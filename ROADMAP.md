@@ -225,6 +225,7 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 
 - 批次 1: P0.1 + P0.2 + P0.3 (插件骨架, 图标与 CI, 一个子会话); P1.1 + P1.2 (宿主契约与绑定, 一个子会话); 两者不同仓库可并行.
 - 批次 2: P1.3 + P1.4 + P1.5 (宿主脚本模块, OCR, Node / Bun); P2.1 + P2.2 + P2.3 (插件服务, 读取, 渲染).
+- 联调 (调度会话 2026-11-12 安排, 批次 2 两张卡都完成后单独发一张卡片, 可与批次 3 并行): P1.2 真机绑定 (`getInfo`), P1.3 附录 B.5 示例, P1.4 OCR, P1.5 Node 脚本的真机验收; 批次 2 的两张卡只做代码与单元 / 仪器测试. `samples/pdf-ocr-manual.js` 由联调卡片写 (要在真机跑过). P1.4 的 (文档) `pdf.md` OCR 一节与 P1.5 的 (文档) `runtimeApis` 一节并入 P5.1.
 - 批次 3: P2.4 + P2.5 (页面操作, 生成); P2.6 (加密, 含 Q4 spike); P1.6 (Explorer 文件类型, 注册, 协议文档); 三者可并行.
 - 批次 4: P3.1 + P3.2 (查看器与会话); P3.3 (Explorer Action 服务); P2.7 设备矩阵在 P2 全部完成后.
 - 批次 5: P4.1 + P4.2 (应用骨架与向导).
@@ -328,13 +329,14 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 
 ### P2.1 服务, 句柄与任务模型 (D10, D11, D28)
 
-- [ ] (插件) `ThreePaperPdfService` 实现 `IPdfPlugin` (`getInfo`, `getCapabilities`, `open`, `run`, `cancel`, `openViewer`), `DocumentRegistry` (每宿主 Binder token 8 个句柄, 空闲超时关闭, token 死亡全部关闭并清理临时文件), `Ops` (opId, 进度节流 100 ms, 取消标志贯穿 PDFBox 循环; 默认无超时, 只靠 `cancel(opId)`, 宿主 Binder 死亡与脚本停止结束操作, Q7 已决), `RenderPool` (2 并发, 其余排队), 临时文件目录 `cache/pdf/<token>/`.
-- [ ] (插件) 契约版本协商与 `PdfCapabilityKeys` (`render.sharedMemory`, `generate.html`, `crypto.aes256`, `ocr` 否, 上限常量回传).
-- 验收: 仪器测试: 绑定, `getInfo`, 打开夹具, 第 9 个句柄 `LIMIT_EXCEEDED`, 取消长操作后输出被截断; token 死亡后临时目录为空.
+- [ ] (插件) `ThreePaperPdfService` 实现 `IPdfPlugin` (`getInfo`, `getCapabilities`, `open`, `run`, `cancel`, `openViewer`), `DocumentRegistry` (每个宿主进程最多 `MAX_DOCUMENTS_PER_HOST` = 32 个句柄, 每脚本 8 个由宿主句柄表执行; 空闲超时关闭, 宿主连接断开时全部关闭并清理临时文件), `Ops` (opId, 进度节流 250 ms (`PROGRESS_THROTTLE_MS`), 取消标志贯穿 PDFBox 循环; 默认无超时, 只靠 `cancel(opId)`, 宿主 Binder 死亡与脚本停止结束操作, Q7 已决), `RenderPool` (2 并发, 其余排队), 临时文件目录 `cache/pdf/<token>/`.
+- [ ] (插件) 契约版本协商与 `PdfCapabilityKeys` (`pdfFeatures` 只列端到端可用的取值 (`render.sharedMemory`, `generate.html`, `crypto.aes256`, `viewer`), 回传 `pdfMaxOpenDocuments`, `pdfMaxRenderPixels`, `pdfRenderConcurrency`, `pdfPdfboxVersion`; OCR 在宿主侧, 不是插件能力).
+- 验收: 仪器测试: 绑定, `getInfo`, 打开夹具, 同一宿主第 33 个句柄 `LIMIT_EXCEEDED`, 取消长操作后输出被截断; token 死亡后临时目录为空.
+- 按 P1.1 契约同步 (paper-p2-core 步骤 0, 2026-11-12): 原文 "每宿主 token 8 个句柄, 第 9 个 LIMIT_EXCEEDED" 与 "进度节流 100 ms" 改为契约的 `MAX_DOCUMENTS_PER_HOST` 32 (每脚本 `MAX_OPEN_DOCUMENTS` 8 由宿主执行) 与 `PROGRESS_THROTTLE_MS` 250; 能力键改为附录 C 的 `pdf*` 键. `open` 不带宿主 token, "token" 指调用方 (Binder 调用 uid 与 pid) 及其服务连接.
 
 ### P2.2 读取: 信息, 文本, 大纲, 搜索 (D31)
 
-- [ ] (插件) `getInfo` (页数, 每页尺寸与旋转, 元数据, PDF 版本, 是否加密与权限位, 文件大小), `getOutline`, `getText` (页范围 + 分块, 保留换行, `layout: 'simple' | 'raw'`), `search` (关键字, 大小写与整词选项, 返回页码与命中矩形, 页上限).
+- [ ] (插件) `getInfo` (页数, 每页尺寸与旋转, 元数据, PDF 版本, 是否加密与权限位, 文件大小), `getOutline`, `getText` (页范围 + 分块, 保留换行, `layout: 'reading' | 'raw'`, 契约名, 原文 `simple`), `search` (关键字, 大小写与整词选项, 返回页码与命中矩形, 页上限).
 - 验收: 单元测试对运行时夹具断言文本, 大纲层级, 搜索命中; 仪器测试经 Binder 取文本分块.
 - P0.3 的发现 (paper-p0, 2026-11-12): (1) `PDFTextStripper` 不按位置排序时, 在转 90 / 270 度的页面上会在词中断行 (`rotated.pdf` 第 2 页得到 "R|o|tate 90", 第 4 页得到 "R|o|ta|te| 2|70"), `sortByPosition = true` 后五页都正确, `layout: 'simple'` 应按位置排序, `raw` 若保留内容流顺序要在文档里说明; (2) JVM 上 PDFBox-Android 的 AFM / CMap 字体资源要 `PDFBoxResourceLoader.init(Context)` 才能加载, 单元测试不能直接调用 `PDFTextStripper`, 文本与搜索的断言放仪器测试 (`SampleFixturesDeviceTest` 已按清单断言), JVM 测试只断言内容流里的 `Tj` 文本, 大纲与结构.
 
@@ -412,6 +414,7 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 ### P5.1 文档 (AutoJs6-Documentation) (D40)
 
 - [ ] (文档) `api/pdf.md` (模块说明, 可用性, 同步 / Async, 路径与 fd 说明, 每个方法, OCR 一节, 错误码表), `api/pdfDocumentType.md`, `api/pdfViewSessionType.md`, `runtimeApis` 一节, 侧栏与索引登记, 文档站 changelog 10 语言 JSON 同时写 (all-languages 规则).
+- 并入 (调度会话 2026-11-12): P1.4 的 (文档) `pdf.md` OCR 一节 (渲染 + `ocr.recognize` 的手动样例写法, 样例文件 `samples/pdf-ocr-manual.js` 由联调卡片提供) 与 P1.5 的 (文档) `runtimeApis` 的 "Node.js / Bun / Worker 的 pdf" 一节在本条完成.
 - 验收: 文档站本地构建通过, 链接检查通过.
 
 ### P5.2 声明 (AutoJs6-TypeScript-Declarations, Ace Editor, Offline Docs)
@@ -554,28 +557,67 @@ session.on('page', (e) => console.log('page', e.page));
 session.on('close', () => console.log('closed'));
 ```
 
-## 附录 C. 契约草案
+## 附录 C. 契约 (P1.1 已发布的 v1)
+
+来源与优先级: 宿主 `plugin-api/pdf-api` (提交 4e872a8741, 即 `libs/pdf-api.aar`, 40,584 B, sha256 e6bdb589...e90bb) 与协议文档 `AutoJs6/docs/dev/pdf-plugin-protocol-v1.md` 为准, 本附录只摘录事实. 2026-11-12 由 paper-p2-core 按已发布契约同步, 替换立项时的草案 (草案与发布版的差异见协议文档末节 "Differences From The Roadmap Appendix C Draft": 去掉 `fontPath` / `html` 两个键, `limits.*` 改为独立能力键, `render.sharedMemory` 等改为 `pdfFeatures` 的取值, 新增应答键与上限). 契约 v1 在批次 2 冻结, 需要改契约时写进交接目录 `pdf-api-change-requests.md` 并登记待决.
 
 ### C.1 `plugin-api/pdf-api`
 
 ```text
-PdfActions:        INFO, SERVICE_ACTION "org.autojs.plugin.PDF", SERVICE_CATEGORY "pdf", PLUGIN_PERMISSION, VIEWER_ACTIVITY_ACTION "org.autojs.plugin.PDF_VIEWER_OPEN", EXTRA_SESSION_TOKEN
-PdfIds:            PLUGIN_ID "three-paper-pdf", ENGINE "pdf", OFFICIAL_PACKAGE
-PdfContract:       CONTRACT_VERSION 1, KEY_* (contractVersion, requestId, displayName, password, pages, page, dpi, scale, width, height, transparent, format, quality, layout, keyword, caseSensitive, wholeWord, offset, limit, maxChars, ranges, every, order, degrees, outline, pageSize, fit, margin, orientation, fontSize, fontPath, lineSpacing, title, html, baseUrl, timeout, userPassword, ownerPassword, permissions, keyLength, opId, percent, stage, current, total, sharedMemory, rowBytes, token, reason),
-                   MAX_OPEN_DOCUMENTS 8, MAX_RENDER_PIXELS 16_000_000, MAX_TEXT_CHARS_PER_CALL, MAX_SEARCH_HITS, MAX_OPTIONS_BYTES, VIEWER_CLAIM_TIMEOUT_MS, REASON_* (closed, replaced, timeout, finished)
-PdfCapabilityKeys: render.sharedMemory, generate.html, crypto.aes256, limits.*
-PdfErrorCodes:     见 C.3
+PdfActions:        INFO, SERVICE_ACTION "org.autojs.plugin.PDF", SERVICE_CATEGORY "pdf", PLUGIN_PERMISSION "org.autojs.permission.PLUGIN",
+                   VIEWER_ACTIVITY_ACTION "org.autojs.plugin.PDF_VIEWER_OPEN", EXTRA_SESSION_TOKEN "org.autojs.plugin.pdf.extra.SESSION_TOKEN"
+PdfIds:            PLUGIN_ID "three-paper-pdf", ENGINE "pdf", CATEGORY "pdf", VARIANT_DEFAULT "default", OFFICIAL_PACKAGE, REQUIRED_HOST_VERSION_CODE 6641
+PdfContract:       CONTRACT_VERSION = MIN_CONTRACT_VERSION = MAX_CONTRACT_VERSION = 1
+  通用键           contractVersion, requestId, op, errorCode, errorMessage, warnings
+  打开             displayName, password, passwords (merge 每个输入一个)
+  渲染             page, dpi, scale, width, height, transparent, transport, sharedMemory, rowBytes, format, quality
+  文本与搜索       pages, page, offset, maxChars, layout, keyword, caseSensitive, wholeWord, limit; 应答 texts, pageNumbers, hasMore, nextPage, nextOffset, items
+  页面操作         ranges, every, order, degrees, rotatePages, deletePages, outline, index
+  生成             pageSize, fit, margin, orientation, fontSize, lineSpacing, title, baseUrl, timeout
+  加密             userPassword, ownerPassword, permissions, keyLength
+  getInfo 应答     pageCount, pageWidths, pageHeights (float[], 旋转前的 crop box, 单位 pt), pageRotations (int[]), title, author, subject, keywords,
+                   creator, producer, creationDate, modificationDate (ISO 8601 带时区, 无则不带该键), pdfVersion, encrypted, permissions (String[]), sizeBytes
+  进度与查看器     opId, percent, stage, current, total, token, reason, zoom, visible
+  items 字段       FIELD_*: title, page, level, rects, context, index, width, height, format, pages, pageCount, sizeBytes
+  取值集合         TRANSPORTS sharedMemory / file; RENDER_FORMATS png (默认) / jpeg / webp; quality 1-100 (默认 90), fromImages 另有 lossless;
+                   LAYOUTS reading (默认, 按位置排序) / raw (内容流顺序); outline merge (默认) / none; pageSize fit (默认) / A4 / Letter;
+                   fit contain / cover; orientation auto / portrait / landscape; keyLength 128 / 256 (默认 256);
+                   PERMISSIONS print, copy, modify, annotate, fillForms, extractForAccessibility, assemble, printHighQuality;
+                   STAGES opening / processing / writing; REASONS closed / replaced / timeout / finished;
+                   FEATURES render.sharedMemory, generate.html, crypto.aes256, viewer
+  上限             DEFAULT_DPI 144 (MIN_DPI 1, MAX_DPI 2400), MAX_RENDER_PIXELS 16,000,000, BYTES_PER_PIXEL 4, MAX_RENDER_FILE_BYTES 96 MiB,
+                   MAX_OPEN_DOCUMENTS 8 (每脚本, 宿主执行), MAX_DOCUMENTS_PER_HOST 32 (每宿主进程, 插件执行),
+                   MAX_TEXT_CHARS_PER_CALL 262,144, MIN / MAX_KEYWORD_LENGTH 1 / 256, DEFAULT_SEARCH_LIMIT 100, MAX_SEARCH_HITS 1000,
+                   DEFAULT_PLAN_LIMIT 500, MAX_PLAN_ITEMS 1000, MAX_RUN_INPUTS 1000, MAX_SPLIT_OUTPUTS 1000, MAX_TEXT_INPUT_BYTES 16 MiB,
+                   MAX_PASSWORD_LENGTH 127, MAX_OPTIONS_BYTES 64 KiB, MAX_ANSWER_BYTES 768 KiB, MAX_EVENT_BYTES 16 KiB,
+                   MAX_ERROR_MESSAGE_BYTES 4 KiB, PROGRESS_THROTTLE_MS 250, VIEWER_CLAIM_TIMEOUT_MS 60 s; 没有默认操作超时 (Q7)
+PdfCapabilityKeys: requiresHostVersion (Long), pdfContractVersion (Int), pdfMaxContractVersion (Int, 可选), pdfFeatures (String[], FEATURES 的子集),
+                   pdfMaxOpenDocuments (Int, <= 32), pdfMaxRenderPixels (Long, <= 16,000,000), pdfRenderConcurrency (Int, D10: 2), pdfPdfboxVersion (String)
+PdfOps:            ALL (见 C.2), RUN_OPS, CANCELLABLE, isRunOp(op)
+PdfErrorCodes:     ALL, HOST_ONLY, encode(code, detail) -> "CODE: detail", decode(message); 取值见 C.3
 AIDL:
-  IPdfPlugin        getInfo(), getCapabilities(), open(fd, options) -> IPdfDocument, run(request, inputs[], output, IPdfProgressCallback) -> opId (merge / fromImages / fromText / fromHtml / encrypt / decrypt), cancel(opId), openViewer(fd, options, IPdfViewerCallback) -> IPdfViewerSession
-  IPdfDocument      getInfo(), getOutline(), getText(request), search(request), render(request, fallbackOutput) -> Bundle (SharedMemory 或已写 fd), renderToFile(request, output), planImages(request), extractImage(request, output), planSplit(request), split(request, outputs[], callback) -> opId, save(request, output, callback) -> opId, close()
+  IPdfPlugin        getInfo(), getCapabilities(), open(source, options) -> IPdfDocument, run(request, inputs[], output, IPdfProgressCallback) -> int opId,
+                    cancel(opId) -> boolean, openViewer(source, options, IPdfViewerCallback) -> IPdfViewerSession
+  IPdfDocument      getInfo(), getOutline(), getText(request), search(request), render(request, fallbackOutput), renderToFile(request, output),
+                    planImages(request), extractImage(request, output), planSplit(request), split(request, outputs[], callback) -> int opId,
+                    save(request, output, callback) -> int opId, close()
   IPdfViewerSession getState(), goTo(page), close(finish)
-  oneway IPdfProgressCallback  onProgress(opId, bundle), onComplete(opId, result), onError(opId, error)
-  oneway IPdfViewerCallback    onPage(token, bundle), onClosed(token, reason)
+  oneway IPdfProgressCallback  onProgress(opId, progress), onComplete(opId, result), onError(opId, error)
+  oneway IPdfViewerCallback    onPage(token, event), onClosed(token, reason)
 ```
+
+要点 (细节见协议文档同名各节):
+
+- 约定: 宿主写的每个 Bundle 带协商后的 `contractVersion`, 插件的应答, 进度, 完成与事件 Bundle 带请求的版本; Bundle 应答要么带结果键, 要么带 `errorCode` + `errorMessage`; 不回 Bundle 的方法 (`open`, `run`, `cancel`, `openViewer`, `split`, `save`, `goTo`, 各 `close`) 跨 Binder 抛 `IllegalArgumentException` / `IllegalStateException` / `SecurityException`, 消息为 `CODE: detail`. 读者忽略不认识的键. 页码从 1 起, 页范围是 `1-3,5,8-` 形式的字符串; 尺寸与搜索矩形单位为 pt, 矩形 `[left, top, right, bottom]` 以显示方向 (旋转后) 的页面左上角为原点.
+- 描述符: 输入是只读的普通文件, 宿主持有并在调用返回后关闭, 插件要保留的 (打开的文档, 查看器会话, 进行中的 `run`) 自行 dup. 输出是宿主新建的空文件: 同步方法 (`renderToFile`, `extractImage`, `render` 的回落) 应答前写完并 flush; 异步操作 (`run`, `split`, `save`) 在返回 opId 前 dup 输出, `onComplete` 前 flush 并关闭; `onError` (含 `CANCELLED`) 后宿主删除输出. 数量取决于文档的输出分两步: `planSplit` / `planImages` 返回清单, 宿主按清单建输出.
+- 渲染: ARGB_8888 预乘 alpha, `Bitmap.copyPixelsToBuffer` 的字节布局, 默认白底, `transparent` 时透明. `transport` `sharedMemory` (默认, API 27+) 应答 `transport`, `sharedMemory` (只读 `SharedMemory`), `width`, `height`, `rowBytes` (>= width * 4), 插件写完应答即释放自己的引用; API 27 以下, 宿主要 `file`, 或建共享内存失败时, 写不超过 96 MiB 的 PNG 到 `fallbackOutput` (v1 总是有效), 应答 `transport` `file`, `width`, `height`, `sizeBytes`. 两个尺寸键为 `INVALID_ARGUMENT`, 超过像素上限为 `LIMIT_EXCEEDED`. `renderToFile` 应答 `width`, `height`, `format`, `sizeBytes`.
+- 并发与关闭: 同一文档的调用在插件里串行, 不同文档并行, 渲染最多 `pdfRenderConcurrency` 个同时进行; 文档关闭时进行中的同步调用以 `SESSION_CLOSED` 结束, 并取消该文档的 `split` / `save`; `close` 幂等, 之后的调用为 `SESSION_CLOSED`. 插件为每个宿主进程最多保留 `pdfMaxOpenDocuments` 个打开的文档, 超出时 `open` 为 `LIMIT_EXCEEDED`; 每脚本 8 个由宿主句柄表执行.
+- 进度与取消: opId > 0 且在插件进程内唯一, 预先拒绝的请求直接抛出而不返回 opId; 每个操作每 250 ms 至多一次 `onProgress` (`op`, `percent`, `stage`, `current`, `total`), 最后恰好一次 `onComplete` 或 `onError`; `cancel(opId)` 在操作仍在运行时返回 true, 操作以 `CANCELLED` 结束; 插件对收到的每个回调 linkToDeath, 回调 Binder 死亡时取消该宿主的全部操作.
+- 版本协商: 宿主接受 `pdfContractVersion` 落在自身范围内的插件, 取 `pdfMaxContractVersion` (无则为基线) 与自身最大值的较小者写进每个请求; 后续版本只在接口末尾追加方法, 追加可选键与开放集合的取值.
 
 ### C.2 操作名 (`PdfOps`)
 
-`info`, `outline`, `text`, `search`, `render`, `renderToFile`, `planImages`, `extractImage`, `merge`, `planSplit`, `split`, `save` (extract / delete / reorder / rotate 的组合), `fromImages`, `fromText`, `fromHtml`, `encrypt`, `decrypt`, `openViewer`.
+`ALL`: `info`, `outline`, `text`, `search`, `render`, `renderToFile`, `planImages`, `extractImage`, `merge`, `planSplit`, `split`, `save` (extract / delete / reorder / rotate 的组合, 键 `deletePages`, `pages`, `order`, `degrees`, `rotatePages`), `fromImages`, `fromText`, `fromHtml`, `encrypt`, `decrypt`, `openViewer`. `RUN_OPS` (经 `run` 的 `op` 键启动): `merge`, `fromImages`, `fromText`, `fromHtml`, `encrypt`, `decrypt`; `CANCELLABLE` = `RUN_OPS` + `split`, `save`. 插件不读脚本路径 (D7), 所以 `fromText` 的字体是第二个输入, `fromHtml` 的 HTML 是第一个输入, 都由宿主写入或打开.
 
 ### C.3 错误码
 
@@ -595,7 +637,9 @@ AIDL:
 | Q6 | OCR 渲染 dpi | (a) 300 dpi (推荐, 识别率优先) / (b) 沿用渲染默认 144 dpi (快) | P1.4 | 已决 (2026-11-12 12:20, 维护者选 (a) 300 dpi; 脚本可用 `ocrDpi` 覆盖) |
 | Q7 | 操作超时 | (a) 默认无超时, 只靠取消与脚本停止 (推荐, 大文档合并耗时不可预估) / (b) 默认 120 s, `timeout` 选项可改 | P2.1 | 已决 (2026-11-12 12:20, 维护者选 (a) 默认无超时; P1.1 契约也不设默认操作超时) |
 | Q8 | D41 发布门在宿主 6.8.0 已公开后的适用 | (a) 沿用 D41: 不等宿主 6.8.1 公开, 1.0.0 全部条目通过即发布并登记官方索引, `REQUIRES_HOST_VERSION` 写含全部宿主条目的 6.8.1 本地构建号, 公开 6.8.0 用户在插件中心看到不兼容直到 6.8.1 公开 (推荐) / (b) 等宿主 6.8.1 公开再发 | P5.4, P1.6 | 已决 (2026-11-12 12:21, 维护者选 (a) 沿用 D41) |
-| Q9 | Compose 自带的原生库 `libandroidx.graphics.path.so` (`androidx.graphics:graphics-path`, 由 `ui-graphics` 传递, 四个 ABI 各 7-11 KB, 已 16 KB 对齐) 与 D3 / D26 "无原生库" 的字面冲突 | (a) 列入原生库白名单, universal APK 照常, `supportedAbis` 为空, 文档写 "PDF 处理无原生库, 唯一的原生库来自 Compose" (推荐, 已先行; 3-Slate Studio 等 Compose 插件同款) / (b) 用 `packaging.jniLibs.excludes` 排除该库 (API 34 以下 Compose 的路径迭代依赖它, 排除后可能 `UnsatisfiedLinkError`, 需在四台设备复核) | P0.1 | 按推荐先行 (paper-p0, 2026-11-12); 影响 D3, D26, D42, 发布门禁 2, P0.1; 改选 (b) 返工: 删白名单 1 行, 加 excludes 1 行, 改 10 语言 README 的原生库说明与 2 个单元测试断言, 约半小时, 另需设备复核 |
+| Q9 | Compose 自带的原生库 `libandroidx.graphics.path.so` (`androidx.graphics:graphics-path`, 由 `ui-graphics` 传递, 四个 ABI 各 7-11 KB, 已 16 KB 对齐) 与 D3 / D26 "无原生库" 的字面冲突 | (a) 列入原生库白名单, universal APK 照常, `supportedAbis` 为空, 文档写 "PDF 处理无原生库, 唯一的原生库来自 Compose" (推荐, 已先行; 3-Slate Studio 等 Compose 插件同款) / (b) 用 `packaging.jniLibs.excludes` 排除该库 (API 34 以下 Compose 的路径迭代依赖它, 排除后可能 `UnsatisfiedLinkError`, 需在四台设备复核) | P0.1 | 已决 (2026-11-12 15:48, 维护者选 (a) 列入白名单, 保持现状; 由 paper-p0 先行实施) |
+| Q20 | `pdf.*` 写输出的方法要求的脚本能力 | (a) 读 `files`, 写输出另加 `files.write` (推荐, 已先行, 与 Node / MCP 的能力清单一致, `files` 不隐含 `files.write`) / (b) 只要 `files` (D29 字面 "files 读写") | P1.2 | 已决 (2026-11-12 15:48, 维护者选 A, 保持现状; 由 paper-p1-host 在宿主 P1.2 先行实施) |
+| Q21 | `PdfPluginHost` 是否设 `allowActivityStarts` | (a) 设 (推荐, 已先行, D29 原文 "含 allowActivityStarts, 以便宿主后台时插件界面弹出授权页"; 只在 API 34+ 且宿主可见时由系统放行) / (b) 与 `EpubPluginHost` 完全相同, 不设 (EPUB 实际未设) | P1.2 | 已决 (2026-11-12 15:48, 维护者选 A, 保持现状; 由 paper-p1-host 在宿主 P1.2 先行实施) |
 
 ## 附录 E. 证据等级
 
