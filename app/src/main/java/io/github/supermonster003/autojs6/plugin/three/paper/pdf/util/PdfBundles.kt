@@ -2,6 +2,7 @@ package io.github.supermonster003.autojs6.plugin.three.paper.pdf.util
 
 import android.os.Bundle
 import android.os.Parcel
+import android.os.Parcelable
 import org.autojs.plugin.pdf.api.PdfContract
 
 /**
@@ -18,9 +19,10 @@ object PdfBundles {
 
     /**
      * The Bundle of an answer map. Supported values: Int, Long, Boolean, Double, Float, String, their primitive arrays,
-     * String arrays, Bundles and nested maps (as Bundles); anything else is a programming error.
-     * zh-CN: 应答 Map 对应的 Bundle. 支持的值: Int, Long, Boolean, Double, Float, String 及其基本类型数组, String 数组, Bundle 与嵌套
-     * Map (写成 Bundle); 其他类型属于编程错误.
+     * String arrays, Bundles, other Parcelables (the region of `render`) and nested maps (as Bundles); anything else is a
+     * programming error.
+     * zh-CN: 应答 Map 对应的 Bundle. 支持的值: Int, Long, Boolean, Double, Float, String 及其基本类型数组, String 数组, Bundle, 其他
+     * Parcelable (`render` 的区域) 与嵌套 Map (写成 Bundle); 其他类型属于编程错误.
      */
     fun toBundle(map: Map<String, Any?>): Bundle = Bundle(map.size).apply {
         for ((key, value) in map) {
@@ -38,6 +40,8 @@ object PdfBundles {
                 is DoubleArray -> putDoubleArray(key, value)
                 is BooleanArray -> putBooleanArray(key, value)
                 is Bundle -> putBundle(key, value)
+                // The SharedMemory region of `render`. zh-CN: `render` 的 SharedMemory 区域.
+                is Parcelable -> putParcelable(key, value)
                 is Map<*, *> -> putBundle(key, toBundle(value.entries.associate { (k, v) -> k.toString() to v }))
                 is Array<*> -> {
                     require(value.isArrayOf<String>()) { "$key: only String arrays are supported" }

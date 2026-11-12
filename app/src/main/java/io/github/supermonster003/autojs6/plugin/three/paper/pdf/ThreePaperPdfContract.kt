@@ -1,5 +1,6 @@
 package io.github.supermonster003.autojs6.plugin.three.paper.pdf
 
+import android.os.Build
 import org.autojs.plugin.explorer.api.ExplorerActionPluginActions
 import org.autojs.plugin.explorer.api.ExplorerActionProtocol
 import org.autojs.plugin.pdf.api.PdfActions
@@ -44,17 +45,24 @@ object ThreePaperPdfContract {
 
     /**
      * Operations the plugin implements end to end; every other operation answers `UNSUPPORTED` with the detail
-     * `NOT_IMPLEMENTED: <op>` until its roadmap item lands (P2.2: reading).
+     * `NOT_IMPLEMENTED: <op>` until its roadmap item lands (P2.2: reading, P2.3: rendering).
      * zh-CN: 插件端到端实现的操作; 其他操作在对应的路线图条目落地之前返回详情为 `NOT_IMPLEMENTED: <op>` 的 `UNSUPPORTED`
-     * (P2.2: 读取).
+     * (P2.2: 读取, P2.3: 渲染).
      */
-    val IMPLEMENTED_OPS: List<String> = listOf(PdfOps.INFO, PdfOps.OUTLINE, PdfOps.TEXT, PdfOps.SEARCH)
+    val IMPLEMENTED_OPS: List<String> = listOf(PdfOps.INFO, PdfOps.OUTLINE, PdfOps.TEXT, PdfOps.SEARCH, PdfOps.RENDER, PdfOps.RENDER_TO_FILE)
 
     /**
-     * Optional features of contract version 1 the plugin declares in `pdfFeatures`; empty until roadmap P2 implements them.
-     * zh-CN: 插件在 `pdfFeatures` 里声明的契约版本 1 可选特性; 路线图 P2 实现之前为空.
+     * Optional features of contract version 1 the plugin declares in `pdfFeatures` on this device ([features]).
+     * zh-CN: 插件在本设备上于 `pdfFeatures` 里声明的契约版本 1 可选特性 ([features]).
      */
-    val FEATURES: List<String> = emptyList()
+    val FEATURES: List<String> get() = features(Build.VERSION.SDK_INT)
+
+    /**
+     * Optional features on API level [sdkInt]: `render.sharedMemory` needs `SharedMemory` (API 27, roadmap P2.3).
+     * zh-CN: API 级别 [sdkInt] 上的可选特性: `render.sharedMemory` 需要 `SharedMemory` (API 27, 路线图 P2.3).
+     */
+    fun features(sdkInt: Int): List<String> =
+        if (sdkInt >= Build.VERSION_CODES.O_MR1) listOf(PdfContract.FEATURE_RENDER_SHARED_MEMORY) else emptyList()
 
     /**
      * Documents one host process may keep open (capability `pdfMaxOpenDocuments`, protocol "Ceilings"); the eight per

@@ -2,6 +2,8 @@ package io.github.supermonster003.autojs6.plugin.three.paper.pdf.util
 
 import org.autojs.plugin.pdf.api.PdfContract
 import org.autojs.plugin.pdf.api.PdfErrorCodes
+import java.util.Locale
+import kotlin.math.floor
 import kotlin.math.roundToLong
 
 /**
@@ -158,19 +160,70 @@ sealed interface RenderSize {
 
     /**
      * Bitmap width and height for a page of [widthPoints] x [heightPoints] as displayed (after its rotation), each at
-     * least 1 pixel; more than `MAX_RENDER_PIXELS` fails with `LIMIT_EXCEEDED` (roadmap D17).
+     * least 1 pixel; more than `MAX_RENDER_PIXELS` fails with `LIMIT_EXCEEDED` and a downsampling hint (roadmap D17,
+     * P2.3).
      * zh-CN: 显示尺寸 (旋转之后) 为 [widthPoints] x [heightPoints] 的页对应的位图宽高, 每边至少 1 像素; 超过 `MAX_RENDER_PIXELS` 报
-     * `LIMIT_EXCEEDED` (路线图 D17).
+     * `LIMIT_EXCEEDED` 并附降采样建议 (路线图 D17, P2.3).
      */
     fun pixels(widthPoints: Double, heightPoints: Double): Pair<Int, Int> {
         require(widthPoints > 0 && heightPoints > 0) { "page size must be positive: $widthPoints x $heightPoints" }
-        val scale = scaleFor(widthPoints, heightPoints)
-        val width = (widthPoints * scale).roundToLong().coerceAtLeast(1)
-        val height = (heightPoints * scale).roundToLong().coerceAtLeast(1)
-        if (width > PdfContract.MAX_RENDER_PIXELS / height) {
-            throw PdfFailure(PdfErrorCodes.LIMIT_EXCEEDED, "${width} x ${height} pixels exceed ${PdfContract.MAX_RENDER_PIXELS}")
+        val (width, height) = rounded(this, widthPoints, heightPoints)
+        if (!fits(width, height)) {
+            throw PdfFailure(
+                PdfErrorCodes.LIMIT_EXCEEDED,
+                "$width x $height pixels exceed ${PdfContract.MAX_RENDER_PIXELS}; ${downsampling(widthPoints, heightPoints)}",
+            )
         }
         return width.toInt() to height.toInt()
+    }
+
+    companion object {
+
+        private fun rounded(size: RenderSize, widthPoints: Double, heightPoints: Double): Pair<Long, Long> {
+            val scale = size.scaleFor(widthPoints, heightPoints)
+            return (widthPoints * scale).roundToLong().coerceAtLeast(1) to (heightPoints * scale).roundToLong().coerceAtLeast(1)
+        }
+
+        private fun fits(width: Long, height: Long) = width <= PdfContract.MAX_RENDER_PIXELS / height
+
+        /**
+         * The hint of an oversized page: the largest `dpi` (with its `scale`), `width` and `height` whose bitmap stays
+         * within `MAX_RENDER_PIXELS` for a page of [widthPoints] x [heightPoints] as displayed.
+         * zh-CN: 超大页面的提示: 对显示尺寸为 [widthPoints] x [heightPoints] 的页面, 位图不超过 `MAX_RENDER_PIXELS` 的最大 `dpi` (及其
+         * `scale`), `width` 与 `height`.
+         */
+        fun downsampling(widthPoints: Double, heightPoints: Double): String {
+            val dpi = largestFitting(PdfContract.MAX_DPI.toLong(), widthPoints, heightPoints) { Dpi(it.toInt()) }
+            val width = largestFitting(PdfContract.MAX_RENDER_PIXELS, widthPoints, heightPoints) { Width(it.toInt()) }
+            val height = largestFitting(PdfContract.MAX_RENDER_PIXELS, widthPoints, heightPoints) { Height(it.toInt()) }
+            val hints = listOfNotNull(
+                dpi?.let { "${PdfContract.KEY_DPI} <= $it (${PdfContract.KEY_SCALE} <= ${"%.3f".format(Locale.ROOT, floor(it / PdfOptions.POINTS_PER_INCH * 1000) / 1000)})" },
+                width?.let { "${PdfContract.KEY_WIDTH} <= $it" },
+                height?.let { "${PdfContract.KEY_HEIGHT} <= $it" },
+            )
+            return "downsample to " + hints.joinToString(", ").replaceLast(", ", " or ")
+        }
+
+        /**
+         * The largest value in `1..upper` whose size fits, or null; sizes grow with the value, so a binary search finds it.
+         * zh-CN: `1..upper` 中尺寸仍放得下的最大值, 没有则为 null; 尺寸随取值单调增长, 因此用二分查找.
+         */
+        internal fun largestFitting(upper: Long, widthPoints: Double, heightPoints: Double, size: (Long) -> RenderSize): Long? {
+            var low = 0L
+            var high = upper
+            while (low < high) {
+                val middle = (low + high + 1) / 2
+                val (width, height) = rounded(size(middle), widthPoints, heightPoints)
+                if (fits(width, height)) low = middle else high = middle - 1
+            }
+            return low.takeIf { it >= 1 }
+        }
+
+        private fun String.replaceLast(old: String, new: String): String {
+            val index = lastIndexOf(old)
+            return if (index < 0) this else replaceRange(index, index + old.length, new)
+        }
+
     }
 
 }

@@ -1,6 +1,7 @@
 package io.github.supermonster003.autojs6.plugin.three.paper.pdf.service
 
 import android.os.Bundle
+import android.os.Parcel
 import android.os.ParcelFileDescriptor
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ThreePaperPdfContract
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.PdfEngine
@@ -10,6 +11,7 @@ import io.github.supermonster003.autojs6.plugin.three.paper.pdf.read.DocumentInf
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.read.OutlineReader
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.read.SearchReader
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.read.TextReader
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.render.PageRendering
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfAnswers
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfBundles
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfFailure
@@ -40,11 +42,13 @@ internal class PdfDocumentStub(private val session: PdfSession, private val engi
 
     override fun search(request: Bundle?): Bundle = answer(PdfOps.SEARCH, request) { options, call -> SearchReader.read(call.pdf, options, call.stop) }
 
-    override fun render(request: Bundle?, fallbackOutput: ParcelFileDescriptor?): Bundle =
-        answer(PdfOps.RENDER, request, fallbackOutput) { _, _ -> throw notImplemented(PdfOps.RENDER) }
+    override fun render(request: Bundle?, fallbackOutput: ParcelFileDescriptor?): Bundle = answer(PdfOps.RENDER, request, fallbackOutput) { options, call ->
+        PageRendering.render(call, engine.renderPool, options, fallbackOutput, ::closeAfterReply)
+    }
 
-    override fun renderToFile(request: Bundle?, output: ParcelFileDescriptor?): Bundle =
-        answer(PdfOps.RENDER_TO_FILE, request, output) { _, _ -> throw notImplemented(PdfOps.RENDER_TO_FILE) }
+    override fun renderToFile(request: Bundle?, output: ParcelFileDescriptor?): Bundle = answer(PdfOps.RENDER_TO_FILE, request, output) { options, call ->
+        PageRendering.renderToFile(call, engine.renderPool, options, output)
+    }
 
     override fun planImages(request: Bundle?): Bundle = answer(PdfOps.PLAN_IMAGES, request) { _, _ -> throw notImplemented(PdfOps.PLAN_IMAGES) }
 
@@ -60,6 +64,33 @@ internal class PdfDocumentStub(private val session: PdfSession, private val engi
 
     override fun close() {
         if (session.close()) engine.operations.cancelDocument(session.id)
+    }
+
+    /**
+     * Runs the transaction, then closes what the answer referenced: a Parcel duplicates the descriptor of a
+     * `SharedMemory` region, so the plugin releases its own reference once the reply is written (protocol "Rendering").
+     * zh-CN: 执行事务后关闭应答引用的对象: Parcel 会复制 `SharedMemory` 区域的描述符, 因此回复写出后插件释放自己的引用 (协议
+     * "Rendering" 一节).
+     */
+    override fun onTransact(code: Int, data: Parcel, reply: Parcel?, flags: Int): Boolean {
+        val outer = afterReply.get()
+        val pending = ArrayList<AutoCloseable>(1)
+        afterReply.set(pending)
+        try {
+            return super.onTransact(code, data, reply, flags)
+        } finally {
+            afterReply.set(outer)
+            pending.forEach { runCatching { it.close() } }
+        }
+    }
+
+    /**
+     * Closes [resource] after the reply of the current transaction; a direct call outside a transaction (same process,
+     * no Binder) leaves it to the caller.
+     * zh-CN: 在当前事务的回复写出后关闭 [resource]; 不经事务的直接调用 (同进程, 未经 Binder) 由调用方负责.
+     */
+    private fun closeAfterReply(resource: AutoCloseable) {
+        afterReply.get()?.add(resource)
     }
 
     /**
@@ -118,6 +149,9 @@ internal class PdfDocumentStub(private val session: PdfSession, private val engi
     }
 
     companion object {
+
+        /** What to close once the reply of this thread's transaction is written. zh-CN: 本线程的事务回复写出后要关闭的对象. */
+        private val afterReply = ThreadLocal<MutableList<AutoCloseable>?>()
 
         /** `UNSUPPORTED` with the detail `NOT_IMPLEMENTED: <op>`. zh-CN: 详情为 `NOT_IMPLEMENTED: <op>` 的 `UNSUPPORTED`. */
         fun notImplemented(op: String) = PdfFailure.unsupported("${ThreePaperPdfContract.NOT_IMPLEMENTED}: $op")

@@ -79,6 +79,19 @@ class PdfSession internal constructor(
         val pdf: PDDocument get() = resource(RESOURCE_PDF) { loader(source, password, directory) }.document
 
         /**
+         * A duplicate of the source descriptor (the system renderer reads it); the caller closes it.
+         * zh-CN: 源描述符的副本 (供系统渲染器读取); 由调用方关闭.
+         */
+        fun duplicateSource(): ParcelFileDescriptor = descriptor.dup()
+
+        /**
+         * Parses the source again into a document of its own that the caller closes (the decrypted copy of the renderer
+         * is saved from it, so [pdf] keeps its encryption state).
+         * zh-CN: 把源重新解析为调用方负责关闭的独立文档 (渲染器的解密副本由它保存, 因此 [pdf] 的加密状态保持不变).
+         */
+        fun loadSeparately(): LoadedPdf = loader(source, password, directory)
+
+        /**
          * A resource that lives until the document closes or idles ([releaseIdle]); [create] runs once.
          * zh-CN: 存活到文档关闭或空闲 ([releaseIdle]) 的资源; [create] 只执行一次.
          */

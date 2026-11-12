@@ -1,5 +1,6 @@
 package io.github.supermonster003.autojs6.plugin.three.paper.pdf.read
 
+import com.tom_roush.pdfbox.pdmodel.PDPage
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToLong
@@ -22,6 +23,21 @@ internal data class PageFrame(val width: Double, val height: Double, val rotatio
         180 -> (width - x) to y
         270 -> (height - y) to (width - x)
         else -> x to (height - y)
+    }
+
+    companion object {
+
+        /**
+         * The frame of [page]: its crop box (clipped to the media box by PDFBox, as pdfium does) and its rotation; a
+         * rotation that is not a multiple of 90 counts as 0.
+         * zh-CN: [page] 的页框: 其裁剪框 (PDFBox 与 pdfium 一样裁到媒体框之内) 与旋转角度; 不是 90 倍数的旋转按 0 处理.
+         */
+        fun of(page: PDPage): PageFrame {
+            val box = page.cropBox
+            val rotation = Math.floorMod(page.rotation, 360).let { if (it % 90 == 0) it else 0 }
+            return PageFrame(box.width.toDouble(), box.height.toDouble(), rotation)
+        }
+
     }
 
 }

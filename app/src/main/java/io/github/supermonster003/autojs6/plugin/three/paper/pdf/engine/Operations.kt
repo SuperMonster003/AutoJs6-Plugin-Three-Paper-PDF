@@ -188,8 +188,9 @@ class Operations(
         }
     }
 
-    private companion object {
+    internal companion object {
 
+        /** fsync of a written output; refusals are ignored. zh-CN: 对已写入的输出执行 fsync; 忽略拒绝. */
         fun flush(descriptor: ParcelFileDescriptor) {
             try {
                 Os.fsync(descriptor.fileDescriptor)
@@ -199,6 +200,7 @@ class Operations(
             }
         }
 
+        /** Empties an output after a failure, best effort. zh-CN: 失败后尽力清空输出. */
         fun truncate(descriptor: ParcelFileDescriptor) {
             runCatching { Os.ftruncate(descriptor.fileDescriptor, 0) }
         }

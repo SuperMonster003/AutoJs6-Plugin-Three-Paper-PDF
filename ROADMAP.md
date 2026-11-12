@@ -204,7 +204,7 @@ io.github.supermonster003.autojs6.plugin.three.paper.pdf
 | --- | --- | --- | --- |
 | P0 | 1.0.0 | 仓库骨架: 构建链与身份, Icon Studio 图标, 测试与 CI | 完成 (paper-p0, 2026-11-12) |
 | P1 | 宿主 6.8.1 | 契约 `pdf-api`, 宿主绑定与查看器启动, 脚本模块 `pdf`, OCR 分支, Node / Bun 桥接, Explorer 文件类型与注册 | 进行中 (P1.1 完成, P1.2 待真机绑定) |
-| P2 | 1.0.0 | 插件核心: 服务与句柄, 读取, 渲染与位图传输, 页面操作, 生成, 加密, 设备矩阵 | 进行中 (P2.1 / P2.2 完成) |
+| P2 | 1.0.0 | 插件核心: 服务与句柄, 读取, 渲染与位图传输, 页面操作, 生成, 加密, 设备矩阵 | 进行中 (P2.1 - P2.3 完成) |
 | P3 | 1.0.0 | 查看器, `pdf.view` 会话, Explorer Action 服务 | 未开始 |
 | P4 | 1.0.0 | 工具箱界面: 应用骨架, 向导, 设置与启动器模式 | 未开始 |
 | P5 | 1.0.0 | 文档, 声明, 四仓库同步, 样例, 兼容矩阵, 发布与索引登记 | 未开始 |
@@ -325,7 +325,7 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 
 ## P2: 插件核心
 
-状态: 进行中 (paper-p2-core: P2.1 / P2.2 完成, P2.3 进行中). 设备: API 33 AVD (仪器测试) + Sony XQ-DQ72 API 33 (联调) + G8441 API 28 (SharedMemory 回落与低端性能).
+状态: 进行中 (paper-p2-core: P2.1 - P2.3 完成). 设备: API 33 AVD (仪器测试) + Sony XQ-DQ72 API 33 (联调) + G8441 API 28 (SharedMemory 回落与低端性能).
 
 ### P2.1 服务, 句柄与任务模型 (D10, D11, D28)
 
@@ -344,9 +344,10 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 
 ### P2.3 渲染与位图传输 (D9, D17, D30)
 
-- [ ] (插件) `render(request)`: 选项 `dpi` / `scale` / `width` / `height` 解析为目标尺寸 (16 M 像素上限), 白底或透明, `PdfRenderer` 渲染 (加密文档先解密到缓存), `BitmapTransport` 写 SharedMemory 或 PNG 到宿主 fd; `renderToFile` 直接编码 PNG / JPEG / WebP 到输出 fd.
-- [ ] (插件) 渲染池与同文档串行; 大页 (> 16 M) 的降采样建议写进错误消息.
+- [x] (插件) `render(request)`: 选项 `dpi` / `scale` / `width` / `height` 解析为目标尺寸 (16 M 像素上限), 白底或透明, `PdfRenderer` 渲染 (加密文档先解密到缓存), `BitmapTransport` 写 SharedMemory 或 PNG 到宿主 fd; `renderToFile` 直接编码 PNG / JPEG / WebP 到输出 fd.
+- [x] (插件) 渲染池与同文档串行; 大页 (> 16 M) 的降采样建议写进错误消息.
 - 验收: 仪器测试断言 144 dpi A4 尺寸, 透明选项, 16 M 上限; G8441 (API 28) 走 SharedMemory, API 24 AVD 走 fd 回落; 1 页 A4 文本页渲染耗时记录进附录 F 性能表.
+- 结果 (2026-11-12, paper-p2-core): 完成. 结构: 新增 `render/` 层: `PageRendering` (`render` / `renderToFile`: 先检查请求并按显示页 (CropBox 截在 MediaBox 内, 再按 /Rotate 转, 与 `getInfo` / `search` 共用 `PageFrame`) 算出目标尺寸, 尺寸键至多一个, 缺省 144 dpi, 四舍五入; 超过 16,000,000 像素报 `LIMIT_EXCEEDED`, 消息给出不超限的 `dpi` / `scale` / `width` / `height` 上界; 之后才占渲染池名额 (2 个许可, 排队中的渲染随文档关闭退出), 同文档调用由会话串行; ARGB_8888 位图白底或透明, 应答就绪后回收), `PageRenderer` (会话资源: 系统 `PdfRenderer` 读源描述符的副本; 加密文档用打开时的密码另行解析, 去掉安全设置后存为文档临时目录的 `render-decrypted.pdf`, 关闭句柄或空闲释放 (Q10) 时删除; API 28 起用浮点变换把显示页映射到位图, 以下不传变换, 由渲染器自己铺满, 因为 Android 7 的渲染器把变换作用于未旋转, 未裁剪的页面, 旋转页会画歪 (本条在 API 24 仪器测试中发现并修正)), `BitmapTransport` (API 27+ 只读 `SharedMemory` 区域, `rowBytes = width * 4`, 插件在回复写出后关闭自己的引用; 回落 PNG 与 `renderToFile` 从输出的当前位置写, `CountingOutputStream` 计数并执行 `MAX_RENDER_FILE_BYTES` 与停止信号, 失败时输出截断为 0 字节). `render` 在 API 27+ 默认 `sharedMemory`; `transport: 'file'`, API 27 以下或区域创建失败时把 PNG 写进 `fallbackOutput` 并回传 `sizeBytes`. `renderToFile` 支持 `png` / `jpeg` / `webp` (`quality` 1-100, 缺省 90; `webp` 在 API 30+ 为有损), `jpeg` + `transparent: true` 报 `INVALID_ARGUMENT` (附录 D Q12, 按推荐先行). `ThreePaperPdfContract.IMPLEMENTED_OPS` 加 `render` / `renderToFile`, `pdfFeatures` 在 API 27+ 为 `[render.sharedMemory]`, 以下为空. E1: JVM 单元测试 108 例 0 失败, 本条新增 4 例 (`PdfOptionsTest` 降采样上界 1, `CountingOutputStreamTest` 3), `PluginRuntimeInfoTest` 改为核对已实现方法与按级别的 `pdfFeatures`; lint 0 错误, 15 个警告都是此前已有的. E2: `am instrument` 全套 48 例, 本条新增 `PdfServiceRenderingTest` 12 例 (全部经 Binder: 缺省 144 dpi A4 为 1190 x 1684 白底; 透明选项边缘 alpha 为 0; `file` 传输的 PNG 签名, `sizeBytes` 与尺寸; 四个尺寸键与互斥; 16 M 上限 (dpi 407 报 `LIMIT_EXCEEDED` 并建议 `dpi <= 406` / `width <= 3362` / `height <= 4758`, dpi 406 得 3355 x 4748); `rotated.pdf` 五页的显示尺寸与黑条位置; 加密文档的解密副本在关闭后删除; `renderToFile` 三种格式; 错误选项 (gif, quality 0 与 101, jpeg + 透明) 后输出为 0 字节; 页码, 传输与已关闭文档的错误码; 20 次渲染后描述符不增长 (API 33 起测试端先回收, 因为收到的 Bundle 惰性保留 Parcel 副本); 附录 F 耗时). 已执行: G8441 (API 28, SharedMemory) 48 例 0 失败; AVD_API_24 只读实例 (emulator-5794, fd 回落) 48 例 0 失败 (修正前 `rotatedPagesRenderAsDisplayed` 第 2 页失败); AVD_API_25 / AVD_API_27 只读实例 (emulator-5796 fd 回落 / emulator-5798 SharedMemory, 核对旧版渲染器) 各 48 例 0 失败; AVD_API_33 只读实例 (emulator-5790) 48 例 0 失败 (在渲染器修正之前的构建上执行, 修正只改 API 28 以下的分支). 未执行: XQ-DQ72 联调 (属 P2.7 与 P1 的真机脚本). 耗时见附录 F 性能表.
 
 ### P2.4 页面操作 (D32)
 
@@ -642,6 +643,7 @@ AIDL:
 | Q9 | Compose 自带的原生库 `libandroidx.graphics.path.so` (`androidx.graphics:graphics-path`, 由 `ui-graphics` 传递, 四个 ABI 各 7-11 KB, 已 16 KB 对齐) 与 D3 / D26 "无原生库" 的字面冲突 | (a) 列入原生库白名单, universal APK 照常, `supportedAbis` 为空, 文档写 "PDF 处理无原生库, 唯一的原生库来自 Compose" (推荐, 已先行; 3-Slate Studio 等 Compose 插件同款) / (b) 用 `packaging.jniLibs.excludes` 排除该库 (API 34 以下 Compose 的路径迭代依赖它, 排除后可能 `UnsatisfiedLinkError`, 需在四台设备复核) | P0.1 | 已决 (2026-11-12 15:48, 维护者选 (a) 列入白名单, 保持现状; 由 paper-p0 先行实施) |
 | Q10 | 文档句柄的空闲处理 (P2.1 原文 "空闲超时关闭") | (a) 空闲 5 分钟只释放解析状态 (PDFBox 对象, 以及 P2.3 的渲染器与解密副本), 句柄仍有效, 下一次调用重新解析源 (推荐, 已先行; 契约没有 "句柄被插件关闭" 的事件, 脚本长时间持有的句柄若被关闭, 之后的调用会意外得到 `SESSION_CLOSED`) / (b) 空闲超时直接关闭句柄并删除临时目录 (字面实现, 脚本须处理 `SESSION_CLOSED`) / (c) 不做空闲处理, 只靠 `close()`, 脚本停止与宿主连接断开 | P2.1 | 按推荐先行 (paper-p2-core, 2026-11-12); 影响 P2.1 `DocumentRegistry.sweep` / `PdfSession.releaseIdle`, P2.3 解密副本的生命周期; 改选返工: (b) 约 20 行与 1 个设备测试, (c) 删除清扫线程约 15 行 |
 | Q11 | `getText` / `search` 是否执行 copy (提取文本) 权限位 | (a) 不执行: 能打开的文档就能读文本与搜索, `getInfo` 照实回报权限位, 由脚本自行决定 (推荐, 已先行; 只有用户密码的文档常把 copy 关掉, 执行会让脚本读不了自己有密码的文件, PDFBox 本身也不强制) / (b) 没有 copy 权限时 `getText` / `search` 报 `PERMISSION_DENIED` (用所有者密码打开或权限含 copy 时照常) | P2.2 | 按推荐先行 (paper-p2-core, 2026-11-12); 影响 P2.2 `TextReader` / `SearchReader`, P3.1 查看器的搜索; 改选返工: (b) 约 10 行与 1 个设备测试 |
+| Q12 | `renderToFile` 的 `jpeg` 遇到 `transparent: true` 怎么处理 | (a) 报 `INVALID_ARGUMENT`, 消息提示去掉 `transparent` 或改用 `png` / `webp` (推荐, 已先行; `jpeg` 没有 alpha 通道, 静默合成到白底会让脚本以为透明生效了) / (b) 忽略 `transparent`, 合成到白底后照常编码 | P2.3 | 按推荐先行 (paper-p2-core, 2026-11-12); 影响 P2.3 `PageRendering.renderToFile`, 宿主 `pdf` 模块文档的 `renderToFile` 选项说明; 改选返工: (b) 约 3 行与 1 个设备测试 |
 | Q20 | `pdf.*` 写输出的方法要求的脚本能力 | (a) 读 `files`, 写输出另加 `files.write` (推荐, 已先行, 与 Node / MCP 的能力清单一致, `files` 不隐含 `files.write`) / (b) 只要 `files` (D29 字面 "files 读写") | P1.2 | 已决 (2026-11-12 15:48, 维护者选 A, 保持现状; 由 paper-p1-host 在宿主 P1.2 先行实施) |
 | Q21 | `PdfPluginHost` 是否设 `allowActivityStarts` | (a) 设 (推荐, 已先行, D29 原文 "含 allowActivityStarts, 以便宿主后台时插件界面弹出授权页"; 只在 API 34+ 且宿主可见时由系统放行) / (b) 与 `EpubPluginHost` 完全相同, 不设 (EPUB 实际未设) | P1.2 | 已决 (2026-11-12 15:48, 维护者选 A, 保持现状; 由 paper-p1-host 在宿主 P1.2 先行实施) |
 
@@ -683,7 +685,15 @@ AIDL:
 
 16 KB 页设备: 1.0.0 只有 Compose 的 graphics-path 原生库, 构建时校验 16 KB 对齐 (Q9), 不需要; 若未来引入原生库再租用 Samsung SM-A566B / SM-F971B.
 
-性能基线表 (P2.7 回填): 设备 | A4 文本页 144 dpi 渲染耗时 | 100 页合并耗时 | 20 张图片转 PDF 耗时 | 备注.
+性能基线表 (渲染列由 P2.3 填入, 其余由 P2.7 回填). 渲染列: `text.pdf` 第 1 页, 144 dpi 即 1190 x 1684, 一次 `render` 调用 (仪器测试, 服务与测试同进程, 调用经过真实 Parcel) 连续 12 次取后 10 次的中位数, 括号内为宿主侧接收 (映射区域或解码 PNG 并拷进位图) 的中位数; 测试 `PdfServiceRenderingTest.timingOfAnA4TextPageAt144Dpi`, logcat 标签 `PaperRenderPerf`.
+
+| 设备 | A4 文本页 144 dpi 渲染耗时 | 100 页合并耗时 | 20 张图片转 PDF 耗时 | 备注 |
+| --- | --- | --- | --- | --- |
+| Sony G8441 (API 28) | 14.7 ms (接收 6.9 ms) | (P2.7) | (P2.7) | SharedMemory; 2026-11-12 paper-p2-core, 单独运行, 前三次全套运行为 14.0 - 14.5 ms |
+| AVD API 33 (x86_64) | 21.2 ms (接收 7.9 ms) | (P2.7) | (P2.7) | SharedMemory; 与 G8441, API 24 的全套并行运行时测得, 只作参考 |
+| AVD API 27 (x86) | 16.7 ms (接收 3.2 ms) | (P2.7) | (P2.7) | SharedMemory; 单独运行 |
+| AVD API 25 (x86_64) | 132.0 ms (接收 32.1 ms) | (P2.7) | (P2.7) | fd 回落 (PNG 编码 + 解码); 单独运行 |
+| AVD API 24 (x86) | 264.1 ms (接收 53.1 ms) | (P2.7) | (P2.7) | fd 回落 (PNG 编码 + 解码); 单独运行, 32 位镜像, 与其他模拟器并行时为 200 - 420 ms |
 
 ## 附录 G. 已评估暂缓
 

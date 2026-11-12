@@ -115,4 +115,23 @@ class PdfOptionsTest {
         assertCode(PdfErrorCodes.LIMIT_EXCEEDED) { RenderSize.Dpi(PdfContract.MAX_DPI).pixels(595.28, 841.89) }
     }
 
+    @Test
+    fun `an oversized page names the largest dpi, width and height that fit`() {
+        // A4 of the text sample: 406 dpi is 3355 x 4748 pixels, 407 dpi 3363 x 4760 = 16 007 880 (roadmap P2.3).
+        // zh-CN: 文本样例的 A4: 406 dpi 为 3355 x 4748 像素, 407 dpi 为 3363 x 4760 = 16 007 880 (路线图 P2.3).
+        assertEquals(3355 to 4748, RenderSize.Dpi(406).pixels(595.0, 842.0))
+        val failure = assertThrows(PdfFailure::class.java) { RenderSize.Dpi(407).pixels(595.0, 842.0) }
+        assertEquals(PdfErrorCodes.LIMIT_EXCEEDED, failure.code)
+        assertEquals("3363 x 4760 pixels exceed 16000000; downsample to dpi <= 406 (scale <= 5.638), width <= 3362 or height <= 4758", failure.detail)
+        listOf<(Long) -> RenderSize>({ RenderSize.Dpi(it.toInt()) }, { RenderSize.Width(it.toInt()) }, { RenderSize.Height(it.toInt()) }).forEach { size ->
+            val largest = checkNotNull(RenderSize.largestFitting(PdfContract.MAX_RENDER_PIXELS, 595.0, 842.0, size))
+            size(largest).pixels(595.0, 842.0)
+            assertCode(PdfErrorCodes.LIMIT_EXCEEDED) { size(largest + 1).pixels(595.0, 842.0) }
+        }
+        RenderSize.Scale(5.638).pixels(595.0, 842.0)
+        // A sliver of a page still gets every hint without walking the whole range. zh-CN: 极窄的页面也能得到全部提示, 无需遍历整个区间.
+        val sliver = assertThrows(PdfFailure::class.java) { RenderSize.Width(16_000_000).pixels(14_400.0, 0.01) }.detail.orEmpty()
+        assertTrue(sliver, sliver.contains("dpi <= 2400") && sliver.contains("width <= ") && sliver.contains("height <= "))
+    }
+
 }

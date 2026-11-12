@@ -51,7 +51,7 @@ internal object SearchReader {
 
             override fun onPage(number: Int, page: PDPage?): Boolean {
                 if (page == null || text.isEmpty()) return true
-                val frame = frameOf(page)
+                val frame = PageFrame.of(page)
                 for (range in matcher.find(text)) {
                     if (!hits.accept { item(number, range, text, owners, frame) }) return false
                 }
@@ -85,12 +85,6 @@ internal object SearchReader {
     fun limit(options: PdfOptions): Int {
         val limit = options.int(PdfContract.KEY_LIMIT, 0..Int.MAX_VALUE, 0)
         return if (limit == 0) PdfContract.DEFAULT_SEARCH_LIMIT else limit.coerceAtMost(PdfContract.MAX_SEARCH_HITS)
-    }
-
-    fun frameOf(page: PDPage): PageFrame {
-        val box = page.cropBox
-        val rotation = Math.floorMod(page.rotation, 360).let { if (it % 90 == 0) it else 0 }
-        return PageFrame(box.width.toDouble(), box.height.toDouble(), rotation)
     }
 
     /**
