@@ -103,6 +103,10 @@ android {
         resValue("string", "plugin_variant", "default")
         resValue("string", "plugin_requires_host_version", "$requiredHostVersion")
         resValue("string", "plugin_version_date", utils.getDateString("MMM d, yyyy", "GMT+08:00"))
+
+        // The `pdfPdfboxVersion` capability (roadmap P2.1) follows the version catalog.
+        // zh-CN: 能力 `pdfPdfboxVersion` (路线图 P2.1) 跟随版本目录.
+        buildConfigField("String", "PDFBOX_VERSION", "\"${libs.versions.pdfbox.android.get()}\"")
     }
 
     testOptions {

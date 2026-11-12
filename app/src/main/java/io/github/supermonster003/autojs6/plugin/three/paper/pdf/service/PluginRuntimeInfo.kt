@@ -36,6 +36,14 @@ internal data class PluginRuntimeFields(
     val contractVersion: Int,
     /** The `pdfFeatures` capability values. zh-CN: 能力 `pdfFeatures` 的取值. */
     val features: List<String>,
+    /** `pdfMaxOpenDocuments`: documents per host process. zh-CN: `pdfMaxOpenDocuments`: 每个宿主进程的文档数. */
+    val maxOpenDocuments: Int,
+    /** `pdfMaxRenderPixels`: pixels of one rendered page. zh-CN: `pdfMaxRenderPixels`: 单页渲染像素上限. */
+    val maxRenderPixels: Long,
+    /** `pdfRenderConcurrency`: renders at once across documents. zh-CN: `pdfRenderConcurrency`: 跨文档同时渲染数. */
+    val renderConcurrency: Int,
+    /** `pdfPdfboxVersion` (roadmap Q1). zh-CN: `pdfPdfboxVersion` (路线图 Q1). */
+    val pdfboxVersion: String,
 )
 
 /**
@@ -68,21 +76,29 @@ internal fun pluginRuntimeFields(
     requiredHostVersion = ThreePaperPdfContract.REQUIRED_HOST_VERSION,
     contractVersion = ThreePaperPdfContract.CONTRACT_VERSION,
     features = ThreePaperPdfContract.FEATURES,
+    maxOpenDocuments = ThreePaperPdfContract.MAX_OPEN_DOCUMENTS,
+    maxRenderPixels = ThreePaperPdfContract.MAX_RENDER_PIXELS,
+    renderConcurrency = ThreePaperPdfContract.RENDER_CONCURRENCY,
+    pdfboxVersion = ThreePaperPdfContract.PDFBOX_VERSION,
 )
 
 /**
- * The capability bundle of PluginInfo and of `IPdfPlugin.getCapabilities`. The skeleton declares no optional feature;
- * roadmap P2.1 adds the ceilings (`pdfMaxOpenDocuments`, `pdfMaxRenderPixels`, `pdfRenderConcurrency`), the PDFBox
- * version and the `pdfFeatures` values (`render.sharedMemory`, `generate.html`, `crypto.aes256`, `viewer`) as the
- * engine implements them.
- * zh-CN: PluginInfo 与 `IPdfPlugin.getCapabilities` 共用的能力 Bundle. 骨架不声明任何可选特性; 路线图 P2.1 随引擎实现再加
- * 上限 (`pdfMaxOpenDocuments`, `pdfMaxRenderPixels`, `pdfRenderConcurrency`), PDFBox 版本与 `pdfFeatures` 的取值
- * (`render.sharedMemory`, `generate.html`, `crypto.aes256`, `viewer`).
+ * The capability bundle of PluginInfo and of `IPdfPlugin.getCapabilities` (roadmap P2.1): host floor, contract version,
+ * the ceilings (`pdfMaxOpenDocuments`, `pdfMaxRenderPixels`, `pdfRenderConcurrency`), the PDFBox version and the
+ * `pdfFeatures` values that work end to end (`render.sharedMemory`, `generate.html`, `crypto.aes256`, `viewer` are
+ * added as the engine implements them).
+ * zh-CN: PluginInfo 与 `IPdfPlugin.getCapabilities` 共用的能力 Bundle (路线图 P2.1): 宿主下限, 契约版本, 上限
+ * (`pdfMaxOpenDocuments`, `pdfMaxRenderPixels`, `pdfRenderConcurrency`), PDFBox 版本, 以及端到端可用的 `pdfFeatures` 取值
+ * (`render.sharedMemory`, `generate.html`, `crypto.aes256`, `viewer` 随引擎实现逐个加入).
  */
 internal fun PluginRuntimeFields.capabilities(): Bundle = Bundle().apply {
     putLong(PdfCapabilityKeys.REQUIRES_HOST_VERSION, requiredHostVersion)
     putInt(PdfCapabilityKeys.CONTRACT_VERSION, contractVersion)
     putStringArray(PdfCapabilityKeys.FEATURES, features.toTypedArray())
+    putInt(PdfCapabilityKeys.MAX_OPEN_DOCUMENTS, maxOpenDocuments)
+    putLong(PdfCapabilityKeys.MAX_RENDER_PIXELS, maxRenderPixels)
+    putInt(PdfCapabilityKeys.RENDER_CONCURRENCY, renderConcurrency)
+    putString(PdfCapabilityKeys.PDFBOX_VERSION, pdfboxVersion)
 }
 
 /**

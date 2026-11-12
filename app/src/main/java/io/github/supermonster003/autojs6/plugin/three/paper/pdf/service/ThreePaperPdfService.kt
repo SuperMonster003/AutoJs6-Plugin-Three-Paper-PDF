@@ -6,6 +6,10 @@ import android.os.Bundle
 import android.os.IBinder
 import android.os.ParcelFileDescriptor
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ThreePaperPdfContract
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.HostKey
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.PdfEngine
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfAnswers
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfBundles
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfFailure
 import org.autojs.plugin.common.api.PluginInfo
 import org.autojs.plugin.pdf.api.IPdfDocument
@@ -17,13 +21,19 @@ import org.autojs.plugin.pdf.api.PdfContract
 import org.autojs.plugin.pdf.api.PdfOps
 
 /**
- * Answers `org.autojs.plugin.PDF` (category `pdf`), guarded by `org.autojs.permission.PLUGIN`. The skeleton reports its
- * identity and capabilities and rejects every operation with `UNSUPPORTED: NOT_IMPLEMENTED` until roadmap P2.1 lands
- * the handle registry and the task model; the file descriptors it receives are closed at once.
- * zh-CN: 响应 `org.autojs.plugin.PDF` (category `pdf`), 受 `org.autojs.permission.PLUGIN` 保护. 骨架只返回身份与能力, 在路线图
- * P2.1 落地句柄登记与任务模型之前, 所有操作都以 `UNSUPPORTED: NOT_IMPLEMENTED` 拒绝; 收到的文件描述符立即关闭.
+ * Answers `org.autojs.plugin.PDF` (category `pdf`), guarded by `org.autojs.permission.PLUGIN` (roadmap P2.1): identity
+ * and capabilities, `open` through the [PdfEngine] document registry (at most `MAX_DOCUMENTS_PER_HOST` per host
+ * process) and `cancel` of asynchronous operations. Operations not implemented yet answer `UNSUPPORTED` with the
+ * detail `NOT_IMPLEMENTED: <op>`. The host holds one binding per open document, run and viewer, so when the last
+ * binding goes ([onUnbind]) every document is closed and its temp files removed.
+ * zh-CN: 响应 `org.autojs.plugin.PDF` (category `pdf`), 受 `org.autojs.permission.PLUGIN` 保护 (路线图 P2.1): 身份与能力, 经
+ * [PdfEngine] 文档登记表的 `open` (每个宿主进程至多 `MAX_DOCUMENTS_PER_HOST` 个), 以及异步操作的 `cancel`. 尚未实现的操作以
+ * `UNSUPPORTED` 与详情 `NOT_IMPLEMENTED: <op>` 作答. 宿主为每个打开的文档, 任务与查看器各持有一个绑定, 因此最后一个绑定解除时
+ * ([onUnbind]) 关闭全部文档并删除其临时文件.
  */
 class ThreePaperPdfService : Service() {
+
+    private lateinit var engine: PdfEngine
 
     private val binder = object : IPdfPlugin.Stub() {
 
@@ -34,8 +44,21 @@ class ThreePaperPdfService : Service() {
         }
 
         override fun open(source: ParcelFileDescriptor?, options: Bundle?): IPdfDocument {
-            source.closeQuietly()
-            throw notImplemented(PdfOps.INFO)
+            val host = HostKey.calling()
+            try {
+                PdfBundles.checkRequestSize(options)
+                val request = PdfBundles.options(options)
+                val version = request.contractVersion()
+                val password = request.password()
+                val displayName = request.string(PdfContract.KEY_DISPLAY_NAME)
+                val descriptor = source ?: throw PdfFailure.invalid("open() carries no source")
+                val session = engine.documents.open(host, version, descriptor, password, displayName)
+                return PdfDocumentStub(session, engine)
+            } catch (e: Throwable) {
+                throw PdfAnswers.failureOf(e).toBinderException()
+            } finally {
+                source.closeQuietly()
+            }
         }
 
         override fun run(
@@ -44,35 +67,52 @@ class ThreePaperPdfService : Service() {
             output: ParcelFileDescriptor?,
             callback: IPdfProgressCallback?,
         ): Int {
-            inputs?.forEach { it.closeQuietly() }
-            output.closeQuietly()
-            throw notImplemented(request?.getString(PdfContract.KEY_OP).orEmpty())
+            try {
+                PdfBundles.checkRequestSize(request)
+                val options = PdfBundles.options(request)
+                options.contractVersion()
+                val op = options.string(PdfContract.KEY_OP) ?: throw PdfFailure.invalid("request carries no ${PdfContract.KEY_OP}")
+                if (op !in PdfOps.RUN_OPS) throw PdfFailure.invalid("${PdfContract.KEY_OP} \"$op\" is not one of ${PdfOps.RUN_OPS.joinToString(", ")}")
+                throw PdfDocumentStub.notImplemented(op)
+            } catch (e: Throwable) {
+                throw PdfAnswers.failureOf(e).toBinderException()
+            } finally {
+                inputs?.forEach { it.closeQuietly() }
+                output.closeQuietly()
+            }
         }
 
-        // Nothing runs yet, so no operation id is known. zh-CN: 尚无任务运行, 因此没有已知的操作 id.
-        override fun cancel(opId: Int): Boolean = false
+        override fun cancel(opId: Int): Boolean = engine.operations.cancel(opId)
 
         override fun openViewer(source: ParcelFileDescriptor?, options: Bundle?, callback: IPdfViewerCallback?): IPdfViewerSession {
             source.closeQuietly()
-            throw notImplemented(PdfOps.OPEN_VIEWER)
+            throw PdfDocumentStub.notImplemented(PdfOps.OPEN_VIEWER).toBinderException()
         }
 
     }
 
+    override fun onCreate() {
+        super.onCreate()
+        engine = PdfEngine(cacheDir)
+    }
+
     override fun onBind(intent: Intent?): IBinder = binder
 
-    private companion object {
+    /**
+     * The last binding is gone, so no host holds a document, run or viewer any more.
+     * zh-CN: 最后一个绑定已解除, 因此不再有宿主持有文档, 任务或查看器.
+     */
+    override fun onUnbind(intent: Intent?): Boolean {
+        engine.closeAll()
+        return false
+    }
 
-        /**
-         * Methods without a Bundle answer report errors as `CODE: detail`, thrown as one of the exception types Binder
-         * carries (contract version 1 allows `IllegalArgumentException`, `IllegalStateException`, `SecurityException`).
-         * zh-CN: 没有 Bundle 应答的方法以 `CODE: detail` 报错, 抛出 Binder 能传递的异常类型 (契约版本 1 只允许
-         * `IllegalArgumentException`, `IllegalStateException`, `SecurityException`).
-         */
-        fun notImplemented(op: String): RuntimeException {
-            val detail = listOf(ThreePaperPdfContract.NOT_IMPLEMENTED, op).filter { it.isNotEmpty() }.joinToString(": ")
-            return PdfFailure.unsupported(detail).toBinderException()
-        }
+    override fun onDestroy() {
+        engine.shutdown()
+        super.onDestroy()
+    }
+
+    private companion object {
 
         fun ParcelFileDescriptor?.closeQuietly() {
             runCatching { this?.close() }

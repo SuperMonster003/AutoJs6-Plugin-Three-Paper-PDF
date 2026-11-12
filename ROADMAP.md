@@ -204,7 +204,7 @@ io.github.supermonster003.autojs6.plugin.three.paper.pdf
 | --- | --- | --- | --- |
 | P0 | 1.0.0 | 仓库骨架: 构建链与身份, Icon Studio 图标, 测试与 CI | 完成 (paper-p0, 2026-11-12) |
 | P1 | 宿主 6.8.1 | 契约 `pdf-api`, 宿主绑定与查看器启动, 脚本模块 `pdf`, OCR 分支, Node / Bun 桥接, Explorer 文件类型与注册 | 进行中 (P1.1 完成, P1.2 待真机绑定) |
-| P2 | 1.0.0 | 插件核心: 服务与句柄, 读取, 渲染与位图传输, 页面操作, 生成, 加密, 设备矩阵 | 未开始 |
+| P2 | 1.0.0 | 插件核心: 服务与句柄, 读取, 渲染与位图传输, 页面操作, 生成, 加密, 设备矩阵 | 进行中 (P2.1 完成) |
 | P3 | 1.0.0 | 查看器, `pdf.view` 会话, Explorer Action 服务 | 未开始 |
 | P4 | 1.0.0 | 工具箱界面: 应用骨架, 向导, 设置与启动器模式 | 未开始 |
 | P5 | 1.0.0 | 文档, 声明, 四仓库同步, 样例, 兼容矩阵, 发布与索引登记 | 未开始 |
@@ -325,14 +325,15 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 
 ## P2: 插件核心
 
-状态: 未开始. 设备: API 33 AVD (仪器测试) + Sony XQ-DQ72 API 33 (联调) + G8441 API 28 (SharedMemory 回落与低端性能).
+状态: 进行中 (paper-p2-core: P2.1 完成, P2.2 / P2.3 进行中). 设备: API 33 AVD (仪器测试) + Sony XQ-DQ72 API 33 (联调) + G8441 API 28 (SharedMemory 回落与低端性能).
 
 ### P2.1 服务, 句柄与任务模型 (D10, D11, D28)
 
-- [ ] (插件) `ThreePaperPdfService` 实现 `IPdfPlugin` (`getInfo`, `getCapabilities`, `open`, `run`, `cancel`, `openViewer`), `DocumentRegistry` (每个宿主进程最多 `MAX_DOCUMENTS_PER_HOST` = 32 个句柄, 每脚本 8 个由宿主句柄表执行; 空闲超时关闭, 宿主连接断开时全部关闭并清理临时文件), `Ops` (opId, 进度节流 250 ms (`PROGRESS_THROTTLE_MS`), 取消标志贯穿 PDFBox 循环; 默认无超时, 只靠 `cancel(opId)`, 宿主 Binder 死亡与脚本停止结束操作, Q7 已决), `RenderPool` (2 并发, 其余排队), 临时文件目录 `cache/pdf/<token>/`.
-- [ ] (插件) 契约版本协商与 `PdfCapabilityKeys` (`pdfFeatures` 只列端到端可用的取值 (`render.sharedMemory`, `generate.html`, `crypto.aes256`, `viewer`), 回传 `pdfMaxOpenDocuments`, `pdfMaxRenderPixels`, `pdfRenderConcurrency`, `pdfPdfboxVersion`; OCR 在宿主侧, 不是插件能力).
+- [x] (插件) `ThreePaperPdfService` 实现 `IPdfPlugin` (`getInfo`, `getCapabilities`, `open`, `run`, `cancel`, `openViewer`), `DocumentRegistry` (每个宿主进程最多 `MAX_DOCUMENTS_PER_HOST` = 32 个句柄, 每脚本 8 个由宿主句柄表执行; 空闲超时关闭, 宿主连接断开时全部关闭并清理临时文件), `Ops` (opId, 进度节流 250 ms (`PROGRESS_THROTTLE_MS`), 取消标志贯穿 PDFBox 循环; 默认无超时, 只靠 `cancel(opId)`, 宿主 Binder 死亡与脚本停止结束操作, Q7 已决), `RenderPool` (2 并发, 其余排队), 临时文件目录 `cache/pdf/<token>/`.
+- [x] (插件) 契约版本协商与 `PdfCapabilityKeys` (`pdfFeatures` 只列端到端可用的取值 (`render.sharedMemory`, `generate.html`, `crypto.aes256`, `viewer`), 回传 `pdfMaxOpenDocuments`, `pdfMaxRenderPixels`, `pdfRenderConcurrency`, `pdfPdfboxVersion`; OCR 在宿主侧, 不是插件能力).
 - 验收: 仪器测试: 绑定, `getInfo`, 打开夹具, 同一宿主第 33 个句柄 `LIMIT_EXCEEDED`, 取消长操作后输出被截断; token 死亡后临时目录为空.
 - 按 P1.1 契约同步 (paper-p2-core 步骤 0, 2026-11-12): 原文 "每宿主 token 8 个句柄, 第 9 个 LIMIT_EXCEEDED" 与 "进度节流 100 ms" 改为契约的 `MAX_DOCUMENTS_PER_HOST` 32 (每脚本 `MAX_OPEN_DOCUMENTS` 8 由宿主执行) 与 `PROGRESS_THROTTLE_MS` 250; 能力键改为附录 C 的 `pdf*` 键. `open` 不带宿主 token, "token" 指调用方 (Binder 调用 uid 与 pid) 及其服务连接.
+- 结果 (2026-11-12, paper-p2-core): 完成. 结构: `engine/` 层 `DocumentRegistry` (每个宿主进程 32 个句柄, 第 33 个 `LIMIT_EXCEEDED`; 每个句柄 dup 源描述符, 打开时即解析, 临时目录 `cache/pdf/<uid>-<pid>/<id>/`, 关闭时删除, 宿主目录随最后一个句柄删除), `PdfSession` (同文档调用串行, `close()` 使在途调用以 `SESSION_CLOSED` 结束, 资源由最后持锁者释放), `PdfLoader` (经 `Os.pread` 的定位读取源 + `ScratchFile`, 16 MiB 内存其余落临时目录), `Operations` (opId 进程内唯一, 进度节流 250 ms, 完成前 fsync 并关闭输出, 失败或取消时截断为 0 字节, 回调 Binder 死亡取消该宿主全部操作并关闭其文档), `RenderPool` (公平信号量 2 个许可, 排队中的渲染随文档关闭退出), `PdfEngine` (服务创建时清空 `cache/pdf/`, 每 60 s 释放空闲 5 分钟文档的解析状态, Q10); 服务最后一个绑定解除时关闭全部文档与操作 (宿主每个句柄与操作各持一个绑定). `service/PdfDocumentStub` 按契约应答 (`contractVersion` / `requestId` 回传, 应答超过 768 KiB 报 `LIMIT_EXCEEDED`); 本条尚未实现的方法与 `run` 的六个操作仍报 `UNSUPPORTED` + `NOT_IMPLEMENTED: <op>`, `pdfFeatures` 为空. 能力新增 `pdfMaxOpenDocuments` 32, `pdfMaxRenderPixels` 16,000,000, `pdfRenderConcurrency` 2, `pdfPdfboxVersion` 2.0.27.0 (`BuildConfig.PDFBOX_VERSION` 取自版本目录). E1: JVM 单元测试 85 例 0 失败, 本条新增 12 例 (`PdfSourceReadTest` 4, `ConcurrencyTest` 3, `PdfLoaderTest` 5), `PluginRuntimeInfoTest` 加 4 个能力断言; lint 0 问题. E2: AVD_API_33 只读实例 (emulator-5790) `am instrument` 27 例 0 失败, 本条新增 11 例: `PdfServiceDocumentsTest` 6 (绑定与能力, 打开样例后关闭再调用为 `SESSION_CLOSED` 且回传 `requestId`, 32 个句柄后第 33 个 `LIMIT_EXCEEDED`, `open` 的密码 / 损坏文件 / 缺版本 / 版本 99 / 超长密码 / 管道错误码, 最后一个绑定解除后宿主临时目录消失, `run` 未知操作), `PdfEngineDeviceTest` 5 (完成的操作刷新输出且只应答一次, 取消长操作后输出为 0 字节且进度间隔 >= 245 ms, 失败操作回传错误码, 空闲释放后句柄仍可用并重新解析, 关闭使在途调用以 `SESSION_CLOSED` 结束并删除临时目录); `ThreePaperPdfContractTest` 改为逐个核对未实现的方法.
 
 ### P2.2 读取: 信息, 文本, 大纲, 搜索 (D31)
 
@@ -638,6 +639,7 @@ AIDL:
 | Q7 | 操作超时 | (a) 默认无超时, 只靠取消与脚本停止 (推荐, 大文档合并耗时不可预估) / (b) 默认 120 s, `timeout` 选项可改 | P2.1 | 已决 (2026-11-12 12:20, 维护者选 (a) 默认无超时; P1.1 契约也不设默认操作超时) |
 | Q8 | D41 发布门在宿主 6.8.0 已公开后的适用 | (a) 沿用 D41: 不等宿主 6.8.1 公开, 1.0.0 全部条目通过即发布并登记官方索引, `REQUIRES_HOST_VERSION` 写含全部宿主条目的 6.8.1 本地构建号, 公开 6.8.0 用户在插件中心看到不兼容直到 6.8.1 公开 (推荐) / (b) 等宿主 6.8.1 公开再发 | P5.4, P1.6 | 已决 (2026-11-12 12:21, 维护者选 (a) 沿用 D41) |
 | Q9 | Compose 自带的原生库 `libandroidx.graphics.path.so` (`androidx.graphics:graphics-path`, 由 `ui-graphics` 传递, 四个 ABI 各 7-11 KB, 已 16 KB 对齐) 与 D3 / D26 "无原生库" 的字面冲突 | (a) 列入原生库白名单, universal APK 照常, `supportedAbis` 为空, 文档写 "PDF 处理无原生库, 唯一的原生库来自 Compose" (推荐, 已先行; 3-Slate Studio 等 Compose 插件同款) / (b) 用 `packaging.jniLibs.excludes` 排除该库 (API 34 以下 Compose 的路径迭代依赖它, 排除后可能 `UnsatisfiedLinkError`, 需在四台设备复核) | P0.1 | 已决 (2026-11-12 15:48, 维护者选 (a) 列入白名单, 保持现状; 由 paper-p0 先行实施) |
+| Q10 | 文档句柄的空闲处理 (P2.1 原文 "空闲超时关闭") | (a) 空闲 5 分钟只释放解析状态 (PDFBox 对象, 以及 P2.3 的渲染器与解密副本), 句柄仍有效, 下一次调用重新解析源 (推荐, 已先行; 契约没有 "句柄被插件关闭" 的事件, 脚本长时间持有的句柄若被关闭, 之后的调用会意外得到 `SESSION_CLOSED`) / (b) 空闲超时直接关闭句柄并删除临时目录 (字面实现, 脚本须处理 `SESSION_CLOSED`) / (c) 不做空闲处理, 只靠 `close()`, 脚本停止与宿主连接断开 | P2.1 | 按推荐先行 (paper-p2-core, 2026-11-12); 影响 P2.1 `DocumentRegistry.sweep` / `PdfSession.releaseIdle`, P2.3 解密副本的生命周期; 改选返工: (b) 约 20 行与 1 个设备测试, (c) 删除清扫线程约 15 行 |
 | Q20 | `pdf.*` 写输出的方法要求的脚本能力 | (a) 读 `files`, 写输出另加 `files.write` (推荐, 已先行, 与 Node / MCP 的能力清单一致, `files` 不隐含 `files.write`) / (b) 只要 `files` (D29 字面 "files 读写") | P1.2 | 已决 (2026-11-12 15:48, 维护者选 A, 保持现状; 由 paper-p1-host 在宿主 P1.2 先行实施) |
 | Q21 | `PdfPluginHost` 是否设 `allowActivityStarts` | (a) 设 (推荐, 已先行, D29 原文 "含 allowActivityStarts, 以便宿主后台时插件界面弹出授权页"; 只在 API 34+ 且宿主可见时由系统放行) / (b) 与 `EpubPluginHost` 完全相同, 不设 (EPUB 实际未设) | P1.2 | 已决 (2026-11-12 15:48, 维护者选 A, 保持现状; 由 paper-p1-host 在宿主 P1.2 先行实施) |
 

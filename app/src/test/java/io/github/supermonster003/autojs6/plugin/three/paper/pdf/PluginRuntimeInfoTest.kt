@@ -50,6 +50,13 @@ class PluginRuntimeInfoTest {
         assertEquals(6641L, fields.requiredHostVersion)
         assertEquals(ThreePaperPdfContract.REQUIRED_HOST_VERSION, fields.requiredHostVersion)
         assertEquals(1, fields.contractVersion)
+        // Roadmap P2.1: the ceilings of contract version 1 and the PDFBox version of the catalog (Q1).
+        assertEquals(32, fields.maxOpenDocuments)
+        assertEquals(PdfContract.MAX_DOCUMENTS_PER_HOST, fields.maxOpenDocuments)
+        assertEquals(16_000_000L, fields.maxRenderPixels)
+        assertEquals(PdfContract.MAX_RENDER_PIXELS, fields.maxRenderPixels)
+        assertEquals(2, fields.renderConcurrency)
+        assertEquals("2.0.27.0", fields.pdfboxVersion)
     }
 
     @Test

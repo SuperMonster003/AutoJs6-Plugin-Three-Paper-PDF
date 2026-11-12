@@ -25,6 +25,7 @@ import org.autojs.plugin.common.api.PluginInfo
 import org.autojs.plugin.explorer.api.ExplorerActionCatalogKeys
 import org.autojs.plugin.explorer.api.ExplorerActionPluginIds
 import org.autojs.plugin.explorer.api.IExplorerActionPlugin
+import org.autojs.plugin.pdf.api.IPdfDocument
 import org.autojs.plugin.pdf.api.IPdfPlugin
 import org.autojs.plugin.pdf.api.PdfCapabilityKeys
 import org.autojs.plugin.pdf.api.PdfContract
@@ -46,14 +47,14 @@ import java.util.concurrent.atomic.AtomicReference
  * The host-facing activation and discovery contract against the installed APK (roadmap P0.3): the Wake activity, the
  * launcher aliases, the viewer entries, discovery of exactly one service per action and category, explicit binding with
  * the expected Binder descriptors, `getInfo()` marshalled through a real Parcel with the transaction code the host uses,
- * and the skeleton answers of `IPdfPlugin` (capabilities, `UNSUPPORTED: NOT_IMPLEMENTED` for every operation until P2).
+ * and the answers of `IPdfPlugin` (capabilities, `UNSUPPORTED: NOT_IMPLEMENTED` for every operation not implemented yet).
  *
  * The services run in the plugin's own process, so the calls below use `transact` with explicit Parcels or a
  * [MarshallingBinder] instead of plain `asInterface`, which would return the local object and skip marshalling.
  *
  * zh-CN: 针对已安装 APK 验证面向宿主的激活与发现契约 (路线图 P0.3): Wake Activity, 启动器别名, 阅读器入口, 每组 action 与
  * category 恰好发现一个服务, 显式绑定与 Binder 描述符, 以宿主使用的事务号经真实 Parcel 编组的 `getInfo()`, 以及 `IPdfPlugin`
- * 骨架的应答 (能力; P2 之前每个操作都返回 `UNSUPPORTED: NOT_IMPLEMENTED`). 服务与测试同进程, 因此下文用显式 Parcel 调用
+ * 的应答 (能力; 尚未实现的每个操作都返回 `UNSUPPORTED: NOT_IMPLEMENTED`). 服务与测试同进程, 因此下文用显式 Parcel 调用
  * `transact` 或经 [MarshallingBinder], 不直接用会返回本地对象而跳过编组的 `asInterface`.
  */
 @RunWith(AndroidJUnit4::class)
@@ -141,9 +142,35 @@ class ThreePaperPdfContractTest {
     }
 
     @Test
-    fun pdfServiceRejectsEveryOperationUntilTheEngineLands() {
+    fun pdfServiceRejectsOperationsNotImplementedYet() {
         withPdfPlugin { plugin ->
-            assertNotImplemented(PdfOps.INFO) { sampleDescriptor().use { plugin.open(it, Bundle()) } }
+            val document = sampleDescriptor().use { source ->
+                val request = Bundle().apply { putInt(PdfContract.KEY_CONTRACT_VERSION, PdfContract.CONTRACT_VERSION) }
+                IPdfDocument.Stub.asInterface(MarshallingBinder(plugin.open(source, request).asBinder()))
+            }
+            try {
+                val request = Bundle().apply { putInt(PdfContract.KEY_CONTRACT_VERSION, PdfContract.CONTRACT_VERSION) }
+                val answers = mapOf(
+                    PdfOps.INFO to { document.info },
+                    PdfOps.OUTLINE to { document.outline },
+                    PdfOps.TEXT to { document.getText(request) },
+                    PdfOps.SEARCH to { document.search(request) },
+                    PdfOps.RENDER to { document.render(request, null) },
+                    PdfOps.RENDER_TO_FILE to { document.renderToFile(request, null) },
+                    PdfOps.PLAN_IMAGES to { document.planImages(request) },
+                    PdfOps.EXTRACT_IMAGE to { document.extractImage(request, null) },
+                    PdfOps.PLAN_SPLIT to { document.planSplit(request) },
+                )
+                (answers - ThreePaperPdfContract.IMPLEMENTED_OPS.toSet()).forEach { (op, call) ->
+                    val answer = call()
+                    assertEquals(op, PdfErrorCodes.UNSUPPORTED, answer.getString(PdfContract.KEY_ERROR_CODE))
+                    assertEquals(op, "${ThreePaperPdfContract.NOT_IMPLEMENTED}: $op", answer.getString(PdfContract.KEY_ERROR_MESSAGE))
+                }
+                assertNotImplemented(PdfOps.SPLIT) { document.split(request, emptyArray(), null) }
+                assertNotImplemented(PdfOps.SAVE) { document.save(request, null, null) }
+            } finally {
+                document.close()
+            }
             assertNotImplemented(PdfOps.OPEN_VIEWER) { sampleDescriptor().use { plugin.openViewer(it, Bundle(), null) } }
             (PdfOps.RUN_OPS - ThreePaperPdfContract.IMPLEMENTED_OPS.toSet()).forEach { op ->
                 val request = Bundle().apply {
@@ -188,7 +215,7 @@ class ThreePaperPdfContractTest {
         assertEquals(PdfErrorCodes.UNSUPPORTED to "${ThreePaperPdfContract.NOT_IMPLEMENTED}: $op", PdfErrorCodes.decode(error.message))
     }
 
-    /** A real file descriptor, which the skeleton must accept and close. zh-CN: 真实文件描述符, 骨架须接收并关闭. */
+    /** A real file descriptor, which the service must accept and close. zh-CN: 真实文件描述符, 服务须接收并关闭. */
     private fun sampleDescriptor(): ParcelFileDescriptor {
         val file = context.cacheDir.resolve("contract-sample.pdf")
         if (!file.exists()) {
@@ -213,6 +240,10 @@ class ThreePaperPdfContractTest {
         assertEquals(ThreePaperPdfContract.REQUIRED_HOST_VERSION, capabilities.getLong(PdfCapabilityKeys.REQUIRES_HOST_VERSION))
         assertEquals(ThreePaperPdfContract.CONTRACT_VERSION, capabilities.getInt(PdfCapabilityKeys.CONTRACT_VERSION))
         assertArrayEquals(ThreePaperPdfContract.FEATURES.toTypedArray(), capabilities.getStringArray(PdfCapabilityKeys.FEATURES))
+        assertEquals(ThreePaperPdfContract.MAX_OPEN_DOCUMENTS, capabilities.getInt(PdfCapabilityKeys.MAX_OPEN_DOCUMENTS))
+        assertEquals(ThreePaperPdfContract.MAX_RENDER_PIXELS, capabilities.getLong(PdfCapabilityKeys.MAX_RENDER_PIXELS))
+        assertEquals(ThreePaperPdfContract.RENDER_CONCURRENCY, capabilities.getInt(PdfCapabilityKeys.RENDER_CONCURRENCY))
+        assertEquals(ThreePaperPdfContract.PDFBOX_VERSION, capabilities.getString(PdfCapabilityKeys.PDFBOX_VERSION))
     }
 
     private fun assertRequiresHostVersion(serviceInfo: ServiceInfo) {
@@ -312,6 +343,10 @@ class ThreePaperPdfContractTest {
             PdfCapabilityKeys.REQUIRES_HOST_VERSION,
             PdfCapabilityKeys.CONTRACT_VERSION,
             PdfCapabilityKeys.FEATURES,
+            PdfCapabilityKeys.MAX_OPEN_DOCUMENTS,
+            PdfCapabilityKeys.MAX_RENDER_PIXELS,
+            PdfCapabilityKeys.RENDER_CONCURRENCY,
+            PdfCapabilityKeys.PDFBOX_VERSION,
         )
 
         @Suppress("UNCHECKED_CAST")

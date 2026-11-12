@@ -54,6 +54,22 @@ object ThreePaperPdfContract {
      */
     val FEATURES: List<String> = emptyList()
 
+    /**
+     * Documents one host process may keep open (capability `pdfMaxOpenDocuments`, protocol "Ceilings"); the eight per
+     * script are enforced by the host.
+     * zh-CN: 一个宿主进程可同时打开的文档数 (能力 `pdfMaxOpenDocuments`, 协议 "Ceilings" 一节); 每个脚本 8 个由宿主执行.
+     */
+    const val MAX_OPEN_DOCUMENTS = PdfContract.MAX_DOCUMENTS_PER_HOST
+
+    /** Pixels of one rendered page (capability `pdfMaxRenderPixels`). zh-CN: 单页渲染的像素上限 (能力 `pdfMaxRenderPixels`). */
+    const val MAX_RENDER_PIXELS = PdfContract.MAX_RENDER_PIXELS
+
+    /** Renders running at once across documents (capability `pdfRenderConcurrency`). zh-CN: 跨文档同时进行的渲染数 (能力 `pdfRenderConcurrency`). */
+    const val RENDER_CONCURRENCY = 2
+
+    /** The PDFBox-Android version (capability `pdfPdfboxVersion`, roadmap Q1). zh-CN: PDFBox-Android 版本 (能力 `pdfPdfboxVersion`, 路线图 Q1). */
+    const val PDFBOX_VERSION = BuildConfig.PDFBOX_VERSION
+
     /** Detail of operations not implemented yet. zh-CN: 尚未实现的操作的详情. */
     const val NOT_IMPLEMENTED = "NOT_IMPLEMENTED"
 
