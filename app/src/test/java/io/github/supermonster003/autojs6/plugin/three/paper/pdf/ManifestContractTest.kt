@@ -4,6 +4,7 @@ import io.github.supermonster003.autojs6.plugin.three.paper.pdf.RepositoryFiles.
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.RepositoryFiles.androidOrNull
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.RepositoryFiles.child
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.RepositoryFiles.children
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.appearance.LauncherIconMode
 import org.autojs.plugin.common.api.PluginActions
 import org.autojs.plugin.common.api.PluginCapabilityKeys
 import org.junit.Assert.assertEquals
@@ -64,6 +65,9 @@ class ManifestContractTest {
         assertEquals("true", application.android("supportsRtl"))
         assertEquals("true", application.android("requestLegacyExternalStorage"))
         assertEquals(".ThreePaperPdfApplication", application.android("name"))
+        // Written by `.python/generate_icon_studio.py` (roadmap D24, P0.2). zh-CN: 由 Icon Studio 生成脚本写入.
+        assertEquals("@mipmap/ic_icon_studio_application", application.android("icon"))
+        assertEquals("@mipmap/ic_icon_studio_application", application.android("roundIcon"))
         assertNull("16 KB aligned libraries stay uncompressed in the APK (roadmap Q9)", application.androidOrNull("extractNativeLibs"))
     }
 
@@ -96,6 +100,40 @@ class ManifestContractTest {
         assertEquals(
             listOf(".WakeActivity", ".ui.home.HomeActivity", ".viewer.ThreePaperPdfViewerActivity"),
             application.children("activity").map { it.android("name") },
+        )
+        val home = activity(".ui.home.HomeActivity")
+        assertEquals("only the aliases are exported to the launcher", "false", home.android("exported"))
+        assertEquals("singleTask", home.android("launchMode"))
+        assertTrue("the launcher reaches the home screen through the aliases only", home.children("intent-filter").isEmpty())
+    }
+
+    @Test
+    fun `four launcher aliases point at the home screen and only the automatic one is enabled`() {
+        val aliases = application.children("activity-alias")
+        assertEquals(
+            listOf(
+                ".launcher.AdaptiveLightIconAlias" to "@mipmap/ic_launcher_system_light",
+                ".launcher.AdaptiveDarkIconAlias" to "@mipmap/ic_launcher_system",
+                ".launcher.AdaptiveAutoIconAlias" to "@mipmap/ic_launcher_system_auto",
+                ".launcher.TransparentIconAlias" to "@mipmap/ic_launcher",
+            ),
+            aliases.map { it.android("name") to it.android("icon") },
+        )
+        aliases.forEach { alias ->
+            assertEquals(".ui.home.HomeActivity", alias.android("targetActivity"))
+            assertEquals(alias.android("icon"), alias.android("roundIcon"))
+            assertEquals("@string/app_name", alias.android("label"))
+            assertEquals("true", alias.android("exported"))
+            // The launcher must start them, so the aliases carry no permission. zh-CN: 启动器要能启动它们, 不带权限.
+            assertNull(alias.androidOrNull("permission"))
+            assertEquals(listOf("android.intent.action.MAIN"), alias.child("intent-filter").children("action").map { it.android("name") })
+            assertEquals(listOf(LAUNCHER_CATEGORY), alias.child("intent-filter").children("category").map { it.android("name") })
+        }
+        assertEquals(listOf(".launcher.AdaptiveAutoIconAlias"), aliases.filter { it.android("enabled") == "true" }.map { it.android("name") })
+        assertEquals(
+            "the aliases and LauncherIcons name the same components",
+            aliases.map { it.android("name").removePrefix(".launcher.") },
+            LauncherIconMode.entries.sortedBy { ALIAS_ORDER.indexOf(it) }.map { it.alias },
         )
     }
 
@@ -148,11 +186,11 @@ class ManifestContractTest {
     }
 
     @Test
-    fun `every exported component except the viewer and the launcher entry requires the plugin permission`() {
+    fun `every exported component except the viewer and the launcher aliases requires the plugin permission`() {
         val components = listOf("activity", "service", "receiver", "provider").flatMap { application.children(it) }
         val exported = components.filter { it.androidOrNull("exported") == "true" }
         assertEquals(
-            listOf(".ui.home.HomeActivity", ".viewer.ThreePaperPdfViewerActivity"),
+            listOf(".viewer.ThreePaperPdfViewerActivity"),
             exported.filter { it.androidOrNull("permission") != PLUGIN_PERMISSION }.map { it.android("name") },
         )
         assertTrue("no receivers in the skeleton", application.children("receiver").isEmpty())
@@ -176,6 +214,8 @@ class ManifestContractTest {
     private companion object {
         const val PLUGIN_PERMISSION = "org.autojs.permission.PLUGIN"
         const val DEFAULT_CATEGORY = "android.intent.category.DEFAULT"
+        const val LAUNCHER_CATEGORY = "android.intent.category.LAUNCHER"
+        val ALIAS_ORDER = listOf(LauncherIconMode.LIGHT, LauncherIconMode.DARK, LauncherIconMode.AUTO, LauncherIconMode.TRANSPARENT)
     }
 
 }

@@ -14,6 +14,7 @@
       "feature": [
         "Esqueleto del complemento: protocolo de activación Wake, servicio de identidad del centro de complementos, servicio de capacidad PDF (versión de contrato 1) y servicio de entrada del gestor de archivos",
         "Pantalla de inicio con la concesión del acceso a todos los archivos (solo la necesita la caja de herramientas)",
+        "Iconos claros y oscuros para el lanzador y el centro de complementos; el lanzador usa por defecto el icono adaptable automático (sigue el tema claro u oscuro del sistema), y los estilos adaptable claro, adaptable oscuro y fondo transparente ya están incluidos, para elegirlos en la futura pantalla de ajustes",
         "Un único APK para todas las ABI: el procesamiento de PDF no contiene bibliotecas nativas; la única biblioteca nativa procede de Jetpack Compose y está alineada a páginas de memoria de 16 KB",
         "README, instrucciones del centro de complementos y registros de cambios en 10 idiomas, generados a partir de fuentes JSON"
       ],

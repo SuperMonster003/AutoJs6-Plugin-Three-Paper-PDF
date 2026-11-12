@@ -12,6 +12,7 @@
 * `Hint` Requires AutoJs6 6.8.1 (6641) or later (the exact minimum build will be filled in once the host changes land)
 * `Feature` Plugin skeleton: Wake activation protocol, Plugin Center identity service, PDF capability service (contract version 1) and file manager entry service
 * `Feature` Home screen with the all files access grant (only the toolbox needs it)
+* `Feature` Light and dark icons for the launcher and the Plugin Center; the launcher uses the adaptive automatic icon by default (it follows the system light or dark theme), and the adaptive light, adaptive dark and transparent background styles are built in, to be chosen on the settings screen that comes later
 * `Feature` A single APK for every ABI: PDF processing contains no native library; the only native library comes from Jetpack Compose and is aligned to 16 KB memory pages
 * `Feature` README, Plugin Center instructions and changelogs in 10 languages, generated from JSON sources
 * `Dependency` Attach PDFBox-Android 2.0.27.0 (text, outline, images, page operations and encryption)

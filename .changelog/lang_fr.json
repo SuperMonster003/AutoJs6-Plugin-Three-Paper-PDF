@@ -14,6 +14,7 @@
       "feature": [
         "Squelette du plugin: protocole d'activation Wake, service d'identité du centre des plugins, service de capacité PDF (version de contrat 1) et service d'entrée du gestionnaire de fichiers",
         "Écran d'accueil permettant d'accorder l'accès à tous les fichiers (seule la boîte à outils en a besoin)",
+        "Icônes claires et sombres pour le lanceur et le centre des plugins; le lanceur utilise par défaut l'icône adaptative automatique (elle suit le thème clair ou sombre du système), et les styles adaptative claire, adaptative sombre et fond transparent sont intégrés, au choix dans l'écran des paramètres à venir",
         "Un seul APK pour toutes les ABI: le traitement des PDF ne contient aucune bibliothèque native; la seule bibliothèque native provient de Jetpack Compose et est alignée sur des pages mémoire de 16 KB",
         "README, instructions du centre des plugins et journaux des modifications en 10 langues, générés à partir de sources JSON"
       ],

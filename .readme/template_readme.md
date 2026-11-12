@@ -176,6 +176,7 @@ native libraries: libandroidx.graphics.path.so of Jetpack Compose only (arm64-v8
 .\gradlew.bat :app:appendDigestToReleasedFiles
 py .python\generate_markdown.py --check
 py .python\generate_third_party_notices.py --check
+py .python\generate_icon_studio.py --check
 py .python\check_repository.py
 ```
 

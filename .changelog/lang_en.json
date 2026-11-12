@@ -14,6 +14,7 @@
       "feature": [
         "Plugin skeleton: Wake activation protocol, Plugin Center identity service, PDF capability service (contract version 1) and file manager entry service",
         "Home screen with the all files access grant (only the toolbox needs it)",
+        "Light and dark icons for the launcher and the Plugin Center; the launcher uses the adaptive automatic icon by default (it follows the system light or dark theme), and the adaptive light, adaptive dark and transparent background styles are built in, to be chosen on the settings screen that comes later",
         "A single APK for every ABI: PDF processing contains no native library; the only native library comes from Jetpack Compose and is aligned to 16 KB memory pages",
         "README, Plugin Center instructions and changelogs in 10 languages, generated from JSON sources"
       ],

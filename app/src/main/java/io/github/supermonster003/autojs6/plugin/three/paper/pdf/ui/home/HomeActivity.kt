@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.R
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.PaperTheme
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.appearance.LauncherIcons
 
 /**
  * Skeleton home screen (roadmap P0.1): the plugin description and the all files access grant of roadmap D7, which only
@@ -49,6 +50,9 @@ class HomeActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        // Repairs a mixed or empty launcher alias state off the main thread (roadmap D24, P0.2).
+        // zh-CN: 在后台线程修复混合或空的启动器 alias 状态 (路线图 D24, P0.2).
+        LauncherIcons.normalizeAsync(this)
         setContent {
             PaperTheme {
                 HomeScreen(storageGranted = storageGranted, onGrantStorage = ::requestStorageAccess)

@@ -42,8 +42,10 @@
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:enableOnBackInvokedCallback="true"
         android:fullBackupContent="false"
+        android:icon="@mipmap/ic_icon_studio_application"
         android:label="@string/app_name"
         android:requestLegacyExternalStorage="true"
+        android:roundIcon="@mipmap/ic_icon_studio_application"
         android:supportsRtl="true"
         android:theme="@style/Theme.ThreePaperPdf"
         tools:targetApi="33">
@@ -79,13 +81,68 @@
 
         <activity
             android:name=".ui.home.HomeActivity"
+            android:exported="false"
+            android:launchMode="singleTask" />
+
+        <!--
+            Launcher icon modes (roadmap D24, P0.2): exactly one alias is enabled at a time; the settings screen of
+            roadmap P4.1 switches them through ui.appearance.LauncherIcons. The adaptive automatic mode is the default.
+        -->
+        <activity-alias
+            android:name=".launcher.AdaptiveLightIconAlias"
+            android:enabled="false"
             android:exported="true"
-            android:launchMode="singleTask">
+            android:icon="@mipmap/ic_launcher_system_light"
+            android:label="@string/app_name"
+            android:roundIcon="@mipmap/ic_launcher_system_light"
+            android:targetActivity=".ui.home.HomeActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".launcher.AdaptiveDarkIconAlias"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_system"
+            android:label="@string/app_name"
+            android:roundIcon="@mipmap/ic_launcher_system"
+            android:targetActivity=".ui.home.HomeActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".launcher.AdaptiveAutoIconAlias"
+            android:enabled="true"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_system_auto"
+            android:label="@string/app_name"
+            android:roundIcon="@mipmap/ic_launcher_system_auto"
+            android:targetActivity=".ui.home.HomeActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".launcher.TransparentIconAlias"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/app_name"
+            android:roundIcon="@mipmap/ic_launcher"
+            android:targetActivity=".ui.home.HomeActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
 
         <!--
             The viewer (roadmap 5.5, D21, D35): the host starts it with an explicit component, the PDF_VIEWER_OPEN action

@@ -158,7 +158,7 @@ def main(argv: list[str] | None = None) -> int:
         device.shell(f"am force-stop {HOST_PACKAGE}", check=False)
         # ANR dialogs of a busy emulator cover the screenshot; emulator images run read-only, so the setting is not kept.
         device.shell("settings put global hide_error_dialogs 1", check=False)
-        started =device.shell(f"am start -W -n {HOST_PACKAGE}/{PLUGIN_CENTER}", check=False)
+        started = device.shell(f"am start -W -n {HOST_PACKAGE}/{PLUGIN_CENTER}", check=False)
         # A freshly booted emulator often reports `Status: timeout` although the activity comes up a little later, so
         # the resumed activity decides. A System UI ANR dialog of the busy emulator is closed with a broadcast, never a tap.
         resumed = ""

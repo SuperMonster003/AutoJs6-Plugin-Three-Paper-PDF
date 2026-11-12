@@ -199,6 +199,7 @@ _2026/11/12_
 - `힌트` AutoJs6 6.8.1 (6641) 이상이 필요합니다 (정확한 최소 버전은 호스트 쪽 변경이 반영된 뒤 채워 넣습니다)
 - `기능` 플러그인 골격: Wake 활성화 프로토콜, 플러그인 센터 식별 서비스, PDF 기능 서비스 (계약 버전 1), 파일 관리자 진입 서비스
 - `기능` 홈 화면에서 모든 파일 접근 권한을 허용할 수 있습니다 (도구 상자에만 필요합니다)
+- `기능` 런처와 플러그인 센터 아이콘을 밝게 / 어둡게 두 가지로 제공합니다. 런처는 기본으로 적응형 자동 아이콘 (시스템의 밝게 / 어둡게를 따름) 을 사용하며, 적응형 밝게, 적응형 어둡게, 투명 배경 스타일도 내장되어 있습니다. 전환은 이후 설정 화면에서 제공됩니다
 - `기능` 모든 ABI에 공통인 APK 하나: PDF 처리에는 네이티브 라이브러리가 없으며, 유일한 네이티브 라이브러리는 Jetpack Compose의 것으로 16 KB 메모리 페이지에 맞춰 정렬되어 있습니다
 - `기능` 10개 언어의 README, 플러그인 센터 설명, 변경 기록을 JSON 소스에서 생성
 - `의존성` PDFBox-Android 2.0.27.0 추가 (텍스트, 개요, 이미지, 페이지 작업, 암호화)
@@ -223,6 +224,7 @@ _2026/11/12_
 .\gradlew.bat :app:appendDigestToReleasedFiles
 py .python\generate_markdown.py --check
 py .python\generate_third_party_notices.py --check
+py .python\generate_icon_studio.py --check
 py .python\check_repository.py
 ```
 

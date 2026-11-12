@@ -199,6 +199,7 @@ _2026/11/12_
 - `Note` Nécessite AutoJs6 6.8.1 (6641) ou ultérieur (la version minimale exacte sera indiquée une fois les modifications de l'hôte intégrées)
 - `Fonctionnalité` Squelette du plugin: protocole d'activation Wake, service d'identité du centre des plugins, service de capacité PDF (version de contrat 1) et service d'entrée du gestionnaire de fichiers
 - `Fonctionnalité` Écran d'accueil permettant d'accorder l'accès à tous les fichiers (seule la boîte à outils en a besoin)
+- `Fonctionnalité` Icônes claires et sombres pour le lanceur et le centre des plugins; le lanceur utilise par défaut l'icône adaptative automatique (elle suit le thème clair ou sombre du système), et les styles adaptative claire, adaptative sombre et fond transparent sont intégrés, au choix dans l'écran des paramètres à venir
 - `Fonctionnalité` Un seul APK pour toutes les ABI: le traitement des PDF ne contient aucune bibliothèque native; la seule bibliothèque native provient de Jetpack Compose et est alignée sur des pages mémoire de 16 KB
 - `Fonctionnalité` README, instructions du centre des plugins et journaux des modifications en 10 langues, générés à partir de sources JSON
 - `Dépendance` Ajout de PDFBox-Android 2.0.27.0 (texte, plan, images, opérations sur les pages et chiffrement)
@@ -223,6 +224,7 @@ Cette section s'adresse aux développeurs souhaitant compiler le plugin depuis l
 .\gradlew.bat :app:appendDigestToReleasedFiles
 py .python\generate_markdown.py --check
 py .python\generate_third_party_notices.py --check
+py .python\generate_icon_studio.py --check
 py .python\check_repository.py
 ```
 
