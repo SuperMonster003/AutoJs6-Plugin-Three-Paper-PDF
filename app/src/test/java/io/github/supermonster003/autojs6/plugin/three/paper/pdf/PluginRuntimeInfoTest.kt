@@ -76,10 +76,11 @@ class PluginRuntimeInfoTest {
         assertEquals(PdfContract.CONTRACT_VERSION, ThreePaperPdfContract.CONTRACT_VERSION)
         assertTrue(PdfOps.ALL.containsAll(ThreePaperPdfContract.IMPLEMENTED_OPS))
         assertEquals(
-            "roadmap P2.2 implements reading, P2.3 rendering, P2.4 page operations",
+            "roadmap P2.2 implements reading, P2.3 rendering, P2.4 page operations, P2.5 generation and images",
             listOf(
                 PdfOps.INFO, PdfOps.OUTLINE, PdfOps.TEXT, PdfOps.SEARCH, PdfOps.RENDER, PdfOps.RENDER_TO_FILE,
                 PdfOps.MERGE, PdfOps.PLAN_SPLIT, PdfOps.SPLIT, PdfOps.SAVE,
+                PdfOps.FROM_IMAGES, PdfOps.FROM_TEXT, PdfOps.FROM_HTML, PdfOps.PLAN_IMAGES, PdfOps.EXTRACT_IMAGE,
             ),
             ThreePaperPdfContract.IMPLEMENTED_OPS,
         )
@@ -87,6 +88,12 @@ class PluginRuntimeInfoTest {
         assertEquals("SharedMemory needs API 27", emptyList<String>(), ThreePaperPdfContract.features(26))
         assertEquals(listOf(PdfContract.FEATURE_RENDER_SHARED_MEMORY), ThreePaperPdfContract.features(27))
         assertTrue(PdfContract.FEATURES.containsAll(ThreePaperPdfContract.features(36)))
+        assertEquals("generate.html follows the print callbacks and the WebView", listOf(PdfContract.FEATURE_GENERATE_HTML), ThreePaperPdfContract.features(24, htmlAvailable = true))
+        assertEquals(
+            listOf(PdfContract.FEATURE_RENDER_SHARED_MEMORY, PdfContract.FEATURE_GENERATE_HTML),
+            ThreePaperPdfContract.features(36, htmlAvailable = true),
+        )
+        assertTrue(PdfContract.FEATURES.containsAll(ThreePaperPdfContract.features(36, htmlAvailable = true)))
         assertEquals(PdfIds.PLUGIN_ID, ThreePaperPdfContract.PLUGIN_ID)
         assertEquals(PdfIds.CATEGORY, ThreePaperPdfContract.SERVICE_CATEGORY)
         assertTrue(

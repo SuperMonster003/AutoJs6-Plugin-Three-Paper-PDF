@@ -2,6 +2,11 @@
 -keep class org.autojs.plugin.** { *; }
 -dontwarn kotlinx.parcelize.Parcelize
 
+# fromHtml (roadmap P2.5, Q5 (a)): the shell class subclasses the hidden print callbacks from inside android.print, so it
+# must keep its package and names. zh-CN: fromHtml (路线图 P2.5, Q5 (a)): 壳类在 android.print 包内继承隐藏的打印回调, 必须
+# 保留包名与类名.
+-keep class android.print.PaperPrintCallbacks** { *; }
+
 # PDFBox-Android (roadmap D26, Q1): JPEG 2000 support is an optional dependency (jp2-android) the plugin does not ship,
 # so its decoder and encoder are referenced but absent; PDFBox reports JPXDecode images as unsupported at run time.
 # zh-CN: PDFBox-Android (路线图 D26, Q1): JPEG 2000 支持是插件不打包的可选依赖 (jp2-android), 其解码器与编码器只被引用而不存在;

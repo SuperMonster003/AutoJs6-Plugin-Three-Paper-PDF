@@ -13,6 +13,7 @@ import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.PdfSessio
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.StopSignal
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.read.DocumentInfoReader
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.read.OutlineReader
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.read.PageImages
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.read.SearchReader
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.read.TextReader
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.render.PageRendering
@@ -54,10 +55,10 @@ internal class PdfDocumentStub(private val session: PdfSession, private val engi
         PageRendering.renderToFile(call, engine.renderPool, options, output)
     }
 
-    override fun planImages(request: Bundle?): Bundle = answer(PdfOps.PLAN_IMAGES, request) { _, _ -> throw notImplemented(PdfOps.PLAN_IMAGES) }
+    override fun planImages(request: Bundle?): Bundle = answer(PdfOps.PLAN_IMAGES, request) { options, call -> PageImages.plan(call.pdf, options, call.stop) }
 
     override fun extractImage(request: Bundle?, output: ParcelFileDescriptor?): Bundle =
-        answer(PdfOps.EXTRACT_IMAGE, request, output) { _, _ -> throw notImplemented(PdfOps.EXTRACT_IMAGE) }
+        answer(PdfOps.EXTRACT_IMAGE, request, output) { options, call -> PageImages.extract(call.pdf, options, output, call.stop) }
 
     override fun planSplit(request: Bundle?): Bundle = answer(PdfOps.PLAN_SPLIT, request) { options, call ->
         PageEditPlan.manifest(PageEditPlan.split(options, call.pdf.numberOfPages))

@@ -97,7 +97,7 @@ class ThreePaperPdfService : Service() {
     override fun onCreate() {
         super.onCreate()
         engine = PdfEngine(cacheDir)
-        runs = RunOperations(engine)
+        runs = RunOperations(engine, this)
     }
 
     override fun onBind(intent: Intent?): IBinder = binder

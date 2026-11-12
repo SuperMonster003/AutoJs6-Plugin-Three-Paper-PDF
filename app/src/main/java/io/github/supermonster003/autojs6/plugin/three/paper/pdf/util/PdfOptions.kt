@@ -58,6 +58,32 @@ class PdfOptions(private val values: PdfValues) {
 
     fun intArray(key: String): IntArray? = typed(key, "an Int array")
 
+    /**
+     * A finite Float in [range] (the generation keys `margin`, `fontSize`, `lineSpacing` are Floats; a Double is taken
+     * too), [default] when absent.
+     * zh-CN: [range] 内的有限 Float (生成相关的键 `margin`, `fontSize`, `lineSpacing` 是 Float; 也接受 Double), 缺省时为 [default].
+     */
+    fun float(key: String, range: ClosedFloatingPointRange<Float>, default: Float): Float {
+        val number = when (val value = values[key] ?: return default) {
+            is Float -> value
+            is Double -> value.toFloat()
+            else -> throw PdfFailure.invalid("$key must be a Float, not ${value::class.java.simpleName}")
+        }
+        if (!number.isFinite() || number !in range) throw PdfFailure.invalid("$key $number is outside ${range.start}..${range.endInclusive}")
+        return number
+    }
+
+    /** A Long (an Int is taken too), or null when absent. zh-CN: Long (也接受 Int), 缺省时为 null. */
+    fun long(key: String): Long? = when (val value = values[key]) {
+        null -> null
+        is Long -> value
+        is Int -> value.toLong()
+        else -> throw PdfFailure.invalid("$key must be a Long, not ${value::class.java.simpleName}")
+    }
+
+    /** The untyped value of [key], for keys that take more than one type (`pageSize`). zh-CN: [key] 的原始值, 用于可取多种类型的键 (`pageSize`). */
+    fun value(key: String): Any? = values[key]
+
     /** Whether the request carries [key] with a value. zh-CN: 请求是否带有取值非空的 [key]. */
     fun has(key: String): Boolean = values[key] != null
 

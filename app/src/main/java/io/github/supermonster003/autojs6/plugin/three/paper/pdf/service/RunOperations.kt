@@ -1,10 +1,14 @@
 package io.github.supermonster003.autojs6.plugin.three.paper.pdf.service
 
+import android.content.Context
 import android.os.ParcelFileDescriptor
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.edit.PageOperations
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.HostKey
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.Operations
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.PdfEngine
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.generate.HtmlToPdf
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.generate.ImagesToPdf
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.generate.TextToPdf
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfFailure
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfOptions
 import org.autojs.plugin.pdf.api.IPdfProgressCallback
@@ -21,7 +25,9 @@ import java.io.File
  * 归操作所有, 每个操作有一个随其结束而消失的临时目录 `<root>/<uid>-<pid>/run-<id>/`. 尚未实现的操作返回
  * `NOT_IMPLEMENTED: <op>`.
  */
-internal class RunOperations(private val engine: PdfEngine) {
+internal class RunOperations(private val engine: PdfEngine, context: Context) {
+
+    private val html = HtmlToPdf(context.applicationContext)
 
     /** The work of one operation on its owned inputs and temp directory. zh-CN: 一个操作基于其自有输入与临时目录的工作. */
     private fun interface Work {
@@ -64,6 +70,18 @@ internal class RunOperations(private val engine: PdfEngine) {
         PdfOps.MERGE -> {
             val request = PageOperations.mergeRequest(options, inputCount)
             Work { operation, inputs, directory -> PageOperations.merge(request, inputs, directory, operation) }
+        }
+        PdfOps.FROM_IMAGES -> {
+            val request = ImagesToPdf.request(options, inputCount)
+            Work { operation, inputs, directory -> ImagesToPdf.write(request, inputs, directory, operation) }
+        }
+        PdfOps.FROM_TEXT -> {
+            val request = TextToPdf.request(options, inputCount)
+            Work { operation, inputs, directory -> TextToPdf.write(request, inputs, directory, operation) }
+        }
+        PdfOps.FROM_HTML -> {
+            val request = HtmlToPdf.request(options, inputCount)
+            Work { operation, inputs, directory -> html.write(request, inputs, directory, operation) }
         }
         else -> throw PdfDocumentStub.notImplemented(op)
     }

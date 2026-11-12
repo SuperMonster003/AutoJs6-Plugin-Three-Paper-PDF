@@ -1,6 +1,7 @@
 package io.github.supermonster003.autojs6.plugin.three.paper.pdf
 
 import android.os.Build
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.generate.HtmlToPdf
 import org.autojs.plugin.explorer.api.ExplorerActionPluginActions
 import org.autojs.plugin.explorer.api.ExplorerActionProtocol
 import org.autojs.plugin.pdf.api.PdfActions
@@ -45,13 +46,17 @@ object ThreePaperPdfContract {
 
     /**
      * Operations the plugin implements end to end; every other operation answers `UNSUPPORTED` with the detail
-     * `NOT_IMPLEMENTED: <op>` until its roadmap item lands (P2.2: reading, P2.3: rendering, P2.4: page operations).
+     * `NOT_IMPLEMENTED: <op>` until its roadmap item lands (P2.2: reading, P2.3: rendering, P2.4: page operations, P2.5:
+     * generation and images). `fromHtml` is listed on every device; where `generate.html` is not declared it answers
+     * `UNSUPPORTED` (protocol "Run operations").
      * zh-CN: 插件端到端实现的操作; 其他操作在对应的路线图条目落地之前返回详情为 `NOT_IMPLEMENTED: <op>` 的 `UNSUPPORTED`
-     * (P2.2: 读取, P2.3: 渲染, P2.4: 页面操作).
+     * (P2.2: 读取, P2.3: 渲染, P2.4: 页面操作, P2.5: 生成与图片). `fromHtml` 在所有设备上都列出; 未声明 `generate.html` 的设备上
+     * 它返回 `UNSUPPORTED` (协议 "Run operations" 一节).
      */
     val IMPLEMENTED_OPS: List<String> = listOf(
         PdfOps.INFO, PdfOps.OUTLINE, PdfOps.TEXT, PdfOps.SEARCH, PdfOps.RENDER, PdfOps.RENDER_TO_FILE,
         PdfOps.MERGE, PdfOps.PLAN_SPLIT, PdfOps.SPLIT, PdfOps.SAVE,
+        PdfOps.FROM_IMAGES, PdfOps.FROM_TEXT, PdfOps.FROM_HTML, PdfOps.PLAN_IMAGES, PdfOps.EXTRACT_IMAGE,
     )
 
     /**
@@ -65,14 +70,18 @@ object ThreePaperPdfContract {
      * Optional features of contract version 1 the plugin declares in `pdfFeatures` on this device ([features]).
      * zh-CN: 插件在本设备上于 `pdfFeatures` 里声明的契约版本 1 可选特性 ([features]).
      */
-    val FEATURES: List<String> get() = features(Build.VERSION.SDK_INT)
+    val FEATURES: List<String> get() = features(Build.VERSION.SDK_INT, HtmlToPdf.isAvailable)
 
     /**
-     * Optional features on API level [sdkInt]: `render.sharedMemory` needs `SharedMemory` (API 27, roadmap P2.3).
-     * zh-CN: API 级别 [sdkInt] 上的可选特性: `render.sharedMemory` 需要 `SharedMemory` (API 27, 路线图 P2.3).
+     * Optional features on API level [sdkInt]: `render.sharedMemory` needs `SharedMemory` (API 27, roadmap P2.3),
+     * `generate.html` the print callbacks and a WebView provider ([htmlAvailable], roadmap P2.5, appendix D Q5).
+     * zh-CN: API 级别 [sdkInt] 上的可选特性: `render.sharedMemory` 需要 `SharedMemory` (API 27, 路线图 P2.3), `generate.html`
+     * 需要打印回调与 WebView 提供方 ([htmlAvailable], 路线图 P2.5, 附录 D Q5).
      */
-    fun features(sdkInt: Int): List<String> =
-        if (sdkInt >= Build.VERSION_CODES.O_MR1) listOf(PdfContract.FEATURE_RENDER_SHARED_MEMORY) else emptyList()
+    fun features(sdkInt: Int, htmlAvailable: Boolean = false): List<String> = buildList {
+        if (sdkInt >= Build.VERSION_CODES.O_MR1) add(PdfContract.FEATURE_RENDER_SHARED_MEMORY)
+        if (htmlAvailable) add(PdfContract.FEATURE_GENERATE_HTML)
+    }
 
     /**
      * Documents one host process may keep open (capability `pdfMaxOpenDocuments`, protocol "Ceilings"); the eight per
