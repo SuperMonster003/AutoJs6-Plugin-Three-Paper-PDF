@@ -203,7 +203,7 @@ io.github.supermonster003.autojs6.plugin.three.paper.pdf
 | 阶段 | 版本 | 主题 | 状态 |
 | --- | --- | --- | --- |
 | P0 | 1.0.0 | 仓库骨架: 构建链与身份, Icon Studio 图标, 测试与 CI | 进行中 (paper-p0, 2026-11-12) |
-| P1 | 宿主 6.8.1 | 契约 `pdf-api`, 宿主绑定与查看器启动, 脚本模块 `pdf`, OCR 分支, Node / Bun 桥接, Explorer 文件类型与注册 | 未开始 |
+| P1 | 宿主 6.8.1 | 契约 `pdf-api`, 宿主绑定与查看器启动, 脚本模块 `pdf`, OCR 分支, Node / Bun 桥接, Explorer 文件类型与注册 | 进行中 (P1.1 完成, P1.2 待真机绑定) |
 | P2 | 1.0.0 | 插件核心: 服务与句柄, 读取, 渲染与位图传输, 页面操作, 生成, 加密, 设备矩阵 | 未开始 |
 | P3 | 1.0.0 | 查看器, `pdf.view` 会话, Explorer Action 服务 | 未开始 |
 | P4 | 1.0.0 | 工具箱界面: 应用骨架, 向导, 设置与启动器模式 | 未开始 |
@@ -268,19 +268,19 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 
 ## P1: 宿主契约, 脚本模块与注册
 
-状态: 未开始. 设备: 宿主单元测试与一台 API 33 真机 (脚本模块联调需 P2 的插件 debug 包).
+状态: 进行中 (2026-11-12 P1.1 完成, P1.2 单元测试部分完成, 真机绑定待批次 2). 设备: 宿主单元测试与一台 API 33 真机 (脚本模块联调需 P2 的插件 debug 包).
 
 ### P1.1 契约模块 `plugin-api/pdf-api` (D27, D28)
 
-- [ ] (宿主) 新建 `plugin-api/pdf-api`: `PdfActions`, `PdfIds`, `PdfContract` (契约版本, Bundle 键, 上限常量: `MAX_OPEN_DOCUMENTS` 8, `MAX_RENDER_PIXELS` 16 M, `MAX_TEXT_CHARS_PER_CALL`, `MAX_OPTIONS_BYTES`, `VIEWER_CLAIM_TIMEOUT_MS`), `PdfCapabilityKeys`, `PdfErrorCodes`, AIDL `IPdfPlugin` / `IPdfDocument` / `IPdfViewerSession` / oneway `IPdfProgressCallback` / `IPdfViewerCallback` (附录 C), `PdfAidlOrderTest` 锁定方法顺序, 加入 `maven-central.gradle.kts` 发布配置.
-- [ ] (宿主) 协议文档 `docs/dev/plugin-pdf-contract.md` (版式照 epub 契约文档): 操作名, Bundle 键, fd 所有权 (输入由宿主关闭, 插件须 dup; 输出写完由插件 flush 后宿主关闭), 两步输出清单, 进度与取消语义, 错误码.
-- 验收: `./gradlew :plugin-api:pdf-api:assemble test` 通过; AAR 复制到插件 `libs/` 并更新 `locks/host-api-aars.lock`.
+- [x] (宿主) 新建 `plugin-api/pdf-api`: `PdfActions`, `PdfIds`, `PdfContract` (契约版本, Bundle 键, 上限常量: `MAX_OPEN_DOCUMENTS` 8, `MAX_RENDER_PIXELS` 16 M, `MAX_TEXT_CHARS_PER_CALL`, `MAX_OPTIONS_BYTES`, `VIEWER_CLAIM_TIMEOUT_MS`), `PdfCapabilityKeys`, `PdfErrorCodes`, AIDL `IPdfPlugin` / `IPdfDocument` / `IPdfViewerSession` / oneway `IPdfProgressCallback` / `IPdfViewerCallback` (附录 C), `PdfAidlOrderTest` 锁定方法顺序, 加入 `maven-central.gradle.kts` 发布配置. 证据 E1: 18 个文件 +1740 行, `PdfAidlOrderTest` 1 项 + `PdfContractTest` 9 项通过; 操作 id 为 int, 上限取值 `MAX_TEXT_CHARS_PER_CALL` 262,144 / `MAX_OPTIONS_BYTES` 65,536 / `VIEWER_CLAIM_TIMEOUT_MS` 60 s. 宿主本地提交 `4e872a8741`.
+- [x] (宿主) 协议文档 `docs/dev/pdf-plugin-protocol-v1.md` (版式照 `epub-plugin-protocol-v1.md`, 沿用宿主 `<名称>-plugin-protocol-v1.md` 的命名): 操作名, Bundle 键, fd 所有权 (输入由宿主关闭, 插件须 dup; 输出写完由插件 flush 后宿主关闭), 两步输出清单, 进度与取消语义, 错误码; 末节列出与附录 C 草案的差异. 宿主本地提交 `4e872a8741` (P1.2 的 `17a617d594` 补 "Host Client" 一节).
+- 验收: `./gradlew :plugin-api:pdf-api:assemble :plugin-api:pdf-api:test` 通过 (E1); release AAR 40,584 B (sha256 `e6bdb589...e90bb`) 放在共享笔记 `pdf-api-handoff.md` 旁, paper-p0 已换入插件工作区 `libs/pdf-api.aar` 并改写 `locks/host-api-aars.lock` (sha256 一致), 随 P0.1 骨架提交入库.
 
 ### P1.2 宿主绑定与查看器启动 (D29)
 
-- [ ] (宿主) `core/plugin/pdf/PdfPluginHost` (基于 `AidlPluginHost`, `preBindValidator` 校验 action / category / 权限 / 契约版本, 绑定 flags 同 `EpubPluginHost`), `PdfBinders` (句柄注册与脚本退出清理, 每脚本 8 个上限), `PdfError` / `PdfErrorMapper` (附录 C.3 -> 脚本错误), `PdfViewerLauncher` (两步启动, 前台判断 -> `UI_REQUIRES_FOREGROUND`), `PdfBitmapReceiver` (SharedMemory / fd 回落 -> `ImageWrapper`).
-- [ ] (宿主) 能力声明: `pdf.*` -> `files`, `pdf.view` -> `ui`, OCR 分支 -> `ocr`; 裸脚本声明与 MCP / Node 一致 (对照 `epub` 的声明处).
-- 验收: 宿主单元测试覆盖错误映射, 句柄上限, 位图接收 (两条路径); 用 P2.1 的插件 debug 包在 API 33 真机绑定成功并取回 `getInfo`.
+- [x] (宿主) `core/plugin/pdf/PdfPluginHost` (基于 `AidlPluginHost`, `preBindValidator` 校验 action / category / 权限 / 契约版本, 绑定 flags 同 `EpubPluginHost`), `PdfBinders` (句柄注册与脚本退出清理, 每脚本 8 个上限), `PdfError` / `PdfErrorMapper` (附录 C.3 -> 脚本错误), `PdfViewerLauncher` (两步启动, 前台判断 -> `UI_REQUIRES_FOREGROUND`), `PdfBitmapReceiver` (SharedMemory / fd 回落 -> `ImageWrapper`). 实现: 9 个源文件 (另有 `PdfBundles`, `PdfClients`: 文档客户端, 可取消的 `PdfOperation`, 查看器会话); 绑定 flags 在 EPUB 之上加 `allowActivityStarts` (D29 原文, 只在 API 34+ 生效, Q21 已先行); 脚本退出顺序 取消操作 -> 断开查看器 (`close(false)`, D23) -> 关闭文档, 预留中的槽位也计入 8 个上限; 位图 API 27+ 且插件声明 `render.sharedMemory` 时走 SharedMemory, 否则 PNG 文件 (至多 96 MiB, 写在 `cacheDir/pdf-render`, 1 h 清扫), 单张至多 16 M 像素, `toImage` 包装成 `ImageWrapper`; `PdfBinders` 挂到脚本运行时与 `RuntimeResourceScope` 登记留给 P1.3. 证据 E5: 绑定与 flags 对照宿主 `AidlPluginHost.kt` / `EpubPluginHost`. 宿主本地提交 `17a617d594`.
+- [x] (宿主) 能力声明: `pdf.*` -> `files`, `pdf.view` -> `ui`, OCR 分支 -> `ocr`; 裸脚本声明与 MCP / Node 一致 (对照 `epub` 的声明处). 实现为 `PdfScriptCapabilities` 能力表: 读方法要 `files`, 写输出的方法另加 `files.write` (Q20 已先行), `view` 与查看器会话要 `files` + `ui`, `ocr: true | 'always'` 加 `ocr` (D19); 接入脚本运行时与 Node / Bun 的 `requiredFor` 留给 P1.3 / P1.5. 宿主本地提交 `17a617d594`.
+- 验收: 宿主单元测试覆盖错误映射, 句柄上限, 位图接收 (两条路径); 用 P2.1 的插件 debug 包在 API 33 真机绑定成功并取回 `getInfo`. 单元测试部分完成 (E1): `:app:testAppDebugUnitTest` 选 PDF 7 个测试类 55 项 + `StaticReferenceGuardTest` 9 项, 共 64 项全部通过 (错误映射 8, 句柄上限与退出清理 10, 位图接收两条路径 12, 契约版本协商 6, 操作生命周期 5, 能力表 8, 查看器启动门 6); lint 未跑. 真机绑定待批次 2 (依赖 P2.1 的插件 debug 包).
 
 ### P1.3 脚本模块 `pdf` (D4, D10, D11, D38)
 
