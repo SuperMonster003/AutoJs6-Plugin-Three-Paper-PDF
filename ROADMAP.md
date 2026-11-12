@@ -282,7 +282,7 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 
 ## P1: 宿主契约, 脚本模块与注册
 
-状态: 进行中 (2026-11-12 P1.1 完成, P1.2 单元测试部分完成, 真机绑定待批次 2). 设备: 宿主单元测试与一台 API 33 真机 (脚本模块联调需 P2 的插件 debug 包).
+状态: 进行中 (2026-11-12 P1.1 完成, P1.2 - P1.5 单元测试部分完成, 真机待联调卡片; P1.6 待批次 3). 设备: 宿主单元测试与一台 API 33 真机 (脚本模块联调需 P2 的插件 debug 包).
 
 ### P1.1 契约模块 `plugin-api/pdf-api` (D27, D28)
 
@@ -298,21 +298,21 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 
 ### P1.3 脚本模块 `pdf` (D4, D10, D11, D38)
 
-- [ ] (宿主) `runtime/api/augment/pdf/`: `Pdf.kt` (便捷层 + `open` + `view` + `isAvailable`), `PdfDocumentNativeObject.kt` (对象层方法), `PdfCalls.kt` (同步 / Async 双形态, 进度回调, 可取消 Promise), `PdfJsErrors.kt` (`PdfError`), `PdfViewSession.kt` (事件 `page` / `close`, `goTo` / `close` / `state`), 停止脚本时取消与关闭.
-- [ ] (宿主) 输出路径规则: 便捷层输出参数可省略时默认 `/sdcard/Documents/3-Paper PDF/<源名>-<操作>-<时间戳>.pdf` (渲染图片默认 `.png`), 返回值带实际路径; 输出与输入同路径时先写临时文件再替换 (D32).
-- 验收: 单元测试覆盖选项序列化, 页码范围, 默认输出路径, 错误映射; 真机脚本 (附录 B.5 示例) 在 API 33 通过 (依赖 P2.1-P2.3).
+- [x] (宿主) `runtime/api/augment/pdf/`: `Pdf.kt` (便捷层 + `open` + `view` + `isAvailable`), `PdfDocumentNativeObject.kt` (对象层方法), `PdfCalls.kt` (同步 / Async 双形态, 进度回调, 可取消 Promise), `PdfJsErrors.kt` (`PdfError`), `PdfViewSession.kt` (事件 `page` / `close`, `goTo` / `close` / `state`), 停止脚本时取消与关闭. 实际落位: 模块层 `runtime/api/modules/pdf/` (照 `epub` 模块, 不用 `augment`; 以上 5 个文件加注册用的 `PdfModule.kt`) 与 Rhino / Node / Bun 共用的 `runtime/api/pdf/` (`PdfService` 每脚本一个并持有 `PdfBinders`, `PdfMethods` 18 个表方法的参数解析, `PdfScriptArguments`, `PdfScriptValues`, `PdfDocumentHandle`, `PdfRequest`, `PdfOutputPaths`). 便捷层 45 个导出: 18 个表方法, `render`, `open`, `view`, `isAvailable` 各带 `xxxAsync`, 加 `PdfError`; `PdfDocument` 12 个方法. 同步形态在 UI 线程上拒绝 (D4); 停止脚本由 `RuntimeResourceScope` 新阶段 `Stage.PDF` (TTS 之后, CAMERA 之前) 取消操作 -> 断开查看器 -> 关闭文档; `ScriptModuleLayer` 顺序末尾加 `pdf`. `text` 返回值形状 (Q22), `namePattern` 占位符 (Q23), `fromHtml` 判别 (Q24), `encrypt` 的 `permissions` 写法 (Q25) 按推荐先行. 宿主本地提交 `701fd99b51`.
+- [x] (宿主) 输出路径规则: 便捷层输出参数可省略时默认 `/sdcard/Documents/3-Paper PDF/<源名>-<操作>-<时间戳>.pdf` (渲染图片默认 `.png`), 返回值带实际路径; 输出与输入同路径时先写临时文件再替换 (D32). 实现: `PdfOutputPaths`, 时间戳 `yyyyMMdd-HHmmss`, 重名加 `-1` / `-2`, 目录输出不带扩展名; 每个输出先写到最终名旁边的隐藏分段文件 (`.part`), 完成后改名, 同路径时替换; 多文件输出 (`split`, `extractImages`) 用 `namePattern` (`{name}` / `{index}` / `{page}`, 展开后重名报 `INVALID_ARGUMENT`). 宿主本地提交 `701fd99b51`.
+- 验收: 单元测试覆盖选项序列化, 页码范围, 默认输出路径, 错误映射; 真机脚本 (附录 B.5 示例) 在 API 33 通过 (依赖 P2.1-P2.3). 单元测试部分完成 (E1): `:app:testAppDebugUnitTest` 选集里本条 6 个测试类 46 项全部通过 (选项序列化 `PdfScriptArgumentsTest` 15, 页码范围 `PdfPageRangesTest` 5, 默认输出路径 `PdfOutputPathsTest` 9, 返回值 `PdfScriptValuesTest` 7, 方法表 `PdfMethodsTest` 6, 错误映射 `PdfJsErrorsTest` 4), 改动过的 `RuntimeResourceScopeTest` 15, `ScriptModuleOrderTest` 7, `ScriptModuleInstallsTest` 2, `ScriptSurfaceGateTest` 2 也通过; `:app` 编译通过, lint 未跑. 真机待联调卡片.
 
 ### P1.4 OCR 分支 (D19)
 
-- [ ] (宿主) `core/plugin/pdf/PdfOcr`: `pdf.text(path, { ocr: true | 'always', ocrOptions })` 对无文本层的页 (提取结果为空白) 以 `ocrDpi` (默认 300, Q6 已决; 脚本可覆盖) 渲染后调用 `ocr` 模块的当前引擎, 结果按页合并进返回值并标 `source: 'ocr'`; 无可用引擎 `OCR_UNAVAILABLE`; 进度回调按页推进.
-- [ ] (文档) `pdf.md` 的 OCR 一节与 "渲染 + `ocr.recognize`" 手动样例 (`samples/pdf-ocr-manual.js`).
-- 验收: 真机 (已装 Paddle 或 Rapid OCR 引擎的 API 33) 对 `samples/fixtures/scanned.pdf` 识别出预期文本; 未装引擎的设备报 `OCR_UNAVAILABLE`.
+- [x] (宿主) `core/plugin/pdf/PdfOcr`: `pdf.text(path, { ocr: true | 'always', ocrOptions })` 对无文本层的页 (提取结果为空白) 以 `ocrDpi` (默认 300, Q6 已决; 脚本可覆盖) 渲染后调用 `ocr` 模块的当前引擎, 结果按页合并进返回值并标 `source: 'ocr'`; 无可用引擎 `OCR_UNAVAILABLE`; 进度回调按页推进. 实现: `ocr: 'always'` 识别范围内每一页; 只在有页需要识别时才解析引擎 (文本层完整的文档不要求装 OCR 插件); 引擎按自动模式的 `ocr.recognizeText` 选择已装的 OCR 插件, `ocrOptions` 接受 `mode` / `engineId` / `engine` / `variant` / `profile`, 未知键为 `INVALID_ARGUMENT`; 进度阶段 `ocr`; 返回值的 `sources` 逐页标 `'text'` / `'ocr'` (Q22). 宿主本地提交 `701fd99b51`.
+- [ ] (文档) `pdf.md` 的 OCR 一节与 "渲染 + `ocr.recognize`" 手动样例 (`samples/pdf-ocr-manual.js`). 文档站部分并入 P5.1, 样例由联调卡片写 (paper-p1-script 2026-11-12).
+- 验收: 真机 (已装 Paddle 或 Rapid OCR 引擎的 API 33) 对 `samples/fixtures/scanned.pdf` 识别出预期文本; 未装引擎的设备报 `OCR_UNAVAILABLE`. 单元测试部分完成 (E1): `PdfOcrTest` 10 项通过 (假渲染器 / 假引擎: 空白页与 `'always'` 的选页, `ocrDpi` 覆盖, 按页合并与来源标记, 无引擎 `OCR_UNAVAILABLE`, 进度, `ocrOptions` 校验); lint 未跑. 真机待联调卡片.
 
 ### P1.5 Node / Bun 桥接 (D13)
 
-- [ ] (宿主) `engine/RuntimePdfBridge.kt` + `NodeBridgeModules.PDF = "pdf"` + `BunAutomationBridge` 对应分支: 方法与 Rhino 一致, 渲染返回 `{ path }` (默认写入脚本目录下 `.pdf-render/` 或指定 `output`) 或 `{ base64 }` (`encoding: 'base64'`), `view` 的事件经桥接事件流; 独立授权与 `epub` 相同.
-- [ ] (文档) `runtimeApis` 加 "Node.js / Bun / Worker 的 pdf" 一节; Node 桥协议文档追加 `pdf` 模块.
-- 验收: 宿主 Node 桥单元测试覆盖方法表与编解码; 真机 Node 脚本读取信息, 渲染一页, 合并两个文件通过.
+- [x] (宿主) `engine/RuntimePdfBridge.kt` + `NodeBridgeModules.PDF = "pdf"` + `BunAutomationBridge` 对应分支: 方法与 Rhino 一致, 渲染返回 `{ path }` (默认写入脚本目录下 `.pdf-render/` 或指定 `output`) 或 `{ base64 }` (`encoding: 'base64'`), `view` 的事件经桥接事件流; 独立授权与 `epub` 相同. 实现: `RuntimeOperationClients` 的 `pdf` 族 (`open / start / poll / cancel / close`), 操作为 18 个表方法, `render`, `open`, `view`, `isAvailable`, `document.<方法>` 与 `view.goTo / state / close`, 参数解析与 Rhino 共用 `PdfMethods`; `render` 返回 `{ path, width, height, format, sizeBytes }`, base64 至多 16 MiB, 查看器事件积压 1024 条时以 `close` reason `overflow` 结束 (Q27); Node 请求按 `PdfScriptCapabilities.requiredFor` 声明能力 (`NodeBridgePermissionManifest`, 写文件的 `render` 加 `files.write`); Bun 授权 `pdf.control` (默认关, OCR 另要 `ocr.control`, provider 清单加 `files` / `files.write` / `ui`, Q26), 设置开关 `plugin_bun_pdf_control_grant` 与 11 个 values 目录的字符串. 宿主开发文档 `docs/dev/runtime-pdf-2026-11-12.md`. Node / Bun 插件仓库的 JavaScript 门面 (`autojs6:pdf` / `$autojs.pdf` / Bun `host.pdf`) 不在本条, 何时做见 Q28; api-coverage 矩阵 45 个 pdf 导出在 Node main / Worker / Bun 三列登记为 pending (135 格). 宿主本地提交 `701fd99b51`.
+- [ ] (文档) `runtimeApis` 加 "Node.js / Bun / Worker 的 pdf" 一节; Node 桥协议文档追加 `pdf` 模块. 文档站部分并入 P5.1, 样例由联调卡片写; 宿主侧桥接协议已写在宿主开发文档 `docs/dev/runtime-pdf-2026-11-12.md` (`701fd99b51`, paper-p1-script 2026-11-12).
+- 验收: 宿主 Node 桥单元测试覆盖方法表与编解码; 真机 Node 脚本读取信息, 渲染一页, 合并两个文件通过. 单元测试部分完成 (E1): `RuntimePdfBridgeTest` 7 项 (操作表对照 Rhino 方法表, 每个操作的能力声明, Bun 授权与 provider 能力, 渲染目标, 文档 / 会话 id, 参数 / 结果 / `PdfTexts` 的 JSON 编解码), `RuntimePluginFamilyGrantTest` 3 项, `BunAutomationPolicyTest` 21 项 (路由总数 367) 通过; lint 未跑. 真机待联调卡片 (Node / Bun 门面先要落地, Q28).
 
 ### P1.6 Explorer 文件类型, 注册, 协议文档与版本回填 (D6, D14, D41)
 
