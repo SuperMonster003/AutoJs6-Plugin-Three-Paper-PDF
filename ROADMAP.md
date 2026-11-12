@@ -1,6 +1,6 @@
 # 3-Paper PDF 插件路线图
 
-更新: 2026-10-22 (立项). 本文件是 `AutoJs6-Plugin-Three-Paper-PDF` (显示名 `3-Paper PDF`, PDF 方向, 插件选题分析 2026-10 的第 4 优先级候选) 的唯一进度与决策记录. 立项基线: 宿主 AutoJs6 `master` `e25e28f88` (2026-10-22, `VERSION_NAME` 6.8.0 未发布, `VERSION_BUILD` 4283, versionCode 5935), 3-Folio EPUB (契约 `epub-api`, 阅读器两步启动, Explorer 预览器降级对话框) 与 3-Prism Camera (SharedMemory 位图传输, 契约模块版式) 作技术先例, 3-Slate Studio `ROADMAP.md` 作为版式与流程模板.
+更新: 2026-11-12 (调度会话首轮拍板 Q1-Q3 / Q6-Q8 落盘, 基线刷新见附录 F 的 2026-11-12 快照: 宿主 6.8.0 已于 2026-11-03 公开, 宿主侧条目进 6.8.1; 多语言文案改为所有语言一次写全); 2026-10-22 (立项). 本文件是 `AutoJs6-Plugin-Three-Paper-PDF` (显示名 `3-Paper PDF`, PDF 方向, 插件选题分析 2026-10 的第 4 优先级候选) 的唯一进度与决策记录. 立项基线: 宿主 AutoJs6 `master` `e25e28f88` (2026-10-22, `VERSION_NAME` 6.8.0 未发布, `VERSION_BUILD` 4283, versionCode 5935; 该 hash 已因 6.8.0 公开时的历史重写失效, 现行基线见附录 F), 3-Folio EPUB (契约 `epub-api`, 阅读器两步启动, Explorer 预览器降级对话框) 与 3-Prism Camera (SharedMemory 位图传输, 契约模块版式) 作技术先例, 3-Slate Studio `ROADMAP.md` 作为版式与流程模板.
 
 使用方式:
 
@@ -52,22 +52,22 @@ D26-D42 据第 1 节派生, 进入对应阶段前可推翻 (推翻点见各条),
 
 | 编号 | 决策 | 含义 | 推翻点 |
 | --- | --- | --- | --- |
-| D26 | 工具链基线 | 按 `AUTOJS6_PLUGIN_NEW_REPO_AGENTS.md` 的占位符表与 3-Slate Studio 的当前依赖线: compileSdk / targetSdk 37, minSdk 24, Kotlin 2.x, Compose BOM 2026.09.00 + Material 3, navigation 2.10.2, `PLATFORM_VERSIONS_PLUGIN_VERSION` 1.9.1, `pdfbox-android` 2.0.27.0 (附录 D Q1; 传递依赖 `bcprov-jdk15to18` / `bcpkix-jdk15to18` 1.72); 版本号起 1.0.0, `VERSION_BUILD` 在骨架阶段为提交数 + 1. 1.0.0 APK 为 universal 单包; 16 KB 页校验只需确认依赖 AAR / JAR 内无 `.so`. | P0.1 |
+| D26 | 工具链基线 | 按 `AUTOJS6_PLUGIN_NEW_REPO_AGENTS.md` 的占位符表与 3-Slate Studio 的当前依赖线: compileSdk / targetSdk 37, minSdk 24, Kotlin 2.x, Compose BOM 2026.09.00 + Material 3, navigation 2.10.2, `PLATFORM_VERSIONS_PLUGIN_VERSION` 1.9.1, `pdfbox-android` 2.0.27.0 (Q1 已决锁定; 传递依赖 `bcprov-jdk15to18` / `bcpkix-jdk15to18` 1.72); 版本号起 1.0.0, `VERSION_BUILD` 在骨架阶段为提交数 + 1. 1.0.0 APK 为 universal 单包; 16 KB 页校验只需确认依赖 AAR / JAR 内无 `.so`. 2026-11-12 进入 P0.1 前核对: `PLATFORM_VERSIONS_PLUGIN_VERSION` 1.9.1 仍是平台仓库最新 tag, Compose BOM 2026.09.00 与 navigation 2.10.2 仍是 3-Chime Alarm 1.0.1 / 3-Slate Studio / 3-Prism Camera / 3-Macaw Speech 的当前线, 不变; BOM 不管理 `androidx.activity`, 另按这几个插件的同款线写 `activity-compose` 1.12.2. | P0.1 |
 | D27 | 契约命名 | `plugin-api/pdf-api`, 包 `org.autojs.plugin.pdf.api`, action `org.autojs.plugin.PDF`, engine / category `pdf`, `PdfContract.CONTRACT_VERSION = 1`, 宿主桥接包 `org.autojs.autojs.core.plugin.pdf`; 文件与 `epub-api` 同版式 (`PdfActions`, `PdfIds`, `PdfContract`, `PdfCapabilityKeys`, `PdfErrorCodes` + AIDL `IPdfPlugin`, `IPdfDocument`, `IPdfViewerSession`, oneway `IPdfProgressCallback` / `IPdfViewerCallback`), `getInfo` 居首并有 `PdfAidlOrderTest` 锁定方法顺序. | P1.1 |
-| D28 | 契约请求模型 | 请求与结果用 `Bundle` (选项像 `JSON.stringify` 一样序列化, 函数被忽略, 未知键在宿主以 `INVALID_ARGUMENT` 拒绝); 输入文件一律 `ParcelFileDescriptor` (只读), 输出文件由宿主创建后传写 fd (D7); 输出文件数不定的操作 (拆分, 提取图片) 两步走: 先 `plan` 返回清单, 宿主按清单创建文件再逐个传 fd; 长操作带 `opId`, 进度经 oneway 回调; 宿主回调 Binder 死亡即取消其全部操作. 草案见附录 C. | P1.1 |
+| D28 | 契约请求模型 | 请求与结果用 `Bundle` (选项像 `JSON.stringify` 一样序列化, 函数被忽略, 未知键在宿主以 `INVALID_ARGUMENT` 拒绝); 输入文件一律 `ParcelFileDescriptor` (只读), 输出文件由宿主创建后传写 fd (D7); 输出文件数不定的操作 (拆分, 提取图片) 两步走: 先 `plan` 返回清单, 宿主按清单创建文件再逐个传 fd; 长操作带 `opId`, 进度经 oneway 回调; 宿主回调 Binder 死亡即取消其全部操作; 操作默认无超时, 只靠 `cancel(opId)` 与脚本停止 (Q7 已决), 契约不设默认操作超时. 草案见附录 C. | P1.1 |
 | D29 | 宿主绑定与能力声明 | `PdfPluginHost` 基于 `core/plugin/AidlPluginHost.kt` (绑定 flags 同 `EpubPluginHost`, 含 `allowActivityStarts`, 以便宿主后台时插件界面弹出授权页); 查看器两步启动: `openViewer` 返回会话令牌, 宿主用显式组件 + 令牌启动 `ThreePaperPdfViewerActivity` (EPUB D12 同款); 脚本能力声明: `pdf.*` 需 `files` (读写脚本路径), `pdf.view` 需 `ui`, OCR 分支需 `ocr`; 裸脚本能力声明与 MCP / Node 的声明保持一致. | P1.2 |
 | D30 | 渲染路径 | 页面渲染用系统 `PdfRenderer` (fd 必须可 seek, 宿主打开普通文件即可); 加密文档 `PdfRenderer` 打不开, 插件先用 PDFBox 解密到插件缓存目录的临时文件再渲染, 关闭句柄时删除; `transparent: false` 时先填白底 (`PdfRenderer` 不绘背景); 位图 `ARGB_8888`, 经 `SharedMemory` 传回时附 `width` / `height` / `rowBytes`. 不用 API 35 的 `PdfRenderer` 文本 API (各版本行为不一), 文本统一走 PDFBox. | P2.3 |
 | D31 | 文本与大纲 | 文本用 PDFBox `PDFTextStripper` 按页提取 (`pages` 范围, 每页返回字符串, 单次调用上限 `MAX_TEXT_CHARS_PER_CALL`, 超出分块), 搜索用 `PDFTextStripper` 的位置信息返回页码与命中矩形 (查看器高亮共用); 大纲用 `PDDocumentOutline` 展平为 `{ title, page, level, children }`; 元数据用 `PDDocumentInformation` + XMP 的标题回退. | P2.2 |
 | D32 | 页面操作与保存 | 合并 `PDFMergerUtility` (保留大纲与书签, 可选 `outline: 'merge' / 'none'`), 拆分 `Splitter` 或按 `ranges` 复制页, 抽页 / 删页 / 重排 / 旋转 在 `PDDocument` 上操作后 `save` 到输出 fd; 页码范围写法 `'1-3,5,8-'` 或数组, 从 1 计, 越界 `PAGE_OUT_OF_RANGE`; 输出与输入同一路径时先写临时文件再由宿主替换. | P2.4 |
 | D33 | 图片提取与图片转 PDF | 提取: 遍历页资源 `PDImageXObject` (含内联图片), `plan` 返回 `{ page, index, width, height, format }` 清单, JPEG (`DCTDecode`) 原样导出, 其他解码为 PNG; 图片转 PDF: JPEG 用 `JPEGFactory.createFromStream` 直接嵌入, PNG / WebP / BMP 解码后按 `quality` 走 `JPEGFactory` 或 `LosslessFactory` (D18), EXIF 方向先纠正. | P2.5 |
 | D34 | 加密实现 | 读: `PDDocument.load(fd, password)` + `getCurrentAccessPermission` 映射为 `permissions` 对象; 写: `StandardProtectionPolicy` + `AccessPermission`, 默认 AES-256 (`keyLength: 256`, 可选 128), 需要 BouncyCastle provider (注册方式与系统内置 `BC` provider 的冲突 spike 见附录 D Q4); `decrypt` 要求能打开的密码, 输出去除加密字典. | P2.6 |
-| D35 | 查看器 | Compose 自绘: 连续纵向滚动 + 双指缩放 (分块渲染, 缩放后按 tile 重渲染, 缓存上限按内存 1/8), 页码指示与跳页, 缩略图栏, 大纲抽屉, 搜索 (D31 命中矩形高亮), 密码输入, 夜间模式 (附录 D Q3), 分享 / 用其他应用打开; 从启动器, Explorer 主动作与 `pdf.view` 三个入口共用同一 Activity; 事件回宿主经 `IPdfViewerCallback` (`page`, `close`). | P3.1 |
-| D36 | Explorer Action 服务 | 第二个 Binder 服务 `ThreePaperPdfExplorerActionService` 实现 `explorer-action-api` 的 `IExplorerActionPlugin` (engine `explorer-action`, 只读信封 v2): 主动作由宿主 `PreviewerType.PDF` 的预览器规格直接启动查看器 (不经 Explorer Action), 溢出工具经目录声明 (合并所选, 拆分, 转图片, 加密, 解密, 提取文本), 多选时只对全为 PDF 的选择显示合并; 输出位置见附录 D Q2; 执行用与脚本相同的 `PdfEngine`, 进度显示在宿主的事务界面. | P3.3 |
+| D35 | 查看器 | Compose 自绘: 连续纵向滚动 + 双指缩放 (分块渲染, 缩放后按 tile 重渲染, 缓存上限按内存 1/8), 页码指示与跳页, 缩略图栏, 大纲抽屉, 搜索 (D31 命中矩形高亮), 密码输入, 夜间模式 (Q3 已决: 反色渲染, 图片保留原色), 分享 / 用其他应用打开; 从启动器, Explorer 主动作与 `pdf.view` 三个入口共用同一 Activity; 事件回宿主经 `IPdfViewerCallback` (`page`, `close`). | P3.1 |
+| D36 | Explorer Action 服务 | 第二个 Binder 服务 `ThreePaperPdfExplorerActionService` 实现 `explorer-action-api` 的 `IExplorerActionPlugin` (engine `explorer-action`, 只读信封 v2): 主动作由宿主 `PreviewerType.PDF` 的预览器规格直接启动查看器 (不经 Explorer Action), 溢出工具经目录声明 (合并所选, 拆分, 转图片, 加密, 解密, 提取文本), 多选时只对全为 PDF 的选择显示合并; 输出到源文件同目录, 文件名加操作后缀, 重名自动编号 (Q2 已决); 执行用与脚本相同的 `PdfEngine`, 进度显示在宿主的事务界面. | P3.3 |
 | D37 | 工具箱界面 | Compose + Material 3 单 Activity + navigation: 首页 (最近文件, 工具入口), 向导页 (选文件 -> 选项 -> 执行 -> 结果, 可直接打开结果), 设置 (默认输出目录 `/sdcard/Documents/3-Paper PDF/`, 默认 dpi, 启动器图标四选项), 发行历史, 更新检查 (插件通用更新检查接口); 长任务走前台服务 + 通知进度; 文件选择用 `MANAGE_EXTERNAL_STORAGE` 下的自带文件浏览 (3-Maple Image 同款) 并支持系统文件选择器. | P4.1 |
 | D38 | 错误模型 | 脚本侧 `PdfError` (`code`, `message`, `cause`), 码表见附录 C.3; 插件缺失 / 禁用 / 不兼容报 `PLUGIN_UNAVAILABLE` / `PLUGIN_DISABLED` / `PLUGIN_INCOMPATIBLE` (消息以插件中心本地化提示开头, `epub` 同款), `pdf.isAvailable()` 预探测. | P1.3 |
 | D39 | 测试夹具 | JVM 测试的 PDF 夹具由 `PdfFixtures` (PDFBox) 在运行时生成 (单页文本, 多页带大纲, 加密, 纯图片 "扫描件", 含 JPEG 与 PNG 图片, 旋转页), 不入库; 真机回归脚本用的样例由 `.python/generate_fixtures.py` (纯 Python 手写最小 PDF 结构, 无依赖) 生成到 `samples/fixtures/` 入库 (总计数十 KB). | P0.3 |
 | D40 | 文档与声明 | `AutoJs6-Documentation/api/pdf.md`, `pdfDocumentType.md`, `pdfViewSessionType.md` (版式照 `epub.md` / `epubBookType.md` / `epubReaderSessionType.md`), `runtimeApis` 加 Node / Bun 的 `pdf` 一节; d.ts, Ace 补全, Offline Docs 按 `epub` 同款补齐; 10 种语言只用半角标点. | P5.1 |
-| D41 | 发布门与版本号 | 不等宿主 6.8.0 公开: 所有条目通过即发 1.0.0 并登记官方索引, `REQUIRES_HOST_VERSION` 写含全部宿主条目的本地构建号 (3-Macaw Speech 先例), 插件中心对旧宿主显示不兼容; 发布文件 `autojs6-plugin-three-paper-pdf-v{VERSION_NAME}-{CRC32}.apk`. | P5.4 |
+| D41 | 发布门与版本号 | 不等宿主公开: 所有条目通过即发 1.0.0 并登记官方索引, `REQUIRES_HOST_VERSION` 写含全部宿主条目的本地构建号 (3-Macaw Speech 先例), 插件中心对旧宿主显示不兼容. 宿主 6.8.0 已于 2026-11-03 公开后仍沿用 (Q8 已决): 不等宿主 6.8.1 公开, `REQUIRES_HOST_VERSION` 写含全部宿主条目的 6.8.1 本地构建号, 公开 6.8.0 (versionCode 6640) 的用户在插件中心看到不兼容, 直到 6.8.1 公开; 发布文件 `autojs6-plugin-three-paper-pdf-v{VERSION_NAME}-{CRC32}.apk`. | P5.4 |
 | D42 | 许可与声明 | 源码 MPL-2.0; `THIRD_PARTY_NOTICES.md` 列 PDFBox-Android (Apache-2.0), Bouncy Castle (MIT 式许可), 其余 AndroidX / Compose (Apache-2.0); README 的 "引擎" 节写明无原生库与纯 Java 依赖. | P0.1 |
 
 ---
@@ -111,7 +111,7 @@ D26-D42 据第 1 节派生, 进入对应阶段前可推翻 (推翻点见各条),
 ### 4.3 外部事实
 
 - 系统 `PdfRenderer` (API 21+): 只读渲染, 需可 seek 的 fd, 不支持加密文档 (抛 `SecurityException`), 同一时刻只能打开一页, 不绘白底; API 35 新增 `Page.getTextContents` / `searchText` / 表单 API, `PdfRendererPreV` 在 API 30-34 需 S 扩展 13+, 覆盖不全, 1.0.0 不依赖 (D30). `PdfDocument` (API 19+) 用 Canvas 绘制生成 PDF, 文本不可提取为 Unicode 以外的编码问题极少, 字体嵌入由系统处理.
-- PDFBox-Android 2.0.27.0 (Apache-2.0, 2023-02): 纯 Java, 需 `PDFBoxResourceLoader.init(context)`; 文本提取, 大纲, 合并 / 拆分, 图片提取与嵌入, `StandardProtectionPolicy` 加密 (AES-256 需 BouncyCastle provider); 自带渲染器慢且字体支持弱, 只作加密文档的解密中转 (D30). 上游 PDFBox 2.0.x 仍在维护, Android 分支是否有更新版见附录 D Q1.
+- PDFBox-Android 2.0.27.0 (Apache-2.0, 2023-02): 纯 Java, 需 `PDFBoxResourceLoader.init(context)`; 文本提取, 大纲, 合并 / 拆分, 图片提取与嵌入, `StandardProtectionPolicy` 加密 (AES-256 需 BouncyCastle provider); 自带渲染器慢且字体支持弱, 只作加密文档的解密中转 (D30). 上游 PDFBox 2.0.x 仍在维护; Android 分支 2026-11-12 复核 Maven Central 最新仍是 2.0.27.0 (元数据最后更新 2023-01-02), Q1 已决锁定该版本.
 - `androidx.pdf` 1.0.0-beta01 (2026-08): minSdk 28, 仅查看器组件, 不提供编辑; pdfium / MuPDF 系库为原生库且 MuPDF 为 AGPL; 均不采用 (D3).
 - WebView `createPrintDocumentAdapter` (API 21+): `onLayout` / `onWrite` 的回调类构造器为隐藏 API, 同包壳类技巧被多个开源库使用但未被官方承诺, 需 spike (附录 D Q5); WebView 必须在主线程创建, 插件服务进程可用 Application 上下文离屏创建.
 - Android 10+ 后台启动 Activity 受限: 宿主在后台时 `pdf.view` 可能被系统拦截, 报 `UI_REQUIRES_FOREGROUND` (D21); 宿主前台时两步启动与 EPUB 相同.
@@ -186,7 +186,7 @@ io.github.supermonster003.autojs6.plugin.three.paper.pdf
 | 宿主契约包 | `org.autojs.plugin.pdf.api` |
 | 宿主桥接包 | `org.autojs.autojs.core.plugin.pdf` |
 | 脚本 API | `pdf` (`$pdf` 同对象); Node / Bun 模块 `pdf` |
-| `{REQUIRES_HOST_VERSION}` | 基线 5935 (宿主 `e25e28f88`), P1.6 写临时值, P5.4 回填为含全部宿主条目的本地构建号 (D41) |
+| `{REQUIRES_HOST_VERSION}` | 基线 6640 (公开 6.8.0 与宿主 `master` 6.8.1 开发线 `739ac2f96e` 的 `VERSION_BUILD` 相同, 宿主的 `VERSION_BUILD` 即 versionCode); P0.1 骨架写临时值 6641 (6640 不含 P1 的宿主提交, 取下一个构建号; 3-Chime Alarm T33 先例), P1.6 核对临时值, P5.4 回填为含全部宿主条目的 6.8.1 本地构建号 (D41, Q8) |
 | 向导目录 | `PluginInstallWizardCatalog` `FILE_MANAGER` 分类, `official("three.paper.pdf")`, 回退标题 `Three Paper PDF`; `PluginDefaultEnabledPolicy` 默认启用 (D14) |
 | `plugin_description` (zh-Hans) | `读取, 渲染, 合并, 拆分, 生成与加密 PDF 文件, 内置查看器与文件管理器入口` (句尾无点号, 不含 "AutoJs6"; P0.1 定稿, 10 语言见 `values*/strings.xml`) |
 | GitHub 仓库描述 | `PDF reading, rendering, page editing, generation and encryption with a built-in viewer for AutoJs6 scripts` |
@@ -202,8 +202,8 @@ io.github.supermonster003.autojs6.plugin.three.paper.pdf
 
 | 阶段 | 版本 | 主题 | 状态 |
 | --- | --- | --- | --- |
-| P0 | 1.0.0 | 仓库骨架: 构建链与身份, Icon Studio 图标, 测试与 CI | 未开始 |
-| P1 | 宿主 6.8.0 | 契约 `pdf-api`, 宿主绑定与查看器启动, 脚本模块 `pdf`, OCR 分支, Node / Bun 桥接, Explorer 文件类型与注册 | 未开始 |
+| P0 | 1.0.0 | 仓库骨架: 构建链与身份, Icon Studio 图标, 测试与 CI | 进行中 (paper-p0, 2026-11-12) |
+| P1 | 宿主 6.8.1 | 契约 `pdf-api`, 宿主绑定与查看器启动, 脚本模块 `pdf`, OCR 分支, Node / Bun 桥接, Explorer 文件类型与注册 | 未开始 |
 | P2 | 1.0.0 | 插件核心: 服务与句柄, 读取, 渲染与位图传输, 页面操作, 生成, 加密, 设备矩阵 | 未开始 |
 | P3 | 1.0.0 | 查看器, `pdf.view` 会话, Explorer Action 服务 | 未开始 |
 | P4 | 1.0.0 | 工具箱界面: 应用骨架, 向导, 设置与启动器模式 | 未开始 |
@@ -236,18 +236,18 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 2. 真机脚本回归: 附录 F 设备矩阵中的 Sony API 28 / 31 / 33, Xiaomi Pad API 35 四台通过, OnePlus API 35 (ColorOS) 至少跑一次; 无原生库, 不需要 16 KB 设备.
 3. 10 种语言资源与文档只用半角标点 (`COMMON_AGENTS.md` 规则), `prepush_check.py` 通过, `THIRD_PARTY_NOTICES.md` 与依赖一致.
 4. 发布 APK 为 release 签名, 用宿主插件中心安装并跑 `samples/` 冒烟脚本; versionCode, 文件名 CRC32 与索引清单一致.
-5. changelog 10 种语言同步 (zh-Hans 由子会话写, 其他语言由维护者同步或子会话按 `AUTOJS6_PLUGIN_NEW_REPO_AGENTS.md` 规则翻译后由维护者复核).
+5. changelog 10 种语言同时写 (`.claude/rules/all-languages.md`, 2026-11-05 起): 子会话以 zh-Hans 为源一次写全并翻译 10 种语言, 运行生成脚本与 `--check`, 不留给维护者; 维护者审阅时可修改任何语言.
 
 ---
 
 ## P0: 仓库骨架
 
-状态: 未开始. 设备: 无 (构建与单元测试); P0.3 的仪器测试用 API 33 AVD.
+状态: 进行中 (paper-p0, 2026-11-12). 设备: 无 (构建与单元测试); P0.3 的仪器测试用 API 33 AVD.
 
 ### P0.1 构建链与身份 (D26, D42)
 
 - [ ] (插件) 按 `AUTOJS6_PLUGIN_NEW_REPO_AGENTS.md` 建立 Gradle 工程 (`settings.gradle.kts`, `build-logic`, `gradle/libs.versions.toml`, `version.properties`, `app/`), 填入 5.5 节身份; `libs/common-plugin-api.aar`, `libs/explorer-action-api.aar` 与 `libs/pdf-api.aar` (P1.1 产出, 未产出前用 P1.1 的常量草案本地构建 AAR 顶替并在 `locks/host-api-aars.lock` 标注临时) 入库.
-- [ ] (插件) 依赖线: Compose BOM 2026.09.00 + Material 3, navigation 2.10.2, `pdfbox-android` 2.0.27.0 (附录 D Q1), 无原生库; `./gradlew assembleDebug` 产出 universal APK; 检查依赖 AAR / JAR 内无 `.so`; `PDFBoxResourceLoader.init` 在 Application 里完成.
+- [ ] (插件) 依赖线: Compose BOM 2026.09.00 + Material 3, navigation 2.10.2, `pdfbox-android` 2.0.27.0 (Q1 已决锁定), 无原生库; `./gradlew assembleDebug` 产出 universal APK; 检查依赖 AAR / JAR 内无 `.so`; `PDFBoxResourceLoader.init` 在 Application 里完成.
 - [ ] (插件) `ThreePaperPdfApplication`, `ThreePaperPdfInfoService`, `ThreePaperPdfService` 空实现 (返回 `getInfo` 与 `NOT_IMPLEMENTED`), `ThreePaperPdfExplorerActionService` 空目录, `ThreePaperPdfContract` (ID, engine, 契约版本), Manifest (权限, 服务, 查看器 Activity 的 `ACTION_VIEW` + `application/pdf` 过滤器, `MANAGE_EXTERNAL_STORAGE` 授权页), 10 种语言 `strings.xml` (`app_name` 不可翻译, `plugin_description` 定稿).
 - [ ] (插件) `LICENSE` (MPL-2.0), `README.md` 骨架 (含 "引擎与依赖" 节), `THIRD_PARTY_NOTICES.md` 生成脚本, `.gitattributes` (已入库), `.editorconfig`, `prepush_check.py` 接入, `AGENTS.md`.
 - 验收: `./gradlew assembleDebug test` 通过; APK 安装到 API 33 AVD 后插件中心能识别 `three-paper-pdf` (身份服务) 并按 D14 默认启用 (宿主 P1.6 落地前显示未启用); 提交前 `VERSION_BUILD` = 提交数 + 1.
@@ -290,7 +290,7 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 
 ### P1.4 OCR 分支 (D19)
 
-- [ ] (宿主) `core/plugin/pdf/PdfOcr`: `pdf.text(path, { ocr: true | 'always', ocrOptions })` 对无文本层的页 (提取结果为空白) 以 `ocrDpi` (附录 D Q6, 默认 300) 渲染后调用 `ocr` 模块的当前引擎, 结果按页合并进返回值并标 `source: 'ocr'`; 无可用引擎 `OCR_UNAVAILABLE`; 进度回调按页推进.
+- [ ] (宿主) `core/plugin/pdf/PdfOcr`: `pdf.text(path, { ocr: true | 'always', ocrOptions })` 对无文本层的页 (提取结果为空白) 以 `ocrDpi` (默认 300, Q6 已决; 脚本可覆盖) 渲染后调用 `ocr` 模块的当前引擎, 结果按页合并进返回值并标 `source: 'ocr'`; 无可用引擎 `OCR_UNAVAILABLE`; 进度回调按页推进.
 - [ ] (文档) `pdf.md` 的 OCR 一节与 "渲染 + `ocr.recognize`" 手动样例 (`samples/pdf-ocr-manual.js`).
 - 验收: 真机 (已装 Paddle 或 Rapid OCR 引擎的 API 33) 对 `samples/fixtures/scanned.pdf` 识别出预期文本; 未装引擎的设备报 `OCR_UNAVAILABLE`.
 
@@ -304,8 +304,8 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 
 - [ ] (宿主) `util/FileUtils.kt`: `TYPE.PDF` 改为 `TypeDataHolder.PDF_VIEWER` (图标字符与 EPUB 同风格, `IDENTITY_PREVIEWABLE`, `PreviewerType.PDF`); `ExplorerDocumentPreviewerPluginUi.specFor` 加 PDF 规格 (`THREE_PAPER_PDF_PACKAGE`, `plugin_three_paper_pdf_name` 10 语言, `application/pdf`), `maximumArchiveDocumentBytes` 给 PDF 独立上限; 未装插件时保持 "用其他应用打开" 回退.
 - [ ] (宿主) `PluginInstallWizardCatalog` 加 `entry(official("three.paper.pdf"), "Three Paper PDF", FILE_MANAGER)`; `PluginDefaultEnabledPolicy` 加默认启用; 插件中心说明文案 10 语言.
-- [ ] (宿主) changelog (zh-Hans, 通俗文案), `docs/dev/` 协议文档定稿, `REQUIRES_HOST_VERSION` 临时值写入插件 `version.properties` (P5.4 回填).
-- 验收: 宿主 Explorer 点击 `.pdf` 文件: 已装插件时打开查看器 (依赖 P3.1), 未装时弹引导对话框; 向导页出现条目; 老宿主 (Redmi) 安装插件显示不兼容.
+- [ ] (宿主) changelog 10 种语言同时写 (6.8.1 版本 key, 通俗文案, all-languages 规则), `docs/dev/` 协议文档定稿, 核对插件的 `REQUIRES_HOST_VERSION` 临时值 (P0.1 骨架为 6641, P5.4 回填).
+- 验收: 宿主 Explorer 点击 `.pdf` 文件: 已装插件时打开查看器 (依赖 P3.1), 未装时弹引导对话框; 向导页出现条目; 老宿主 (Redmi, 或公开 6.8.0) 安装插件显示不兼容.
 
 ---
 
@@ -315,7 +315,7 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 
 ### P2.1 服务, 句柄与任务模型 (D10, D11, D28)
 
-- [ ] (插件) `ThreePaperPdfService` 实现 `IPdfPlugin` (`getInfo`, `getCapabilities`, `open`, `run`, `cancel`, `openViewer`), `DocumentRegistry` (每宿主 Binder token 8 个句柄, 空闲超时关闭, token 死亡全部关闭并清理临时文件), `Ops` (opId, 进度节流 100 ms, 取消标志贯穿 PDFBox 循环), `RenderPool` (2 并发, 其余排队), 临时文件目录 `cache/pdf/<token>/`.
+- [ ] (插件) `ThreePaperPdfService` 实现 `IPdfPlugin` (`getInfo`, `getCapabilities`, `open`, `run`, `cancel`, `openViewer`), `DocumentRegistry` (每宿主 Binder token 8 个句柄, 空闲超时关闭, token 死亡全部关闭并清理临时文件), `Ops` (opId, 进度节流 100 ms, 取消标志贯穿 PDFBox 循环; 默认无超时, 只靠 `cancel(opId)`, 宿主 Binder 死亡与脚本停止结束操作, Q7 已决), `RenderPool` (2 并发, 其余排队), 临时文件目录 `cache/pdf/<token>/`.
 - [ ] (插件) 契约版本协商与 `PdfCapabilityKeys` (`render.sharedMemory`, `generate.html`, `crypto.aes256`, `ocr` 否, 上限常量回传).
 - 验收: 仪器测试: 绑定, `getInfo`, 打开夹具, 第 9 个句柄 `LIMIT_EXCEEDED`, 取消长操作后输出被截断; token 死亡后临时目录为空.
 
@@ -358,7 +358,7 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 
 ### P3.1 Compose 查看器 (D35)
 
-- [ ] (插件) `ThreePaperPdfViewerActivity` + `ViewerScreen`: 连续纵向滚动, 双指缩放与 tile 重渲染, 页码指示与跳页, 缩略图栏, 大纲抽屉, 搜索与高亮, 密码对话框, 夜间模式 (附录 D Q3), 分享 / 用其他应用打开, 三个入口 (令牌, `ACTION_VIEW` content URI, 工具箱结果页) 共用.
+- [ ] (插件) `ThreePaperPdfViewerActivity` + `ViewerScreen`: 连续纵向滚动, 双指缩放与 tile 重渲染, 页码指示与跳页, 缩略图栏, 大纲抽屉, 搜索与高亮, 密码对话框, 夜间模式 (Q3 已决: 反色渲染, 图片保留原色), 分享 / 用其他应用打开, 三个入口 (令牌, `ACTION_VIEW` content URI, 工具箱结果页) 共用.
 - 验收: 仪器测试打开夹具并断言页数与跳页; 真机 API 31 / 35 的缩放与搜索手测 (E4); 100 页文档滚动无 ANR (API 28).
 
 ### P3.2 `pdf.view` 会话 (D21, D23)
@@ -369,7 +369,7 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 
 ### P3.3 Explorer Action 服务 (D6, D36)
 
-- [ ] (插件) `ThreePaperPdfExplorerActionService` 目录声明 (合并所选, 拆分, 转图片, 加密, 解密, 提取文本), 执行走 `PdfEngine`, 输出位置按附录 D Q2, 进度回宿主事务界面, 错误本地化.
+- [ ] (插件) `ThreePaperPdfExplorerActionService` 目录声明 (合并所选, 拆分, 转图片, 加密, 解密, 提取文本), 执行走 `PdfEngine`, 输出到源文件同目录 (文件名加操作后缀, 重名自动编号; Q2 已决), 进度回宿主事务界面, 错误本地化.
 - [ ] (宿主) `ExplorerPluginActionController` 对 PDF 类型的溢出工具展示与多选合并条件 (依赖 P1.6).
 - 验收: 真机 Explorer 对单个与多选 PDF 执行每个工具, 结果文件出现在约定位置并可打开.
 
@@ -397,7 +397,7 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 
 ### P5.1 文档 (AutoJs6-Documentation) (D40)
 
-- [ ] (文档) `api/pdf.md` (模块说明, 可用性, 同步 / Async, 路径与 fd 说明, 每个方法, OCR 一节, 错误码表), `api/pdfDocumentType.md`, `api/pdfViewSessionType.md`, `runtimeApis` 一节, 侧栏与索引登记, 10 语言 changelog JSON 同步规则.
+- [ ] (文档) `api/pdf.md` (模块说明, 可用性, 同步 / Async, 路径与 fd 说明, 每个方法, OCR 一节, 错误码表), `api/pdfDocumentType.md`, `api/pdfViewSessionType.md`, `runtimeApis` 一节, 侧栏与索引登记, 文档站 changelog 10 语言 JSON 同时写 (all-languages 规则).
 - 验收: 文档站本地构建通过, 链接检查通过.
 
 ### P5.2 声明 (AutoJs6-TypeScript-Declarations, Ace Editor, Offline Docs)
@@ -407,12 +407,12 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 
 ### P5.3 README, changelog, 样例与兼容矩阵
 
-- [ ] (插件) README (功能, 安装, 引擎与依赖, 权限说明, 脚本示例, 兼容矩阵), `CHANGELOG.md` 10 语言 (zh-Hans 定稿), `samples/` (读取, 渲染, 合并拆分, 图片转 PDF, 加密, 查看器, OCR 手动) 与宿主 `samples/` 同步.
+- [ ] (插件) README (功能, 安装, 引擎与依赖, 权限说明, 脚本示例, 兼容矩阵), `CHANGELOG.md` 10 语言一次写全 (以 zh-Hans 为源翻译, all-languages 规则), `samples/` (读取, 渲染, 合并拆分, 图片转 PDF, 加密, 查看器, OCR 手动) 与宿主 `samples/` 同步.
 - 验收: `prepush_check.py` 通过; 样例在 API 33 真机全部通过.
 
 ### P5.4 1.0.0 发布 (D41)
 
-- [ ] (发布) 走第 6 节发布门禁 1-5; `REQUIRES_HOST_VERSION` 回填; tag `v1.0.0`, release 工作流产出 APK; (索引) 登记 `release-manifests/.../<versionCode>.json`; 宿主 changelog 与本文件阶段总览更新.
+- [ ] (发布) 走第 6 节发布门禁 1-5; `REQUIRES_HOST_VERSION` 回填为含全部宿主条目的 6.8.1 本地构建号 (D41, Q8: 不等宿主 6.8.1 公开); tag `v1.0.0`, release 工作流产出 APK; (索引) 登记 `release-manifests/.../<versionCode>.json`; 宿主 changelog 与本文件阶段总览更新.
 - 验收: 插件中心从索引安装 1.0.0 并默认启用; Explorer 与脚本冒烟通过.
 
 ---
@@ -573,13 +573,14 @@ AIDL:
 
 | 编号 | 事项 | 选项 | 拍板时点 | 状态 |
 | --- | --- | --- | --- | --- |
-| Q1 | PDFBox-Android 版本 | (a) 2.0.27.0 (推荐, Maven Central 已验证, 2023-02) / (b) P0.1 时若 Android 分支已发更新版则用更新版 (需复核 BouncyCastle 传递依赖) | P0.1 | 需拍板 |
-| Q2 | Explorer 溢出工具的输出位置 | (a) 与源文件同目录, 文件名加操作后缀, 重名自动编号 (推荐, 与宿主事务结果可见性一致) / (b) 统一写到 `/sdcard/Documents/3-Paper PDF/` | P3.3 | 需拍板 |
-| Q3 | 查看器夜间模式 | (a) 做, 反色渲染并保留图片原色 (推荐, 成本低) / (b) 1.0.0 不做 | P3.1 | 需拍板 |
+| Q1 | PDFBox-Android 版本 | (a) 2.0.27.0 (推荐, Maven Central 已验证, 2023-02) / (b) P0.1 时若 Android 分支已发更新版则用更新版 (需复核 BouncyCastle 传递依赖) | P0.1 | 已决 (2026-11-12 12:20, 维护者选 (a) 锁定 2.0.27.0; 当日复核 Maven Central 最新仍是 2.0.27.0, 元数据最后更新 2023-01-02) |
+| Q2 | Explorer 溢出工具的输出位置 | (a) 与源文件同目录, 文件名加操作后缀, 重名自动编号 (推荐, 与宿主事务结果可见性一致) / (b) 统一写到 `/sdcard/Documents/3-Paper PDF/` | P3.3 | 已决 (2026-11-12 12:21, 维护者选 (a) 与源文件同目录) |
+| Q3 | 查看器夜间模式 | (a) 做, 反色渲染并保留图片原色 (推荐, 成本低) / (b) 1.0.0 不做 | P3.1 | 已决 (2026-11-12 12:20, 维护者选 (a) 做) |
 | Q4 | BouncyCastle provider 注册 | (a) `Security.insertProviderAt(BouncyCastleProvider, 1)` 并在 Application 里先移除同名系统 provider (推荐, PDFBox 文档做法) / (b) 不注册全局 provider, 只在加密调用处传入 provider 实例 | P2.6 spike 后 | 待 spike |
 | Q5 | WebView 打印适配器隐藏 API | (a) 同包壳类访问隐藏构造器, 失败回落 `UNSUPPORTED` (推荐) / (b) 自写 HTML 排版到 `PdfDocument` (大, 只支持子集) | P2.5 spike 后 | 待 spike |
-| Q6 | OCR 渲染 dpi | (a) 300 dpi (推荐, 识别率优先) / (b) 沿用渲染默认 144 dpi (快) | P1.4 | 需拍板 |
-| Q7 | 操作超时 | (a) 默认无超时, 只靠取消与脚本停止 (推荐, 大文档合并耗时不可预估) / (b) 默认 120 s, `timeout` 选项可改 | P2.1 | 需拍板 |
+| Q6 | OCR 渲染 dpi | (a) 300 dpi (推荐, 识别率优先) / (b) 沿用渲染默认 144 dpi (快) | P1.4 | 已决 (2026-11-12 12:20, 维护者选 (a) 300 dpi; 脚本可用 `ocrDpi` 覆盖) |
+| Q7 | 操作超时 | (a) 默认无超时, 只靠取消与脚本停止 (推荐, 大文档合并耗时不可预估) / (b) 默认 120 s, `timeout` 选项可改 | P2.1 | 已决 (2026-11-12 12:20, 维护者选 (a) 默认无超时; P1.1 契约也不设默认操作超时) |
+| Q8 | D41 发布门在宿主 6.8.0 已公开后的适用 | (a) 沿用 D41: 不等宿主 6.8.1 公开, 1.0.0 全部条目通过即发布并登记官方索引, `REQUIRES_HOST_VERSION` 写含全部宿主条目的 6.8.1 本地构建号, 公开 6.8.0 用户在插件中心看到不兼容直到 6.8.1 公开 (推荐) / (b) 等宿主 6.8.1 公开再发 | P5.4, P1.6 | 已决 (2026-11-12 12:21, 维护者选 (a) 沿用 D41) |
 
 ## 附录 E. 证据等级
 
@@ -593,9 +594,15 @@ AIDL:
 
 ## 附录 F. 基线快照与设备矩阵
 
-基线 (2026-10-22):
+基线 (2026-11-12, 进入 P0 时刷新):
 
-- 宿主 AutoJs6 `master` `e25e28f88`, `VERSION_NAME` 6.8.0 (未发布), `VERSION_BUILD` 4283, versionCode 5935 (偏移 1652), minSdk 24, compile / target 37; `plugin-api/epub-api` 契约版本 2, `explorer-action-api` 只读信封 v2.
+- 宿主 AutoJs6: 6.8.0 已于 2026-11-03 公开 (tag `v6.8.0` = `b7c88e117d`, versionCode 6640 = `VERSION_BUILD` 4988 + `VERSION_CODE_OFFSET` 1652); 公开时重写过历史, 立项基线 `e25e28f88` 已失效. `master` 为 6.8.1 开发线 `739ac2f96e` (2026-11-12 12:11), `VERSION_NAME` 6.8.1, `VERSION_BUILD` 6640; 自 `ef27581df9` 起宿主不再用 offset, `VERSION_BUILD` 即 versionCode, 6.8.1 开发期间与公开 6.8.0 同为 6640, 所以插件临时 `REQUIRES_HOST_VERSION` 取 6641 (5.5 节). 宿主侧 P1 条目进 6.8.1.
+- 插件平台与依赖线: `PLATFORM_VERSIONS_PLUGIN_VERSION` 1.9.1 (仍是最新 tag), Compose BOM 2026.09.00, navigation 2.10.2, `activity-compose` 1.12.2 (D26 核对不变); `pdfbox-android` 2.0.27.0 (Q1 已决).
+- 流程: 多语言文案自 2026-11-05 起所有语言一次写全 (`.claude/rules/all-languages.md`), 不再留给维护者同步.
+
+基线 (2026-10-22, 立项, 仅作历史):
+
+- 宿主 AutoJs6 `master` `e25e28f88` (已失效, 见上), `VERSION_NAME` 6.8.0 (未发布), `VERSION_BUILD` 4283, versionCode 5935 (偏移 1652), minSdk 24, compile / target 37; `plugin-api/epub-api` 契约版本 2, `explorer-action-api` 只读信封 v2.
 - 插件平台: `PLATFORM_VERSIONS_PLUGIN_VERSION` 1.9.1; 3-Slate Studio 立项依赖线: Compose BOM 2026.09.00, navigation 2.10.2; 3-Maple Image: `MANAGE_EXTERNAL_STORAGE`; 3-Macaw Speech 1.0.0 发布时 `REQUIRES_HOST_VERSION` 5456 (宿主未公开, D41 先例); Icon Studio 内核 1.4.0.
 - 外部: `pdfbox-android` 2.0.27.0 (BouncyCastle jdk15to18 1.72); 系统 `PdfRenderer` / `PdfDocument` API 21+ / 19+.
 
@@ -628,4 +635,4 @@ AIDL:
 | 远程 URL 转 PDF | 网络与安全边界扩大; 1.0.0 只收本地 HTML (D8) |
 | 注释, 数字签名, PDF/A, reflow | 不在 1.0.0 与 1.1.0 范围 (第 3 节) |
 | 工具箱生成脚本代码 | 3-Slate Studio D11 同款, 价值在但非本插件首要; 1.1.0 后再评估 |
-| 等宿主 6.8.0 公开再发 1.0.0 | 发布时点不可控; 照 Macaw 先例不等 (D41) |
+| 等宿主 6.8.0 公开再发 1.0.0 | 发布时点不可控; 照 Macaw 先例不等 (D41). 6.8.0 已于 2026-11-03 公开, 对 6.8.1 同样不等 (Q8 已决) |
