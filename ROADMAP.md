@@ -202,7 +202,7 @@ io.github.supermonster003.autojs6.plugin.three.paper.pdf
 
 | 阶段 | 版本 | 主题 | 状态 |
 | --- | --- | --- | --- |
-| P0 | 1.0.0 | 仓库骨架: 构建链与身份, Icon Studio 图标, 测试与 CI | 进行中 (paper-p0, 2026-11-12; P0.1 / P0.3 完成, P0.2 只剩真机图标目视 E4) |
+| P0 | 1.0.0 | 仓库骨架: 构建链与身份, Icon Studio 图标, 测试与 CI | 完成 (paper-p0, 2026-11-12) |
 | P1 | 宿主 6.8.1 | 契约 `pdf-api`, 宿主绑定与查看器启动, 脚本模块 `pdf`, OCR 分支, Node / Bun 桥接, Explorer 文件类型与注册 | 进行中 (P1.1 完成, P1.2 待真机绑定) |
 | P2 | 1.0.0 | 插件核心: 服务与句柄, 读取, 渲染与位图传输, 页面操作, 生成, 加密, 设备矩阵 | 未开始 |
 | P3 | 1.0.0 | 查看器, `pdf.view` 会话, Explorer Action 服务 | 未开始 |
@@ -242,7 +242,7 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 
 ## P0: 仓库骨架
 
-状态: 进行中 (paper-p0, 2026-11-12; P0.1 / P0.3 完成, P0.2 只剩真机图标目视 E4, 由维护者确认). 设备: 无 (构建与单元测试); P0.3 的仪器测试用 API 33 AVD.
+状态: 完成 (paper-p0, 2026-11-12). 设备: 无 (构建与单元测试); P0.3 的仪器测试用 API 33 AVD.
 
 ### P0.1 构建链与身份 (D26, D42)
 
@@ -258,7 +258,7 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 - [x] (插件) 用 Icon Studio (`D:/webstorm-projects/AutoJs6-Icon-Studio`, 内核 1.4.0) 从 `.python/icons/three-paper-ic-launcher-light.png` / `-dark.png` 生成全套资源 (`ic_plugin_center`, `ic_launcher`, `ic_launcher_system*`, monochrome, 四个 launcher alias, `.icons/recipe.json`, `.python/icon_studio_runtime.py` / `generate_icon_studio.py`), 视觉尺寸 V = 0.52, 安全圆断言通过.
 - [x] (插件) 设置页的启动器图标四选项 (自适应自动 / 固定亮 / 固定暗 / 透明) 与规范提示文案 (可在 P4.1 的设置页落地, 本条只要求资源与组件 alias 就绪). P0.2 就绪的部分: 四个 alias (`AdaptiveAutoIconAlias` 默认启用, 其余三个默认停用, 均指向 `ui.home.HomeActivity`, 真实入口不再导出) 与 `ui.appearance.LauncherIcons` (切换, 快捷方式归属回滚, 混合状态修复); 设置页四选项与提示文案随 P4.1 落地.
 - 验收: 工程测试中的图标尺寸 / 透明度 / 安全圆断言通过; API 33 AVD 与一台真机的启动器与插件中心亮暗主题下图标可辨.
-- 结果 (2026-11-12, paper-p0): 资源与 AVD 部分完成, 真机目视 (E4) 待维护者确认. E1: 独立运行时 (`.python/icon_studio_runtime.py`, 与内核 1.4.0 的 `icon_studio/runtime.py` 相同) 按 `.icons/recipe.json` 生成 28 个资源 (14 张 PNG, 含 Manifest 的 application icon / roundIcon), `generate_icon_studio.py --check` 通过, 无错误无警告; 度量: V = 0.5216 (目标 0.52 +- 0.006), 列表安全圆半径 169.65 / 216 px, 启动器前景半径 113.59 / 132 px, 透明像素 75.3%, 亮 / 暗对比度 13.94 / 11.19. 单元测试 39 例 0 失败 (新增 `IconResourcesTest` 6 例, `LauncherIconStatePolicyTest`, Manifest 四 alias 契约); lint 新增的只有生成资源固有的 `IconDuplicates` 7 条与 `IconLauncherShape` 2 条提示 (规范第 7 节允许, 不写成零警告); debug APK 21,411,073 B (versionCode 5). E2: API 33 AVD (只读实例, 宿主 debug 6640) 上 `.python/device_plugin_center_check.py` RESULT PASS (启动器入口解析到 `.launcher.AdaptiveAutoIconAlias`), `.python/device_icon_check.py --center --drawer --aliases` RESULT PASS: 插件中心亮色为 `#FAFAFA` 圆底 + 深色图案, 暗色为 `#212121` 圆底 + 浅色图案 (插件未启用, 宿主按未启用状态调暗); 暗色下逐一启用四个 alias, 启动器分别显示亮底, 暗底, 暗底 (自动随系统), 透明 (Pixel 启动器给非自适应图标加白色外框, 暗色图案在白框上对比度低, 属启动器外框行为), 最后恢复为 Manifest 默认状态. 两点观察: 宿主插件中心的亮暗由宿主持久化的夜间标记决定, 只在宿主进程存活时随系统同步, 所以脚本在宿主前台时切换主题; Launcher3 的图标缓存不随 `cmd uimode night` 刷新 (与 3-Prism Camera P3 的记录相同), 自动模式在组件状态变化或重装后显示对应变体. 截图在会话 scratchpad, 不入库.
+- 结果 (2026-11-12, paper-p0): 完成. E1: 独立运行时 (`.python/icon_studio_runtime.py`, 与内核 1.4.0 的 `icon_studio/runtime.py` 相同) 按 `.icons/recipe.json` 生成 28 个资源 (14 张 PNG, 含 Manifest 的 application icon / roundIcon), `generate_icon_studio.py --check` 通过, 无错误无警告; 度量: V = 0.5216 (目标 0.52 +- 0.006), 列表安全圆半径 169.65 / 216 px, 启动器前景半径 113.59 / 132 px, 透明像素 75.3%, 亮 / 暗对比度 13.94 / 11.19. 单元测试 39 例 0 失败 (新增 `IconResourcesTest` 6 例, `LauncherIconStatePolicyTest`, Manifest 四 alias 契约); lint 新增的只有生成资源固有的 `IconDuplicates` 7 条与 `IconLauncherShape` 2 条提示 (规范第 7 节允许, 不写成零警告); debug APK 21,411,073 B (versionCode 5). E2: API 33 AVD (只读实例, 宿主 debug 6640) 上 `.python/device_plugin_center_check.py` RESULT PASS (启动器入口解析到 `.launcher.AdaptiveAutoIconAlias`), `.python/device_icon_check.py --center --drawer --aliases` RESULT PASS: 插件中心亮色为 `#FAFAFA` 圆底 + 深色图案, 暗色为 `#212121` 圆底 + 浅色图案 (插件未启用, 宿主按未启用状态调暗); 暗色下逐一启用四个 alias, 启动器分别显示亮底, 暗底, 暗底 (自动随系统), 透明 (Pixel 启动器给非自适应图标加白色外框, 暗色图案在白框上对比度低, 属启动器外框行为), 最后恢复为 Manifest 默认状态. 两点观察: 宿主插件中心的亮暗由宿主持久化的夜间标记决定, 只在宿主进程存活时随系统同步, 所以脚本在宿主前台时切换主题; Launcher3 的图标缓存不随 `cmd uimode night` 刷新 (与 3-Prism Camera P3 的记录相同), 自动模式在组件状态变化或重装后显示对应变体. 截图在会话 scratchpad, 不入库. E4 (2026-11-12 15:40): XQ-AT72 (API 31, 宿主 debug 6.8.1 / 6641, 插件 debug 包) 上维护者目视确认, 暗色与亮色主题下启动器 (默认自适应自动 alias) 与宿主插件中心 (未启用状态, 宿主调暗) 的图标都清晰可辨; 测后夜间模式恢复为测前的暗色, 插件已卸载.
 
 ### P0.3 测试与 CI (D15, D39)
 
