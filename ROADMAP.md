@@ -204,7 +204,7 @@ io.github.supermonster003.autojs6.plugin.three.paper.pdf
 | --- | --- | --- | --- |
 | P0 | 1.0.0 | 仓库骨架: 构建链与身份, Icon Studio 图标, 测试与 CI | 完成 (paper-p0, 2026-11-12) |
 | P1 | 宿主 6.8.1 | 契约 `pdf-api`, 宿主绑定与查看器启动, 脚本模块 `pdf`, OCR 分支, Node / Bun 桥接, Explorer 文件类型与注册 | 进行中 (P1.1 完成, P1.2 待真机绑定) |
-| P2 | 1.0.0 | 插件核心: 服务与句柄, 读取, 渲染与位图传输, 页面操作, 生成, 加密, 设备矩阵 | 进行中 (P2.1 完成) |
+| P2 | 1.0.0 | 插件核心: 服务与句柄, 读取, 渲染与位图传输, 页面操作, 生成, 加密, 设备矩阵 | 进行中 (P2.1 / P2.2 完成) |
 | P3 | 1.0.0 | 查看器, `pdf.view` 会话, Explorer Action 服务 | 未开始 |
 | P4 | 1.0.0 | 工具箱界面: 应用骨架, 向导, 设置与启动器模式 | 未开始 |
 | P5 | 1.0.0 | 文档, 声明, 四仓库同步, 样例, 兼容矩阵, 发布与索引登记 | 未开始 |
@@ -325,7 +325,7 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 
 ## P2: 插件核心
 
-状态: 进行中 (paper-p2-core: P2.1 完成, P2.2 / P2.3 进行中). 设备: API 33 AVD (仪器测试) + Sony XQ-DQ72 API 33 (联调) + G8441 API 28 (SharedMemory 回落与低端性能).
+状态: 进行中 (paper-p2-core: P2.1 / P2.2 完成, P2.3 进行中). 设备: API 33 AVD (仪器测试) + Sony XQ-DQ72 API 33 (联调) + G8441 API 28 (SharedMemory 回落与低端性能).
 
 ### P2.1 服务, 句柄与任务模型 (D10, D11, D28)
 
@@ -337,9 +337,10 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 
 ### P2.2 读取: 信息, 文本, 大纲, 搜索 (D31)
 
-- [ ] (插件) `getInfo` (页数, 每页尺寸与旋转, 元数据, PDF 版本, 是否加密与权限位, 文件大小), `getOutline`, `getText` (页范围 + 分块, 保留换行, `layout: 'reading' | 'raw'`, 契约名, 原文 `simple`), `search` (关键字, 大小写与整词选项, 返回页码与命中矩形, 页上限).
+- [x] (插件) `getInfo` (页数, 每页尺寸与旋转, 元数据, PDF 版本, 是否加密与权限位, 文件大小), `getOutline`, `getText` (页范围 + 分块, 保留换行, `layout: 'reading' | 'raw'`, 契约名, 原文 `simple`), `search` (关键字, 大小写与整词选项, 返回页码与命中矩形, 页上限).
 - 验收: 单元测试对运行时夹具断言文本, 大纲层级, 搜索命中; 仪器测试经 Binder 取文本分块.
 - P0.3 的发现 (paper-p0, 2026-11-12): (1) `PDFTextStripper` 不按位置排序时, 在转 90 / 270 度的页面上会在词中断行 (`rotated.pdf` 第 2 页得到 "R|o|tate 90", 第 4 页得到 "R|o|ta|te| 2|70"), `sortByPosition = true` 后五页都正确, `layout: 'simple'` 应按位置排序, `raw` 若保留内容流顺序要在文档里说明; (2) JVM 上 PDFBox-Android 的 AFM / CMap 字体资源要 `PDFBoxResourceLoader.init(Context)` 才能加载, 单元测试不能直接调用 `PDFTextStripper`, 文本与搜索的断言放仪器测试 (`SampleFixturesDeviceTest` 已按清单断言), JVM 测试只断言内容流里的 `Tj` 文本, 大纲与结构.
+- 结果 (2026-11-12, paper-p2-core): 完成. 结构: 新增 `read/` 层: `DocumentInfoReader` (`getInfo`: 页数, 每页 CropBox 宽高与旋转, 信息字典元数据 (无标题时回落到 XMP `dc:title`), 日期为带数字时区的 ISO 8601, PDF 版本, 是否加密, 当前密码授予的权限位, 文件大小), `OutlineReader` (深度优先扁平化为 `title` / `page` / `level`, 页面目标支持显式目标, 命名目标与 `GoTo` 动作, 没有页面目标为 0, 损坏的环被截断, 最深 64 层), `PageSweep` (逐页 `PDFTextStripper`, 每 256 个字形检查取消与关闭), `TextReader` + `TextChunker` (`page` / `offset` 续读, `maxChars` 缺省与上限都是 `MAX_TEXT_CHARS_PER_CALL`, 每页保留换行并以一个换行结尾, 不截断代理对, 应答文本预算 700,000 字节), `SearchReader` (`KeywordMatcher`: 大小写与整词选项, 关键字里的空白匹配任意空白 (含换行), 命中不重叠; 命中矩形按行拆分, 坐标为显示页 (已旋转) 左上原点的点, 由字形原点, 前进量与字体描述的 ascent / descent 求得, 保留两位小数并截在页内; `context` 取命中前后各 40 个字符; `limit` 0 或缺省为 100, 上限 1000, `offset` 分页; 列表 JSON 预算 320,000 字符). `layout: 'reading'` 按位置排序, `raw` 保留内容流顺序 (转 90 / 270 度的页面会在词中断行, 文档须说明, 见上面的 P0.3 发现); 搜索总按阅读顺序. 不检查文本相关的权限位 (附录 D Q11, 按推荐先行). `ThreePaperPdfContract.IMPLEMENTED_OPS` = `info`, `outline`, `text`, `search`, 其余方法仍报 `UNSUPPORTED` + `NOT_IMPLEMENTED: <op>`. E1: JVM 单元测试 104 例 0 失败, 本条新增 19 例 (`DocumentReadersTest` 8: 文本 / 旋转 / 加密样例的信息与权限位, 缺省元数据与 XMP 标题, 日期时区, 大纲层级与 `GoTo` 目标, 空大纲与预算截断, 断环与关闭; `ReadingPartsTest` 11: 分块, 选项缺省与上限, 关键字匹配, 命中收集, 四种旋转下的显示矩形, 字形与上下文); lint 0 错误, 15 个警告都是此前已有的. E2: AVD_API_33 只读实例 (emulator-5790) `am instrument` 36 例 0 失败, 本条新增 `PdfServiceReadingTest` 9 例 (全部经 Binder: 信息与权限位, 大纲, 文本保留换行并回传 `requestId`, `pages: '2-5'` + `maxChars: 20` 的分块拼起来等于整段文本, reading / raw 在旋转页上的差异, 错误请求, 搜索的页码 / 选项 / 分页 / 跨行命中 / 关键字错误, 命中矩形在显示页上的位置 (`rotated.pdf` 五页, 误差 0.5 点), 用户密码打开时可读文本 (Q11)).
 
 ### P2.3 渲染与位图传输 (D9, D17, D30)
 
@@ -640,6 +641,7 @@ AIDL:
 | Q8 | D41 发布门在宿主 6.8.0 已公开后的适用 | (a) 沿用 D41: 不等宿主 6.8.1 公开, 1.0.0 全部条目通过即发布并登记官方索引, `REQUIRES_HOST_VERSION` 写含全部宿主条目的 6.8.1 本地构建号, 公开 6.8.0 用户在插件中心看到不兼容直到 6.8.1 公开 (推荐) / (b) 等宿主 6.8.1 公开再发 | P5.4, P1.6 | 已决 (2026-11-12 12:21, 维护者选 (a) 沿用 D41) |
 | Q9 | Compose 自带的原生库 `libandroidx.graphics.path.so` (`androidx.graphics:graphics-path`, 由 `ui-graphics` 传递, 四个 ABI 各 7-11 KB, 已 16 KB 对齐) 与 D3 / D26 "无原生库" 的字面冲突 | (a) 列入原生库白名单, universal APK 照常, `supportedAbis` 为空, 文档写 "PDF 处理无原生库, 唯一的原生库来自 Compose" (推荐, 已先行; 3-Slate Studio 等 Compose 插件同款) / (b) 用 `packaging.jniLibs.excludes` 排除该库 (API 34 以下 Compose 的路径迭代依赖它, 排除后可能 `UnsatisfiedLinkError`, 需在四台设备复核) | P0.1 | 已决 (2026-11-12 15:48, 维护者选 (a) 列入白名单, 保持现状; 由 paper-p0 先行实施) |
 | Q10 | 文档句柄的空闲处理 (P2.1 原文 "空闲超时关闭") | (a) 空闲 5 分钟只释放解析状态 (PDFBox 对象, 以及 P2.3 的渲染器与解密副本), 句柄仍有效, 下一次调用重新解析源 (推荐, 已先行; 契约没有 "句柄被插件关闭" 的事件, 脚本长时间持有的句柄若被关闭, 之后的调用会意外得到 `SESSION_CLOSED`) / (b) 空闲超时直接关闭句柄并删除临时目录 (字面实现, 脚本须处理 `SESSION_CLOSED`) / (c) 不做空闲处理, 只靠 `close()`, 脚本停止与宿主连接断开 | P2.1 | 按推荐先行 (paper-p2-core, 2026-11-12); 影响 P2.1 `DocumentRegistry.sweep` / `PdfSession.releaseIdle`, P2.3 解密副本的生命周期; 改选返工: (b) 约 20 行与 1 个设备测试, (c) 删除清扫线程约 15 行 |
+| Q11 | `getText` / `search` 是否执行 copy (提取文本) 权限位 | (a) 不执行: 能打开的文档就能读文本与搜索, `getInfo` 照实回报权限位, 由脚本自行决定 (推荐, 已先行; 只有用户密码的文档常把 copy 关掉, 执行会让脚本读不了自己有密码的文件, PDFBox 本身也不强制) / (b) 没有 copy 权限时 `getText` / `search` 报 `PERMISSION_DENIED` (用所有者密码打开或权限含 copy 时照常) | P2.2 | 按推荐先行 (paper-p2-core, 2026-11-12); 影响 P2.2 `TextReader` / `SearchReader`, P3.1 查看器的搜索; 改选返工: (b) 约 10 行与 1 个设备测试 |
 | Q20 | `pdf.*` 写输出的方法要求的脚本能力 | (a) 读 `files`, 写输出另加 `files.write` (推荐, 已先行, 与 Node / MCP 的能力清单一致, `files` 不隐含 `files.write`) / (b) 只要 `files` (D29 字面 "files 读写") | P1.2 | 已决 (2026-11-12 15:48, 维护者选 A, 保持现状; 由 paper-p1-host 在宿主 P1.2 先行实施) |
 | Q21 | `PdfPluginHost` 是否设 `allowActivityStarts` | (a) 设 (推荐, 已先行, D29 原文 "含 allowActivityStarts, 以便宿主后台时插件界面弹出授权页"; 只在 API 34+ 且宿主可见时由系统放行) / (b) 与 `EpubPluginHost` 完全相同, 不设 (EPUB 实际未设) | P1.2 | 已决 (2026-11-12 15:48, 维护者选 A, 保持现状; 由 paper-p1-host 在宿主 P1.2 先行实施) |
 

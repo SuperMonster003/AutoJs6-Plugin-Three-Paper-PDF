@@ -6,6 +6,10 @@ import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ThreePaperPdfCon
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.PdfEngine
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.PdfSession
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.StopSignal
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.read.DocumentInfoReader
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.read.OutlineReader
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.read.SearchReader
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.read.TextReader
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfAnswers
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfBundles
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfFailure
@@ -28,13 +32,13 @@ import org.autojs.plugin.pdf.api.PdfOps
  */
 internal class PdfDocumentStub(private val session: PdfSession, private val engine: PdfEngine) : IPdfDocument.Stub() {
 
-    override fun getInfo(): Bundle = answer(PdfOps.INFO, request = null) { _, _ -> throw notImplemented(PdfOps.INFO) }
+    override fun getInfo(): Bundle = answer(PdfOps.INFO, request = null) { _, call -> DocumentInfoReader.read(call.pdf, session.sizeBytes, call.stop) }
 
-    override fun getOutline(): Bundle = answer(PdfOps.OUTLINE, request = null) { _, _ -> throw notImplemented(PdfOps.OUTLINE) }
+    override fun getOutline(): Bundle = answer(PdfOps.OUTLINE, request = null) { _, call -> OutlineReader.read(call.pdf, call.stop) }
 
-    override fun getText(request: Bundle?): Bundle = answer(PdfOps.TEXT, request) { _, _ -> throw notImplemented(PdfOps.TEXT) }
+    override fun getText(request: Bundle?): Bundle = answer(PdfOps.TEXT, request) { options, call -> TextReader.read(call.pdf, options, call.stop) }
 
-    override fun search(request: Bundle?): Bundle = answer(PdfOps.SEARCH, request) { _, _ -> throw notImplemented(PdfOps.SEARCH) }
+    override fun search(request: Bundle?): Bundle = answer(PdfOps.SEARCH, request) { options, call -> SearchReader.read(call.pdf, options, call.stop) }
 
     override fun render(request: Bundle?, fallbackOutput: ParcelFileDescriptor?): Bundle =
         answer(PdfOps.RENDER, request, fallbackOutput) { _, _ -> throw notImplemented(PdfOps.RENDER) }

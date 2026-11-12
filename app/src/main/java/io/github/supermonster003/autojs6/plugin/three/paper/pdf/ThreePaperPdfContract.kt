@@ -5,6 +5,7 @@ import org.autojs.plugin.explorer.api.ExplorerActionProtocol
 import org.autojs.plugin.pdf.api.PdfActions
 import org.autojs.plugin.pdf.api.PdfContract
 import org.autojs.plugin.pdf.api.PdfIds
+import org.autojs.plugin.pdf.api.PdfOps
 
 /**
  * Identity and contract constants of the plugin (roadmap 5.5). JVM tests keep them equal to the build resources, the
@@ -42,11 +43,12 @@ object ThreePaperPdfContract {
     const val CONTRACT_VERSION = PdfContract.CONTRACT_VERSION
 
     /**
-     * Operations the plugin implements; empty until roadmap P2 lands the engine, so every operation answers
-     * `UNSUPPORTED: NOT_IMPLEMENTED`.
-     * zh-CN: 插件已实现的操作; 路线图 P2 落地引擎之前为空, 因此每个操作都返回 `UNSUPPORTED: NOT_IMPLEMENTED`.
+     * Operations the plugin implements end to end; every other operation answers `UNSUPPORTED` with the detail
+     * `NOT_IMPLEMENTED: <op>` until its roadmap item lands (P2.2: reading).
+     * zh-CN: 插件端到端实现的操作; 其他操作在对应的路线图条目落地之前返回详情为 `NOT_IMPLEMENTED: <op>` 的 `UNSUPPORTED`
+     * (P2.2: 读取).
      */
-    val IMPLEMENTED_OPS: List<String> = emptyList()
+    val IMPLEMENTED_OPS: List<String> = listOf(PdfOps.INFO, PdfOps.OUTLINE, PdfOps.TEXT, PdfOps.SEARCH)
 
     /**
      * Optional features of contract version 1 the plugin declares in `pdfFeatures`; empty until roadmap P2 implements them.
