@@ -13,10 +13,11 @@
 # 运行时 PDFBox 把 JPXDecode 图片报告为不支持.
 -dontwarn com.gemalto.jp2.**
 
-# Bouncy Castle (roadmap D12, D34): the JCA provider resolves its algorithm classes by name, so R8 must keep the provider
-# packages PDFBox reaches for public key and AES-256 encryption; roadmap P2.6 narrows this after the provider spike (Q4).
-# zh-CN: Bouncy Castle (路线图 D12, D34): JCA provider 按类名解析算法类, R8 须保留 PDFBox 公钥与 AES-256 加密会用到的 provider 包;
-# 路线图 P2.6 在 provider spike (Q4) 之后再收窄.
--keep class org.bouncycastle.jcajce.provider.** { *; }
--keep class org.bouncycastle.jce.provider.** { *; }
+# Bouncy Castle (roadmap D12, D34, P2.6): password encryption (AES-128 / AES-256) uses the PDFBox standard security
+# handler with the platform JCA providers only, and no provider is registered (appendix D Q4 (c)). Only the certificate
+# handler (Adobe.PubSec, outside the contract) reaches Bouncy Castle, so R8 keeps just what it references; a password
+# given for such a document is refused before Bouncy Castle is touched.
+# zh-CN: Bouncy Castle (路线图 D12, D34, P2.6): 密码加密 (AES-128 / AES-256) 使用 PDFBox 标准安全处理器, 只用平台 JCA provider,
+# 不注册任何 provider (附录 D Q4 (c)). 只有证书加密处理器 (Adobe.PubSec, 不在契约内) 会用到 Bouncy Castle, 因此 R8 只保留它引用的
+# 部分; 对这类文档给出密码时, 在触及 Bouncy Castle 之前就被拒绝.
 -dontwarn org.bouncycastle.**

@@ -3,6 +3,7 @@ package io.github.supermonster003.autojs6.plugin.three.paper.pdf.service
 import android.content.Context
 import android.os.ParcelFileDescriptor
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.edit.PageOperations
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.edit.PdfEncryption
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.HostKey
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.Operations
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.PdfEngine
@@ -82,6 +83,14 @@ internal class RunOperations(private val engine: PdfEngine, context: Context) {
         PdfOps.FROM_HTML -> {
             val request = HtmlToPdf.request(options, inputCount)
             Work { operation, inputs, directory -> html.write(request, inputs, directory, operation) }
+        }
+        PdfOps.ENCRYPT -> {
+            val request = PdfEncryption.encryptRequest(options, inputCount)
+            Work { operation, inputs, directory -> PdfEncryption.encrypt(request, inputs.single(), directory, operation) }
+        }
+        PdfOps.DECRYPT -> {
+            val request = PdfEncryption.decryptRequest(options, inputCount)
+            Work { operation, inputs, directory -> PdfEncryption.decrypt(request, inputs.single(), directory, operation) }
         }
         else -> throw PdfDocumentStub.notImplemented(op)
     }

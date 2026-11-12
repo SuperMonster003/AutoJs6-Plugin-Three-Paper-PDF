@@ -45,6 +45,20 @@ object PdfWriting {
     fun write(document: PDDocument, output: OutputStream, stop: StopSignal): Long {
         checkWritable(document)
         if (document.isEncrypted) document.isAllSecurityToBeRemoved = true
+        return save(document, output, stop)
+    }
+
+    /**
+     * Writes [document] encrypted with the policy set by `PDDocument.protect` (`encrypt`, roadmap P2.6), otherwise like
+     * [write].
+     * zh-CN: 按 `PDDocument.protect` 设置的策略加密写出 [document] (`encrypt`, 路线图 P2.6), 其余与 [write] 相同.
+     */
+    fun writeProtected(document: PDDocument, output: OutputStream, stop: StopSignal): Long {
+        check(document.encryption?.securityHandler?.hasProtectionPolicy() == true) { "the document carries no protection policy" }
+        return save(document, output, stop)
+    }
+
+    private fun save(document: PDDocument, output: OutputStream, stop: StopSignal): Long {
         stamp(document)
         // PDDocument.save closes the stream it is given; CountingOutputStream ignores close, so the output stays open.
         // zh-CN: PDDocument.save 会关闭传入的流; CountingOutputStream 忽略 close, 因此输出保持打开.
