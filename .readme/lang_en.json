@@ -1,0 +1,77 @@
+{
+  "$name": "English",
+  "text_current_lowercase": "current",
+  "text_plugin_synopsis": "Read, render, merge, split, generate and encrypt PDF files, with a built-in viewer and file manager entries",
+  "h3_languages_with_ascii": "Languages",
+  "p_languages_all_supported_for_readme": "The README.md file is currently available in the following languages",
+  "h3_introduction": "Introduction",
+  "h3_features": "Features",
+  "h3_usage": "Usage",
+  "h3_script_api": "Script API",
+  "h3_faq": "FAQ",
+  "h3_security": "Permissions and security",
+  "h3_plugin_interface": "Plugin interface",
+  "p_plugin_interface": "The following information targets AutoJs6 host and plugin developers; the host uses these identifiers to discover the plugin and negotiate capabilities",
+  "h3_roadmap": "Roadmap",
+  "text_link_roadmap": "View ROADMAP.md",
+  "h3_release_history": "Release history",
+  "h5_for_more_release_history": "For more release history, refer to",
+  "h3_build": "Build",
+  "p_build_intro": "This section targets developers who want to build the plugin from source.",
+  "h3_license": "License",
+  "h3_links": "Related links",
+  "text_link_autojs6": "AutoJs6 project",
+  "p_roadmap": "Plans, design decisions and progress are tracked as a checklist in ROADMAP.md. Unchecked items are plans, not features of the current version.",
+  "p_introduction_what": "3-Paper PDF is the PDF plugin of AutoJs6, and also a PDF toolbox and viewer that works on its own without AutoJs6. It reads the information, text, outline and embedded images of a PDF and renders pages to images; it merges, splits, extracts, deletes, reorders and rotates pages; it generates PDF files from images, text or HTML, and encrypts or decrypts documents.",
+  "p_introduction_how": "Processing runs inside the plugin with the `PdfRenderer` of Android and the pure Java PDFBox-Android, so the AutoJs6 host stays small. AutoJs6 scripts use these features through the global module `pdf`; AutoJs6 opens the paths that scripts pass and hands them to the plugin, so the plugin needs no storage permission to process script files. The plugin comes with its own viewer, which opens from the launcher, the AutoJs6 file manager or scripts (`pdf.view`).",
+  "p_status_note": "This is a development preview: the AutoJs6 Plugin Center can discover the plugin, but reading, rendering, page operations, the viewer, the toolbox and the `pdf` module are not delivered yet. The text below describes the design goals of 1.0.0; see the roadmap for progress.",
+  "features": [
+    "Reading: page count, page sizes, metadata, encryption state and permissions; text and outline (bookmarks) per page; text search with page numbers and positions; listing and exporting embedded images.",
+    "Rendering: pages to `Image` objects or PNG / JPEG / WebP files, 144 dpi by default, or by dpi, scale or target width and height.",
+    "Page operations: merge (bookmarks kept), split, extract, delete, reorder and rotate pages; page numbers start at 1 and ranges are written as `'1-3,5,8-'`.",
+    "Generation: images to PDF (JPEG embedded as is, without re-encoding), text to PDF (with a font of your choice) and HTML to PDF (no remote URLs are loaded).",
+    "Encryption: open encrypted documents with a password, encrypt with AES-256 and set permissions, remove encryption.",
+    "Viewer: continuous scrolling, pinch zoom, thumbnails, outline, search highlights, password prompt and night mode; scripts can open the viewer and receive page change and close events.",
+    "Toolbox and file manager: wizards to merge, split, convert to images, convert images to PDF, encrypt / decrypt and extract text; the AutoJs6 file manager opens PDF files directly in the plugin viewer, and its overflow menu offers the same tools.",
+    "OCR: `pdf.text(path, { ocr: true })` calls the AutoJs6 OCR engine for scanned pages without a text layer."
+  ],
+  "usage_steps": [
+    "Download the APK from [Releases]({{ repo_url }}/releases) and install it. There is a single package for every ABI.",
+    "To use the `pdf` module in scripts, update AutoJs6 to internal build {{ required_host_version_code }} ({{ required_host_version_name }}) or later and enable the plugin in the Plugin Center.",
+    "To use the built-in toolbox, open the plugin and grant all files access when asked; script operations do not need this permission."
+  ],
+  "p_usage_note": "The plugin supports devices running Android {{ min_android_version }} (API {{ android_min_sdk }}) or later. PDF processing uses only system APIs and pure Java libraries; the only native library comes from Jetpack Compose and is aligned to 16 KB memory pages, so a single package serves every ABI.",
+  "p_script_api_intro": "Scripts use these features through the global module `pdf` (also available as `$pdf`) (1.0.0 design draft; the documentation of the released version prevails)",
+  "api_points": [
+    "Convenience methods such as `pdf.info` / `pdf.text` / `pdf.render` / `pdf.merge` / `pdf.split` / `pdf.fromImages` open and close the document on each call; `pdf.open(path, options)` returns a `PdfDocument` that shares one opening across several operations, with at most 8 documents open per script.",
+    "Each method has a blocking form and an `xxxAsync` form that returns a Promise; `xxxAsync` accepts `options.onProgress(progress)` and its Promise has `cancel()`; stopping the script cancels running operations and deletes unfinished output.",
+    "`pdf.view(path, options)` opens the viewer and returns a `PdfViewSession` with the `page` and `close` events and the `goTo(page)` and `close()` methods.",
+    "Failures throw a `PdfError` with a stable `code` such as `PASSWORD_REQUIRED`, `WRONG_PASSWORD` or `PAGE_OUT_OF_RANGE`; `pdf.isAvailable()` checks in advance whether the plugin is available."
+  ],
+  "faq": [
+    {
+      "q": "Can I use it without AutoJs6?",
+      "a": "Yes. The toolbox and the viewer work on their own; AutoJs6 is only needed when scripts process PDF files."
+    },
+    {
+      "q": "Why does the plugin ask for all files access?",
+      "a": "Only the toolbox and the viewer opened from the launcher need it, to read and write the files you choose on screen. AutoJs6 opens the paths that scripts pass and hands them to the plugin as file descriptors, so scripts need no storage permission of the plugin."
+    },
+    {
+      "q": "Does the plugin contain native libraries?",
+      "a": "PDF processing uses no native library: pages are rendered by the system `PdfRenderer`, and the other features use the pure Java PDFBox-Android. The only native library in the package is `libandroidx.graphics.path.so`, which comes with Jetpack Compose."
+    }
+  ],
+  "p_security_intro": "The plugin keeps its permission surface as small as possible:",
+  "security_points": [
+    "Protected entries: the capability service, the file manager entry service and the activation entry require the AutoJs6 plugin permission (`org.autojs.permission.PLUGIN`), so other apps cannot call them directly.",
+    "Storage: script files arrive as file descriptors, so the plugin asks for no storage permission on behalf of scripts; all files access is only used for the files you choose in the toolbox and the viewer.",
+    "HTML to PDF: only the given HTML string or local file is rendered; no remote URLs are loaded.",
+    "Network and passwords: the network is only used to check for updates; document passwords are only used for the current operation and are never stored by the plugin."
+  ],
+  "h3_engine": "Engine and dependencies",
+  "p_engine": "Pages are rendered with the `PdfRenderer` of Android; text, outline, images, page operations and encryption use [PDFBox-Android](https://github.com/TomRoush/PdfBox-Android) (Apache-2.0, pure Java), and encryption relies on Bouncy Castle (MIT-style license). PDF processing contains no native library and uses no native renderer such as pdfium or MuPDF.",
+  "p_license": "The project code is licensed under the [Mozilla Public License 2.0]({{ license_url }}). Third-party components and data are listed in the third-party notices.",
+  "text_link_third_party": "Third-party notices (THIRD_PARTY_NOTICES.md)",
+  "p_instruction_docs": "Progress and design are available on the [project page]({{ repo_url }})."
+}

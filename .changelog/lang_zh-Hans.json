@@ -1,0 +1,28 @@
+{
+  "changelog_label_hint": "提示",
+  "changelog_label_feature": "新增",
+  "changelog_label_fix": "修复",
+  "changelog_label_improvement": "优化",
+  "changelog_label_dependency": "依赖",
+  "$data": {
+    "v1.0.0": {
+      "released_date": "2026/11/12",
+      "hint": [
+        "开发预览: 插件可以被 AutoJs6 插件中心识别, 读取, 渲染, 页面操作, 查看器, 工具箱与 pdf 脚本模块尚未交付",
+        "需要 AutoJs6 {{ required_host_version_name }} ({{ required_host_version_code }}) 或更高版本 (准确的最低版本号待宿主侧改动落地后回填)"
+      ],
+      "feature": [
+        "插件骨架: Wake 激活协议, 插件中心身份服务, PDF 能力服务 (契约版本 1) 与文件管理器入口服务",
+        "首页提供所有文件访问权限的授权入口 (仅工具箱需要)",
+        "所有 ABI 共用一个 APK: PDF 处理不含原生库, 唯一的原生库来自 Jetpack Compose, 已按 16 KB 内存页对齐",
+        "10 种语言的 README, 插件中心说明与更新日志, 由 JSON 源文件统一生成"
+      ],
+      "dependency": [
+        "附加 PDFBox-Android 版本 2.0.27.0 (文本, 大纲, 图片, 页面操作与加密)",
+        "附加 Jetpack Compose BOM 版本 2026.09.00 (插件界面)",
+        "附加 Navigation Compose 版本 2.10.2",
+        "附加 AndroidX Core KTX 版本 1.18.0"
+      ]
+    }
+  }
+}

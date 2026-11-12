@@ -20,7 +20,7 @@
 | --- | --- | --- |
 | D1 | 名称 | `3-Paper PDF`: Word `Paper` (纸页), 后缀 `PDF`. 仓库 `AutoJs6-Plugin-Three-Paper-PDF`, 机器标识 `three-paper-pdf`. |
 | D2 | 1.0.0 范围 | 全集: 读取 (元数据, 页数与页尺寸, 文本, 大纲, 页面渲染为图片, 内嵌图片提取), 页面操作 (合并, 拆分, 抽页, 旋转, 删页, 重排), 生成 (图片转 PDF, 文本转 PDF, HTML 转 PDF), 加密与解密, 自绘查看器, 工具箱界面, 文件管理器入口. 表单, 水印 / 页码, 可搜索 PDF, 压缩归 1.1.0 (D20). |
-| D3 | 引擎 | 系统 API (`android.graphics.pdf.PdfRenderer` 渲染, `PdfDocument` 生成) + PDFBox-Android `com.tom-roush:pdfbox-android` 2.0.27.0 (Apache-2.0, 纯 Java: 文本, 大纲, 图片, 页面操作, 加密). 单个 universal APK, 无原生库, 不拆 ABI; minSdk 24. 不用 `androidx.pdf` (minSdk 28, beta) 与 pdfium 系原生库. |
+| D3 | 引擎 | 系统 API (`android.graphics.pdf.PdfRenderer` 渲染, `PdfDocument` 生成) + PDFBox-Android `com.tom-roush:pdfbox-android` 2.0.27.0 (Apache-2.0, 纯 Java: 文本, 大纲, 图片, 页面操作, 加密). 单个 universal APK, PDF 处理无原生库 (Compose 自带的 `libandroidx.graphics.path.so` 除外, 见 Q9), 不拆 ABI; minSdk 24. 不用 `androidx.pdf` (minSdk 28, beta) 与 pdfium 系原生库. |
 | D4 | 脚本 API 形态 | 新全局模块 `pdf` (`$pdf` 同对象): 对象层 `pdf.open(path, options)` 返回 `PdfDocument` 句柄 (多次操作共用一次打开), 便捷层 `pdf.info` / `text` / `render` / `merge` / `split` / `fromImages` 等每次自行打开关闭. 每个方法都有同步形态与 `xxxAsync` 形态 (与 `epub` 同约定: 同步阻塞脚本线程, 不可在 UI 线程调用; Async 返回 Promise, 回调在脚本线程). |
 | D5 | 独立界面 | 工具箱式界面 (合并, 拆分, 转图片, 图片转 PDF, 加密 / 解密, 提取文本等向导) + 自绘 Compose 查看器 (不调系统或第三方阅读器). |
 | D6 | 文件管理器入口 | Explorer Action: 主动作 = 用插件查看器打开 (宿主把 `pdf` 文件类型改为可预览并新增 `PreviewerType.PDF`, 未装插件时走 `ExplorerDocumentPreviewerPluginUi` 的引导安装 / 用其他应用打开); 溢出菜单 = 工具 (合并所选, 拆分, 转图片, 加密, 解密, 提取文本). |
@@ -52,7 +52,7 @@ D26-D42 据第 1 节派生, 进入对应阶段前可推翻 (推翻点见各条),
 
 | 编号 | 决策 | 含义 | 推翻点 |
 | --- | --- | --- | --- |
-| D26 | 工具链基线 | 按 `AUTOJS6_PLUGIN_NEW_REPO_AGENTS.md` 的占位符表与 3-Slate Studio 的当前依赖线: compileSdk / targetSdk 37, minSdk 24, Kotlin 2.x, Compose BOM 2026.09.00 + Material 3, navigation 2.10.2, `PLATFORM_VERSIONS_PLUGIN_VERSION` 1.9.1, `pdfbox-android` 2.0.27.0 (Q1 已决锁定; 传递依赖 `bcprov-jdk15to18` / `bcpkix-jdk15to18` 1.72); 版本号起 1.0.0, `VERSION_BUILD` 在骨架阶段为提交数 + 1. 1.0.0 APK 为 universal 单包; 16 KB 页校验只需确认依赖 AAR / JAR 内无 `.so`. 2026-11-12 进入 P0.1 前核对: `PLATFORM_VERSIONS_PLUGIN_VERSION` 1.9.1 仍是平台仓库最新 tag, Compose BOM 2026.09.00 与 navigation 2.10.2 仍是 3-Chime Alarm 1.0.1 / 3-Slate Studio / 3-Prism Camera / 3-Macaw Speech 的当前线, 不变; BOM 不管理 `androidx.activity`, 另按这几个插件的同款线写 `activity-compose` 1.12.2. | P0.1 |
+| D26 | 工具链基线 | 按 `AUTOJS6_PLUGIN_NEW_REPO_AGENTS.md` 的占位符表与 3-Slate Studio 的当前依赖线: compileSdk / targetSdk 37, minSdk 24, Kotlin 2.x, Compose BOM 2026.09.00 + Material 3, navigation 2.10.2, `PLATFORM_VERSIONS_PLUGIN_VERSION` 1.9.1, `pdfbox-android` 2.0.27.0 (Q1 已决锁定; 传递依赖 `bcprov-jdk15to18` / `bcpkix-jdk15to18` 1.72); 版本号起 1.0.0, `VERSION_BUILD` 在骨架阶段为提交数 + 1. 1.0.0 APK 为 universal 单包; 16 KB 页校验只需确认依赖 AAR / JAR 内无 `.so`. 2026-11-12 进入 P0.1 前核对: `PLATFORM_VERSIONS_PLUGIN_VERSION` 1.9.1 仍是平台仓库最新 tag, Compose BOM 2026.09.00 与 navigation 2.10.2 仍是 3-Chime Alarm 1.0.1 / 3-Slate Studio / 3-Prism Camera / 3-Macaw Speech 的当前线, 不变; BOM 不管理 `androidx.activity`, 另按这几个插件的同款线写 `activity-compose` 1.12.2. P0.1 落地 (2026-11-12): `activity-compose` 声明 1.12.2, 被 `androidx.activity` 原子组的冲突解析抬到 1.13.0 (与 3-Slate Studio 的锁相同), 锁文件以解析结果为准; APK 唯一的原生库是 Compose `ui-graphics` 传递的 `androidx.graphics:graphics-path` (`libandroidx.graphics.path.so`, 四个 ABI), 列入 `allowedNativeLibraries` 白名单, 由 `verifyDebugNativePageAlignment` 校验 16 KB 对齐 (Q9). | P0.1 |
 | D27 | 契约命名 | `plugin-api/pdf-api`, 包 `org.autojs.plugin.pdf.api`, action `org.autojs.plugin.PDF`, engine / category `pdf`, `PdfContract.CONTRACT_VERSION = 1`, 宿主桥接包 `org.autojs.autojs.core.plugin.pdf`; 文件与 `epub-api` 同版式 (`PdfActions`, `PdfIds`, `PdfContract`, `PdfCapabilityKeys`, `PdfErrorCodes` + AIDL `IPdfPlugin`, `IPdfDocument`, `IPdfViewerSession`, oneway `IPdfProgressCallback` / `IPdfViewerCallback`), `getInfo` 居首并有 `PdfAidlOrderTest` 锁定方法顺序. | P1.1 |
 | D28 | 契约请求模型 | 请求与结果用 `Bundle` (选项像 `JSON.stringify` 一样序列化, 函数被忽略, 未知键在宿主以 `INVALID_ARGUMENT` 拒绝); 输入文件一律 `ParcelFileDescriptor` (只读), 输出文件由宿主创建后传写 fd (D7); 输出文件数不定的操作 (拆分, 提取图片) 两步走: 先 `plan` 返回清单, 宿主按清单创建文件再逐个传 fd; 长操作带 `opId`, 进度经 oneway 回调; 宿主回调 Binder 死亡即取消其全部操作; 操作默认无超时, 只靠 `cancel(opId)` 与脚本停止 (Q7 已决), 契约不设默认操作超时. 草案见附录 C. | P1.1 |
 | D29 | 宿主绑定与能力声明 | `PdfPluginHost` 基于 `core/plugin/AidlPluginHost.kt` (绑定 flags 同 `EpubPluginHost`, 含 `allowActivityStarts`, 以便宿主后台时插件界面弹出授权页); 查看器两步启动: `openViewer` 返回会话令牌, 宿主用显式组件 + 令牌启动 `ThreePaperPdfViewerActivity` (EPUB D12 同款); 脚本能力声明: `pdf.*` 需 `files` (读写脚本路径), `pdf.view` 需 `ui`, OCR 分支需 `ocr`; 裸脚本能力声明与 MCP / Node 的声明保持一致. | P1.2 |
@@ -68,7 +68,7 @@ D26-D42 据第 1 节派生, 进入对应阶段前可推翻 (推翻点见各条),
 | D39 | 测试夹具 | JVM 测试的 PDF 夹具由 `PdfFixtures` (PDFBox) 在运行时生成 (单页文本, 多页带大纲, 加密, 纯图片 "扫描件", 含 JPEG 与 PNG 图片, 旋转页), 不入库; 真机回归脚本用的样例由 `.python/generate_fixtures.py` (纯 Python 手写最小 PDF 结构, 无依赖) 生成到 `samples/fixtures/` 入库 (总计数十 KB). | P0.3 |
 | D40 | 文档与声明 | `AutoJs6-Documentation/api/pdf.md`, `pdfDocumentType.md`, `pdfViewSessionType.md` (版式照 `epub.md` / `epubBookType.md` / `epubReaderSessionType.md`), `runtimeApis` 加 Node / Bun 的 `pdf` 一节; d.ts, Ace 补全, Offline Docs 按 `epub` 同款补齐; 10 种语言只用半角标点. | P5.1 |
 | D41 | 发布门与版本号 | 不等宿主公开: 所有条目通过即发 1.0.0 并登记官方索引, `REQUIRES_HOST_VERSION` 写含全部宿主条目的本地构建号 (3-Macaw Speech 先例), 插件中心对旧宿主显示不兼容. 宿主 6.8.0 已于 2026-11-03 公开后仍沿用 (Q8 已决): 不等宿主 6.8.1 公开, `REQUIRES_HOST_VERSION` 写含全部宿主条目的 6.8.1 本地构建号, 公开 6.8.0 (versionCode 6640) 的用户在插件中心看到不兼容, 直到 6.8.1 公开; 发布文件 `autojs6-plugin-three-paper-pdf-v{VERSION_NAME}-{CRC32}.apk`. | P5.4 |
-| D42 | 许可与声明 | 源码 MPL-2.0; `THIRD_PARTY_NOTICES.md` 列 PDFBox-Android (Apache-2.0), Bouncy Castle (MIT 式许可), 其余 AndroidX / Compose (Apache-2.0); README 的 "引擎" 节写明无原生库与纯 Java 依赖. | P0.1 |
+| D42 | 许可与声明 | 源码 MPL-2.0; `THIRD_PARTY_NOTICES.md` 列 PDFBox-Android (Apache-2.0), Bouncy Castle (MIT 式许可, 许可全文附在声明里), 其余 AndroidX / Compose (Apache-2.0); PDFBox-Android 随包的数据文件 (LiberationSans 字体 OFL-1.1, Adobe glyphlist, CMap 等 8 项) 在声明里单列一表; README 的 "引擎" 节写明 PDF 处理无原生库与纯 Java 依赖 (Compose 的 graphics-path 例外, Q9). | P0.1 |
 
 ---
 
@@ -233,7 +233,7 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 发布门禁 (每个阶段的 "(发布)" 条目都指向本清单):
 
 1. 插件 `./gradlew test connectedDebugAndroidTest` 通过 (API 33 AVD), 宿主涉及模块的单元测试通过.
-2. 真机脚本回归: 附录 F 设备矩阵中的 Sony API 28 / 31 / 33, Xiaomi Pad API 35 四台通过, OnePlus API 35 (ColorOS) 至少跑一次; 无原生库, 不需要 16 KB 设备.
+2. 真机脚本回归: 附录 F 设备矩阵中的 Sony API 28 / 31 / 33, Xiaomi Pad API 35 四台通过, OnePlus API 35 (ColorOS) 至少跑一次; PDF 处理无原生库, 唯一的 Compose 原生库在构建时校验 16 KB 对齐 (Q9), 不需要 16 KB 设备.
 3. 10 种语言资源与文档只用半角标点 (`COMMON_AGENTS.md` 规则), `prepush_check.py` 通过, `THIRD_PARTY_NOTICES.md` 与依赖一致.
 4. 发布 APK 为 release 签名, 用宿主插件中心安装并跑 `samples/` 冒烟脚本; versionCode, 文件名 CRC32 与索引清单一致.
 5. changelog 10 种语言同时写 (`.claude/rules/all-languages.md`, 2026-11-05 起): 子会话以 zh-Hans 为源一次写全并翻译 10 种语言, 运行生成脚本与 `--check`, 不留给维护者; 维护者审阅时可修改任何语言.
@@ -246,11 +246,12 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 
 ### P0.1 构建链与身份 (D26, D42)
 
-- [ ] (插件) 按 `AUTOJS6_PLUGIN_NEW_REPO_AGENTS.md` 建立 Gradle 工程 (`settings.gradle.kts`, `build-logic`, `gradle/libs.versions.toml`, `version.properties`, `app/`), 填入 5.5 节身份; `libs/common-plugin-api.aar`, `libs/explorer-action-api.aar` 与 `libs/pdf-api.aar` (P1.1 产出, 未产出前用 P1.1 的常量草案本地构建 AAR 顶替并在 `locks/host-api-aars.lock` 标注临时) 入库.
-- [ ] (插件) 依赖线: Compose BOM 2026.09.00 + Material 3, navigation 2.10.2, `pdfbox-android` 2.0.27.0 (Q1 已决锁定), 无原生库; `./gradlew assembleDebug` 产出 universal APK; 检查依赖 AAR / JAR 内无 `.so`; `PDFBoxResourceLoader.init` 在 Application 里完成.
-- [ ] (插件) `ThreePaperPdfApplication`, `ThreePaperPdfInfoService`, `ThreePaperPdfService` 空实现 (返回 `getInfo` 与 `NOT_IMPLEMENTED`), `ThreePaperPdfExplorerActionService` 空目录, `ThreePaperPdfContract` (ID, engine, 契约版本), Manifest (权限, 服务, 查看器 Activity 的 `ACTION_VIEW` + `application/pdf` 过滤器, `MANAGE_EXTERNAL_STORAGE` 授权页), 10 种语言 `strings.xml` (`app_name` 不可翻译, `plugin_description` 定稿).
-- [ ] (插件) `LICENSE` (MPL-2.0), `README.md` 骨架 (含 "引擎与依赖" 节), `THIRD_PARTY_NOTICES.md` 生成脚本, `.gitattributes` (已入库), `.editorconfig`, `prepush_check.py` 接入, `AGENTS.md`.
+- [x] (插件) 按 `AUTOJS6_PLUGIN_NEW_REPO_AGENTS.md` 建立 Gradle 工程 (`settings.gradle.kts`, `build-logic`, `gradle/libs.versions.toml`, `version.properties`, `app/`), 填入 5.5 节身份; `libs/common-plugin-api.aar`, `libs/explorer-action-api.aar` 与 `libs/pdf-api.aar` (P1.1 产出, 未产出前用 P1.1 的常量草案本地构建 AAR 顶替并在 `locks/host-api-aars.lock` 标注临时) 入库.
+- [x] (插件) 依赖线: Compose BOM 2026.09.00 + Material 3, navigation 2.10.2, `pdfbox-android` 2.0.27.0 (Q1 已决锁定), PDF 处理无原生库 (Compose 的 graphics-path 例外, Q9); `./gradlew assembleDebug` 产出 universal APK; 检查依赖 AAR / JAR 内无 `.so`; `PDFBoxResourceLoader.init` 在 Application 里完成.
+- [x] (插件) `ThreePaperPdfApplication`, `ThreePaperPdfInfoService`, `ThreePaperPdfService` 空实现 (返回 `getInfo` 与 `NOT_IMPLEMENTED`), `ThreePaperPdfExplorerActionService` 空目录, `ThreePaperPdfContract` (ID, engine, 契约版本), Manifest (权限, 服务, 查看器 Activity 的 `ACTION_VIEW` + `application/pdf` 过滤器, `MANAGE_EXTERNAL_STORAGE` 授权页), 10 种语言 `strings.xml` (`app_name` 不可翻译, `plugin_description` 定稿).
+- [x] (插件) `LICENSE` (MPL-2.0), `README.md` 骨架 (含 "引擎与依赖" 节), `THIRD_PARTY_NOTICES.md` 生成脚本, `.gitattributes` (已入库), `.editorconfig`, `prepush_check.py` 接入, `AGENTS.md`.
 - 验收: `./gradlew assembleDebug test` 通过; APK 安装到 API 33 AVD 后插件中心能识别 `three-paper-pdf` (身份服务) 并按 D14 默认启用 (宿主 P1.6 落地前显示未启用); 提交前 `VERSION_BUILD` = 提交数 + 1.
+- 结果 (2026-11-12, paper-p0): 完成. E1: `./gradlew assembleDebug test` 通过, 单元测试 31 例 0 失败 (Manifest 契约, 运行时身份与常量, 10 语言字符串一致, 宿主 AAR 锁, 第三方声明, 标点); universal debug APK 21,225,165 B, versionCode 3; 运行时依赖锁 71 个产物 (`pdfbox-android` 2.0.27.0, Bouncy Castle `*-jdk15to18` 1.72), `THIRD_PARTY_NOTICES.md` 生成检查 `NOTICES_OK host=3 maven=71 data=8`; 原生库只有 4 个 ABI 的 `libandroidx.graphics.path.so` (arm64-v8a 10,096 B, armeabi-v7a 7,252 B, x86 9,284 B, x86_64 10,760 B), `verifyDebugNativePageAlignment` 16384 通过 (Q9). E2: `.python/device_plugin_center_check.py` 在 API 33 AVD (只读实例, 宿主 debug 6640 x86_64) 上 RESULT PASS: INFO / PDF / EXPLORER_ACTION 服务, WAKE, 查看器两个过滤器 (`PDF_VIEWER_OPEN` 与 VIEW `application/pdf`) 与启动器入口都解析到本插件; 插件中心列出 "3-Paper PDF 1.0.0 (3)", 开关为未启用 (宿主 P1.6 前的预期状态). `libs/pdf-api.aar` 已换入 P1.1 正式版 (宿主 `4e872a8741`, 契约版本 1, 40,584 B, sha256 `e6bdb589...`); 骨架的全部操作以 `IllegalStateException("UNSUPPORTED: NOT_IMPLEMENTED: <op>")` 拒绝 (契约只允许 IAE / ISE / SecurityException 跨 Binder), `pdfFeatures` 为空; 查看器 Activity 导出但不受权限保护, 会话令牌校验在 P3.2. `prepush_check.py` 已能识别本仓库 (构建号与生成文档检查通过, 仓库契约检查等 P0.2 的 mipmap). 10 种语言的 README / changelog / 插件说明由 `.python/generate_markdown.py --check` 校验 (`MARKDOWN_OK languages=10 artifacts=36`).
 
 ### P0.2 图标与启动器模式 (D24)
 
@@ -581,6 +582,7 @@ AIDL:
 | Q6 | OCR 渲染 dpi | (a) 300 dpi (推荐, 识别率优先) / (b) 沿用渲染默认 144 dpi (快) | P1.4 | 已决 (2026-11-12 12:20, 维护者选 (a) 300 dpi; 脚本可用 `ocrDpi` 覆盖) |
 | Q7 | 操作超时 | (a) 默认无超时, 只靠取消与脚本停止 (推荐, 大文档合并耗时不可预估) / (b) 默认 120 s, `timeout` 选项可改 | P2.1 | 已决 (2026-11-12 12:20, 维护者选 (a) 默认无超时; P1.1 契约也不设默认操作超时) |
 | Q8 | D41 发布门在宿主 6.8.0 已公开后的适用 | (a) 沿用 D41: 不等宿主 6.8.1 公开, 1.0.0 全部条目通过即发布并登记官方索引, `REQUIRES_HOST_VERSION` 写含全部宿主条目的 6.8.1 本地构建号, 公开 6.8.0 用户在插件中心看到不兼容直到 6.8.1 公开 (推荐) / (b) 等宿主 6.8.1 公开再发 | P5.4, P1.6 | 已决 (2026-11-12 12:21, 维护者选 (a) 沿用 D41) |
+| Q9 | Compose 自带的原生库 `libandroidx.graphics.path.so` (`androidx.graphics:graphics-path`, 由 `ui-graphics` 传递, 四个 ABI 各 7-11 KB, 已 16 KB 对齐) 与 D3 / D26 "无原生库" 的字面冲突 | (a) 列入原生库白名单, universal APK 照常, `supportedAbis` 为空, 文档写 "PDF 处理无原生库, 唯一的原生库来自 Compose" (推荐, 已先行; 3-Slate Studio 等 Compose 插件同款) / (b) 用 `packaging.jniLibs.excludes` 排除该库 (API 34 以下 Compose 的路径迭代依赖它, 排除后可能 `UnsatisfiedLinkError`, 需在四台设备复核) | P0.1 | 按推荐先行 (paper-p0, 2026-11-12); 影响 D3, D26, D42, 发布门禁 2, P0.1; 改选 (b) 返工: 删白名单 1 行, 加 excludes 1 行, 改 10 语言 README 的原生库说明与 2 个单元测试断言, 约半小时, 另需设备复核 |
 
 ## 附录 E. 证据等级
 
@@ -597,7 +599,7 @@ AIDL:
 基线 (2026-11-12, 进入 P0 时刷新):
 
 - 宿主 AutoJs6: 6.8.0 已于 2026-11-03 公开 (tag `v6.8.0` = `b7c88e117d`, versionCode 6640 = `VERSION_BUILD` 4988 + `VERSION_CODE_OFFSET` 1652); 公开时重写过历史, 立项基线 `e25e28f88` 已失效. `master` 为 6.8.1 开发线 `739ac2f96e` (2026-11-12 12:11), `VERSION_NAME` 6.8.1, `VERSION_BUILD` 6640; 自 `ef27581df9` 起宿主不再用 offset, `VERSION_BUILD` 即 versionCode, 6.8.1 开发期间与公开 6.8.0 同为 6640, 所以插件临时 `REQUIRES_HOST_VERSION` 取 6641 (5.5 节). 宿主侧 P1 条目进 6.8.1.
-- 插件平台与依赖线: `PLATFORM_VERSIONS_PLUGIN_VERSION` 1.9.1 (仍是最新 tag), Compose BOM 2026.09.00, navigation 2.10.2, `activity-compose` 1.12.2 (D26 核对不变); `pdfbox-android` 2.0.27.0 (Q1 已决).
+- 插件平台与依赖线: `PLATFORM_VERSIONS_PLUGIN_VERSION` 1.9.1 (仍是最新 tag), Compose BOM 2026.09.00, navigation 2.10.2, `activity-compose` 1.12.2 (D26 核对不变; 解析为 1.13.0, 见 D26); `pdfbox-android` 2.0.27.0 (Q1 已决).
 - 流程: 多语言文案自 2026-11-05 起所有语言一次写全 (`.claude/rules/all-languages.md`), 不再留给维护者同步.
 
 基线 (2026-10-22, 立项, 仅作历史):
@@ -618,7 +620,7 @@ AIDL:
 | Redmi 22120RN86C (`bek749scrwv4wo8h`) | 33 | 旧宿主隐藏验证 (不兼容提示) |
 | AVD API 24 / 33 / 35 / 37 (`E:\.android\avd\`) | 24 / 33 / 35 / 37 | 最低版本与 fd 回落, CI 同款仪器测试 (33), 新系统行为 |
 
-16 KB 页设备: 1.0.0 无原生库, 不需要; 若未来引入原生库再租用 Samsung SM-A566B / SM-F971B.
+16 KB 页设备: 1.0.0 只有 Compose 的 graphics-path 原生库, 构建时校验 16 KB 对齐 (Q9), 不需要; 若未来引入原生库再租用 Samsung SM-A566B / SM-F971B.
 
 性能基线表 (P2.7 回填): 设备 | A4 文本页 144 dpi 渲染耗时 | 100 页合并耗时 | 20 张图片转 PDF 耗时 | 备注.
 

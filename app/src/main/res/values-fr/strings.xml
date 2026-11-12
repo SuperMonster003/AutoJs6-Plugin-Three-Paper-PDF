@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_skeleton_note">Cette version est le squelette du dépôt: la lecture, le rendu, les opérations sur les pages, la visionneuse et la boîte à outils arrivent dans les versions suivantes.</string>
+    <string name="home_storage_denied">L\'accès à tous les fichiers n\'est pas accordé. Tant que vous ne l\'accordez pas, la boîte à outils ne peut ni lire ni écrire les fichiers choisis; les opérations des scripts ne sont pas concernées.</string>
+    <string name="home_storage_grant">Accorder l\'accès</string>
+    <string name="home_storage_granted">L\'accès à tous les fichiers est accordé. La boîte à outils peut lire et écrire les fichiers choisis.</string>
+    <string name="home_storage_title">Accès aux fichiers</string>
+    <string name="plugin_description">Lecture, rendu, fusion, découpage, génération et chiffrement de fichiers PDF, avec une visionneuse intégrée et des entrées dans le gestionnaire de fichiers</string>
+    <string name="viewer_close">Fermer</string>
+    <string name="viewer_skeleton_note">La visionneuse PDF arrive dans une version suivante.</string>
+</resources>

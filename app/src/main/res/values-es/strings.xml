@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_skeleton_note">Esta compilación es el esqueleto del repositorio: la lectura, el renderizado, las operaciones de páginas, el visor y la caja de herramientas llegarán en compilaciones posteriores.</string>
+    <string name="home_storage_denied">El acceso a todos los archivos no está concedido. Hasta que lo concedas, la caja de herramientas no puede leer ni escribir los archivos que elijas; las operaciones de scripts no se ven afectadas.</string>
+    <string name="home_storage_grant">Conceder acceso</string>
+    <string name="home_storage_granted">El acceso a todos los archivos está concedido. La caja de herramientas puede leer y escribir los archivos que elijas.</string>
+    <string name="home_storage_title">Acceso a archivos</string>
+    <string name="plugin_description">Lectura, renderizado, combinación, división, generación y cifrado de archivos PDF, con visor integrado y entradas en el gestor de archivos</string>
+    <string name="viewer_close">Cerrar</string>
+    <string name="viewer_skeleton_note">El visor de PDF llegará en una compilación posterior.</string>
+</resources>

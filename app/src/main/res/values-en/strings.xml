@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_skeleton_note">This build is the repository skeleton: reading, rendering, page operations, the viewer and the toolbox come in later builds.</string>
+    <string name="home_storage_denied">All files access is not granted. Until you grant it, the toolbox cannot read or write the files you choose; script operations are not affected.</string>
+    <string name="home_storage_grant">Grant access</string>
+    <string name="home_storage_granted">All files access is granted. The toolbox can read and write the files you choose.</string>
+    <string name="home_storage_title">File access</string>
+    <string name="plugin_description">Read, render, merge, split, generate and encrypt PDF files, with a built-in viewer and file manager entries</string>
+    <string name="viewer_close">Close</string>
+    <string name="viewer_skeleton_note">The PDF viewer comes in a later build.</string>
+</resources>

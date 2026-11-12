@@ -1,0 +1,45 @@
+[versions]
+
+# Roadmap D26: the Compose 1.12 line of 3-Slate Studio, 3-Chime Alarm, 3-Prism Camera and 3-Macaw Speech (compileSdk 37,
+# AGP 9.1+); the BOM is the single Compose version source.
+compose-bom = "2026.09.00"
+# The Compose BOM does not manage androidx.activity; the activity line those plugins ship with the same BOM (roadmap D26).
+activity-compose = "1.12.2"
+core-ktx = "1.18.0"
+foojay-resolver-convention = "1.0.0"
+junit = "4.13.2"
+navigation = "2.10.2"
+# Roadmap Q1 (decided 2026-11-12): PDFBox-Android, pure Java, Apache-2.0; brings Bouncy Castle bcprov / bcpkix
+# jdk15to18 1.72 (MIT style license) for encryption.
+pdfbox-android = "2.0.27.0"
+# The test library line of 3-Macaw Speech: Espresso 3.5.0 calls InputManager.getInstance, gone on API 36.
+test-espresso-core = "3.7.0"
+test-junit-version = "1.3.0"
+test-rules = "1.7.0"
+test-runner = "1.7.0"
+
+[libraries]
+
+compose-activity = { module = "androidx.activity:activity-compose", version.ref = "activity-compose" }
+compose-animation = { module = "androidx.compose.animation:animation" }
+compose-bom = { module = "androidx.compose:compose-bom", version.ref = "compose-bom" }
+compose-foundation = { module = "androidx.compose.foundation:foundation" }
+compose-material3 = { module = "androidx.compose.material3:material3" }
+compose-runtime = { module = "androidx.compose.runtime:runtime" }
+compose-ui = { module = "androidx.compose.ui:ui" }
+compose-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4" }
+compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
+compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
+compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
+core-ktx = { module = "androidx.core:core-ktx", version.ref = "core-ktx" }
+junit = { module = "junit:junit", version.ref = "junit" }
+navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigation" }
+pdfbox-android = { module = "com.tom-roush:pdfbox-android", version.ref = "pdfbox-android" }
+test-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "test-espresso-core" }
+test-ext-junit = { module = "androidx.test.ext:junit", version.ref = "test-junit-version" }
+test-rules = { module = "androidx.test:rules", version.ref = "test-rules" }
+test-runner = { module = "androidx.test:runner", version.ref = "test-runner" }
+
+[plugins]
+
+foojay-resolver-convention = { id = "org.gradle.toolchains.foojay-resolver-convention", version.ref = "foojay-resolver-convention" }

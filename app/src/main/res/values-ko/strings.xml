@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_skeleton_note">이 빌드는 저장소 골격입니다. 읽기, 렌더링, 페이지 작업, 뷰어와 도구 상자는 이후 빌드에서 제공됩니다.</string>
+    <string name="home_storage_denied">모든 파일 접근 권한이 허용되지 않았습니다. 허용하기 전까지 도구 상자는 선택한 파일을 읽거나 쓸 수 없습니다. 스크립트 작업에는 영향이 없습니다.</string>
+    <string name="home_storage_grant">권한 허용</string>
+    <string name="home_storage_granted">모든 파일 접근 권한이 허용되었습니다. 도구 상자에서 선택한 파일을 읽고 쓸 수 있습니다.</string>
+    <string name="home_storage_title">파일 접근</string>
+    <string name="plugin_description">PDF 파일 읽기, 렌더링, 병합, 분할, 생성과 암호화, 뷰어와 파일 관리자 진입점 내장</string>
+    <string name="viewer_close">닫기</string>
+    <string name="viewer_skeleton_note">PDF 뷰어는 이후 빌드에서 제공됩니다.</string>
+</resources>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_skeleton_note">このビルドはリポジトリの骨格です. 読み込み, レンダリング, ページ操作, ビューアーとツールボックスは今後のビルドで提供されます.</string>
+    <string name="home_storage_denied">すべてのファイルへのアクセスが許可されていません. 許可するまでツールボックスは選んだファイルを読み書きできません. スクリプトの操作には影響しません.</string>
+    <string name="home_storage_grant">許可する</string>
+    <string name="home_storage_granted">すべてのファイルへのアクセスが許可されています. ツールボックスは選んだファイルを読み書きできます.</string>
+    <string name="home_storage_title">ファイルアクセス</string>
+    <string name="plugin_description">PDF ファイルの読み込み, レンダリング, 結合, 分割, 生成と暗号化, ビューアーとファイルマネージャーの入口を内蔵</string>
+    <string name="viewer_close">閉じる</string>
+    <string name="viewer_skeleton_note">PDF ビューアーは今後のビルドで提供されます.</string>
+</resources>

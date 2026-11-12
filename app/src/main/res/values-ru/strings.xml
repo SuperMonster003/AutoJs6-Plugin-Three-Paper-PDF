@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_skeleton_note">Эта сборка - каркас репозитория: чтение, отрисовка, операции со страницами, просмотрщик и набор инструментов появятся в следующих сборках.</string>
+    <string name="home_storage_denied">Доступ ко всем файлам не предоставлен. Пока вы его не предоставите, набор инструментов не может читать и записывать выбранные файлы; операции скриптов это не затрагивает.</string>
+    <string name="home_storage_grant">Предоставить доступ</string>
+    <string name="home_storage_granted">Доступ ко всем файлам предоставлен. Набор инструментов может читать и записывать выбранные файлы.</string>
+    <string name="home_storage_title">Доступ к файлам</string>
+    <string name="plugin_description">Чтение, отрисовка, объединение, разделение, создание и шифрование PDF-файлов, встроенный просмотрщик и пункты в файловом менеджере</string>
+    <string name="viewer_close">Закрыть</string>
+    <string name="viewer_skeleton_note">Просмотрщик PDF появится в следующей сборке.</string>
+</resources>
