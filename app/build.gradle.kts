@@ -105,7 +105,17 @@ android {
         resValue("string", "plugin_version_date", utils.getDateString("MMM d, yyyy", "GMT+08:00"))
     }
 
-    testOptions { unitTests.isIncludeAndroidResources = true }
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+        // JVM tests read the committed samples of .python/generate_fixtures.py (roadmap P0.3, D39).
+        // zh-CN: JVM 测试读取 .python/generate_fixtures.py 生成并已提交的样例 (路线图 P0.3, D39).
+        unitTests.all { it.systemProperty("paper.samples", rootProject.file("samples/fixtures").path) }
+    }
+
+    // Device tests open the same samples as androidTest assets. zh-CN: 设备测试把同一批样例作为 androidTest 资产打开.
+    sourceSets.named("androidTest") {
+        assets.directories += rootProject.file("samples/fixtures").path
+    }
 
     lint {
         abortOnError = true
@@ -226,6 +236,7 @@ dependencies {
     debugImplementation(libs.compose.ui.test.manifest)
 
     testImplementation(libs.junit)
+    testImplementation(libs.org.json)
     androidTestImplementation(libs.test.ext.junit)
     androidTestImplementation(libs.test.runner)
     androidTestImplementation(libs.test.rules)

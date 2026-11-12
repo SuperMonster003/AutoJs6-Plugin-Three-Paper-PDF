@@ -1,0 +1,105 @@
+%PDF-1.7
+%‚„œ”
+1 0 obj
+<< /Title (Rotated sample) /Author (AutoJs6) /Subject (3-Paper PDF test fixture) /Keywords (autojs6, pdf, fixture) /Creator (.python/generate_fixtures.py) /Producer (3-Paper PDF fixtures) /CreationDate (D:20261112080000Z) /ModDate (D:20261112080000Z) >>
+endobj
+2 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+4 0 obj
+<< /Type /Pages /Kids [6 0 R 8 0 R 10 0 R 12 0 R 14 0 R] /Count 5 >>
+endobj
+5 0 obj
+<< /Length 99 >>
+stream
+0 g 36 770 144 36 re f
+BT /F2 18 Tf 72 722 Td (Rotate 0) Tj /F1 12 Tf
+0 -28 Td (Page 1 of 5) Tj
+ET
+
+endstream
+endobj
+6 0 obj
+<< /Type /Page /Parent 4 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 2 0 R /F2 3 0 R >> >> /Contents 5 0 R >>
+endobj
+7 0 obj
+<< /Length 100 >>
+stream
+0 g 36 770 144 36 re f
+BT /F2 18 Tf 72 722 Td (Rotate 90) Tj /F1 12 Tf
+0 -28 Td (Page 2 of 5) Tj
+ET
+
+endstream
+endobj
+8 0 obj
+<< /Type /Page /Parent 4 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 2 0 R /F2 3 0 R >> >> /Contents 7 0 R /Rotate 90 >>
+endobj
+9 0 obj
+<< /Length 101 >>
+stream
+0 g 36 770 144 36 re f
+BT /F2 18 Tf 72 722 Td (Rotate 180) Tj /F1 12 Tf
+0 -28 Td (Page 3 of 5) Tj
+ET
+
+endstream
+endobj
+10 0 obj
+<< /Type /Page /Parent 4 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 2 0 R /F2 3 0 R >> >> /Contents 9 0 R /Rotate 180 >>
+endobj
+11 0 obj
+<< /Length 101 >>
+stream
+0 g 36 770 144 36 re f
+BT /F2 18 Tf 72 722 Td (Rotate 270) Tj /F1 12 Tf
+0 -28 Td (Page 4 of 5) Tj
+ET
+
+endstream
+endobj
+12 0 obj
+<< /Type /Page /Parent 4 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 2 0 R /F2 3 0 R >> >> /Contents 11 0 R /Rotate 270 >>
+endobj
+13 0 obj
+<< /Length 99 >>
+stream
+0 g 36 540 144 36 re f
+BT /F2 18 Tf 72 492 Td (Rotate 0) Tj /F1 12 Tf
+0 -28 Td (Page 5 of 5) Tj
+ET
+
+endstream
+endobj
+14 0 obj
+<< /Type /Page /Parent 4 0 R /MediaBox [0 0 792 612] /Resources << /Font << /F1 2 0 R /F2 3 0 R >> >> /Contents 13 0 R >>
+endobj
+15 0 obj
+<< /Type /Catalog /Pages 4 0 R >>
+endobj
+xref
+0 16
+0000000000 65535 f 
+0000000015 00000 n 
+0000000284 00000 n 
+0000000381 00000 n 
+0000000483 00000 n 
+0000000567 00000 n 
+0000000716 00000 n 
+0000000852 00000 n 
+0000001003 00000 n 
+0000001150 00000 n 
+0000001302 00000 n 
+0000001451 00000 n 
+0000001604 00000 n 
+0000001754 00000 n 
+0000001904 00000 n 
+0000002042 00000 n 
+trailer
+<< /Size 16 /Root 15 0 R /Info 1 0 R /ID [<236EA87BE363D309F6A3969E98ECA87E> <236EA87BE363D309F6A3969E98ECA87E>] >>
+startxref
+2092
+%%EOF

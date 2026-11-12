@@ -1,0 +1,339 @@
+{
+  "format": 1,
+  "generator": ".python/generate_fixtures.py",
+  "author": "AutoJs6",
+  "date": "D:20261112080000Z",
+  "fixtures": {
+    "text.pdf": {
+      "bytes": 1376,
+      "sha256": "611754dda1be3253bfdbecb9c67cdad0fa5a2229b67f20cc41bf2c0d2ee27361",
+      "title": "Text sample",
+      "pages": 1,
+      "pageSize": [
+        595,
+        842
+      ],
+      "text": [
+        [
+          "Text sample",
+          "The quick brown fox jumps over the lazy dog.",
+          "Numbers: 0123456789",
+          "Symbols: (parentheses) [brackets] {braces} \\ backslash",
+          "Search target: needle",
+          "Last line of the page."
+        ]
+      ],
+      "notes": "Helvetica and Helvetica-Bold, not embedded, WinAnsiEncoding; the content stream is uncompressed."
+    },
+    "outline.pdf": {
+      "bytes": 4002,
+      "sha256": "76e721ed82da61d2f2b85a731ba448076c6091edf655588633e9773bc5eee338",
+      "title": "Outline sample",
+      "pages": 6,
+      "pageSize": [
+        595,
+        842
+      ],
+      "text": [
+        [
+          "Chapter 1",
+          "Page 1 of 6"
+        ],
+        [
+          "Chapter 1, section 1",
+          "Page 2 of 6",
+          "The needle is on this page."
+        ],
+        [
+          "Chapter 2",
+          "Page 3 of 6"
+        ],
+        [
+          "Chapter 2, section 1",
+          "Page 4 of 6"
+        ],
+        [
+          "Chapter 3",
+          "Page 5 of 6",
+          "The needle is on this page."
+        ],
+        [
+          "Chapter 3, section 1",
+          "Page 6 of 6"
+        ]
+      ],
+      "outline": [
+        {
+          "title": "Chapter 1",
+          "page": 1,
+          "action": false,
+          "children": [
+            {
+              "title": "Chapter 1, section 1",
+              "page": 2,
+              "children": []
+            }
+          ]
+        },
+        {
+          "title": "Chapter 2",
+          "page": 3,
+          "action": false,
+          "children": [
+            {
+              "title": "Chapter 2, section 1",
+              "page": 4,
+              "children": []
+            }
+          ]
+        },
+        {
+          "title": "Chapter 3",
+          "page": 5,
+          "action": true,
+          "children": [
+            {
+              "title": "Chapter 3, section 1",
+              "page": 6,
+              "children": []
+            }
+          ]
+        },
+        {
+          "title": "Notes",
+          "page": null,
+          "children": []
+        }
+      ],
+      "search": {
+        "needle": [
+          2,
+          5
+        ]
+      },
+      "notes": "Chapter items are open and use /Fit destinations (chapter 3 a GoTo action); sections use /XYZ; content streams are FlateDecode."
+    },
+    "encrypted.pdf": {
+      "bytes": 1937,
+      "sha256": "27d75fdf306dd6f72bfa193db4457dd73a550d1fc6a4262dc485becb8286ee4f",
+      "title": "Encrypted sample",
+      "pages": 2,
+      "pageSize": [
+        595,
+        842
+      ],
+      "text": [
+        [
+          "Encrypted sample",
+          "Page 1 of 2",
+          "Opened with the user or the owner password."
+        ],
+        [
+          "Page 2",
+          "Page 2 of 2"
+        ]
+      ],
+      "userPassword": "paper-user",
+      "ownerPassword": "paper-owner",
+      "encryption": {
+        "filter": "Standard",
+        "v": 2,
+        "r": 3,
+        "keyLength": 128,
+        "algorithm": "RC4"
+      },
+      "permissions": {
+        "p": -3900,
+        "print": true,
+        "printFaithful": false,
+        "modify": false,
+        "extractContent": false,
+        "modifyAnnotations": false,
+        "fillInForm": false,
+        "extractForAccessibility": false,
+        "assemble": false
+      },
+      "notes": "The user password allows printing only; the owner password grants every permission."
+    },
+    "scanned.pdf": {
+      "bytes": 25083,
+      "sha256": "21f5fcbd985bc12e6a3fa4ea782ca0db445dbe1150d663bf12e92458dba654e9",
+      "title": "Scanned sample",
+      "pages": 1,
+      "pageSize": [
+        595,
+        842
+      ],
+      "text": [
+        []
+      ],
+      "image": {
+        "name": "Im1",
+        "width": 1240,
+        "height": 1754,
+        "colorSpace": "DeviceGray",
+        "bitsPerComponent": 8,
+        "filter": "FlateDecode",
+        "paper": 248,
+        "ink": 24,
+        "inkPixels": 53200,
+        "inkBox": [
+          120,
+          160,
+          830,
+          560
+        ]
+      },
+      "ocrText": [
+        "SCANNED PAGE",
+        "PAPER PDF",
+        "HELLO WORLD",
+        "2026"
+      ],
+      "glyphs": {
+        "dot": 10,
+        "origin": [
+          120,
+          160
+        ],
+        "advanceDots": 6,
+        "lineDots": 11,
+        "font": "5 x 7 block capitals"
+      },
+      "notes": "An image of block capitals filling the page at 150 dpi and no text layer, for OCR (roadmap P1.4)."
+    },
+    "images.pdf": {
+      "bytes": 5545,
+      "sha256": "86cc2f22965fb72519f10f69878a8c566b1fc2fbabc28d57c71fb1165423b687",
+      "title": "Images sample",
+      "pages": 1,
+      "pageSize": [
+        595,
+        842
+      ],
+      "text": [
+        [
+          "Images sample",
+          "A JPEG photo and an RGB image with a soft mask."
+        ]
+      ],
+      "images": [
+        {
+          "name": "Im1",
+          "filter": "DCTDecode",
+          "width": 160,
+          "height": 120,
+          "colorSpace": "DeviceRGB",
+          "bytes": 2717,
+          "sha256": "d75b3b7340d9c360f66330361779ebb3dc54222737402edfc2a37de7f53b77d8",
+          "placement": [
+            72,
+            520,
+            240,
+            180
+          ],
+          "centre": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "name": "Im2",
+          "filter": "FlateDecode",
+          "width": 64,
+          "height": 64,
+          "colorSpace": "DeviceRGB",
+          "softMask": true,
+          "placement": [
+            360,
+            546,
+            128,
+            128
+          ],
+          "quadrants": [
+            [
+              220,
+              40,
+              40
+            ],
+            [
+              40,
+              180,
+              60
+            ],
+            [
+              40,
+              80,
+              220
+            ],
+            [
+              240,
+              200,
+              40
+            ]
+          ]
+        }
+      ],
+      "notes": "Im1 is stored as a baseline JPEG, so extracting it returns the stored bytes (sha256); Im2 is opaque inside a circle and transparent in the corners."
+    },
+    "rotated.pdf": {
+      "bytes": 2567,
+      "sha256": "fe28f6eaab29f4ecc235f81869f9c3109b14016d0c90c0f52017bbb6013c018f",
+      "title": "Rotated sample",
+      "pages": 5,
+      "text": [
+        [
+          "Rotate 0",
+          "Page 1 of 5"
+        ],
+        [
+          "Rotate 90",
+          "Page 2 of 5"
+        ],
+        [
+          "Rotate 180",
+          "Page 3 of 5"
+        ],
+        [
+          "Rotate 270",
+          "Page 4 of 5"
+        ],
+        [
+          "Rotate 0",
+          "Page 5 of 5"
+        ]
+      ],
+      "rotations": [
+        0,
+        90,
+        180,
+        270,
+        0
+      ],
+      "mediaBoxes": [
+        [
+          595,
+          842
+        ],
+        [
+          595,
+          842
+        ],
+        [
+          595,
+          842
+        ],
+        [
+          595,
+          842
+        ],
+        [
+          792,
+          612
+        ]
+      ],
+      "marker": "A 144 x 36 pt black bar 36 pt from the left and top edges of the unrotated page."
+    }
+  }
+}

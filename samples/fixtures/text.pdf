@@ -1,0 +1,48 @@
+%PDF-1.7
+%‚„œ”
+1 0 obj
+<< /Title (Text sample) /Author (AutoJs6) /Subject (3-Paper PDF test fixture) /Keywords (autojs6, pdf, fixture) /Creator (.python/generate_fixtures.py) /Producer (3-Paper PDF fixtures) /CreationDate (D:20261112080000Z) /ModDate (D:20261112080000Z) >>
+endobj
+2 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+4 0 obj
+<< /Type /Pages /Kids [6 0 R] /Count 1 >>
+endobj
+5 0 obj
+<< /Length 291 >>
+stream
+BT /F2 18 Tf 72 770 Td (Text sample) Tj /F1 12 Tf
+0 -28 Td (The quick brown fox jumps over the lazy dog.) Tj
+0 -16 Td (Numbers: 0123456789) Tj
+0 -16 Td (Symbols: \(parentheses\) [brackets] {braces} \\ backslash) Tj
+0 -16 Td (Search target: needle) Tj
+0 -16 Td (Last line of the page.) Tj
+ET
+
+endstream
+endobj
+6 0 obj
+<< /Type /Page /Parent 4 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 2 0 R /F2 3 0 R >> >> /Contents 5 0 R >>
+endobj
+7 0 obj
+<< /Type /Catalog /Pages 4 0 R >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000015 00000 n 
+0000000281 00000 n 
+0000000378 00000 n 
+0000000480 00000 n 
+0000000537 00000 n 
+0000000879 00000 n 
+0000001015 00000 n 
+trailer
+<< /Size 8 /Root 7 0 R /Info 1 0 R /ID [<DC970ABBA7EC63DE4A6D3021F0A8ADC8> <DC970ABBA7EC63DE4A6D3021F0A8ADC8>] >>
+startxref
+1064
+%%EOF

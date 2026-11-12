@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.os.IBinder
 import android.os.ParcelFileDescriptor
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ThreePaperPdfContract
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfFailure
 import org.autojs.plugin.common.api.PluginInfo
 import org.autojs.plugin.pdf.api.IPdfDocument
 import org.autojs.plugin.pdf.api.IPdfPlugin
@@ -13,7 +14,6 @@ import org.autojs.plugin.pdf.api.IPdfProgressCallback
 import org.autojs.plugin.pdf.api.IPdfViewerCallback
 import org.autojs.plugin.pdf.api.IPdfViewerSession
 import org.autojs.plugin.pdf.api.PdfContract
-import org.autojs.plugin.pdf.api.PdfErrorCodes
 import org.autojs.plugin.pdf.api.PdfOps
 
 /**
@@ -69,9 +69,9 @@ class ThreePaperPdfService : Service() {
          * zh-CN: 没有 Bundle 应答的方法以 `CODE: detail` 报错, 抛出 Binder 能传递的异常类型 (契约版本 1 只允许
          * `IllegalArgumentException`, `IllegalStateException`, `SecurityException`).
          */
-        fun notImplemented(op: String): IllegalStateException {
+        fun notImplemented(op: String): RuntimeException {
             val detail = listOf(ThreePaperPdfContract.NOT_IMPLEMENTED, op).filter { it.isNotEmpty() }.joinToString(": ")
-            return IllegalStateException(PdfErrorCodes.encode(PdfErrorCodes.UNSUPPORTED, detail))
+            return PdfFailure.unsupported(detail).toBinderException()
         }
 
         fun ParcelFileDescriptor?.closeQuietly() {

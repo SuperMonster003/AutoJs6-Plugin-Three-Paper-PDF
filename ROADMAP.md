@@ -202,7 +202,7 @@ io.github.supermonster003.autojs6.plugin.three.paper.pdf
 
 | 阶段 | 版本 | 主题 | 状态 |
 | --- | --- | --- | --- |
-| P0 | 1.0.0 | 仓库骨架: 构建链与身份, Icon Studio 图标, 测试与 CI | 进行中 (paper-p0, 2026-11-12) |
+| P0 | 1.0.0 | 仓库骨架: 构建链与身份, Icon Studio 图标, 测试与 CI | 进行中 (paper-p0, 2026-11-12; P0.1 / P0.3 完成, P0.2 只剩真机图标目视 E4) |
 | P1 | 宿主 6.8.1 | 契约 `pdf-api`, 宿主绑定与查看器启动, 脚本模块 `pdf`, OCR 分支, Node / Bun 桥接, Explorer 文件类型与注册 | 进行中 (P1.1 完成, P1.2 待真机绑定) |
 | P2 | 1.0.0 | 插件核心: 服务与句柄, 读取, 渲染与位图传输, 页面操作, 生成, 加密, 设备矩阵 | 未开始 |
 | P3 | 1.0.0 | 查看器, `pdf.view` 会话, Explorer Action 服务 | 未开始 |
@@ -242,7 +242,7 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 
 ## P0: 仓库骨架
 
-状态: 进行中 (paper-p0, 2026-11-12). 设备: 无 (构建与单元测试); P0.3 的仪器测试用 API 33 AVD.
+状态: 进行中 (paper-p0, 2026-11-12; P0.1 / P0.3 完成, P0.2 只剩真机图标目视 E4, 由维护者确认). 设备: 无 (构建与单元测试); P0.3 的仪器测试用 API 33 AVD.
 
 ### P0.1 构建链与身份 (D26, D42)
 
@@ -262,9 +262,20 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 
 ### P0.3 测试与 CI (D15, D39)
 
-- [ ] (插件) 单元测试骨架 (页码范围解析, 选项校验, Bundle 编解码), `PdfFixtures` 运行时夹具生成器 (PDFBox: 单页文本, 多页带大纲, 加密, 纯图片, 含图片, 旋转页), 仪器测试骨架 (服务绑定, `getInfo`); `.python/generate_fixtures.py` 生成 `samples/fixtures/` 的最小样例并入库.
-- [ ] (插件) GitHub Actions: `build.yml` (assemble + test), `android-test.yml` (API 33 x86_64 AVD 冒烟仪器测试, 与 CI 同款 AVD 配方), `release.yml` (tag 触发, 产出 `autojs6-plugin-three-paper-pdf-v{VERSION_NAME}-{CRC32}.apk` 与索引清单草稿).
+- [x] (插件) 单元测试骨架 (页码范围解析, 选项校验, Bundle 编解码), `PdfFixtures` 运行时夹具生成器 (PDFBox: 单页文本, 多页带大纲, 加密, 纯图片, 含图片, 旋转页), 仪器测试骨架 (服务绑定, `getInfo`); `.python/generate_fixtures.py` 生成 `samples/fixtures/` 的最小样例并入库.
+- [x] (插件) GitHub Actions: `build.yml` (assemble + test), `android-test.yml` (API 33 x86_64 AVD 冒烟仪器测试, 与 CI 同款 AVD 配方), `release.yml` (tag 触发, 产出 `autojs6-plugin-three-paper-pdf-v{VERSION_NAME}-{CRC32}.apk` 与索引清单草稿).
 - 验收: 本地 `./gradlew test connectedDebugAndroidTest` 通过; 工作流文件经 `prepush_check.py` 检查 (远端运行待首次推送).
+- 结果 (2026-11-12, paper-p0): 完成, 远端运行待首次推送. E1: JVM 单元测试 73 例 0 失败, 本条新增 34 例: `PageRangesTest` 7, `PdfOptionsTest` 7, `PdfAnswersTest` 6, `PdfFixturesTest` 7, `SampleFixturesTest` 7. 测试对象是新增的 `util/` 层: 页码范围, 选项与类型校验, 应答 Map, Bundle 编解码, 请求大小上限 65,536 B 报 `LIMIT_EXCEEDED`; 服务的拒绝路径改为复用该层. `PdfFixtures` 在运行时用 PDFBox 生成 6 种夹具 (单页文本, 多页带大纲, AES-128 加密, 纯图片扫描件, JPEG + 带软蒙版的 PNG, 0 / 90 / 180 / 270 度旋转页), 不入库. `.python/generate_fixtures.py` 纯 Python, 无依赖, 生成 `samples/fixtures/` 的 6 个样例与 `fixtures.json` 清单 (7 个文件共 48,069 B), 清单记录页数, 文本, 大纲, 搜索页, 加密参数, 图片放置与像素值; 加密样例是 RC4-128 (R3, P = -3900, 只允许打印), 与运行时的 AES 夹具互补; `--check` 校验可重现. JVM 上不能提取文本 (原因见 P2.2 的发现), 所以 JVM 测试只断言内容流里的 `Tj` 文本. E2: `./gradlew test connectedDebugAndroidTest` 在 API 33 AVD (只读实例) 上 16 例 0 失败:
+  - `ThreePaperPdfContractTest` 7 例: WAKE, 启动器 alias 与查看器过滤器; 身份服务 `getInfo` 与 PDF 服务能力经 `MarshallingBinder` 强制走 Parcel; 全部操作报 `NOT_IMPLEMENTED: <op>`; Explorer 返回空目录.
+  - `PdfBundlesDeviceTest` 4 例: 应答 Bundle 经 Parcel 往返, 请求 Bundle 校验, 超大请求.
+  - `SampleFixturesDeviceTest` 5 例: PDFBox-Android 按清单提取 7 个样例的文本与搜索页; 系统解码器解出存储的 JPEG; `PdfRenderer` 打开全部未加密样例, 报告的是旋转后的显示尺寸 (90 / 270 度宽高互换); 扫描件与图片的像素探针.
+  - 装宿主 debug 6640 与不装宿主 (与 CI 相同, 只读实例里卸载, 不留存) 各跑一遍都通过, Explorer 测试分别走 "已授权" 与 "拒绝" 两个分支.
+- 结果 (续), 工作流: 三个工作流都从 3-Slate Studio 的同名文件改编.
+  - `build.yml`: 依次跑仓库契约检查, 生成文档检查, 第三方声明检查, 样例 `--check`, `release_manifest.py` 编译检查; 然后跑 `verifyRuntimeDependencyLock`, JVM 测试, 构建 debug / androidTest / release APK 并跑 lint; 最后检查 release 包的原生库集合.
+  - `android-test.yml`: API 33 google_apis x86_64, pixel_6, 4096 MB, 与本地 AVD_API_33 相同, 只是用 2 核; 测试前用 `hide_error_dialogs`, `stayon`, 解锁屏幕 (3-Maple Image 配方).
+  - `release.yml`: tag `v{VERSION_NAME}` 触发, 签名 secrets 沿用其他官方插件的 4 个名称, 产出 APK, SHA256SUMS 与 `.python/release_manifest.py` 写的索引清单草稿.
+  - 本地复现: `build.yml` 的 Gradle 命令通过; lint 0 错误, 15 个警告都是此前已有的 (生成图标 9 个, bcpkix 库自带的 `TrustAllX509TrustManager` 3 个, 版本提示 3 个); release 包 7,780,340 B, 只含 4 个不压缩的 graphics-path 库. `appendDigestToReleasedFiles` 收集到 `autojs6-plugin-three-paper-pdf-v1.0.0-4fb4bac9.apk`, `release_manifest.py` 输出 `MANIFEST_OK versionCode=5`, 清单的 `supportedAbis` 与 APK 的 `SUPPORTED_ABIS` 元数据一致 (四个 ABI); tag 与版本不符时报 `MANIFEST_ERROR`.
+  - `prepush_check.py` 6 / 6 通过. 仓库还没有 remote, 远端运行等首次推送; 首次打 tag 前, 维护者要在仓库里配置 4 个签名 secrets.
 
 ---
 
@@ -325,6 +336,7 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 
 - [ ] (插件) `getInfo` (页数, 每页尺寸与旋转, 元数据, PDF 版本, 是否加密与权限位, 文件大小), `getOutline`, `getText` (页范围 + 分块, 保留换行, `layout: 'simple' | 'raw'`), `search` (关键字, 大小写与整词选项, 返回页码与命中矩形, 页上限).
 - 验收: 单元测试对运行时夹具断言文本, 大纲层级, 搜索命中; 仪器测试经 Binder 取文本分块.
+- P0.3 的发现 (paper-p0, 2026-11-12): (1) `PDFTextStripper` 不按位置排序时, 在转 90 / 270 度的页面上会在词中断行 (`rotated.pdf` 第 2 页得到 "R|o|tate 90", 第 4 页得到 "R|o|ta|te| 2|70"), `sortByPosition = true` 后五页都正确, `layout: 'simple'` 应按位置排序, `raw` 若保留内容流顺序要在文档里说明; (2) JVM 上 PDFBox-Android 的 AFM / CMap 字体资源要 `PDFBoxResourceLoader.init(Context)` 才能加载, 单元测试不能直接调用 `PDFTextStripper`, 文本与搜索的断言放仪器测试 (`SampleFixturesDeviceTest` 已按清单断言), JVM 测试只断言内容流里的 `Tj` 文本, 大纲与结构.
 
 ### P2.3 渲染与位图传输 (D9, D17, D30)
 
