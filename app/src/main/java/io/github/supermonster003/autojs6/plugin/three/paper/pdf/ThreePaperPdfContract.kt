@@ -45,11 +45,21 @@ object ThreePaperPdfContract {
 
     /**
      * Operations the plugin implements end to end; every other operation answers `UNSUPPORTED` with the detail
-     * `NOT_IMPLEMENTED: <op>` until its roadmap item lands (P2.2: reading, P2.3: rendering).
+     * `NOT_IMPLEMENTED: <op>` until its roadmap item lands (P2.2: reading, P2.3: rendering, P2.4: page operations).
      * zh-CN: 插件端到端实现的操作; 其他操作在对应的路线图条目落地之前返回详情为 `NOT_IMPLEMENTED: <op>` 的 `UNSUPPORTED`
-     * (P2.2: 读取, P2.3: 渲染).
+     * (P2.2: 读取, P2.3: 渲染, P2.4: 页面操作).
      */
-    val IMPLEMENTED_OPS: List<String> = listOf(PdfOps.INFO, PdfOps.OUTLINE, PdfOps.TEXT, PdfOps.SEARCH, PdfOps.RENDER, PdfOps.RENDER_TO_FILE)
+    val IMPLEMENTED_OPS: List<String> = listOf(
+        PdfOps.INFO, PdfOps.OUTLINE, PdfOps.TEXT, PdfOps.SEARCH, PdfOps.RENDER, PdfOps.RENDER_TO_FILE,
+        PdfOps.MERGE, PdfOps.PLAN_SPLIT, PdfOps.SPLIT, PdfOps.SAVE,
+    )
+
+    /**
+     * `producer` of every document the plugin writes (roadmap P2.4: the metadata of the input is kept, `producer` names
+     * the plugin).
+     * zh-CN: 插件写出的每个文档的 `producer` (路线图 P2.4: 保留输入的元数据, `producer` 写插件名).
+     */
+    const val PRODUCER = "3-Paper PDF ${BuildConfig.VERSION_NAME}"
 
     /**
      * Optional features of contract version 1 the plugin declares in `pdfFeatures` on this device ([features]).

@@ -56,6 +56,11 @@ class PdfOptions(private val values: PdfValues) {
         return value as Array<String?>
     }
 
+    fun intArray(key: String): IntArray? = typed(key, "an Int array")
+
+    /** Whether the request carries [key] with a value. zh-CN: 请求是否带有取值非空的 [key]. */
+    fun has(key: String): Boolean = values[key] != null
+
     /**
      * A String of [allowed] (a closed value set of [PdfContract]), or [default] when absent.
      * zh-CN: 取自 [allowed] ([PdfContract] 的封闭取值集合) 的 String, 缺省时为 [default].

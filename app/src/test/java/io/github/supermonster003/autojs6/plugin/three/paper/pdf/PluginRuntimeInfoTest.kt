@@ -76,8 +76,11 @@ class PluginRuntimeInfoTest {
         assertEquals(PdfContract.CONTRACT_VERSION, ThreePaperPdfContract.CONTRACT_VERSION)
         assertTrue(PdfOps.ALL.containsAll(ThreePaperPdfContract.IMPLEMENTED_OPS))
         assertEquals(
-            "roadmap P2.2 implements reading, P2.3 rendering",
-            listOf(PdfOps.INFO, PdfOps.OUTLINE, PdfOps.TEXT, PdfOps.SEARCH, PdfOps.RENDER, PdfOps.RENDER_TO_FILE),
+            "roadmap P2.2 implements reading, P2.3 rendering, P2.4 page operations",
+            listOf(
+                PdfOps.INFO, PdfOps.OUTLINE, PdfOps.TEXT, PdfOps.SEARCH, PdfOps.RENDER, PdfOps.RENDER_TO_FILE,
+                PdfOps.MERGE, PdfOps.PLAN_SPLIT, PdfOps.SPLIT, PdfOps.SAVE,
+            ),
             ThreePaperPdfContract.IMPLEMENTED_OPS,
         )
         assertTrue(PdfContract.FEATURES.containsAll(ThreePaperPdfContract.FEATURES))
@@ -91,6 +94,7 @@ class PluginRuntimeInfoTest {
             ThreePaperPdfContract.REQUIRED_HOST_VERSION >= PdfIds.REQUIRED_HOST_VERSION_CODE,
         )
         assertEquals("NOT_IMPLEMENTED", ThreePaperPdfContract.NOT_IMPLEMENTED)
+        assertEquals("3-Paper PDF ${BuildConfig.VERSION_NAME}", ThreePaperPdfContract.PRODUCER)
     }
 
     @Test

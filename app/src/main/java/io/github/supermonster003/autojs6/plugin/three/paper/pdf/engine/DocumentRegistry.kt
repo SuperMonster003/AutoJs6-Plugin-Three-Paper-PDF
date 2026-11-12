@@ -88,6 +88,23 @@ class DocumentRegistry(
     /** The temp directory of [host]. zh-CN: [host] 的临时目录. */
     fun hostDirectory(host: HostKey) = File(root, host.directoryName)
 
+    /**
+     * Creates the temp directory `<root>/<uid>-<pid>/run-<opId>/` of a `run` operation; [releaseRunDirectory] removes it
+     * and the host directory once that is empty, under the same lock as the document directories.
+     * zh-CN: 创建 `run` 操作的临时目录 `<root>/<uid>-<pid>/run-<opId>/`; [releaseRunDirectory] 删除它, 并在宿主目录为空时一并删除,
+     * 与文档目录使用同一把锁.
+     */
+    fun createRunDirectory(host: HostKey, opId: Int): File = synchronized(lock) {
+        val directory = File(hostDirectory(host), "$RUN_DIRECTORY_PREFIX$opId")
+        directory.deleteRecursively()
+        if (!directory.mkdirs() && !directory.isDirectory) {
+            throw PdfFailure(PdfErrorCodes.IO_ERROR, "cannot create the temp directory of the operation")
+        }
+        directory
+    }
+
+    fun releaseRunDirectory(directory: File) = released(directory)
+
     /** Removes what a previous plugin process left behind. zh-CN: 删除上一个插件进程遗留的内容. */
     fun wipe() = synchronized(lock) {
         if (sessions.isEmpty() && reserved.isEmpty()) root.deleteRecursively()
@@ -136,6 +153,9 @@ class DocumentRegistry(
 
         /** Period of [sweep]. zh-CN: [sweep] 的周期. */
         const val SWEEP_PERIOD_MS = 60 * 1000L
+
+        /** Prefix of the temp directories of `run` operations. zh-CN: `run` 操作临时目录的前缀. */
+        const val RUN_DIRECTORY_PREFIX = "run-"
 
     }
 

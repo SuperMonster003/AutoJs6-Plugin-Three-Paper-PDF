@@ -204,7 +204,7 @@ io.github.supermonster003.autojs6.plugin.three.paper.pdf
 | --- | --- | --- | --- |
 | P0 | 1.0.0 | 仓库骨架: 构建链与身份, Icon Studio 图标, 测试与 CI | 完成 (paper-p0, 2026-11-12) |
 | P1 | 宿主 6.8.1 | 契约 `pdf-api`, 宿主绑定与查看器启动, 脚本模块 `pdf`, OCR 分支, Node / Bun 桥接, Explorer 文件类型与注册 | 进行中 (P1.1 完成, P1.2 待真机绑定) |
-| P2 | 1.0.0 | 插件核心: 服务与句柄, 读取, 渲染与位图传输, 页面操作, 生成, 加密, 设备矩阵 | 进行中 (P2.1 - P2.3 完成) |
+| P2 | 1.0.0 | 插件核心: 服务与句柄, 读取, 渲染与位图传输, 页面操作, 生成, 加密, 设备矩阵 | 进行中 (P2.1 - P2.4 完成) |
 | P3 | 1.0.0 | 查看器, `pdf.view` 会话, Explorer Action 服务 | 未开始 |
 | P4 | 1.0.0 | 工具箱界面: 应用骨架, 向导, 设置与启动器模式 | 未开始 |
 | P5 | 1.0.0 | 文档, 声明, 四仓库同步, 样例, 兼容矩阵, 发布与索引登记 | 未开始 |
@@ -325,7 +325,7 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 
 ## P2: 插件核心
 
-状态: 进行中 (paper-p2-core: P2.1 - P2.3 完成). 设备: API 33 AVD (仪器测试) + Sony XQ-DQ72 API 33 (联调) + G8441 API 28 (SharedMemory 回落与低端性能).
+状态: 进行中 (paper-p2-core: P2.1 - P2.3 完成; paper-p2-ops: P2.4 完成). 设备: API 33 AVD (仪器测试) + Sony XQ-DQ72 API 33 (联调) + G8441 API 28 (SharedMemory 回落与低端性能).
 
 ### P2.1 服务, 句柄与任务模型 (D10, D11, D28)
 
@@ -351,8 +351,9 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 
 ### P2.4 页面操作 (D32)
 
-- [ ] (插件) `merge` (多输入 fd, 大纲合并选项, 进度按文件), `planSplit` + `split` (按 `ranges` 或 `every: n` 页), `extract`, `delete`, `reorder`, `rotate` (90 的倍数, 页范围); 元数据保留与 `producer` 写入插件名.
+- [x] (插件) `merge` (多输入 fd, 大纲合并选项, 进度按文件), `planSplit` + `split` (按 `ranges` 或 `every: n` 页), `extract`, `delete`, `reorder`, `rotate` (90 的倍数, 页范围); 元数据保留与 `producer` 写入插件名.
 - 验收: 单元测试覆盖范围解析与每种操作的页数 / 旋转断言; 仪器测试经 Binder 合并两个夹具并拆分回去.
+- 结果 (2026-11-12, paper-p2-ops): 完成. 结构: 新增 `edit/` 层: `PageEditPlan` (把 `save` 请求按协议顺序换算成页面放置: 先 `deletePages`, 再在其余页中保留 `pages`, 再按 `order` 重排 (必须是保留页的排列), 最后按 `degrees` 旋转 `rotatePages` (缺省为全部保留页), 删光全部页报 `INVALID_ARGUMENT`; `split` 的 `ranges` (每段内升序) 或 `every: n`, 两者恰好一个, 超过 `MAX_SPLIT_OUTPUTS` 报 `LIMIT_EXCEEDED`; `planSplit` 清单 `{index, pages, pageCount}`), `PageEditor` (在为写出另行加载的副本上改写页面: 先把可继承的 `Resources` / `MediaBox` / `CropBox` / `Rotate` 复制到每页, 再把放置的页按新顺序挂到一个新的扁平页面树根下; 有页被移除时切断指向它们的大纲条目 (其下还有保留条目的留下但去掉目标), 命名目标, 链接目标, 打开动作, 结构树, 文章线程与页标签 (顺序改变时也删页标签); 大纲损坏时丢弃大纲并回报 `warnings`), `PdfMerger` (`PDFMergerUtility.appendDocument` 逐个追加; `outline: merge` 时每个输入一个折叠的顶层条目 (文档标题, 没有标题时 `Document <n>`, 指向其第一页), 其下放该输入自己的大纲, `none` 丢弃全部大纲; 元数据取第一个输入), `PdfWriting` (`producer` 写 `3-Paper PDF <版本>`, `modificationDate` 为写出时间, 其余元数据保留; 经 `CountingOutputStream` 写出并响应停止信号; 写出的副本不带加密, 所以只用用户密码打开的加密输入报 `PERMISSION_DENIED`, 附录 D Q30), `PageOperations` (`save` 与 `split` 在会话锁内为写出另行加载源文档 (不动已打开的解析状态), 未改动时原样另存; `split` 每段加载一次; `merge` 的目标文档用混合内存 (主存上限同打开, 其余落到操作的临时目录), 源文档保持打开到目标写完; 进度: `save` 处理 / 写出, `split` 按段, `merge` 按文件). `run` 由新的 `RunOperations` 处理: 先检查输入与请求 (预先拒绝的请求直接抛出, 未实现的操作仍是 `NOT_IMPLEMENTED: <op>`), 复制输入归操作所有, 每个操作在 `DocumentRegistry` 锁内建 `<root>/<uid>-<pid>/run-<id>/` 临时目录, 结束即删 (宿主目录随之清空). `split` / `save` 在文档锁内检查请求, 之后在操作线程上再次持锁执行, 文档 `close()` 先取消其上运行中的操作再关闭. `merge` 接受 1 个输入 (与宿主一致, 协议文字写 2 个起, 附录 D Q32); 每个输入的大纲条目标题见 Q31. `ThreePaperPdfContract.IMPLEMENTED_OPS` 加 `merge` / `planSplit` / `split` / `save`, 新增 `PRODUCER`. JVM 测试打开 `unitTests.isReturnDefaultValues` (PDFBox-Android 合并 AcroForm 时调用 `android.util.Log`, 其他插件仓库同款). E1: JVM 单元测试 131 例 0 失败, 本条新增 23 例 (`PageEditPlanTest` 11: 范围解析, `save` 各步骤顺序与拒绝, `order` 排列, 旋转, `split` 两种方式与上限, `planSplit` 清单, `merge` 请求检查; `PageOperationsTest` 12: 提取保留大纲与元数据并写 `producer`, 删除后无目标的条目, 旋转与重排, 未改动另存, 拆分后每段的大纲, 可继承属性, 命名目标与链接, 合并的大纲包装与 `none`, 加密输入 (用户密码 `PERMISSION_DENIED`, 所有者密码写出不加密的副本), 取消的写出报 `CANCELLED`), `PluginRuntimeInfoTest` 核对新的已实现方法与 `PRODUCER`; `lintDebug` 0 错误, 15 条警告与 P2.3 基线相同 (IconDuplicates 7, TrustAllX509TrustManager 3, GradleDependency 2, IconLauncherShape 2, AndroidGradlePluginVersion 1), 无新增. E2: 仪器测试全套 53 例, 本条新增 `PdfServicePageOperationsTest` 5 例 (全部经 Binder: `outline.pdf` (6 页) + `rotated.pdf` (5 页) 合并为 11 页, `sizeBytes` 等于文件长度, `producer` 与旋转逐页一致, 大纲有两个输入的条目; `planSplit` + `split` 按 `1-6` / `7-11` 拆回, 两段页数与旋转同原文件; `save` 提取 `2-4` 并按 `[4, 3, 2]` 重排, 旋转 90 度; 预先拒绝 (缺回调, 删光全部页, 页码越界, 拆分段数与输出数不符, 空输入合并) 抛异常; 用户密码合并报 `PERMISSION_DENIED` 且输出为 0 字节, 所有者密码合并 3 页, 用户密码打开的文档 `save` 抛 `SecurityException`; run 临时目录随操作删除; 100 页合并耗时). 已执行: G8441 (API 28) 52 例 0 失败 (耗时用例加入之前) 与耗时用例单跑; AVD_API_33 只读实例 (emulator-5850) 53 例 0 失败; AVD_API_24 只读实例 (emulator-5852) 53 例 0 失败. 未执行: 真机 API 31 / 33 / 35 (属 P2.7). 100 页合并耗时见附录 F. 已知限制: 拆分 / 提取不裁剪表单域 (被删页上的控件仍留在 AcroForm 中); XMP 元数据里的 producer 不更新; PDFBox 2.0 写经典 xref, 不写对象流, 输出可能比输入大; 长时间的 `save` / `split` 占着文档锁, 同一文档上的其他调用等它结束; 1000 个输入的合并瞬时最多持有 2000 个描述符 (宿主的与插件复制的).
 
 ### P2.5 生成: 图片, 文本, HTML (D8, D18, D22, D33)
 
@@ -653,6 +654,9 @@ AIDL:
 | Q26 | Bun 的 `pdf.control` 授权范围 | (a) `pdf.control` (默认关, 同 `epub.control`) 覆盖除 OCR 外的全部操作, `text` 带 `ocr: true` / `'always'` 时另要 `ocr.control`; 授予时 Bun provider 清单声明 `files` / `files.write` / `ui`, 不进 `nodeCapabilities` (flow 工具与打包应用不借此拿到文件能力) (推荐, 已先行) / (b) `pdf.control` 也覆盖 OCR / (c) 拆成 `pdf.read` 与 `pdf.write` 两个授权 | P1.5 | 已决 (2026-11-12 19:17-19:21, 维护者选 A, 保持现状; 由 paper-p1-script 在宿主 701fd99b51 先行实施) |
 | Q27 | Node / Bun 下 `render` 与查看器事件的细节 | (a) `render` 默认把 PNG 写到脚本工作目录下 `.pdf-render/` 并返回 `{ path, width, height, format, sizeBytes }`, 写文件另要 `files.write`; `encoding: 'base64'` 返回 `{ base64, ... }`, PNG 超过 16 MiB 报 `LIMIT_EXCEEDED`; 查看器事件积压 1024 条未取时以 `close` reason `overflow` 结束会话, 查看器留给用户 (推荐, 已先行) / (b) base64 不设上限 / (c) `render` 一律返回 base64, 不写文件 | P1.5 | 已决 (2026-11-12 19:17-19:21, 维护者选 A, 保持现状; 由 paper-p1-script 在宿主 701fd99b51 先行实施) |
 | Q28 | Node / Bun 插件仓库的 pdf 门面 (`autojs6:pdf` / `$autojs.pdf`, Bun `host.pdf`, `PdfError` / `PdfDocument` / `PdfViewSession` 包装, d.ts 与一致性测试) 何时做 | (a) 联调卡片之前单发一张 "Node / Bun pdf 门面" 卡片, 两个运行时仓库各一个本地提交 (推荐; 联调卡片的 Node 真机验收要用到门面) / (b) 并入联调卡片 / (c) 并入 P5.2 (d.ts / Ace) | 联调卡片之前 | 已决 (2026-11-12 19:17-19:21, 维护者选 A: 联调前单发 Node / Bun 门面卡片; 批次 3 的 paper-rt-facade 执行) |
+| Q30 | 只用用户密码打开的加密输入能否 `save` / `split` / `merge` | (a) 不能, 报 `PERMISSION_DENIED`, 消息提示用所有者密码打开 (推荐, 已先行; 写出的副本不带加密, 只凭用户密码就能得到去掉限制的副本等于绕过所有者设的权限位, 与 `decrypt` 要求所有者密码一致) / (b) 允许, 写出时用同一用户密码与原权限位重新加密 (所有者密码不可知, 只能另生成, 原所有者从此打不开限制) / (c) 允许并写出不加密的副本, 不检查 | P2.4 | 已按推荐先行待确认 (2026-11-12, paper-p2-ops; 影响 P2.4 `PdfWriting.checkWritable`, P3.3 Explorer 溢出工具的错误提示; 改选返工: (b) 约 40 行 + 2 个测试, (c) 删检查约 5 行并改 3 个测试) |
+| Q31 | `merge` 时每个输入的大纲条目叫什么 (协议只写 "每个输入一个条目") | (a) 输入的文档标题, 没有标题时 `Document <n>` (n 从 1 计) (推荐, 已先行; 契约 v1 不变) / (b) 契约 v2 增加 `displayNames` (每个输入的显示名, 宿主传文件名), 没有时退回 (a) | P2.4 | 已按推荐先行待确认 (2026-11-12, paper-p2-ops; 影响 P2.4 `PdfMerger`, 宿主 `pdf.merge` 文档; (b) 是契约改动, 已写进交接目录 `pdf-api-change-requests.md`; 改选返工: (b) 宿主与插件各约 20 行 + 契约版本 2 与协商测试) |
+| Q32 | `merge` 只给 1 个输入 (协议表写 "2 to MAX_RUN_INPUTS", 宿主脚本模块允许 1 个) | (a) 插件接受 1 个输入 (相当于规整地另存一份), 协议表改为 "1 to MAX_RUN_INPUTS" (推荐, 已先行; 与宿主现状一致, 无代码改动) / (b) 宿主与插件都拒绝 1 个输入, 报 `INVALID_ARGUMENT` | P2.4 | 已按推荐先行待确认 (2026-11-12, paper-p2-ops; 影响 P2.4 `PageOperations.mergeRequest`, 宿主协议文档第 174 行 (协议文字改动已写进 `pdf-api-change-requests.md`); 改选返工: (b) 插件 1 行 + 1 个测试, 宿主约 3 行 + 1 个测试) |
 
 ## 附录 E. 证据等级
 
@@ -692,15 +696,15 @@ AIDL:
 
 16 KB 页设备: 1.0.0 只有 Compose 的 graphics-path 原生库, 构建时校验 16 KB 对齐 (Q9), 不需要; 若未来引入原生库再租用 Samsung SM-A566B / SM-F971B.
 
-性能基线表 (渲染列由 P2.3 填入, 其余由 P2.7 回填). 渲染列: `text.pdf` 第 1 页, 144 dpi 即 1190 x 1684, 一次 `render` 调用 (仪器测试, 服务与测试同进程, 调用经过真实 Parcel) 连续 12 次取后 10 次的中位数, 括号内为宿主侧接收 (映射区域或解码 PNG 并拷进位图) 的中位数; 测试 `PdfServiceRenderingTest.timingOfAnA4TextPageAt144Dpi`, logcat 标签 `PaperRenderPerf`.
+性能基线表 (渲染列由 P2.3 填入, 合并列由 P2.4 填入, 其余由 P2.7 回填). 渲染列: `text.pdf` 第 1 页, 144 dpi 即 1190 x 1684, 一次 `render` 调用 (仪器测试, 服务与测试同进程, 调用经过真实 Parcel) 连续 12 次取后 10 次的中位数, 括号内为宿主侧接收 (映射区域或解码 PNG 并拷进位图) 的中位数; 测试 `PdfServiceRenderingTest.timingOfAnA4TextPageAt144Dpi`, logcat 标签 `PaperRenderPerf`. 合并列: 四个 25 页的 A4 文本文档 (测试内用系统 `PdfDocument` 生成, 每页 60 行) 经 Binder `run` `merge` 为 100 页, 从调用到 `onComplete` 计时, 预热 1 次后 3 次的中位数, 括号内为 3 次的范围; 测试 `PdfServicePageOperationsTest.timingOfAHundredPageMerge`, logcat 标签 `PaperMergePerf`.
 
 | 设备 | A4 文本页 144 dpi 渲染耗时 | 100 页合并耗时 | 20 张图片转 PDF 耗时 | 备注 |
 | --- | --- | --- | --- | --- |
-| Sony G8441 (API 28) | 14.7 ms (接收 6.9 ms) | (P2.7) | (P2.7) | SharedMemory; 2026-11-12 paper-p2-core, 单独运行, 前三次全套运行为 14.0 - 14.5 ms |
-| AVD API 33 (x86_64) | 21.2 ms (接收 7.9 ms) | (P2.7) | (P2.7) | SharedMemory; 与 G8441, API 24 的全套并行运行时测得, 只作参考 |
+| Sony G8441 (API 28) | 14.7 ms (接收 6.9 ms) | 440 ms (421 - 524 ms; 输入共 205 KB, 输出 224 KB) | (P2.7) | SharedMemory; 2026-11-12 paper-p2-core, 单独运行, 前三次全套运行为 14.0 - 14.5 ms |
+| AVD API 33 (x86_64) | 21.2 ms (接收 7.9 ms) | 1325 ms (886 - 1798 ms; 输入共 882 KB, 输出 899 KB; 与另外 5 个模拟器并行, 只作参考) | (P2.7) | SharedMemory; 与 G8441, API 24 的全套并行运行时测得, 只作参考 |
 | AVD API 27 (x86) | 16.7 ms (接收 3.2 ms) | (P2.7) | (P2.7) | SharedMemory; 单独运行 |
 | AVD API 25 (x86_64) | 132.0 ms (接收 32.1 ms) | (P2.7) | (P2.7) | fd 回落 (PNG 编码 + 解码); 单独运行 |
-| AVD API 24 (x86) | 264.1 ms (接收 53.1 ms) | (P2.7) | (P2.7) | fd 回落 (PNG 编码 + 解码); 单独运行, 32 位镜像, 与其他模拟器并行时为 200 - 420 ms |
+| AVD API 24 (x86) | 264.1 ms (接收 53.1 ms) | 1261 ms (901 - 1353 ms; 输入共 1.8 MB, 输出 1.8 MB; 与其他模拟器并行) | (P2.7) | fd 回落 (PNG 编码 + 解码); 单独运行, 32 位镜像, 与其他模拟器并行时为 200 - 420 ms |
 
 ## 附录 G. 已评估暂缓
 

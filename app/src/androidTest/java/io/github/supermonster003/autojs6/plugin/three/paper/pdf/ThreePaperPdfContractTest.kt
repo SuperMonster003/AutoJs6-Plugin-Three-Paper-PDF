@@ -166,8 +166,6 @@ class ThreePaperPdfContractTest {
                     assertEquals(op, PdfErrorCodes.UNSUPPORTED, answer.getString(PdfContract.KEY_ERROR_CODE))
                     assertEquals(op, "${ThreePaperPdfContract.NOT_IMPLEMENTED}: $op", answer.getString(PdfContract.KEY_ERROR_MESSAGE))
                 }
-                assertNotImplemented(PdfOps.SPLIT) { document.split(request, emptyArray(), null) }
-                assertNotImplemented(PdfOps.SAVE) { document.save(request, null, null) }
             } finally {
                 document.close()
             }

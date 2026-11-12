@@ -23,17 +23,20 @@ import org.autojs.plugin.pdf.api.PdfOps
 /**
  * Answers `org.autojs.plugin.PDF` (category `pdf`), guarded by `org.autojs.permission.PLUGIN` (roadmap P2.1): identity
  * and capabilities, `open` through the [PdfEngine] document registry (at most `MAX_DOCUMENTS_PER_HOST` per host
- * process) and `cancel` of asynchronous operations. Operations not implemented yet answer `UNSUPPORTED` with the
+ * process), `run` ([RunOperations]) and `cancel` of asynchronous operations. Operations not implemented yet answer `UNSUPPORTED` with the
  * detail `NOT_IMPLEMENTED: <op>`. The host holds one binding per open document, run and viewer, so when the last
  * binding goes ([onUnbind]) every document is closed and its temp files removed.
  * zh-CN: 响应 `org.autojs.plugin.PDF` (category `pdf`), 受 `org.autojs.permission.PLUGIN` 保护 (路线图 P2.1): 身份与能力, 经
- * [PdfEngine] 文档登记表的 `open` (每个宿主进程至多 `MAX_DOCUMENTS_PER_HOST` 个), 以及异步操作的 `cancel`. 尚未实现的操作以
+ * [PdfEngine] 文档登记表的 `open` (每个宿主进程至多 `MAX_DOCUMENTS_PER_HOST` 个), `run` ([RunOperations]), 以及异步操作的
+ * `cancel`. 尚未实现的操作以
  * `UNSUPPORTED` 与详情 `NOT_IMPLEMENTED: <op>` 作答. 宿主为每个打开的文档, 任务与查看器各持有一个绑定, 因此最后一个绑定解除时
  * ([onUnbind]) 关闭全部文档并删除其临时文件.
  */
 class ThreePaperPdfService : Service() {
 
     private lateinit var engine: PdfEngine
+
+    private lateinit var runs: RunOperations
 
     private val binder = object : IPdfPlugin.Stub() {
 
@@ -70,10 +73,10 @@ class ThreePaperPdfService : Service() {
             try {
                 PdfBundles.checkRequestSize(request)
                 val options = PdfBundles.options(request)
-                options.contractVersion()
+                val version = options.contractVersion()
                 val op = options.string(PdfContract.KEY_OP) ?: throw PdfFailure.invalid("request carries no ${PdfContract.KEY_OP}")
                 if (op !in PdfOps.RUN_OPS) throw PdfFailure.invalid("${PdfContract.KEY_OP} \"$op\" is not one of ${PdfOps.RUN_OPS.joinToString(", ")}")
-                throw PdfDocumentStub.notImplemented(op)
+                return runs.start(HostKey.calling(), version, op, options, inputs, output, callback)
             } catch (e: Throwable) {
                 throw PdfAnswers.failureOf(e).toBinderException()
             } finally {
@@ -94,6 +97,7 @@ class ThreePaperPdfService : Service() {
     override fun onCreate() {
         super.onCreate()
         engine = PdfEngine(cacheDir)
+        runs = RunOperations(engine)
     }
 
     override fun onBind(intent: Intent?): IBinder = binder

@@ -4,6 +4,10 @@ import android.os.Bundle
 import android.os.Parcel
 import android.os.ParcelFileDescriptor
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ThreePaperPdfContract
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.edit.PageEditPlan
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.edit.PageOperations
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.edit.PdfWriting
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.Operations
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.PdfEngine
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.PdfSession
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.StopSignal
@@ -55,15 +59,41 @@ internal class PdfDocumentStub(private val session: PdfSession, private val engi
     override fun extractImage(request: Bundle?, output: ParcelFileDescriptor?): Bundle =
         answer(PdfOps.EXTRACT_IMAGE, request, output) { _, _ -> throw notImplemented(PdfOps.EXTRACT_IMAGE) }
 
-    override fun planSplit(request: Bundle?): Bundle = answer(PdfOps.PLAN_SPLIT, request) { _, _ -> throw notImplemented(PdfOps.PLAN_SPLIT) }
+    override fun planSplit(request: Bundle?): Bundle = answer(PdfOps.PLAN_SPLIT, request) { options, call ->
+        PageEditPlan.manifest(PageEditPlan.split(options, call.pdf.numberOfPages))
+    }
 
-    override fun split(request: Bundle?, outputs: Array<out ParcelFileDescriptor?>?, callback: IPdfProgressCallback?): Int =
-        start(PdfOps.SPLIT, *outputs.orEmpty())
+    override fun split(request: Bundle?, outputs: Array<out ParcelFileDescriptor?>?, callback: IPdfProgressCallback?): Int {
+        val received = outputs.orEmpty()
+        return start(PdfOps.SPLIT, request, callback, *received) { options, call ->
+            val parts = PageEditPlan.split(options, call.pdf.numberOfPages)
+            if (received.size != parts.size) {
+                throw PdfFailure.invalid("the split gives ${parts.size} parts but ${received.size} outputs were given (planSplit tells the count)")
+            }
+            PdfWriting.checkWritable(call.pdf)
+            Prepared(received.map { it ?: throw PdfFailure.invalid("a split output is null") }) { operation, running ->
+                PageOperations.split(running, parts, operation)
+            }
+        }
+    }
 
-    override fun save(request: Bundle?, output: ParcelFileDescriptor?, callback: IPdfProgressCallback?): Int = start(PdfOps.SAVE, output)
+    override fun save(request: Bundle?, output: ParcelFileDescriptor?, callback: IPdfProgressCallback?): Int =
+        start(PdfOps.SAVE, request, callback, output) { options, call ->
+            val placements = PageEditPlan.save(options, call.pdf.numberOfPages)
+            PdfWriting.checkWritable(call.pdf)
+            Prepared(listOf(output ?: throw PdfFailure.invalid("save() carries no output"))) { operation, running ->
+                PageOperations.save(running, placements, operation)
+            }
+        }
 
+    /**
+     * Cancels the running `split` / `save` first, so they end with `CANCELLED` and release the document lock, then
+     * closes the document.
+     * zh-CN: 先取消运行中的 `split` / `save`, 使其以 `CANCELLED` 结束并释放文档锁, 再关闭文档.
+     */
     override fun close() {
-        if (session.close()) engine.operations.cancelDocument(session.id)
+        engine.operations.cancelDocument(session.id)
+        session.close()
     }
 
     /**
@@ -133,14 +163,37 @@ internal class PdfDocumentStub(private val session: PdfSession, private val engi
         }
     }
 
+    /** The checked plan of a `split` / `save`: its outputs and its work. zh-CN: 已检查的 `split` / `save` 计划: 输出与工作. */
+    private class Prepared(
+        val outputs: List<ParcelFileDescriptor>,
+        val work: (Operations.Operation, PdfSession.Call) -> Map<String, Any?>,
+    )
+
     /**
-     * `split` / `save` are not implemented yet: refused up front (protocol: a request refused before an id exists throws).
-     * zh-CN: `split` / `save` 尚未实现: 预先拒绝 (协议: 产生 id 之前被拒绝的请求直接抛出).
+     * Starts `split` / `save`: [prepare] checks the request holding the document, before an id exists (protocol: a
+     * request refused up front throws); the work runs on the operation executor, holding the document again, so other
+     * calls on this document wait until it ends. Received descriptors are closed when the call returns (the operation
+     * keeps duplicates).
+     * zh-CN: 启动 `split` / `save`: [prepare] 持有文档检查请求, 此时尚无 id (协议: 预先拒绝的请求直接抛出); 工作在操作执行器上再次
+     * 持有文档执行, 因此该文档上的其他调用等待其结束. 收到的描述符在调用返回时关闭 (操作保留副本).
      */
-    private fun start(op: String, vararg received: ParcelFileDescriptor?): Int {
+    private fun start(
+        op: String,
+        request: Bundle?,
+        callback: IPdfProgressCallback?,
+        vararg received: ParcelFileDescriptor?,
+        prepare: (PdfOptions, PdfSession.Call) -> Prepared,
+    ): Int {
         try {
             if (session.isClosed) throw StopSignal.closed()
-            throw notImplemented(op)
+            PdfBundles.checkRequestSize(request)
+            val options = PdfBundles.options(request)
+            val version = options.contractVersion()
+            val progress = callback ?: throw PdfFailure.invalid("$op() carries no progress callback")
+            val prepared = session.call { prepare(options, it) }
+            return engine.operations.start(session.host, version, op, prepared.outputs, progress, session.id, session.stopSignal) { operation ->
+                session.call { prepared.work(operation, it) }
+            }
         } catch (e: Throwable) {
             throw PdfAnswers.failureOf(e).toBinderException()
         } finally {

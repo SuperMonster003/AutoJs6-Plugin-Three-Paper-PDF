@@ -111,6 +111,9 @@ android {
 
     testOptions {
         unitTests.isIncludeAndroidResources = true
+        // PDFBox-Android logs through android.util.Log (PDFMergerUtility reads the AcroForm), which the JVM stubs refuse.
+        // zh-CN: PDFBox-Android 经 android.util.Log 记录日志 (PDFMergerUtility 读取 AcroForm 时), JVM 桩默认拒绝调用.
+        unitTests.isReturnDefaultValues = true
         // JVM tests read the committed samples of .python/generate_fixtures.py (roadmap P0.3, D39).
         // zh-CN: JVM 测试读取 .python/generate_fixtures.py 生成并已提交的样例 (路线图 P0.3, D39).
         unitTests.all { it.systemProperty("paper.samples", rootProject.file("samples/fixtures").path) }
