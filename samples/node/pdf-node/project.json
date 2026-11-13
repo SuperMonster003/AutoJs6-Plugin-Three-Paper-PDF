@@ -1,0 +1,8 @@
+{
+  "name": "pdf-node",
+  "type": "node",
+  "main": "main.js",
+  "node": {
+    "permissions": ["files", "files.write"]
+  }
+}
