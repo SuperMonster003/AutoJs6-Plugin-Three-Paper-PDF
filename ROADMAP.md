@@ -210,7 +210,7 @@ io.github.supermonster003.autojs6.plugin.three.paper.pdf
 | P2 | 1.0.0 | 插件核心: 服务与句柄, 读取, 渲染与位图传输, 页面操作, 生成, 加密, 设备矩阵 | 进行中 (P2.1 - P2.6 完成) |
 | P3 | 1.0.0 | 查看器, `pdf.view` 会话, Explorer Action 服务 | 进行中 (P3.1, P3.2 / P3.3 插件行与 P3.3 宿主行完成; 真机手测与宿主联调转批次 5 真机复验卡) |
 | P4 | 1.0.0 | 工具箱界面: 应用骨架, 向导, 设置与启动器模式 | 进行中 (P4.1 / P4.2 插件行完成, AVD 验收通过; 真机手测转真机复验卡) |
-| P5 | 1.0.0 | 文档, 声明, 四仓库同步, 样例, 兼容矩阵, 打包应用支持 (Q145 (b)), 发布与索引登记 | 进行中 (P5.1 / P5.2 完成, P5.3 只差真机, P5.5 打包应用支持进行中) |
+| P5 | 1.0.0 | 文档, 声明, 四仓库同步, 样例, 兼容矩阵, 打包应用支持 (Q145 (b)), 发布与索引登记 | 进行中 (P5.1 / P5.2 完成, P5.3 只差真机, P5.5 打包应用支持只差真机) |
 | P6 | 1.1.0 | 表单, 水印 / 页码 / 页眉页脚, 可搜索 PDF, 压缩, 发布 | 未开始 |
 
 依赖顺序:
@@ -418,7 +418,7 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 
 ## P5: 文档, 声明, 四仓库同步, 样例与发布
 
-状态: 进行中 (P5.1 / P5.2 完成, P5.3 只差真机, P5.5 打包应用支持 (Q145 (b), 2026-11-14 加入) 进行中). 设备: 发布门禁的四台 + OnePlus.
+状态: 进行中 (P5.1 / P5.2 完成, P5.3 只差真机, P5.5 打包应用支持 (Q145 (b), 2026-11-14 加入) 只差真机). 设备: 发布门禁的四台 + OnePlus.
 
 ### P5.1 文档 (AutoJs6-Documentation) (D40)
 
@@ -444,12 +444,12 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 
 ### P5.5 打包应用支持 (Q145 (b))
 
-维护者 2026-11-13 23:57 选 Q145 (b): 1.0.0 就让由 AutoJs6 打包的应用使用 `pdf` 模块. 决策 D43 - D45, 待决 Q150 起; 先例 3-Tally Sheet (D54, D60, Q20 (b)). 状态: 进行中 (paper-packaged, 2026-11-14). 设备: AVD_API_33 只读实例; 真机一项并入批次 8 真机复验卡.
+维护者 2026-11-13 23:57 选 Q145 (b): 1.0.0 就让由 AutoJs6 打包的应用使用 `pdf` 模块. 决策 D43 - D45, 待决 Q150 起; 先例 3-Tally Sheet (D54, D60, Q20 (b)). 状态: 只差真机 (paper-packaged, 2026-11-14: 插件, 宿主, 文档与 AVD_API_33 验证完成; 真机一项并入批次 8). 设备: AVD_API_33 只读实例; 真机一项并入批次 8 真机复验卡.
 
 - [x] (插件) 清单声明 normal 级权限 `org.autojs.plugin.pdf.permission.RUNTIME`, 打包入口服务 `.service.ThreePaperPdfPackagedService` 与查看器别名 `.viewer.PackagedPdfViewerActivity` (D43); 两个服务入口共用进程内的服务引擎, 打包入口每次调用校验调用方权限, 文档句柄, 查看器会话与操作绑定创建者 uid, 打包入口的临时目录前缀 `k`, 清扫线程回收已死调用方, `onUnbind` 只关本入口 (D44); 文件访问仍只走 fd (D7); 换入重出的 `pdf-api.aar`. 验收: JVM 单测 (入口校验, uid 绑定, 死亡回收, 按入口关闭, 临时目录名) 与 AVD_API_33 仪器测试 (绑定打包服务完成打开 / 渲染 / 操作, 别名查看器认领会话, 清单契约) 通过; lint 不高于基线 15; `.python/prepush_check.py` 通过. 结果 (paper-packaged, 2026-11-14, VERSION_BUILD 36): JVM 单测 215 项 0 失败 (新增 `PdfCallerGuardTest` 6 项, `ManifestContractTest` 补打包入口, `IconResourcesTest` 只看启动器别名); AVD_API_33 只读实例仪器测试 116 / 116 (新增 `PdfServicePackagedTest` 4 项, `PdfEngineDeviceTest` +3, `ViewerActivityDeviceTest` +1); lint 0 错误 / 15 警告 (= 基线); prepush 6 / 6 通过.
 - [x] (宿主) 契约 `pdf-api` 就地加 3 个常量 (Q60, 版本仍为 1) 并重出 aar; `core/plugin/pdf/PdfEntry`, `PdfPluginHost` 与 `PdfViewerLauncher` 按入口选择服务与查看器 (D43); 宿主 manifest 加 `uses-permission` 与两个 queries; `RemoteApkBuildRequestPreparer` 按 D45 / Q150 为打包请求加权限; 协议文档 `docs/dev/pdf-plugin-protocol-v1.md` 补打包入口; 6.8.1 changelog 10 语言. 验收: `PdfEntryTest`, 打包请求的权限单测, 契约与 pdf 相关既有单测通过 (camera 2 项与 api-coverage 14 项既有失败是积压). 结果 (paper-packaged, 2026-11-14): 宿主本地提交 `c37a23258d` (43 个文件, 未推送), 新 `pdf-api` aar 40,772 B (sha256 `9d5714fe...`, 已换进 `libs/`); `PdfEntryTest`, 打包请求权限单测与 pdf 相关单测共 150 项 0 失败; `generate_markdown.py --check` 与 changelog 翻译检查通过.
 - [x] (文档) 文档站 `api/pdf.md` 开头 "打包应用暂不能使用" 一句改为打包应用的用法与前提 (设备要装 3-Paper PDF 1.0.0 及以上, 用 AutoJs6 6.8.1 及以上打包, 权限由打包流程加入), `runtimeApis` 的 pdf 一节补打包应用, `progress.md`, 文档站 changelog 10 语言, 重新生成 (versionCode 与离线产物照 P5.1 做法); 插件 README 与 CHANGELOG 10 语言. 验收: `normalize-markdown.py --check`, `auto-generate.py --check`, `generate_markdown.py --check` 与翻译检查通过. 结果 (paper-packaged, 2026-11-14): 文档站本地提交 `4dd6ed6` / `ba8493e` (versionCode 218), 离线文档插件 `df366e4` (VERSION_BUILD 293), 均未推送, 文档站与离线文档的生成与翻译检查通过; 插件 README 与 CHANGELOG 10 语言随本行提交, `generate_markdown.py --check` 通过.
-- [ ] (验证) AVD_API_33 只读实例: 用隔离克隆构建的宿主 (VERSION_BUILD 6641) 与官方签名的模板插件打一个最小打包应用, 核对 open / info / render / merge / 加密 / view 各一项, 未装插件时报 `PLUGIN_UNAVAILABLE`, 打包应用被杀后插件回收其文档与临时目录; 可复跑入口在本仓库 `.python/`, 输出只留每项通过 / 失败与关键数值. 证据等级 E2.
+- [x] (验证) AVD_API_33 只读实例: 用隔离克隆构建的宿主 (VERSION_BUILD 6641) 与官方签名的模板插件打一个最小打包应用, 核对 open / info / render / merge / 加密 / view 各一项, 未装插件时报 `PLUGIN_UNAVAILABLE`, 打包应用被杀后插件回收其文档与临时目录; 可复跑入口在本仓库 `.python/`, 输出只留每项通过 / 失败与关键数值. 证据等级 E2. 结果 (paper-packaged, 2026-11-14, E2): 入口 `.python/packaged_app_check.py`, 打包应用由宿主仪器测试 `PackagedAppPdfDeviceTest` (按需, 宿主本地提交) 经官方签名的模板插件生成 (Rhino, `org.autojs.autojs6.paperpdf`, 38,115,725 B, 21 s); emulator-5990 (API 33, 宿主 6641, 插件 debug 包 versionCode 33, 代码与 VERSION_BUILD 36 的提交相同) 全部 14 项检查通过: 打包流程授予 `org.autojs.plugin.pdf.permission.RUNTIME`; `fromText` 2 页, `open` 1 页, `render` 72 dpi 595 x 842, `merge` 2 页 368,694 B, `info` 2 页未加密, `encrypt` 后不给密码报 `PASSWORD_REQUIRED`, `view` 跳到 2 / 2 页可见, `close({ finish: true })` 的原因为 `finished`; 保持打开的文档在插件 `cache/pdf/k10193-11756/`, `am force-stop` 打包应用后 0 s 内删除; `pm uninstall -k` 插件后 `isAvailable()` 为 false, 7 / 7 项调用报 `PLUGIN_UNAVAILABLE` (输入文件须存在: 宿主先检查输入路径, 不存在时报 `FILE_NOT_FOUND`), 之后装回插件.
 - [ ] (验证, 真机) API 33 真机用同一入口复跑, 并入批次 8 真机复验卡. 证据等级 E3.
 
 ---
