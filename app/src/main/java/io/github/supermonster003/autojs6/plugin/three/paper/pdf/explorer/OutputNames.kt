@@ -28,6 +28,19 @@ internal object OutputNames {
 
     fun text(name: String) = "${stem(name)}_text.txt"
 
+    /**
+     * Images to PDF (roadmap P4.2, appendix D Q101): the name of the first image with `.pdf` for its extension.
+     * zh-CN: 图片转 PDF (路线图 P4.2, 附录 D Q101): 第一张图片的名称, 扩展名换成 `.pdf`.
+     */
+    fun imagesPdf(firstImageName: String): String {
+        val trimmed = firstImageName.trim()
+        val dot = trimmed.lastIndexOf('.')
+        return "${stem(if (dot > 0) trimmed.substring(0, dot) else trimmed)}.pdf"
+    }
+
+    /** Organized pages (roadmap P4.2, appendix D Q101). zh-CN: 整理后的页面 (路线图 P4.2, 附录 D Q101). */
+    fun edited(name: String) = "${stem(name)}_edited.pdf"
+
     fun splitFolder(name: String) = "${stem(name)}_split"
 
     /** Part [index] (from 1) of [count]. zh-CN: [count] 个部分中的第 [index] 个 (从 1 起). */

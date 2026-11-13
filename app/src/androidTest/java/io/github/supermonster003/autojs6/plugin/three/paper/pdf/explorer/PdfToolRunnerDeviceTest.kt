@@ -62,7 +62,7 @@ class PdfToolRunnerDeviceTest {
     @Test
     fun mergeKeepsEachInputAsAnOutlineEntryAndNumbersATakenName() {
         File(host.directory, "Outline_merged.pdf").writeText("taken")
-        val result = runner().run(ExplorerTool.MERGE, listOf(input("outline.pdf", "Outline.pdf"), input("text.pdf", "Text.pdf")), ToolOptions.Merge(true))
+        val result = runner().run(listOf(input("outline.pdf", "Outline.pdf"), input("text.pdf", "Text.pdf")), ToolOptions.Merge(true))
         assertEquals("${FakeHostSession.PARENT_PATH}/Outline_merged (1).pdf", result.displayPath)
         assertEquals(1, result.files)
         PDDocument.load(output("Outline_merged (1).pdf")).use { merged ->
@@ -75,7 +75,7 @@ class PdfToolRunnerDeviceTest {
 
     @Test
     fun mergeWithoutOutlinesDropsTheBookmarks() {
-        runner().run(ExplorerTool.MERGE, listOf(input("text.pdf", "Text.pdf"), input("outline.pdf", "Outline.pdf")), ToolOptions.Merge(false))
+        runner().run(listOf(input("text.pdf", "Text.pdf"), input("outline.pdf", "Outline.pdf")), ToolOptions.Merge(false))
         PDDocument.load(output("Text_merged.pdf")).use { merged ->
             assertEquals(7, merged.numberOfPages)
             assertTrue(merged.documentCatalog.documentOutline?.children()?.none() ?: true)
@@ -86,13 +86,13 @@ class PdfToolRunnerDeviceTest {
     fun anEncryptedInputNeedsItsOwnerPasswordToBeWrittenUnencrypted() {
         listOf(USER_PASSWORD to PdfErrorCodes.PERMISSION_DENIED, "wrong" to PdfErrorCodes.WRONG_PASSWORD).forEach { (password, code) ->
             val failure = assertThrows(ToolFailure::class.java) {
-                runner().run(ExplorerTool.MERGE, listOf(input("encrypted.pdf", password = password), input("text.pdf")), ToolOptions.Merge(true))
+                runner().run(listOf(input("encrypted.pdf", password = password), input("text.pdf")), ToolOptions.Merge(true))
             }
             assertEquals(password, code, failure.code)
             assertEquals(emptyList<String>(), host.files())
             assertTrue(host.stagingEmpty())
         }
-        runner().run(ExplorerTool.MERGE, listOf(input("encrypted.pdf", password = OWNER_PASSWORD), input("text.pdf")), ToolOptions.Merge(true))
+        runner().run(listOf(input("encrypted.pdf", password = OWNER_PASSWORD), input("text.pdf")), ToolOptions.Merge(true))
         PDDocument.load(output("encrypted_merged.pdf")).use { merged ->
             assertEquals(3, merged.numberOfPages)
             assertFalse(merged.isEncrypted)
@@ -101,10 +101,10 @@ class PdfToolRunnerDeviceTest {
 
     @Test
     fun splitWritesOneFolderOfPartsByCountOrByRanges() {
-        val every = runner().run(ExplorerTool.SPLIT, listOf(input("outline.pdf", "Outline.pdf")), ToolOptions.Split(2, null))
+        val every = runner().run(listOf(input("outline.pdf", "Outline.pdf")), ToolOptions.Split(2, null))
         assertEquals("${FakeHostSession.PARENT_PATH}/Outline_split", every.displayPath)
         assertEquals(3, every.files)
-        val ranges = runner().run(ExplorerTool.SPLIT, listOf(input("outline.pdf", "Outline.pdf")), ToolOptions.Split(null, listOf("1-2", "5-")))
+        val ranges = runner().run(listOf(input("outline.pdf", "Outline.pdf")), ToolOptions.Split(null, listOf("1-2", "5-")))
         assertEquals("${FakeHostSession.PARENT_PATH}/Outline_split (1)", ranges.displayPath)
         assertEquals(
             listOf(
@@ -122,9 +122,9 @@ class PdfToolRunnerDeviceTest {
 
     @Test
     fun imagesAreOnePicturePerSelectedPageAtTheChosenResolution() {
-        val png = runner().run(ExplorerTool.TO_IMAGES, listOf(input("outline.pdf", "Outline.pdf")), ToolOptions.ToImages(PdfContract.FORMAT_PNG, 72, "2-3"))
+        val png = runner().run(listOf(input("outline.pdf", "Outline.pdf")), ToolOptions.ToImages(PdfContract.FORMAT_PNG, 72, "2-3"))
         assertEquals(2, png.files)
-        runner().run(ExplorerTool.TO_IMAGES, listOf(input("text.pdf", "Text.pdf")), ToolOptions.ToImages(PdfContract.FORMAT_JPEG, 144, null))
+        runner().run(listOf(input("text.pdf", "Text.pdf")), ToolOptions.ToImages(PdfContract.FORMAT_JPEG, 144, null))
         assertEquals(listOf("Outline_images/Outline-p02.png", "Outline_images/Outline-p03.png", "Text_images/Text-p01.jpg"), host.files())
         bounds("Outline_images/Outline-p02.png").let { (width, height, type) ->
             assertEquals("image/png", type)
@@ -139,18 +139,18 @@ class PdfToolRunnerDeviceTest {
 
     @Test
     fun extractedTextFollowsThePageOrderWithABlankLineBetweenPages() {
-        runner().run(ExplorerTool.EXTRACT_TEXT, listOf(input("outline.pdf", "Outline.pdf")), ToolOptions.ExtractText("2-3"))
+        runner().run(listOf(input("outline.pdf", "Outline.pdf")), ToolOptions.ExtractText("2-3"))
         val text = output("Outline_text.txt").readText()
         assertFalse(text, text.contains("Page 1 of 6"))
         assertTrue(text, text.indexOf("Page 2 of 6") in 0 until text.indexOf("Page 3 of 6"))
         assertTrue(text, text.contains("\n\n"))
-        runner().run(ExplorerTool.EXTRACT_TEXT, listOf(input("text.pdf", "Text.pdf")), ToolOptions.ExtractText(null))
+        runner().run(listOf(input("text.pdf", "Text.pdf")), ToolOptions.ExtractText(null))
         assertTrue(output("Text_text.txt").readText().contains("Search target: needle"))
     }
 
     @Test
     fun encryptSetsTheOpenPasswordAndDecryptRemovesIt() {
-        runner().run(ExplorerTool.ENCRYPT, listOf(input("text.pdf", "Text.pdf")), ToolOptions.Encrypt("s3cret"))
+        runner().run(listOf(input("text.pdf", "Text.pdf")), ToolOptions.Encrypt("s3cret"))
         val encrypted = output("Text_encrypted.pdf")
         assertThrows(InvalidPasswordException::class.java) { PDDocument.load(encrypted).close() }
         PDDocument.load(encrypted, "s3cret").use { document ->
@@ -160,17 +160,59 @@ class PdfToolRunnerDeviceTest {
             assertTrue(document.currentAccessPermission.isOwnerPermission)
         }
         val target = ToolTarget(Uri.fromFile(encrypted), encrypted.name)
-        runner().run(ExplorerTool.DECRYPT, listOf(ToolInput(target, "s3cret")), ToolOptions.Decrypt)
+        runner().run(listOf(ToolInput(target, "s3cret")), ToolOptions.Decrypt)
         PDDocument.load(output("Text_encrypted_decrypted.pdf")).use { assertFalse(it.isEncrypted) }
 
         val failure = assertThrows(ToolFailure::class.java) {
-            runner().run(ExplorerTool.DECRYPT, listOf(input("encrypted.pdf", password = USER_PASSWORD)), ToolOptions.Decrypt)
+            runner().run(listOf(input("encrypted.pdf", password = USER_PASSWORD)), ToolOptions.Decrypt)
         }
         assertEquals(PdfErrorCodes.PERMISSION_DENIED, failure.code)
-        runner().run(ExplorerTool.DECRYPT, listOf(input("encrypted.pdf", password = OWNER_PASSWORD)), ToolOptions.Decrypt)
+        runner().run(listOf(input("encrypted.pdf", password = OWNER_PASSWORD)), ToolOptions.Decrypt)
         PDDocument.load(output("encrypted_decrypted.pdf")).use { decrypted ->
             assertFalse(decrypted.isEncrypted)
             assertEquals(2, decrypted.numberOfPages)
+        }
+    }
+
+    @Test
+    fun imagesBecomeOnePdfNamedAfterTheFirstImage() {
+        val first = image("scan-a.png", 400, 300)
+        val second = image("scan-b.png", 300, 400)
+        val result = runner().run(
+            listOf(ToolInput(ToolTarget(Uri.fromFile(first), "scan-a.png"), null), ToolInput(ToolTarget(Uri.fromFile(second), "scan-b.png"), null)),
+            ToolOptions.FromImages(PdfContract.PAGE_SIZE_A4, PdfContract.ORIENTATION_PORTRAIT, 36f),
+        )
+        assertEquals("scan-a.pdf", result.displayPath.substringAfterLast('/'))
+        PDDocument.load(output("scan-a.pdf")).use { document ->
+            assertEquals(2, document.numberOfPages)
+            document.pages.forEach { page ->
+                assertNear(A4_WIDTH_POINTS, page.mediaBox.width.toInt())
+                assertNear(A4_HEIGHT_POINTS, page.mediaBox.height.toInt())
+            }
+        }
+    }
+
+    @Test
+    fun organizingKeepsOrdersAndTurnsPagesOverSeveralSaves() {
+        val pages = listOf(OrganizedPage(3, 90), OrganizedPage(1, 0), OrganizedPage(2, 180), OrganizedPage(5, 90))
+        var last = 0f
+        val job = PdfToolRunner(plugin, { uri -> context.contentResolver.openFileDescriptor(uri, "r") ?: error("no descriptor") }, HostSessionOutput(host),
+            { last = it }, File(root, "work"))
+        val result = job.run(listOf(input(manyPages(), "Many.pdf")), ToolOptions.Organize(pages))
+        assertEquals("Many_edited.pdf", result.displayPath.substringAfterLast('/'))
+        assertEquals(1f, last, 0.001f)
+        assertTrue(File(root, "work").listFiles().isNullOrEmpty())
+        PDDocument.load(output("Many_edited.pdf")).use { document ->
+            assertEquals(4, document.numberOfPages)
+            assertEquals(listOf(90, 0, 180, 90), document.pages.map { it.rotation })
+            val stripper = PDFTextStripper()
+            listOf(3, 1, 2, 5).forEachIndexed { index, source ->
+                stripper.startPage = index + 1
+                stripper.endPage = index + 1
+                // Turned pages come out of the stripper broken across lines. zh-CN: 旋转后的页面经文本抽取会被拆成多行.
+                val text = stripper.getText(document).filterNot { it.isWhitespace() }
+                assertTrue(text, text.contains("Page${source}of$MANY"))
+            }
         }
     }
 
@@ -179,7 +221,7 @@ class PdfToolRunnerDeviceTest {
         lateinit var job: PdfToolRunner
         job = runner { job.cancel() }
         val failure = assertThrows(ToolFailure::class.java) {
-            job.run(ExplorerTool.TO_IMAGES, listOf(input(manyPages(), "Many.pdf")), ToolOptions.ToImages(PdfContract.FORMAT_PNG, 72, null))
+            job.run(listOf(input(manyPages(), "Many.pdf")), ToolOptions.ToImages(PdfContract.FORMAT_PNG, 72, null))
         }
         assertEquals(PdfErrorCodes.CANCELLED, failure.code)
         assertEquals(emptyList<String>(), host.files())
@@ -190,11 +232,11 @@ class PdfToolRunnerDeviceTest {
     @Test
     fun badPagesAndMissingFilesFailBeforeAnythingIsCreated() {
         val pages = assertThrows(ToolFailure::class.java) {
-            runner().run(ExplorerTool.TO_IMAGES, listOf(input("outline.pdf")), ToolOptions.ToImages(PdfContract.FORMAT_PNG, 72, "9"))
+            runner().run(listOf(input("outline.pdf")), ToolOptions.ToImages(PdfContract.FORMAT_PNG, 72, "9"))
         }
         assertEquals(PdfErrorCodes.PAGE_OUT_OF_RANGE, pages.code)
         val missing = ToolTarget(Uri.fromFile(File(root, "missing.pdf")), "missing.pdf")
-        val notFound = assertThrows(ToolFailure::class.java) { runner().run(ExplorerTool.EXTRACT_TEXT, listOf(ToolInput(missing, null)), ToolOptions.ExtractText(null)) }
+        val notFound = assertThrows(ToolFailure::class.java) { runner().run(listOf(ToolInput(missing, null)), ToolOptions.ExtractText(null)) }
         assertEquals(PdfErrorCodes.FILE_NOT_FOUND, notFound.code)
         assertEquals(emptyList<String>(), host.files())
         assertEquals(0, host.aborted)
@@ -219,6 +261,16 @@ class PdfToolRunnerDeviceTest {
         val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         BitmapFactory.decodeFile(output(path).path, options)
         return Triple(options.outWidth, options.outHeight, options.outMimeType)
+    }
+
+    private fun image(name: String, width: Int, height: Int): File {
+        val file = File(root, "images/$name")
+        file.parentFile?.mkdirs()
+        val bitmap = android.graphics.Bitmap.createBitmap(width, height, android.graphics.Bitmap.Config.ARGB_8888)
+        bitmap.eraseColor(android.graphics.Color.rgb(200, 120, 40))
+        file.outputStream().use { bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
+        bitmap.recycle()
+        return file
     }
 
     /** Pixel sizes round either way. zh-CN: 像素尺寸可能向任一方向取整. */

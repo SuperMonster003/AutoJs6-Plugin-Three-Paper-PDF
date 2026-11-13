@@ -8,13 +8,18 @@
     "v1.0.0": {
       "released_date": "2026/11/12",
       "hint": [
-        "Development preview: the AutoJs6 Plugin Center can discover the plugin; reading, rendering, page operations, the viewer, the toolbox and the pdf script module are not delivered yet",
+        "Development preview: the AutoJs6 Plugin Center can discover the plugin; reading, rendering, page operations, the viewer and the pdf script module are not delivered yet",
         "Requires AutoJs6 {{ required_host_version_name }} ({{ required_host_version_code }}) or later (the exact minimum build will be filled in once the host changes land)"
       ],
       "feature": [
         "Plugin skeleton: Wake activation protocol, Plugin Center identity service, PDF capability service (contract version 1) and file manager entry service",
-        "Home screen with the all files access grant (only the toolbox needs it)",
-        "Light and dark icons for the launcher and the Plugin Center; the launcher uses the adaptive automatic icon by default (it follows the system light or dark theme), and the adaptive light, adaptive dark and transparent background styles are built in, to be chosen on the settings screen that comes later",
+        "Home screen: the tools, task progress, recent files and the all files access grant (only the toolbox needs it)",
+        "The toolbox offers 8 tools: merge, split (by page ranges or every n pages), PDF to images (resolution, format, pages), images to PDF (page size, orientation, margins), encrypt, remove the password, extract text (saved as TXT), and rotating, deleting and reordering pages with thumbnails; they share their processing with the file manager entries",
+        "Toolbox tasks run one after another in a foreground service and keep running after you leave the tool screen; the notification shows the progress and can cancel, and the results can be opened in the viewer or shared",
+        "A built-in file browser that can select several files and create folders; the system file picker is also available",
+        "Settings screen: default output folder (Documents/3-Paper PDF), default resolution of PDF to images, language, night mode, theme color, launcher icon, permission status, release history and update check",
+        "Update check: manually on the settings screen, or automatically when the home screen opens (at most once every 12 hours); release information comes from the official plugin index",
+        "Light and dark icons for the launcher and the Plugin Center; the launcher uses the adaptive automatic icon by default (it follows the system light or dark theme), and the adaptive light, adaptive dark and transparent background styles are built in, selectable on the settings screen",
         "A single APK for every ABI: PDF processing contains no native library; the only native library comes from Jetpack Compose and is aligned to 16 KB memory pages",
         "README, Plugin Center instructions and changelogs in 10 languages, generated from JSON sources"
       ],
@@ -22,6 +27,7 @@
         "Attach PDFBox-Android 2.0.27.0 (text, outline, images, page operations and encryption)",
         "Attach Jetpack Compose BOM 2026.09.00 (the plugin screens)",
         "Attach Navigation Compose 2.10.2",
+        "Attach Material Color Utilities (MaterialKolor) 4.1.1 (theme color of the plugin screens)",
         "Attach AndroidX Core KTX 1.18.0"
       ]
     }

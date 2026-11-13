@@ -79,6 +79,25 @@ val hostApiAars: List<File> = run {
     }
 }
 
+run {
+    // The extra TLS trust anchor of res/xml/network_security_config.xml (roadmap P4.1, the update check on Android 7.0;
+    // copied from 3-Macaw Speech cf32b5e): the ISRG Root X1 certificate in DER form, locked in locks/trust-anchors.lock
+    // and checked again by TrustAnchorsTest.
+    // zh-CN: res/xml/network_security_config.xml 的额外 TLS 信任锚 (路线图 P4.1, Android 7.0 上的更新检查; 照搬 3-Macaw Speech
+    // cf32b5e): DER 格式的 ISRG Root X1 证书, 锁定在 locks/trust-anchors.lock 中, TrustAnchorsTest 再次核对.
+    val entries = readLock("locks/trust-anchors.lock")
+    val names = entries.keys.filter { it.endsWith(".path") }.map { it.removeSuffix(".path") }.sorted()
+    check(names == listOf("isrg-root-x1")) { "locks/trust-anchors.lock must list isrg-root-x1" }
+    check(entries.keys == setOf("format") + names.flatMap { name -> listOf("path", "sha256", "url", "subject", "notAfter").map { "$name.$it" } }) {
+        "Unexpected keys in locks/trust-anchors.lock"
+    }
+    names.forEach { name ->
+        val path = entries.getValue("$name.path")
+        check(path == "app/src/main/res/raw/${name.replace('-', '_')}.der") { "trust anchor $name must be the DER file of res/raw" }
+        verifiedFile(path, entries["$name.sha256"], "trust anchor $name")
+    }
+}
+
 android {
     namespace = globalApplicationId
     compileSdk = versions.sdkVersionCompile
@@ -239,6 +258,11 @@ dependencies {
     implementation(libs.compose.activity)
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.navigation.compose)
+    // Material Color Utilities (MaterialKolor, MIT): the HCT tone rule of the screen theme color (standalone settings
+    // specification section 6, roadmap P4.1, Q100), the same as 3-Slate Studio.
+    // zh-CN: Material Color Utilities (MaterialKolor, MIT): 界面主题色的 HCT 色调规则 (独立设置规范第 6 节, 路线图 P4.1, Q100),
+    // 与 3-Slate Studio 相同.
+    implementation(libs.material.color.utilities)
     debugImplementation(libs.compose.ui.tooling)
     debugImplementation(libs.compose.ui.test.manifest)
 

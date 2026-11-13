@@ -8,6 +8,10 @@ activity-compose = "1.12.2"
 core-ktx = "1.18.0"
 foojay-resolver-convention = "1.0.0"
 junit = "4.13.2"
+# The MIT Kotlin port of Material Color Utilities that 3-Slate Studio, 3-Prism Camera and 3-Macaw Speech ship: the fixed
+# HCT tone rule of the theme accent (standalone settings specification section 6, roadmap P4.1, Q100).
+#noinspection NewerVersionAvailable
+material-color-utilities = "4.1.1"
 navigation = "2.10.2"
 # Tests only: the JVM has no org.json (android.jar ships stubs); the line of 3-Folio EPUB.
 org-json = "20260814"
@@ -35,6 +39,7 @@ compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
 core-ktx = { module = "androidx.core:core-ktx", version.ref = "core-ktx" }
 junit = { module = "junit:junit", version.ref = "junit" }
+material-color-utilities = { module = "com.materialkolor:material-color-utilities", version.ref = "material-color-utilities" }
 navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigation" }
 org-json = { module = "org.json:json", version.ref = "org-json" }
 pdfbox-android = { module = "com.tom-roush:pdfbox-android", version.ref = "pdfbox-android" }

@@ -26,6 +26,7 @@ import org.autojs.plugin.explorer.api.ExplorerActionTargetKeys
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -160,7 +161,17 @@ class ExplorerActivitiesDeviceTest {
         compose.waitUntil(TIMEOUT_MILLIS) {
             compose.onAllNodesWithTag("tool-start").fetchSemanticsNodes().any { it.config.getOrNull(SemanticsProperties.Disabled) == null }
         }
-        compose.onNodeWithTag("tool-start").performClick()
+        // The bottom bar follows the keyboard, so a click while it moves can miss: click until the button goes.
+        // zh-CN: 底栏跟随键盘移动, 移动中的点击可能落空: 点击直到按钮消失.
+        repeat(START_ATTEMPTS) {
+            if (compose.onAllNodesWithTag("tool-start").fetchSemanticsNodes().isEmpty()) return
+            compose.onNodeWithTag("tool-start").performClick()
+            val gone = runCatching {
+                compose.waitUntil(START_WAIT_MILLIS) { compose.onAllNodesWithTag("tool-start").fetchSemanticsNodes().isEmpty() }
+            }.isSuccess
+            if (gone) return
+        }
+        fail("the start button took no click")
     }
 
     private fun awaitTag(tag: String) {
@@ -177,6 +188,8 @@ class ExplorerActivitiesDeviceTest {
 
     private companion object {
         const val TIMEOUT_MILLIS = 20_000L
+        const val START_ATTEMPTS = 3
+        const val START_WAIT_MILLIS = 5_000L
         const val OUTLINE_PAGES = 6
     }
 

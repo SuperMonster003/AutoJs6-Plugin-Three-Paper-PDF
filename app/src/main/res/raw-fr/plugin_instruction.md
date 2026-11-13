@@ -1,6 +1,6 @@
 3-Paper PDF est le plugin PDF d'AutoJs6, et aussi une boîte à outils et une visionneuse PDF qui fonctionnent seules, sans AutoJs6. Il lit les informations, le texte, le plan et les images intégrées d'un PDF et rend les pages en images; il fusionne, découpe, extrait, supprime, réordonne et fait pivoter les pages; il génère des PDF à partir d'images, de texte ou de HTML, et chiffre ou déchiffre les documents.
 
-> Il s'agit d'une préversion de développement: le centre des plugins d'AutoJs6 peut détecter le plugin, mais la lecture, le rendu, les opérations sur les pages, la visionneuse, la boîte à outils et le module `pdf` ne sont pas encore livrés. La suite décrit les objectifs de conception de la 1.0.0; consultez la feuille de route pour l'avancement.
+> Il s'agit d'une préversion de développement: le centre des plugins d'AutoJs6 peut détecter le plugin, mais la lecture, le rendu, les opérations sur les pages, la visionneuse et le module `pdf` ne sont pas encore livrés. La suite décrit les objectifs de conception de la 1.0.0; consultez la feuille de route pour l'avancement.
 
 ### Points Forts
 

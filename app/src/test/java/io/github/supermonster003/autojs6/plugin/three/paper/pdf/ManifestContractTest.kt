@@ -184,7 +184,12 @@ class ManifestContractTest {
     @Test
     fun `the INFO, PDF and EXPLORER_ACTION services match the discovery constants`() {
         assertEquals(
-            listOf(".service.ThreePaperPdfInfoService", ".service.ThreePaperPdfService", ".ThreePaperPdfExplorerActionService"),
+            listOf(
+                ".service.ThreePaperPdfInfoService",
+                ".service.ThreePaperPdfService",
+                ".ThreePaperPdfExplorerActionService",
+                ".ui.toolbox.ToolTaskService",
+            ),
             application.children("service").map { it.android("name") },
         )
         val info = service(".service.ThreePaperPdfInfoService")
@@ -206,9 +211,19 @@ class ManifestContractTest {
             assertEquals("true", service.android("exported"))
             assertEquals(PLUGIN_PERMISSION, service.android("permission"))
             assertNull("services run in the plugin's default process", service.androidOrNull("process"))
-            // The toolbox foreground service arrives with roadmap P4.1.
             assertNull("discovery services are not foreground services", service.androidOrNull("foregroundServiceType"))
         }
+    }
+
+    @Test
+    fun `the toolbox task service is a private data sync foreground service`() {
+        val tasks = service(".ui.toolbox.ToolTaskService")
+        // Only the plugin starts it (roadmap D37, P4.2). zh-CN: 只有插件自己启动它.
+        assertEquals("false", tasks.android("exported"))
+        assertEquals("dataSync", tasks.android("foregroundServiceType"))
+        assertNull(tasks.androidOrNull("permission"))
+        assertNull(tasks.androidOrNull("process"))
+        assertTrue("no intent filters", tasks.children("intent-filter").isEmpty())
     }
 
     @Test
@@ -223,7 +238,7 @@ class ManifestContractTest {
     }
 
     @Test
-    fun `the only provider is the private FileProvider of the viewer's shared copies`() {
+    fun `the only provider is the private FileProvider of the viewer copies and the toolbox results`() {
         val provider = application.children("provider").single()
         assertEquals("androidx.core.content.FileProvider", provider.android("name"))
         assertEquals("\${applicationId}.viewer.files", provider.android("authorities"))
@@ -232,9 +247,14 @@ class ManifestContractTest {
         val paths = provider.child("meta-data")
         assertEquals("android.support.FILE_PROVIDER_PATHS", paths.android("name"))
         assertEquals("@xml/viewer_file_paths", paths.android("resource"))
-        val shared = RepositoryFiles.xml("app/src/main/res/xml/viewer_file_paths.xml").children("cache-path").single()
+        val roots = RepositoryFiles.xml("app/src/main/res/xml/viewer_file_paths.xml")
         // FileProvider reads plain attributes here. zh-CN: FileProvider 在此读取不带命名空间的属性.
-        assertEquals("viewer-share/", shared.getAttribute("path"))
+        assertEquals("viewer-share/", roots.children("cache-path").single().getAttribute("path"))
+        // The toolbox results on the shared storage (roadmap P4.2, appendix D Q104). zh-CN: 共享存储上的工具箱结果.
+        assertEquals(".", roots.children("external-path").single().getAttribute("path"))
+        listOf("files-path", "external-files-path", "external-cache-path", "root-path").forEach { tag ->
+            assertTrue("no $tag root", roots.children(tag).isEmpty())
+        }
     }
 
     private fun activity(name: String): Element = application.children("activity").single { it.android("name") == name }

@@ -1,7 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Copies handed to other apps by the viewer (ViewerViewModel.SHARE_DIRECTORY, roadmap P3.1). -->
+<!--
+    Copies handed to other apps by the viewer (ViewerViewModel.SHARE_DIRECTORY, roadmap P3.1) and the toolbox results on
+    the shared storage, shared in place (roadmap P4.2, appendix D Q104; ui.toolbox.ToolboxFiles copies the others into
+    viewer-share/).
+-->
 <paths>
     <cache-path
         name="viewer"
         path="viewer-share/" />
+    <external-path
+        name="external"
+        path="." />
 </paths>

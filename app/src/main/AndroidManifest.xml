@@ -20,8 +20,8 @@
         android:maxSdkVersion="29" />
 
     <!--
-        Long toolbox tasks run in a data sync foreground service with a progress notification (roadmap D37, P4.1).
-        P0.1 only reserves the permissions, the foreground service component comes with P4.1.
+        Long toolbox tasks run in a data sync foreground service with a progress notification (roadmap D37, P4.2):
+        ui.toolbox.ToolTaskService below.
     -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
@@ -44,6 +44,7 @@
         android:fullBackupContent="false"
         android:icon="@mipmap/ic_icon_studio_application"
         android:label="@string/app_name"
+        android:networkSecurityConfig="@xml/network_security_config"
         android:requestLegacyExternalStorage="true"
         android:roundIcon="@mipmap/ic_icon_studio_application"
         android:supportsRtl="true"
@@ -196,7 +197,8 @@
         </activity>
 
         <!--
-            Copies of the open document handed to other apps by share and open with (roadmap P3.1), granted per intent.
+            Copies of the open document handed to other apps by share and open with (roadmap P3.1), and the results of
+            the toolbox shared from the shared storage (P4.2, appendix D Q104), granted per intent.
         -->
         <provider
             android:name="androidx.core.content.FileProvider"
@@ -246,6 +248,12 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </service>
+
+        <!-- The toolbox task queue, in the foreground while tasks run (roadmap D37, P4.2, appendix D Q103). -->
+        <service
+            android:name=".ui.toolbox.ToolTaskService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
 
     </application>
 

@@ -11,14 +11,12 @@ import android.os.Bundle
 import android.os.ParcelFileDescriptor
 import android.provider.OpenableColumns
 import android.widget.Toast
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.annotation.StringRes
+import androidx.compose.runtime.Composable
 import androidx.core.content.FileProvider
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.R
-import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.PaperTheme
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.StandaloneActivity
 import org.autojs.plugin.pdf.api.PdfActions
 import java.io.File
 import java.io.FileNotFoundException
@@ -36,30 +34,30 @@ internal class ViewerEntry(val key: String, @param:StringRes val missing: Int, v
  * from the host with a session token (claimed from [ViewerSessions]), `ACTION_VIEW` of a `content:` or `file:` PDF from
  * the launcher, other apps and the toolbox result page, and the file manager's primary action (a subclass that
  * overrides [entryOf]). A new intent replaces the document on screen; share and open with hand a copy to other apps
- * through the FileProvider.
+ * through the FileProvider. Like the other standalone screens it follows the plugin's appearance settings (roadmap
+ * P4.1): language, night mode and theme color.
  * zh-CN: 查看器 (路线图 5.5, D21, D35, P3.1). 所有入口共用此 Activity: 宿主带会话令牌发来的 `org.autojs.plugin.PDF_VIEWER_OPEN`
  * (从 [ViewerSessions] 认领), 启动器, 其他应用与工具箱结果页发来的 `content:` 或 `file:` PDF 的 `ACTION_VIEW`, 以及文件管理器的主
- * 操作 (重写 [entryOf] 的子类). 新的 intent 替换屏幕上的文档; 分享与用其他应用打开通过 FileProvider 把副本交给其他应用.
+ * 操作 (重写 [entryOf] 的子类). 新的 intent 替换屏幕上的文档; 分享与用其他应用打开通过 FileProvider 把副本交给其他应用. 与其他独立界面一样遵循插件的外观设置 (路线图 P4.1): 语言, 夜间模式与主题色.
  */
-open class ThreePaperPdfViewerActivity : ComponentActivity() {
+open class ThreePaperPdfViewerActivity : StandaloneActivity() {
 
     private val model: ViewerViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         show(intent)
         model.attach(::finish)
-        setContent {
-            PaperTheme {
-                ViewerScreen(
-                    model = model,
-                    onClose = ::finish,
-                    onShare = { handOff(send = true) },
-                    onOpenWith = { handOff(send = false) },
-                )
-            }
-        }
+    }
+
+    @Composable
+    override fun Content() {
+        ViewerScreen(
+            model = model,
+            onClose = ::finish,
+            onShare = { handOff(send = true) },
+            onOpenWith = { handOff(send = false) },
+        )
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -178,7 +176,7 @@ open class ThreePaperPdfViewerActivity : ComponentActivity() {
             else -> null
         }
 
-        private fun displayNameOf(context: Context, uri: Uri): String? {
+        internal fun displayNameOf(context: Context, uri: Uri): String? {
             val queried = runCatching {
                 context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
                     if (cursor.moveToFirst() && !cursor.isNull(0)) cursor.getString(0) else null

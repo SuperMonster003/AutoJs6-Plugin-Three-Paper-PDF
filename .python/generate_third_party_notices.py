@@ -76,6 +76,13 @@ FAMILIES: tuple[Family, ...] = (
            group_is("org.jetbrains")),
     Family("Guava", "https://github.com/google/guava", "Apache-2.0", group_is("com.google.guava")),
     Family("JSpecify annotations", "https://github.com/jspecify/jspecify", "Apache-2.0", group_is("org.jspecify")),
+    # The theme color of the plugin's screens (roadmap P4.1, Q100, standalone settings specification section 6): the
+    # MaterialKolor Kotlin port is MIT, its sources keep the Apache-2.0 headers of Google's material-color-utilities.
+    # zh-CN: 插件界面的主题色 (路线图 P4.1, Q100, 独立设置规范第 6 节): MaterialKolor 的 Kotlin 移植为 MIT, 源码保留 Google
+    # material-color-utilities 的 Apache-2.0 文件头.
+    Family("Material Color Utilities, Kotlin port by MaterialKolor", "https://github.com/jordond/materialkolor",
+           "MIT (port), Apache-2.0 (code from Google's material-color-utilities)", group_is("com.materialkolor")),
+    Family("Poko annotations", "https://github.com/drewhamilton/Poko", "Apache-2.0", group_is("dev.drewhamilton.poko")),
 )
 
 # NOTICE files carried by locked artifacts, keyed by `group:artifact` (Apache-2.0 section 4 (d)). The Android build
@@ -86,9 +93,33 @@ NOTICE_TEXTS: dict[str, str] = {}
 
 # License texts that must accompany the binary. Bouncy Castle 1.72 ships its licence as `org.bouncycastle.LICENSE`
 # (the text below is that class's `licenseText`, line breaks kept); bcpkix and bcutil are under the same licence.
+# MaterialKolor 4.1.1 carries the MIT `LICENSE` of its tag.
 # zh-CN: 必须随二进制分发的许可证全文. Bouncy Castle 1.72 以 `org.bouncycastle.LICENSE` 类携带许可证 (下文即该类的
-# `licenseText`, 保留换行); bcpkix 与 bcutil 使用同一许可证.
+# `licenseText`, 保留换行); bcpkix 与 bcutil 使用同一许可证. MaterialKolor 4.1.1 携带其标签的 MIT `LICENSE`.
 LICENSE_TEXTS: dict[str, str] = {
+    "com.materialkolor:material-color-utilities-android": """MaterialKolor (`LICENSE` of tag 4.1.1)
+
+MIT License
+
+Copyright (c) 2025 Jordon de Hoog
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.""",
     "org.bouncycastle:bcprov-jdk15to18": """Copyright (c) 2000-2022 The Legion of the Bouncy Castle Inc. (https://www.bouncycastle.org)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software

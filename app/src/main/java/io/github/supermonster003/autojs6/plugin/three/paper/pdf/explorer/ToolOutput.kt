@@ -5,6 +5,8 @@ import android.os.ParcelFileDescriptor
 import org.autojs.plugin.explorer.api.ExplorerActionHostSessionKeys
 import org.autojs.plugin.explorer.api.ExplorerActionHostSessionValues
 import org.autojs.plugin.explorer.api.IExplorerActionHostSession
+import java.io.File
+import java.io.IOException
 
 /**
  * Where a tool writes its result: one file, or one folder of files, each published by [Pending.commit] or removed by
@@ -93,5 +95,73 @@ internal class HostSessionOutput(private val session: IExplorerActionHostSession
     private fun transactionOf(prepared: Bundle?): String =
         prepared?.getString(ExplorerActionHostSessionKeys.OUTPUT_TRANSACTION_ID)?.takeIf { it.isNotEmpty() }
             ?: throw IllegalStateException("the host prepared no output transaction")
+
+}
+
+/**
+ * [ToolOutput] into a folder of the device (the toolbox, roadmap P4.2): each result is written under a hidden staging
+ * name first and renamed at the commit, to `name (1).ext` and so on when the name is taken (the rule of the host).
+ * The commit answers the absolute path.
+ * zh-CN: 写入设备上某个文件夹的 [ToolOutput] (工具箱, 路线图 P4.2): 每个结果先以隐藏的暂存名写入, 提交时改名; 名称已被占用时改为
+ * `name (1).ext` 等 (与宿主规则相同). 提交返回绝对路径.
+ */
+internal class LocalFolderOutput(private val folder: File) : ToolOutput {
+
+    override fun createFile(name: String, mimeType: String): ToolOutput.PendingFile {
+        val staged = stage(name)
+        val descriptor = ParcelFileDescriptor.open(staged, ParcelFileDescriptor.MODE_CREATE or ParcelFileDescriptor.MODE_WRITE_ONLY or ParcelFileDescriptor.MODE_TRUNCATE)
+        return object : ToolOutput.PendingFile {
+            override val descriptor = descriptor
+            override fun commit(): String = publish(staged, name)
+            override fun abort() {
+                staged.delete()
+            }
+        }
+    }
+
+    override fun createFolder(name: String): ToolOutput.PendingFolder {
+        val staged = stage(name)
+        if (!staged.mkdir()) throw IOException("cannot create $staged")
+        return object : ToolOutput.PendingFolder {
+            override fun openFile(name: String): ParcelFileDescriptor {
+                require(name.isNotEmpty() && '/' !in name && name != "." && name != "..") { "bad file name $name" }
+                return ParcelFileDescriptor.open(File(staged, name), ParcelFileDescriptor.MODE_CREATE or ParcelFileDescriptor.MODE_WRITE_ONLY or ParcelFileDescriptor.MODE_TRUNCATE)
+            }
+            override fun commit(): String = publish(staged, name)
+            override fun abort() {
+                staged.deleteRecursively()
+            }
+        }
+    }
+
+    private fun stage(name: String): File {
+        if (!folder.isDirectory && !folder.mkdirs()) throw IOException("cannot create the folder $folder")
+        return File(folder, ".$name.$STAGING_SUFFIX-${System.nanoTime()}")
+    }
+
+    @Synchronized
+    private fun publish(staged: File, name: String): String {
+        val target = available(name)
+        if (!staged.renameTo(target)) throw IOException("cannot rename $staged to $target")
+        return target.absolutePath
+    }
+
+    private fun available(name: String): File {
+        val first = File(folder, name)
+        if (!first.exists()) return first
+        val dot = name.lastIndexOf('.').takeIf { it > 0 } ?: name.length
+        val base = name.substring(0, dot)
+        val extension = name.substring(dot)
+        var number = 1
+        while (true) {
+            val next = File(folder, "$base ($number)$extension")
+            if (!next.exists()) return next
+            number += 1
+        }
+    }
+
+    private companion object {
+        const val STAGING_SUFFIX = "partial"
+    }
 
 }

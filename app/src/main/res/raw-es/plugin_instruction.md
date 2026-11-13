@@ -1,6 +1,6 @@
 3-Paper PDF es el complemento PDF de AutoJs6 y, además, una caja de herramientas y un visor de PDF que funcionan por sí solos, sin AutoJs6. Lee la información, el texto, el esquema y las imágenes incrustadas de un PDF y renderiza páginas como imágenes; combina, divide, extrae, elimina, reordena y gira páginas; genera PDF a partir de imágenes, texto o HTML, y cifra o descifra documentos.
 
-> Esta es una versión preliminar de desarrollo: el centro de complementos de AutoJs6 puede detectar el complemento, pero la lectura, el renderizado, las operaciones de páginas, el visor, la caja de herramientas y el módulo `pdf` aún no están disponibles. El texto siguiente describe los objetivos de diseño de la 1.0.0; consulte la hoja de ruta para ver el progreso.
+> Esta es una versión preliminar de desarrollo: el centro de complementos de AutoJs6 puede detectar el complemento, pero la lectura, el renderizado, las operaciones de páginas, el visor y el módulo `pdf` aún no están disponibles. El texto siguiente describe los objetivos de diseño de la 1.0.0; consulte la hoja de ruta para ver el progreso.
 
 ### Funciones Destacadas
 

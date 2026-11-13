@@ -133,16 +133,18 @@ class PdfEngineDeviceTest {
         }
         assertTrue(started.await(10, TimeUnit.SECONDS))
         assertTrue("written before the cancel", file.length() > 0)
-        Thread.sleep(600)
         assertTrue(operations.cancel(id))
         assertTrue(events.ended.await(10, TimeUnit.SECONDS))
         assertNull(events.completed.get())
         assertEquals(PdfErrorCodes.CANCELLED, events.failed.get().getString(PdfContract.KEY_ERROR_CODE))
         assertEquals("the partial output is truncated", 0L, file.length())
-        // At most one report per 250 ms (protocol), measured on arrival. zh-CN: 每 250 ms 至多一次报告 (协议), 按到达时间测量.
-        val times = events.progress.map { it.first }
-        assertTrue("several reports: ${times.size}", times.size >= 3)
-        times.zipWithNext().forEach { (a, b) -> assertTrue("reports ${b - a} ms apart", b - a >= PdfContract.PROGRESS_THROTTLE_MS - 5) }
+        // The first report passes at once and later ones keep their order; the 250 ms rate itself is checked with a
+        // fake clock in ConcurrencyTest, since arrival times on a device depend on scheduling (paper-p4).
+        // zh-CN: 首次报告立即放行, 后续报告保持顺序; 250 ms 的频率本身由 ConcurrencyTest 用假时钟检查, 因为设备上的到达时间取决于调度 (paper-p4).
+        val steps = events.progress.map { it.second.getInt(PdfContract.KEY_CURRENT) }
+        assertTrue("the first report arrives", steps.isNotEmpty())
+        assertEquals("the first report is the first step", 1, steps.first())
+        steps.zipWithNext().forEach { (a, b) -> assertTrue("reports in order: $a then $b", b > a) }
         assertFalse(operations.cancel(id))
     }
 

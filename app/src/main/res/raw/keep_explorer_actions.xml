@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The host reads the file manager action labels by name (ExplorerCatalog); the open action has no other reference, so release resource shrinking must keep it. zh-CN: 宿主按名称读取文件管理器操作的标签 (ExplorerCatalog); 打开操作没有其他引用, 因此 release 资源压缩必须保留它. -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@string/explorer_action_open" />

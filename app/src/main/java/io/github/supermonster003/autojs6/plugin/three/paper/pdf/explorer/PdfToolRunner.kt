@@ -14,6 +14,7 @@ import org.autojs.plugin.pdf.api.PdfContract
 import org.autojs.plugin.pdf.api.PdfErrorCodes
 import org.autojs.plugin.pdf.api.PdfOps
 import org.json.JSONArray
+import java.io.File
 import java.io.FileNotFoundException
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicBoolean
@@ -50,7 +51,21 @@ internal sealed interface ToolOptions {
 
     data object Decrypt : ToolOptions
 
+    /**
+     * Images to one PDF (roadmap P4.2): [pageSize] is `fit`, `a4` or `letter`, [orientation] `auto`, `portrait` or
+     * `landscape`, [margin] in points.
+     * zh-CN: 图片转为一个 PDF (路线图 P4.2): [pageSize] 为 `fit`, `a4` 或 `letter`, [orientation] 为 `auto`, `portrait` 或
+     * `landscape`, [margin] 以点为单位.
+     */
+    data class FromImages(val pageSize: String, val orientation: String, val margin: Float) : ToolOptions
+
+    /** The pages to keep, in their new order, each turned clockwise as given (roadmap P4.2). zh-CN: 要保留的页, 按新顺序排列, 各自按给定角度顺时针旋转 (路线图 P4.2). */
+    data class Organize(val pages: List<OrganizedPage>) : ToolOptions
+
 }
+
+/** A page of the source ([page] from 1) and the clockwise turn added to it (0, 90, 180 or 270). zh-CN: 源文档的一页 ([page] 从 1 起) 及为它追加的顺时针旋转 (0, 90, 180 或 270). */
+internal data class OrganizedPage(val page: Int, val rotation: Int)
 
 /** A selected file and the password it opens with, if any. zh-CN: 选中的文件及打开它所用的密码 (如有). */
 internal class ToolInput(val target: ToolTarget, val password: String?)
@@ -73,6 +88,7 @@ internal class PdfToolRunner(
     private val open: (Uri) -> ParcelFileDescriptor,
     private val output: ToolOutput,
     private val progress: (Float) -> Unit = {},
+    private val workDir: File? = null,
 ) {
 
     private val cancelled = AtomicBoolean(false)
@@ -87,10 +103,12 @@ internal class PdfToolRunner(
         if (id != NO_OPERATION) runCatching { plugin.cancel(id) }
     }
 
-    fun run(tool: ExplorerTool, inputs: List<ToolInput>, options: ToolOptions): ToolResult {
+    fun run(inputs: List<ToolInput>, options: ToolOptions): ToolResult {
         require(inputs.isNotEmpty()) { "a tool needs at least one input" }
         return when (options) {
-            is ToolOptions.Merge -> merge(inputs, options).also { check(tool == ExplorerTool.MERGE) }
+            is ToolOptions.Merge -> merge(inputs, options)
+            is ToolOptions.FromImages -> fromImages(inputs, options)
+            is ToolOptions.Organize -> organize(inputs.first(), options)
             is ToolOptions.Split -> split(inputs.first(), options)
             is ToolOptions.ToImages -> toImages(inputs.first(), options)
             is ToolOptions.ExtractText -> extractText(inputs.first(), options)
@@ -125,6 +143,77 @@ internal class PdfToolRunner(
     private fun decrypt(input: ToolInput): ToolResult {
         val request = request(PdfOps.DECRYPT) { input.password?.let { putString(PdfContract.KEY_PASSWORD, it) } }
         return file(OutputNames.decrypted(input.target.displayName), MIME_PDF) { descriptor -> runOperation(request, listOf(input), descriptor) }
+    }
+
+    private fun fromImages(inputs: List<ToolInput>, options: ToolOptions.FromImages): ToolResult {
+        val request = request(PdfOps.FROM_IMAGES) {
+            putString(PdfContract.KEY_PAGE_SIZE, options.pageSize)
+            putString(PdfContract.KEY_ORIENTATION, options.orientation)
+            putFloat(PdfContract.KEY_MARGIN, options.margin)
+        }
+        return file(OutputNames.imagesPdf(inputs.first().target.displayName), MIME_PDF) { descriptor -> runOperation(request, inputs, descriptor) }
+    }
+
+    /**
+     * Organizes the pages through `save` (roadmap P4.2): the first save keeps and orders the pages and turns those of one
+     * angle; each further angle needs one more save of the previous result (a save turns its pages by one angle), kept
+     * in [workDir] until the last save writes the result.
+     * zh-CN: 经 `save` 整理页面 (路线图 P4.2): 第一次保存保留并排列页面, 同时旋转一种角度的页; 每多一种角度就需要对上一次的结果再保存一次
+     * (一次保存只按一种角度旋转), 中间结果放在 [workDir], 最后一次保存写出结果.
+     */
+    private fun organize(input: ToolInput, options: ToolOptions.Organize): ToolResult {
+        val placed = options.pages
+        if (placed.isEmpty()) throw ToolFailure(PdfErrorCodes.INVALID_ARGUMENT, "no page is kept")
+        val angles = placed.map { Math.floorMod(it.rotation, FULL_TURN) }.filter { it != 0 }.distinct().sorted()
+        val rounds = maxOf(1, angles.size)
+        return file(OutputNames.edited(input.target.displayName), MIME_PDF) { descriptor ->
+            val directory = workDir
+            if (rounds > 1 && directory == null) throw ToolFailure(PdfErrorCodes.INTERNAL, "no work folder for the intermediate files")
+            val temps = ArrayList<File>()
+            try {
+                var source = input
+                var answer: Bundle? = null
+                for (round in 0 until rounds) {
+                    checkCancelled()
+                    val last = round == rounds - 1
+                    val target = if (last) {
+                        descriptor
+                    } else {
+                        directory!!.mkdirs()
+                        val temp = File.createTempFile("organize-", ".pdf", directory).also { temps += it }
+                        ParcelFileDescriptor.open(temp, ParcelFileDescriptor.MODE_WRITE_ONLY or ParcelFileDescriptor.MODE_TRUNCATE)
+                    }
+                    val angle = angles.getOrNull(round)
+                    val request = request {
+                        if (round == 0) {
+                            putString(PdfContract.KEY_PAGES, PageRanges.format(placed.map { it.page }.sorted().toIntArray()))
+                            putIntArray(PdfContract.KEY_ORDER, placed.map { it.page }.toIntArray())
+                        }
+                        if (angle != null) {
+                            // The first save names source pages, the later ones positions of the result. zh-CN: 第一次保存指源文档的页码, 之后指结果中的位置.
+                            val turned = placed.withIndex().filter { Math.floorMod(it.value.rotation, FULL_TURN) == angle }
+                                .map { if (round == 0) it.value.page else it.index + 1 }
+                            putString(PdfContract.KEY_ROTATE_PAGES, PageRanges.format(turned.sorted().toIntArray()))
+                            putInt(PdfContract.KEY_DEGREES, angle)
+                        }
+                    }
+                    val base = round.toFloat() / rounds
+                    answer = try {
+                        withDocument(source) { document ->
+                            // save() closes the output. zh-CN: save() 会关闭输出.
+                            await({ callback -> document.save(request, target, callback) }) { base + it / rounds }
+                        }
+                    } catch (e: Throwable) {
+                        if (!last) runCatching { target.close() }
+                        throw e
+                    }
+                    if (!last) source = ToolInput(ToolTarget(Uri.fromFile(temps.last()), input.target.displayName), null)
+                }
+                answer
+            } finally {
+                temps.forEach { it.delete() }
+            }
+        }
     }
 
     private fun split(input: ToolInput, options: ToolOptions.Split): ToolResult = withDocument(input) { document ->
@@ -321,6 +410,8 @@ internal class PdfToolRunner(
         }
         val answer = outcome ?: Bundle()
         if (failed) throw failureOf(answer)
+        // The engine drops reports inside its throttle interval, the last one included. zh-CN: 引擎丢弃节流间隔内的报告, 包括最后一次.
+        progress(overall(1f))
         return answer
     }
 
@@ -398,6 +489,8 @@ internal class PdfToolRunner(
         private const val PERCENT = 100f
 
         private const val NO_OPERATION = -1
+
+        private const val FULL_TURN = 360
 
     }
 

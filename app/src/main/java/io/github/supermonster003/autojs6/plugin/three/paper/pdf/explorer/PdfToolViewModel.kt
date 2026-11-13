@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.ParcelFileDescriptor
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -15,22 +16,31 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ThreePaperPdfContract
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.ToolTask
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.ToolTasks
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.ToolboxPreferences
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PageRanges
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfFailure
 import org.autojs.plugin.explorer.api.IExplorerActionHostSession
 import org.autojs.plugin.pdf.api.IPdfPlugin
 import org.autojs.plugin.pdf.api.PdfContract
 import org.autojs.plugin.pdf.api.PdfErrorCodes
+import java.io.File
 import java.io.FileNotFoundException
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 /**
- * The state of one file manager tool screen (roadmap P3.3, appendix D Q70), kept across configuration changes: reading
- * the selected files (page count, password), the options of the tool, progress and the outcome. Engine and host calls
- * run on one worker thread; the state lives on the main thread.
- * zh-CN: 一个文件管理器工具界面的状态 (路线图 P3.3, 附录 D Q70), 在配置变更后保留: 读取选中的文件 (页数, 密码), 工具的选项, 进度与
- * 结果. 引擎与宿主调用在一个工作线程上运行; 状态都在主线程上.
+ * The state of one tool screen, kept across configuration changes: reading the input files (page count, password), the
+ * options of the tool, progress and the outcome. The file manager starts it with a request (roadmap P3.3, appendix D
+ * Q70; results go next to the selected files through the host session, run here); the toolbox starts it with a tool
+ * (roadmap P4.2; the user adds the files, results go to the output folder, run by [ToolTasks] in the foreground
+ * service so leaving the screen does not stop them). Both share the options, the checks and [PdfToolRunner]. Engine
+ * and host calls run on one worker thread; the state lives on the main thread.
+ * zh-CN: 一个工具界面的状态, 在配置变更后保留: 读取输入文件 (页数, 密码), 工具的选项, 进度与结果. 文件管理器用请求启动它 (路线图 P3.3,
+ * 附录 D Q70; 结果经宿主会话写到选中文件旁边, 在这里执行); 工具箱用工具启动它 (路线图 P4.2; 由用户添加文件, 结果写入输出目录, 由
+ * [ToolTasks] 在前台服务中执行, 离开界面也不会停止). 两者共用选项, 校验与 [PdfToolRunner]. 引擎与宿主调用在一个工作线程上运行;
+ * 状态都在主线程上.
  */
 internal class PdfToolViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -44,7 +54,7 @@ internal class PdfToolViewModel(application: Application) : AndroidViewModel(app
 
     enum class SplitMode { EVERY, RANGES }
 
-    /** One selected file and what reading it found. zh-CN: 一个选中的文件及读取它的结果. */
+    /** One input file and what reading it found. zh-CN: 一个输入文件及读取它的结果. */
     class Input(val target: ToolTarget) {
 
         var pageCount by mutableIntStateOf(0)
@@ -63,6 +73,10 @@ internal class PdfToolViewModel(application: Application) : AndroidViewModel(app
         var unlocking by mutableStateOf(false)
             internal set
 
+        /** Still being read (toolbox inputs added later). zh-CN: 仍在读取中 (工具箱中后来添加的输入). */
+        var inspecting by mutableStateOf(false)
+            internal set
+
         /** The password it opened with. zh-CN: 打开它所用的密码. */
         var password by mutableStateOf<String?>(null)
             internal set
@@ -71,7 +85,15 @@ internal class PdfToolViewModel(application: Application) : AndroidViewModel(app
         var error by mutableStateOf<String?>(null)
             internal set
 
-        val usable get() = !locked && error == null
+        val usable get() = !locked && error == null && !inspecting
+
+    }
+
+    /** One page of the organize tool: [page] of the source (from 1) and the clockwise turn added to it. zh-CN: 页面整理中的一页: 源文档的第 [page] 页 (从 1 起) 及为它追加的顺时针旋转. */
+    class Page(val page: Int) {
+
+        var rotation by mutableIntStateOf(0)
+            internal set
 
     }
 
@@ -91,40 +113,76 @@ internal class PdfToolViewModel(application: Application) : AndroidViewModel(app
 
     private var runner: PdfToolRunner? = null
 
-    var tool by mutableStateOf<ExplorerTool?>(null)
+    var kind by mutableStateOf<ToolKind?>(null)
         private set
+
+    /** The toolbox started the screen: inputs can be added and removed, results go to [outputFolder]. zh-CN: 由工具箱启动: 可以增删输入, 结果写入 [outputFolder]. */
+    var toolbox by mutableStateOf(false)
+        private set
+
+    /** Where the toolbox writes the results, for this run only. zh-CN: 工具箱写入结果的位置, 只对本次执行有效. */
+    var outputFolder by mutableStateOf<File?>(null)
+
     var parentPath by mutableStateOf<String?>(null)
         private set
     val inputs = mutableStateListOf<Input>()
-    var phase by mutableStateOf<Phase>(Phase.Inspecting)
+
+    private var localPhase by mutableStateOf<Phase>(Phase.Inspecting)
+    private var localProgress by mutableFloatStateOf(0f)
+
+    /** The toolbox task of the last start, while the screen shows it. zh-CN: 最近一次开始的工具箱任务, 界面显示它期间保留. */
+    var task by mutableStateOf<ToolTask?>(null)
         private set
-    var progress by mutableFloatStateOf(0f)
-        private set
+
+    val phase: Phase by derivedStateOf {
+        when (val state = task?.state) {
+            null -> localPhase
+            ToolTask.State.Queued, ToolTask.State.Running -> Phase.Running
+            is ToolTask.State.Done -> Phase.Done(state.result)
+            is ToolTask.State.Failed -> Phase.Failed(state.failure)
+        }
+    }
+
+    val progress: Float get() = task?.progress ?: localProgress
+
+    /** The toolbox task waits for an earlier one (appendix D Q103). zh-CN: 工具箱任务在等待更早的任务 (附录 D Q103). */
+    val queued: Boolean get() = task?.state == ToolTask.State.Queued
 
     var keepOutline by mutableStateOf(true)
     var splitMode by mutableStateOf(SplitMode.EVERY)
     var splitEvery by mutableStateOf("1")
     var splitRanges by mutableStateOf("")
     var imageFormat by mutableStateOf(PdfContract.FORMAT_PNG)
-    var imageDpi by mutableIntStateOf(DEFAULT_DPI)
+    var imageDpi by mutableIntStateOf(ToolboxPreferences.DEFAULT_DPI)
     var pages by mutableStateOf("")
     var newPassword by mutableStateOf("")
     var confirmPassword by mutableStateOf("")
     var decryptPassword by mutableStateOf("")
+    var pageSize by mutableStateOf(PdfContract.PAGE_SIZE_FIT)
+    var orientation by mutableStateOf(PdfContract.ORIENTATION_AUTO)
+    var margin by mutableIntStateOf(MARGIN_CHOICES.first())
+
+    /** The pages of the organize tool in their new order; removed pages are left out. zh-CN: 页面整理中按新顺序排列的页; 删除的页不在其中. */
+    val organized = mutableStateListOf<Page>()
+
+    /** The thumbnails of the organize tool, while its input is open. zh-CN: 页面整理的缩略图, 在其输入打开期间存在. */
+    var thumbnails by mutableStateOf<PageThumbnails?>(null)
+        private set
 
     /**
-     * Starts the tool of [request] once; a recreated Activity calls it again and keeps the state. Without a usable
-     * request the screen fails with [NO_FILES].
-     * zh-CN: 为 [request] 启动工具, 只执行一次; 重建的 Activity 再次调用时保留状态. 没有可用的请求时界面以 [NO_FILES] 失败.
+     * Starts the tool of the file manager [request] once; a recreated Activity calls it again and keeps the state.
+     * Without a usable request the screen fails with [NO_FILES].
+     * zh-CN: 为文件管理器的 [request] 启动工具, 只执行一次; 重建的 Activity 再次调用时保留状态. 没有可用的请求时界面以 [NO_FILES] 失败.
      */
     fun start(request: ToolRequest?) {
         if (started) return
         started = true
-        if (request == null || request.tool == ExplorerTool.OPEN) {
-            phase = Phase.Failed(ToolFailure(NO_FILES, null))
+        val requested = request?.tool?.kind
+        if (request == null || requested == null) {
+            localPhase = Phase.Failed(ToolFailure(NO_FILES, null))
             return
         }
-        tool = request.tool
+        kind = requested
         parentPath = request.parentDisplayPath
         val entries = request.targets.map(::Input)
         inputs += entries
@@ -140,7 +198,72 @@ internal class PdfToolViewModel(application: Application) : AndroidViewModel(app
                 val found = inspect(engine, input.target, null)
                 main.post { apply(input, found, null) }
             }
-            main.post { if (phase == Phase.Inspecting) phase = Phase.Ready }
+            main.post { if (localPhase == Phase.Inspecting) localPhase = Phase.Ready }
+        }
+    }
+
+    /**
+     * Starts the toolbox wizard of [tool] once (roadmap P4.2): no inputs yet, the output folder and resolution from the
+     * toolbox settings.
+     * zh-CN: 启动 [tool] 的工具箱向导, 只执行一次 (路线图 P4.2): 尚无输入, 输出目录与分辨率取自工具箱设置.
+     */
+    fun startToolbox(tool: ToolKind) {
+        if (started) return
+        started = true
+        toolbox = true
+        kind = tool
+        val app = getApplication<Application>()
+        outputFolder = ToolboxPreferences.outputFolder(app)
+        imageDpi = ToolboxPreferences.defaultDpi(app)
+        acquired = true
+        worker.execute {
+            plugin = ToolEngine.acquire(app)
+            main.post { if (localPhase == Phase.Inspecting) localPhase = Phase.Ready }
+        }
+    }
+
+    /**
+     * Adds toolbox inputs: a one-file tool replaces its input, the others append the new files in order (at most
+     * `MAX_RUN_INPUTS`). PDF inputs are read in the background; images are checked by the operation.
+     * zh-CN: 添加工具箱输入: 单文件工具替换其输入, 其他工具按顺序追加新文件 (至多 `MAX_RUN_INPUTS` 个). PDF 输入在后台读取; 图片由操作本身校验.
+     */
+    fun addTargets(targets: List<ToolTarget>) {
+        val tool = kind ?: return
+        if (!toolbox || phase != Phase.Ready || targets.isEmpty()) return
+        val fresh = if (tool.inputs == ToolKind.Inputs.ONE_PDF) {
+            closeThumbnails()
+            organized.clear()
+            inputs.clear()
+            pages = ""
+            decryptPassword = ""
+            listOf(targets.first())
+        } else {
+            val known = inputs.map { it.target.uri }.toMutableSet()
+            targets.filter { known.add(it.uri) }.take(maxOf(0, PdfContract.MAX_RUN_INPUTS - inputs.size))
+        }
+        val entries = fresh.map(::Input)
+        inputs += entries
+        if (tool.inputs == ToolKind.Inputs.IMAGES) return
+        entries.forEach { it.inspecting = true }
+        worker.execute {
+            val engine = plugin ?: return@execute
+            entries.forEach { input ->
+                val found = inspect(engine, input.target, null)
+                main.post {
+                    input.inspecting = false
+                    apply(input, found, null)
+                }
+            }
+        }
+    }
+
+    /** Removes toolbox input [index]. zh-CN: 移除第 [index] 个工具箱输入. */
+    fun remove(index: Int) {
+        if (!toolbox || phase != Phase.Ready || index !in inputs.indices) return
+        inputs.removeAt(index)
+        if (inputs.isEmpty()) {
+            closeThumbnails()
+            organized.clear()
         }
     }
 
@@ -158,27 +281,66 @@ internal class PdfToolViewModel(application: Application) : AndroidViewModel(app
         }
     }
 
-    /** Moves input [index] by [delta] places (the merge order). zh-CN: 把第 [index] 个输入移动 [delta] 位 (合并顺序). */
+    /** Moves input [index] by [delta] places (the merge and images order). zh-CN: 把第 [index] 个输入移动 [delta] 位 (合并与图片的顺序). */
     fun move(index: Int, delta: Int) {
         val target = index + delta
         if (phase != Phase.Ready || index !in inputs.indices || target !in inputs.indices) return
         inputs.add(target, inputs.removeAt(index))
     }
 
+    /** Moves organized page [from] to position [to]. zh-CN: 把整理中的第 [from] 页移到位置 [to]. */
+    fun movePage(from: Int, to: Int) {
+        if (phase != Phase.Ready || from !in organized.indices || to !in organized.indices || from == to) return
+        organized.add(to, organized.removeAt(from))
+    }
+
+    /** Turns organized page [index] a quarter clockwise. zh-CN: 把整理中的第 [index] 页顺时针转四分之一圈. */
+    fun rotatePage(index: Int) {
+        val page = organized.getOrNull(index) ?: return
+        if (phase != Phase.Ready) return
+        page.rotation = (page.rotation + QUARTER) % FULL_TURN
+    }
+
+    /** Turns every organized page a quarter clockwise. zh-CN: 把整理中的每一页顺时针转四分之一圈. */
+    fun rotateAll() {
+        if (phase != Phase.Ready) return
+        organized.forEach { it.rotation = (it.rotation + QUARTER) % FULL_TURN }
+    }
+
+    fun removePage(index: Int) {
+        if (phase != Phase.Ready || index !in organized.indices) return
+        organized.removeAt(index)
+    }
+
+    /** Back to every page in the source order, unturned. zh-CN: 恢复为按源顺序排列的全部页面, 不旋转. */
+    fun resetPages() {
+        if (phase != Phase.Ready) return
+        organized.clear()
+        organized += (1..(inputs.firstOrNull()?.pageCount ?: 0)).map(::Page)
+    }
+
+    /** The organized pages differ from the source. zh-CN: 整理后的页面与源文档不同. */
+    fun pagesChanged(): Boolean {
+        val count = inputs.firstOrNull()?.pageCount ?: return false
+        return organized.size != count || organized.withIndex().any { (index, page) -> page.page != index + 1 || page.rotation != 0 }
+    }
+
     /** The options the screen shows, or null while they are incomplete or invalid. zh-CN: 界面上的选项; 不完整或无效时为 null. */
     fun options(): ToolOptions? {
         val first = inputs.firstOrNull() ?: return null
-        return when (tool) {
-            ExplorerTool.MERGE -> ToolOptions.Merge(keepOutline).takeIf { inputs.size >= 2 }
-            ExplorerTool.SPLIT -> when (splitMode) {
+        return when (kind) {
+            ToolKind.MERGE -> ToolOptions.Merge(keepOutline).takeIf { inputs.size >= 2 }
+            ToolKind.SPLIT -> when (splitMode) {
                 SplitMode.EVERY -> splitEveryValue()?.let { ToolOptions.Split(it, null) }
                 SplitMode.RANGES -> splitRangeList()?.let { ToolOptions.Split(null, it) }
             }
-            ExplorerTool.TO_IMAGES -> pagesOrAll(first.pageCount)?.let { ToolOptions.ToImages(imageFormat, imageDpi, it.value) }
-            ExplorerTool.EXTRACT_TEXT -> pagesOrAll(first.pageCount)?.let { ToolOptions.ExtractText(it.value) }
-            ExplorerTool.ENCRYPT -> ToolOptions.Encrypt(newPassword).takeIf { encryptPasswordProblem() == null }
-            ExplorerTool.DECRYPT -> ToolOptions.Decrypt.takeIf { first.encrypted }
-            ExplorerTool.OPEN, null -> null
+            ToolKind.TO_IMAGES -> pagesOrAll(first.pageCount)?.let { ToolOptions.ToImages(imageFormat, imageDpi, it.value) }
+            ToolKind.FROM_IMAGES -> ToolOptions.FromImages(pageSize, orientation, margin.toFloat())
+            ToolKind.EXTRACT_TEXT -> pagesOrAll(first.pageCount)?.let { ToolOptions.ExtractText(it.value) }
+            ToolKind.ENCRYPT -> ToolOptions.Encrypt(newPassword).takeIf { encryptPasswordProblem() == null }
+            ToolKind.DECRYPT -> ToolOptions.Decrypt.takeIf { first.encrypted }
+            ToolKind.ORGANIZE -> ToolOptions.Organize(organized.map { OrganizedPage(it.page, it.rotation) }).takeIf { organized.isNotEmpty() && pagesChanged() }
+            null -> null
         }
     }
 
@@ -197,31 +359,40 @@ internal class PdfToolViewModel(application: Application) : AndroidViewModel(app
         else -> null
     }
 
-    fun canStart(): Boolean = phase == Phase.Ready && inputs.isNotEmpty() && inputs.all { it.usable } && session != null && options() != null
+    fun canStart(): Boolean {
+        if (phase != Phase.Ready || inputs.isEmpty() || !inputs.all { it.usable }) return false
+        val destination = if (toolbox) outputFolder != null && plugin != null else session != null
+        return destination && options() != null
+    }
 
     fun run() {
-        val tool = tool ?: return
-        val engine = plugin ?: return
+        val tool = kind ?: return
         val options = options() ?: return
         if (phase != Phase.Ready) return
-        val host = session
-        if (host == null) {
-            phase = Phase.Failed(ToolFailure(ToolFailure.OUTPUT_FAILED, "no host session"))
-            return
-        }
         val jobInputs = inputs.map { input ->
-            val password = if (tool == ExplorerTool.DECRYPT) decryptPassword.ifEmpty { null } ?: input.password else input.password
+            val password = if (tool == ToolKind.DECRYPT) decryptPassword.ifEmpty { null } ?: input.password else input.password
             ToolInput(input.target, password)
         }
-        val job = PdfToolRunner(engine, ::open, HostSessionOutput(host)) { fraction ->
-            main.post { if (phase == Phase.Running) progress = fraction.coerceIn(0f, 1f) }
+        if (toolbox) {
+            val folder = outputFolder ?: return
+            task = ToolTasks.submit(getApplication(), tool, jobInputs, options, folder)
+            return
         }
+        val engine = plugin ?: return
+        val host = session
+        if (host == null) {
+            localPhase = Phase.Failed(ToolFailure(ToolFailure.OUTPUT_FAILED, "no host session"))
+            return
+        }
+        val job = PdfToolRunner(engine, ::open, HostSessionOutput(host), { fraction ->
+            main.post { if (localPhase == Phase.Running) localProgress = fraction.coerceIn(0f, 1f) }
+        }, ToolTasks.workDirectory(getApplication()))
         runner = job
-        progress = 0f
-        phase = Phase.Running
+        localProgress = 0f
+        localPhase = Phase.Running
         worker.execute {
             val outcome = try {
-                Phase.Done(job.run(tool, jobInputs, options))
+                Phase.Done(job.run(jobInputs, options))
             } catch (e: ToolFailure) {
                 Phase.Failed(e)
             } catch (e: Exception) {
@@ -230,14 +401,15 @@ internal class PdfToolViewModel(application: Application) : AndroidViewModel(app
             main.post {
                 if (runner === job) {
                     runner = null
-                    phase = outcome
+                    localPhase = outcome
                 }
             }
         }
     }
 
     fun cancel() {
-        runner?.cancel()
+        val current = task
+        if (current != null) current.cancel() else runner?.cancel()
     }
 
     /**
@@ -252,20 +424,30 @@ internal class PdfToolViewModel(application: Application) : AndroidViewModel(app
         if (inputs.isEmpty()) return
         val code = failed.failure.code
         val password = code == PdfErrorCodes.PERMISSION_DENIED || code == PdfErrorCodes.WRONG_PASSWORD || code == PdfErrorCodes.PASSWORD_REQUIRED
-        if (password && tool != ExplorerTool.DECRYPT) {
+        if (password && kind != ToolKind.DECRYPT) {
             inputs.filter { it.encrypted && it.error == null }.forEach { input ->
                 input.locked = true
                 input.wrongPassword = false
             }
         }
-        phase = Phase.Ready
+        task?.let { ToolTasks.dismiss(getApplication(), it) }
+        task = null
+        localPhase = Phase.Ready
+    }
+
+    /** The user saw the toolbox outcome: drop its card from the home screen. zh-CN: 用户已看到工具箱结果: 从首页移除其卡片. */
+    fun acknowledge() {
+        val current = task ?: return
+        if (current.finished) ToolTasks.dismiss(getApplication(), current)
     }
 
     override fun onCleared() {
         runner?.cancel()
         runner = null
+        closeThumbnails()
         if (acquired) {
-            // After a running tool stops: close the host session, then give the engine back. zh-CN: 等运行中的工具停止后关闭宿主会话, 再归还引擎.
+            // After a running tool stops: close the host session, then give the engine back. A toolbox task holds the
+            // engine on its own and keeps running. zh-CN: 等运行中的工具停止后关闭宿主会话, 再归还引擎. 工具箱任务自行持有引擎, 继续运行.
             worker.execute {
                 session?.let { runCatching { it.close() } }
                 ToolEngine.release()
@@ -283,7 +465,8 @@ internal class PdfToolViewModel(application: Application) : AndroidViewModel(app
                 input.locked = false
                 input.wrongPassword = false
                 input.error = null
-                if (tool == ExplorerTool.DECRYPT && password != null && decryptPassword.isEmpty()) decryptPassword = password
+                if (kind == ToolKind.DECRYPT && password != null && decryptPassword.isEmpty()) decryptPassword = password
+                if (kind == ToolKind.ORGANIZE && inputs.firstOrNull() === input) openPages(input)
             }
             is Inspection.Locked -> {
                 input.encrypted = true
@@ -292,6 +475,18 @@ internal class PdfToolViewModel(application: Application) : AndroidViewModel(app
             }
             is Inspection.Unreadable -> input.error = found.code
         }
+    }
+
+    private fun openPages(input: Input) {
+        closeThumbnails()
+        organized.clear()
+        organized += (1..input.pageCount).map(::Page)
+        thumbnails = PageThumbnails(getApplication(), input.target.uri, input.password)
+    }
+
+    private fun closeThumbnails() {
+        thumbnails?.close()
+        thumbnails = null
     }
 
     private fun inspect(engine: IPdfPlugin, target: ToolTarget, password: String?): Inspection {
@@ -378,9 +573,14 @@ internal class PdfToolViewModel(application: Application) : AndroidViewModel(app
 
         const val PASSWORD_MISMATCH = "MISMATCH"
 
-        const val DEFAULT_DPI = 144
+        val DPI_CHOICES = ToolboxPreferences.DPI_CHOICES
 
-        val DPI_CHOICES = listOf(72, 144, 300)
+        /** Page margins of images to PDF in points: none, narrow (1/4 inch), wide (1/2 inch). zh-CN: 图片转 PDF 的页边距 (点): 无, 窄 (1/4 英寸), 宽 (1/2 英寸). */
+        val MARGIN_CHOICES = listOf(0, 18, 36)
+
+        private const val QUARTER = 90
+
+        private const val FULL_TURN = 360
 
     }
 

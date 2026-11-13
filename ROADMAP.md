@@ -206,7 +206,7 @@ io.github.supermonster003.autojs6.plugin.three.paper.pdf
 | P1 | 宿主 6.8.1 | 契约 `pdf-api`, 宿主绑定与查看器启动, 脚本模块 `pdf`, OCR 分支, Node / Bun 桥接, Explorer 文件类型与注册 | 进行中 (P1.1 完成, P1.2 待真机绑定) |
 | P2 | 1.0.0 | 插件核心: 服务与句柄, 读取, 渲染与位图传输, 页面操作, 生成, 加密, 设备矩阵 | 进行中 (P2.1 - P2.6 完成) |
 | P3 | 1.0.0 | 查看器, `pdf.view` 会话, Explorer Action 服务 | 进行中 (P3.1, P3.2 / P3.3 插件行与 P3.3 宿主行完成; 真机手测与宿主联调转批次 5 真机复验卡) |
-| P4 | 1.0.0 | 工具箱界面: 应用骨架, 向导, 设置与启动器模式 | 未开始 |
+| P4 | 1.0.0 | 工具箱界面: 应用骨架, 向导, 设置与启动器模式 | 进行中 (P4.1 / P4.2 插件行完成, AVD 验收通过; 真机手测转真机复验卡) |
 | P5 | 1.0.0 | 文档, 声明, 四仓库同步, 样例, 兼容矩阵, 发布与索引登记 | 未开始 |
 | P6 | 1.1.0 | 表单, 水印 / 页码 / 页眉页脚, 可搜索 PDF, 压缩, 发布 | 未开始 |
 
@@ -399,17 +399,17 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 
 ## P4: 工具箱界面
 
-状态: 未开始. 设备: API 33 AVD + Xiaomi Pad API 35 (存储授权需手动) + Sony XQ-AT72 API 31.
+状态: 进行中 (P4.1 / P4.2 插件行完成, AVD 验收通过, paper-p4 2026-11-13; 真机手测转真机复验卡). 设备: API 33 AVD + Xiaomi Pad API 35 (存储授权需手动) + Sony XQ-AT72 API 31.
 
 ### P4.1 应用骨架, 首页, 设置, 发行历史 (D7, D37)
 
-- [ ] (插件) 单 Activity + navigation, 首页 (最近文件, 工具入口, 存储授权引导), 设置 (默认输出目录, 默认 dpi, 启动器图标四选项, 语言跟随系统), 发行历史, 更新检查, `MANAGE_EXTERNAL_STORAGE` 授权流程 (API 24-29 走运行时权限, API 30+ 走所有文件访问页).
-- 验收: 仪器测试导航与设置持久化; 真机 API 31 / 35 的授权流程手测 (E4).
+- [x] (插件) 单 Activity + navigation, 首页 (最近文件, 工具入口, 存储授权引导), 设置 (默认输出目录, 默认 dpi, 启动器图标四选项, 语言跟随系统), 发行历史, 更新检查, `MANAGE_EXTERNAL_STORAGE` 授权流程 (API 24-29 走运行时权限, API 30+ 走所有文件访问页). 结果 (2026-11-13, paper-p4): `ui/home/HomeActivity` (启动器四个 alias 的目标, 继承 `ui/StandaloneActivity`) 内一个 NavHost, 路由 `home` / `settings` / `history` / `wizard/{kind}`. 首页: 存储授权引导卡 (API 24-29 申请运行时权限, API 30+ 跳所有文件访问页, 回到前台时重查), 打开 PDF (自带文件浏览 `ui/files/FileBrowser` 与系统文件选择器), 8 个工具入口, 进行中与已完成的任务卡片, 最近文件 (附录 D Q106). 设置: 外观 (语言, 夜间模式, 主题色, 默认跟随 AutoJs6, Q102), 启动器图标四选项与规范提示, 默认输出目录 `/sdcard/Documents/3-Paper PDF/` 与 PDF 转图片默认分辨率 (72 / 144 / 300, 默认 144), 存储与通知权限入口, 版本, 发行历史 (`assets/doc/CHANGELOG-*.md`), 更新检查 (手动 / 启动时自动, 可忽略某个版本; 读官方插件索引, Android 7.0 经 `res/raw/isrg_root_x1.der` + `network_security_config.xml` 信任 Let's Encrypt 链, 照搬 3-Macaw Speech cf32b5e, `locks/trust-anchors.lock` + `TrustAnchorsTest`). 查看器改为继承 `StandaloneActivity`, 跟随插件外观, 删去骨架期的 `PaperTheme`. 新增字符串 155 条, 11 个 values 目录写全; changelog 与 README 10 种语言同步.
+- 验收: 仪器测试导航与设置持久化; 真机 API 31 / 35 的授权流程手测 (E4). 状态 (2026-11-13, paper-p4): 仪器测试 `HomeNavigationDeviceTest` 3 项 (首页, 设置, 发行历史与 8 个向导都经顶栏与系统返回打开和关闭, 路由与向导参数正确; 默认分辨率与输出目录跨 Activity 重启保留并带进向导; 选择日语后 Activity 重建并停在设置页, 改回跟随系统), JVM `TrustAnchorsTest` 3 项, JVM 共 198 项通过; AVD_API_33 只读实例全套仪器测试 101 / 101 (连续两次, lint 修复后的最终代码再跑一次也全过). 真机手测转真机复验卡: API 31 / 35 的所有文件访问授权流程, 设置的持久化与外观切换, 启动器图标切换, 更新检查 (API 24 上的 ISRG 根证书); 准备脚本 `.python/device_toolbox_manual_prep.py` (prepare / status / cleanup, 不点按不授权).
 
 ### P4.2 工具箱向导 (D5)
 
-- [ ] (插件) 向导: 合并 (多选排序), 拆分 (范围 / 每 n 页), 转图片 (dpi, 格式, 页范围), 图片转 PDF (多选排序, 页面选项), 加密 / 解密, 提取文本 (另存 txt), 旋转 / 删页 / 重排 (缩略图拖拽); 长任务前台服务 + 通知进度; 结果页可打开查看器或分享.
-- 验收: 每个向导在 API 33 AVD 走通一次; 真机 Xiaomi Pad 大屏布局与 Sony API 31 各手测一次.
+- [x] (插件) 向导: 合并 (多选排序), 拆分 (范围 / 每 n 页), 转图片 (dpi, 格式, 页范围), 图片转 PDF (多选排序, 页面选项), 加密 / 解密, 提取文本 (另存 txt), 旋转 / 删页 / 重排 (缩略图拖拽); 长任务前台服务 + 通知进度; 结果页可打开查看器或分享. 结果 (2026-11-13, paper-p4): 向导与 P3.3 共用 `explorer/PdfToolScreen` + `PdfToolViewModel` + `PdfToolRunner` (附录 D Q70; 工具箱模式下可增删输入并排序, 输出目录可在本次改, Q100), `explorer/ToolKind` 列出 8 个向导 (合并, 拆分, 转图片, 图片转 PDF, 加密, 解密, 提取文本, 页面整理). 图片转 PDF 选纸张大小, 方向与三档页边距 (Q105); 页面整理用缩略图网格 (`PageThumbnails`), 长按拖拽重排 (另有无障碍 "前移 / 后移" 动作), 单页 / 全部旋转, 删页, 多种角度经多次 `save` 完成; 结果命名沿用 Q74, 两个新工具按 Q101. 任务: `ui/toolbox/ToolTasks` 单线程排队 (Q103), `ToolTaskService` (dataSync 前台服务) 发通知进度并可取消, 离开向导后继续, 首页卡片同步显示; 第一次开始任务时请求通知权限 (Q107). 结果页: PDF 在插件查看器中打开, 其他文件用其他应用打开, 分享经 FileProvider (Q104); 单个 PDF 结果进最近文件. 顺带: 引擎会丢弃节流间隔内的进度 (包括最后一次), `PdfToolRunner` 在每个操作成功结束时补报这一段的满进度.
+- 验收: 每个向导在 API 33 AVD 走通一次; 真机 Xiaomi Pad 大屏布局与 Sony API 31 各手测一次. 状态 (2026-11-13, paper-p4): `ToolboxWizardDeviceTest` 8 项在 AVD_API_33 只读实例通过, 每个向导从首页启动, 在界面上设选项, 经前台服务执行: 合并 (结果通知, 返回首页后进最近文件), 拆分 (运行中返回首页, 由首页任务卡片显示结束并移除), 转图片 (页范围与 72 dpi), 图片转 PDF (两张图两页, 宽边距), 加密 (两次输入, 无密码打不开), 解密 (所有者密码), 提取文本, 页面整理 (全部旋转, 删页, 经拖动的无障碍动作前移一页, 结果页序与角度正确); `PdfToolRunnerDeviceTest` 新增 2 项 (图片转 PDF, 多种角度的页面整理) 共 11 项, 与 `ExplorerActivitiesDeviceTest` 6 项一起覆盖共用的 runner; 全套 101 / 101 (连续两次, lint 修复后的最终代码再跑一次也全过). 真机手测转真机复验卡: Xiaomi Pad 横竖屏大屏布局与缩略图拖拽, Sony API 31 的通知进度 / 取消 / 排队, 结果打开与分享 (要看的点在共享笔记 paper-p4-handoff.md).
 
 ---
 
@@ -694,6 +694,19 @@ AIDL:
 | Q92 | MediaStudioCalls.kt:312 疑似同样的早取消悬挂 | (a) 3-Slate 主题新增条目照 PdfCalls 修 (settle-once + `invokeOnCompletion`) 并补设备检查 (推荐, 未先行) / (b) 抽一个宿主共用的可取消 Promise helper, pdf / mediastudio / camera 一起改 / (c) 不处理 | 3-Slate 脚本的 cancel(), 宿主 pdf / mediastudio / camera 调用 | 已决 (2026-11-13 13:15, 维护者选 (b) 抽宿主共用的可取消 Promise helper, pdf / mediastudio / camera 一起改, 非推荐项, 经调度会话拍板; 约半天, 由批次 5 的 paper-host-rework 落实) |
 | Q93 | Node / Bun 门面 signal 的细节 | (a) 只有返回带 `cancel()` 的 Promise 的调用理会 signal (`view.goTo` / `close` 不理会); 中止 = `CANCELLED` 的 PdfError, `cause` 为 `signal.reason`; 已中止的 signal 立即 reject 不发请求; 非 AbortSignal 报 `INVALID_ARGUMENT`; 不加 timeout 选项, 用 `AbortSignal.timeout(ms)` (推荐, 已先行) / (b) `view` 的方法也接受 signal, 中止即关会话 / (c) 另加 `timeoutMs` | Node / Bun 门面与 d.ts | 已决 (2026-11-13 13:15, 维护者选 (c) 现状之上另加 `timeoutMs` 选项 (等价 `AbortSignal.timeout`), 非推荐项, 经调度会话拍板; 由批次 5 的 paper-host-rework 落实, d.ts 与文档同步; 返工: Node / Bun 各约 20 行 + 测试) |
 | Q94 | 回归脚本与运行器放哪里 | (a) 脚本在插件仓库 `scripts/`, 运行器在宿主 `tools/paper-pdf/` (宿主 `/tools/*` 被忽略, 强制加入, 同 device_check.py) (推荐, 已先行) / (b) 运行器也放插件仓库 `.python/` | P2.7 / P5 的使用方式 | 已决 (2026-11-13 13:30, 维护者选 (a) 保持现状, 经调度会话拍板; paper-integ 已实施, 宿主 8d8990b497, 插件 fec78ec; 改选返工: 移动 1 个文件, 改默认路径) |
+| Q100 | 工具箱向导里改输出目录是否写回设置 | (a) 只对本次有效, 设置页的默认输出目录不变 (推荐, 已先行) / (b) 向导里选的目录同时写回设置 (返工约 1 行, 改 1 个设备测试) | P4.2 | 待决 (paper-p4 已按 (a) 先行) |
+| Q101 | 图片转 PDF 与页面整理的结果命名 (Q74 只定了文件管理器已有的工具) | (a) 图片转 PDF 用第一张图片的名称, 扩展名换成 `.pdf`; 页面整理为 `<主干>_edited.pdf`; 主干规则与重名编号 `名称 (1)` 同 Q74 (推荐, 已先行) / (b) `<首图主干>_images.pdf` 与 `<主干>_organized.pdf` (返工: `OutputNames` 2 行, JVM 与设备测试各 1 处) | P4.2 | 待决 (paper-p4 已按 (a) 先行) |
+| Q102 | 设置页的语言选项 (P4.1 原文写 "语言跟随系统") | (a) 按独立设置规范第 7 节: 默认跟随 AutoJs6, 可选跟随系统与 10 种语言; 夜间模式与主题色同理; 查看器也遵循 (推荐, 已先行) / (b) 照原文只跟随系统, 去掉语言选项 (返工约 30 行, 删 1 个设备测试) | P4.1 | 待决 (paper-p4 已按 (a) 先行) |
+| Q103 | 同时开始多个工具箱任务时怎么处理 | (a) 单线程排队, 按开始顺序执行, 首页卡片与通知显示 "排队中" 及排队数 (推荐, 已先行) / (b) 并行执行 (返工约 40 行: 线程池与通知分组; 内存峰值随任务数叠加) / (c) 已有任务时拒绝开始新任务 (返工约 15 行, 10 种语言 1 条文案) | P4.2 | 待决 (paper-p4 已按 (a) 先行) |
+| Q104 | 分享工具箱结果的方式 | (a) 主共享存储上的结果经 FileProvider `external-path` 原地分享, 其他存储卷上的先在后台复制到缓存 `viewer-share/` 再分享 (推荐, 已先行) / (b) 总是复制到缓存再分享 (返工约 10 行; 大文件多占一份空间) | P4.2 | 待决 (paper-p4 已按 (a) 先行) |
+| Q105 | 图片转 PDF 的页边距 | (a) 三档: 无 / 窄 (18 pt, 1/4 英寸) / 宽 (36 pt, 1/2 英寸), 默认无 (推荐, 已先行) / (b) 自由输入点数 (返工约 30 行: 输入框与校验, 10 种语言 2 条文案) | P4.2 | 待决 (paper-p4 已按 (a) 先行) |
+| Q106 | 经系统文件选择器打开的文件 (`content:` uri) 是否持久授权并进最近文件 | (a) 不持久授权, 只在本次使用; 最近文件只记插件自带浏览器选中的文件与工具箱的单个 PDF 结果 (推荐, 已先行) / (b) `takePersistableUriPermission` 并把 uri 记进最近文件 (返工约 60 行: 最近文件改存 uri, 失效清理, 系统持久授权数上限 128 / 512) | P4.1 | 待决 (paper-p4 已按 (a) 先行) |
+| Q107 | API 33+ 何时请求通知权限 | (a) 第一次开始工具箱任务时请求一次, 拒绝后不再自动询问, 任务照常在前台服务中运行 (只是看不到进度通知); 设置页另有通知权限入口 (推荐, 已先行) / (b) 首页第一次打开时请求 (返工约 10 行) / (c) 不主动请求, 只靠设置页入口 (返工约 10 行) | P4.2 | 待决 (paper-p4 已按 (a) 先行) |
+| Q110 | 脚本传入的 merge `displayNames` 使请求超出预算 (`MERGE_REQUEST_BUDGET` = 64 KiB - 1024) 时怎么办 | (a) 发送前报 `LIMIT_EXCEEDED`, 不写输出; 宿主自己派生的文件名超预算时仍静默省略 (推荐, 已先行) / (b) 报 `INVALID_ARGUMENT` / (c) 静默省略, 插件回落到文档标题 | Q81 (b) 落实, 宿主 PdfScriptArguments 与协议文档 | 已按推荐先行待确认 (paper-host-rework, 宿主 2822672962; 改选返工: 宿主约 2 行 + 1 项单测 + 文档 1 句) |
+| Q111 | `displayNames` 里的 null 与空串 | (a) null = 该输入文件名去掉 `.pdf`, 空串原样发送, 插件回落到该文档标题 (无标题时 `Document <n>`) (推荐, 已先行) / (b) 只收字符串, null 报 `INVALID_ARGUMENT` / (c) null 与空串都回落到文档标题 | Q81 (b) 落实, 宿主与 Node / Bun d.ts | 已按推荐先行待确认 (paper-host-rework; 改选返工: 宿主约 3 行 + 1 项单测, Node / Bun d.ts 与测试各 1 处) |
+| Q112 | Node / Bun `timeoutMs` 到时的错误形态 | (a) 与 `AbortSignal.timeout` 一致: `CANCELLED` 的 PdfError, `cause` 为 DOMException `TimeoutError`, 同时向宿主发 cancel (推荐, 已先行) / (b) 新增错误码 `TIMEOUT` | Q93 (c) 落实, Node / Bun 门面, d.ts, HOST-API | 已按推荐先行待确认 (paper-host-rework, Node 1bf91959, Bun 61366e3; 改选返工: Node 约 5 行 + 测试, Bun 同步, 错误码表与 10 语言文档) |
+| Q113 | `timeoutMs` 的取值范围 | (a) 有限数, > 0 且 <= 2147483647, 小数向上取整; 0, 负数, NaN, Infinity, 非数字报 `INVALID_ARGUMENT`; null / undefined 视为未给 (推荐, 已先行) / (b) 只收正整数 / (c) 超上限时钳到上限 | Q93 (c) 落实, Node / Bun 门面与 d.ts | 已按推荐先行待确认 (paper-host-rework; 改选返工: Node 1-2 行 + 测试, Bun 同步) |
+| Q114 | Q92 (b) 共用 helper 在 camera 的范围 | (a) 迁移 `CameraScriptCalls` 的 async / callback, `CameraSession.connectInBackground` 不动 (其 LAZY 协程不落定 Promise) (推荐, 已先行) / (b) `CameraSession` 也改用 helper | Q92 (b) 落实, 3-Prism | 已按推荐先行待确认 (paper-host-rework, 宿主 8643ab0b90; 改选返工: 宿主约 15 行 + camera 单测重跑) |
 
 ## 附录 E. 证据等级
 
