@@ -59,6 +59,14 @@
 
 ******
 
+### {{ h3_compatibility }}
+
+******
+
+{{ placeholder_compatibility_points }}
+
+******
+
 ### {{ h3_script_api }}
 
 ******
@@ -89,6 +97,23 @@ pdf.encrypt("./report.pdf", "./report-locked.pdf", { userPassword: "open", owner
 let session = pdf.view("./book.pdf", { page: 5, search: "AutoJs6" });
 session.on("page", (e) => console.log("page", e.page));
 session.on("close", () => console.log("closed"));
+```
+
+{{ p_script_api_node }}:
+
+```javascript
+"nodejs";
+const pdf = require("autojs6:pdf");
+
+(async () => {
+    const { texts, pages } = await pdf.text("./book.pdf", { pages: "1-3" });
+    console.log(pages, texts[0]);
+    const merged = await pdf.merge(["./a.pdf", "./b.pdf"], "./ab.pdf", {
+        displayNames: ["Part A", null],
+        timeoutMs: 60000,
+    });
+    console.log(merged.path, merged.pageCount);
+})();
 ```
 
 {{ placeholder_api_points }}

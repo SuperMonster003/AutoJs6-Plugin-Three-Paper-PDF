@@ -87,7 +87,7 @@ CHANGELOG_CATEGORIES = ["hint", "feature", "fix", "improvement", "dependency"]
 CHANGELOG_LABEL_KEYS = [f"changelog_label_{category}" for category in CHANGELOG_CATEGORIES]
 CHANGELOG_DATA_KEY = "$data"
 
-README_LIST_KEYS = ["features", "usage_steps", "api_points", "security_points"]
+README_LIST_KEYS = ["features", "usage_steps", "compatibility_points", "api_points", "security_points"]
 README_FAQ_KEY = "faq"
 
 EXPECTED_ARTIFACT_COUNT = 36
@@ -465,6 +465,7 @@ def build_readme_values(
     content["placeholder_ul_languages_all_supported"] = build_language_list(code, languages)
     content["placeholder_features"] = bullet_list(content["features"])
     content["placeholder_usage_steps"] = numbered_list(content["usage_steps"])
+    content["placeholder_compatibility_points"] = bullet_list(content["compatibility_points"])
     content["placeholder_api_points"] = bullet_list(content["api_points"])
     content["placeholder_security_points"] = bullet_list(content["security_points"])
     content["placeholder_faq"] = faq_list(content[README_FAQ_KEY])

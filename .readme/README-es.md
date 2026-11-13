@@ -44,9 +44,9 @@ El README.md actual admite los siguientes idiomas:
 
 3-Paper PDF es el complemento PDF de AutoJs6 y, además, una caja de herramientas y un visor de PDF que funcionan por sí solos, sin AutoJs6. Lee la información, el texto, el esquema y las imágenes incrustadas de un PDF y renderiza páginas como imágenes; combina, divide, extrae, elimina, reordena y gira páginas; genera PDF a partir de imágenes, texto o HTML, y cifra o descifra documentos.
 
-El procesamiento se ejecuta en el complemento con el `PdfRenderer` de Android y PDFBox-Android, en Java puro, de modo que el host AutoJs6 sigue siendo ligero. Los scripts de AutoJs6 usan estas funciones mediante el módulo global `pdf`; AutoJs6 abre las rutas que pasan los scripts y se las entrega al complemento, por lo que este no necesita permiso de almacenamiento para procesar los archivos de los scripts. El complemento incluye su propio visor, que se abre desde el lanzador, el gestor de archivos de AutoJs6 o un script (`pdf.view`).
+El procesamiento se ejecuta en el complemento con el `PdfRenderer` de Android y PDFBox-Android, en Java puro, de modo que el host AutoJs6 sigue siendo ligero. Los scripts de AutoJs6 usan estas funciones mediante el módulo global `pdf`, igual que los scripts de los complementos Node.js Runtime y Bun Runtime; AutoJs6 abre las rutas que pasan los scripts y se las entrega al complemento, por lo que este no necesita permiso de almacenamiento para procesar los archivos de los scripts. El complemento incluye su propio visor, que se abre desde el lanzador, el gestor de archivos de AutoJs6, la opción "Abrir con" de otras aplicaciones o un script (`pdf.view`).
 
-> Esta es una versión preliminar de desarrollo: el centro de complementos de AutoJs6 puede detectar el complemento, pero la lectura, el renderizado, las operaciones de páginas, el visor y el módulo `pdf` aún no están disponibles. El texto siguiente describe los objetivos de diseño de la 1.0.0; consulte la hoja de ruta para ver el progreso.
+> El módulo `pdf` de los scripts de AutoJs6 y las entradas del gestor de archivos requieren AutoJs6 6.8.1 (compilación interna 6641) o posterior; las versiones anteriores de AutoJs6 muestran el complemento como incompatible en el centro de complementos. La caja de herramientas y el visor no dependen de AutoJs6 y funcionan por sí solos.
 
 ******
 
@@ -59,9 +59,11 @@ El procesamiento se ejecuta en el complemento con el `PdfRenderer` de Android y 
 - Operaciones de páginas: combinar (conservando los marcadores), dividir, extraer, eliminar, reordenar y girar páginas; los números de página empiezan en 1 y los rangos se escriben `'1-3,5,8-'`.
 - Generación: imágenes a PDF (los JPEG se incrustan tal cual, sin recodificar), texto a PDF (con la fuente que elija) y HTML a PDF (no se cargan URL remotas).
 - Cifrado: abrir documentos cifrados con contraseña, cifrar con AES-256 y establecer permisos, quitar el cifrado.
-- Visor: desplazamiento continuo, zoom con dos dedos, miniaturas, esquema, resaltado de búsqueda, introducción de contraseña y modo nocturno; los scripts pueden abrir el visor y recibir los eventos de cambio de página y de cierre.
-- Caja de herramientas y gestor de archivos: asistentes para combinar, dividir, convertir a imágenes, convertir imágenes a PDF, cifrar / descifrar y extraer texto; el gestor de archivos de AutoJs6 abre los PDF directamente en el visor del complemento, y su menú adicional ofrece las mismas herramientas.
-- OCR: `pdf.text(path, { ocr: true })` llama al motor OCR de AutoJs6 para las páginas escaneadas sin capa de texto.
+- Visor: desplazamiento continuo, zoom con dos dedos, miniaturas, esquema, resaltado de búsqueda, ir a una página, introducción de contraseña y modo nocturno; otras aplicaciones pueden entregarle archivos PDF con "Abrir con" o compartiendo; los scripts pueden abrir el visor y recibir los eventos de cambio de página y de cierre.
+- Caja de herramientas: 8 herramientas para combinar, dividir, convertir a imágenes, convertir imágenes a PDF, cifrar, descifrar, extraer texto y organizar páginas; las tareas se ejecutan una tras otra en segundo plano, con el progreso en la notificación; los archivos recientes también recuerdan los archivos abiertos con el selector de archivos del sistema.
+- Gestor de archivos de AutoJs6: al tocar un PDF se abre en el visor del complemento, y los PDF de hasta 512 MiB dentro de archivos comprimidos también se abren directamente; el menú ofrece combinar, dividir, convertir a imágenes, extraer texto, cifrar y quitar la contraseña.
+- OCR: `pdf.text(path, { ocr: true })` reconoce las páginas escaneadas sin capa de texto con un complemento OCR instalado (ML Kit OCR, Paddle OCR o Rapid OCR).
+- Node.js y Bun: Node.js Runtime 2.2.0 y Bun Runtime 0.23.0 o posteriores ofrecen el mismo módulo `pdf`; sus métodos devuelven Promises, y las llamadas se pueden interrumpir con `signal` o `timeoutMs`.
 
 ******
 
@@ -70,10 +72,22 @@ El procesamiento se ejecuta en el complemento con el `PdfRenderer` de Android y 
 ******
 
 1. Descargue el APK desde [Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Paper-PDF/releases) e instálelo. Hay un único paquete para todas las ABI.
-2. Para usar el módulo `pdf` en scripts, actualice AutoJs6 a la compilación interna 6641 (6.8.1) o posterior y active el complemento en el centro de complementos.
+2. Para usarlo en scripts de AutoJs6 o en el gestor de archivos, actualice AutoJs6 a 6.8.1 (compilación interna 6641) o posterior y compruebe que el complemento está activado en el centro de complementos.
 3. Para usar la caja de herramientas integrada, abra el complemento y conceda el acceso a todos los archivos cuando se solicite; las operaciones de scripts no necesitan este permiso.
 
 > El complemento es compatible con dispositivos con Android 7.0 (API 24) o posterior. El procesamiento de PDF solo usa API del sistema y bibliotecas en Java puro; la única biblioteca nativa procede de Jetpack Compose y está alineada a páginas de memoria de 16 KB, por lo que un único paquete sirve para todas las ABI.
+
+******
+
+### Compatibilidad
+
+******
+
+- Android 7.0 (API 24) o posterior, un único paquete para todas las ABI; la caja de herramientas y el visor no dependen de AutoJs6.
+- Scripts de AutoJs6 y gestor de archivos: requieren AutoJs6 6.8.1 (compilación interna 6641) o posterior.
+- Node.js: requiere el complemento Node.js Runtime 2.2.0 o posterior, cargado con `require('autojs6:pdf')`; el proyecto declara `files` en `node.permissions` de `project.json`, además de `files.write` para escribir archivos, `ocr` para reconocer texto y `ui` para abrir el visor.
+- Bun: requiere el complemento Bun Runtime 0.23.0 o posterior (Android 13 o posterior), usado mediante `host.pdf`; active `pdf.control` en la pantalla de ajustes de Bun Runtime, además de `ocr.control` para reconocer texto.
+- OCR: reconocer páginas escaneadas requiere un complemento OCR (ML Kit OCR, Paddle OCR o Rapid OCR); sin él, el reconocimiento de páginas escaneadas falla con `OCR_UNAVAILABLE`, y las demás funciones no se ven afectadas.
 
 ******
 
@@ -81,7 +95,7 @@ El procesamiento se ejecuta en el complemento con el `PdfRenderer` de Android y 
 
 ******
 
-Los scripts usan estas funciones mediante el módulo global `pdf` (también disponible como `$pdf`) (borrador de diseño de la 1.0.0; prevalece la documentación de la versión publicada):
+Los scripts de AutoJs6 usan estas funciones mediante el módulo global `pdf` (también disponible como `$pdf`; referencia completa en [Documentación de AutoJs6 > PDF](https://docs.autojs6.com/#/pdf)):
 
 ```javascript
 let info = pdf.info("./book.pdf");
@@ -109,9 +123,29 @@ session.on("page", (e) => console.log("page", e.page));
 session.on("close", () => console.log("closed"));
 ```
 
+En Node.js y Bun, los métodos del mismo nombre devuelven Promises (Bun los usa mediante `host.pdf`):
+
+```javascript
+"nodejs";
+const pdf = require("autojs6:pdf");
+
+(async () => {
+    const { texts, pages } = await pdf.text("./book.pdf", { pages: "1-3" });
+    console.log(pages, texts[0]);
+    const merged = await pdf.merge(["./a.pdf", "./b.pdf"], "./ab.pdf", {
+        displayNames: ["Part A", null],
+        timeoutMs: 60000,
+    });
+    console.log(merged.path, merged.pageCount);
+})();
+```
+
 - Los métodos prácticos como `pdf.info` / `pdf.text` / `pdf.render` / `pdf.merge` / `pdf.split` / `pdf.fromImages` abren y cierran el documento en cada llamada; `pdf.open(path, options)` devuelve un `PdfDocument` que comparte una sola apertura entre varias operaciones, con un máximo de 8 documentos abiertos por script.
-- Cada método tiene una forma bloqueante y una forma `xxxAsync` que devuelve una Promise; `xxxAsync` acepta `options.onProgress(progress)` y su Promise tiene `cancel()`; detener el script cancela las operaciones en curso y elimina las salidas sin terminar.
-- `pdf.view(path, options)` abre el visor y devuelve un `PdfViewSession` con los eventos `page` y `close` y los métodos `goTo(page)` y `close()`.
+- Cada método tiene una forma bloqueante y una forma `xxxAsync` que devuelve una Promise, con los mismos argumentos y resultados; la forma bloqueante no se puede llamar en el hilo de la interfaz (falla con `INVALID_ARGUMENT`), así que los scripts de interfaz usan `xxxAsync`; los métodos que escriben archivos aceptan `onProgress` y su Promise tiene `cancel()`; cancelar o detener el script nunca deja un archivo a medio escribir.
+- Los `displayNames` de `pdf.merge` dan nombre al marcador de cada entrada: `null` toma el nombre del archivo (sin `.pdf`), y una cadena vacía o de espacios toma el título del documento (`Document <n>` si no tiene); unas opciones de más de unos 63 KiB fallan con `LIMIT_EXCEEDED` y no escriben nada.
+- `pdf.fromHtml` ejecuta por defecto los scripts de la página, y `javaScript: false` los desactiva; no se carga ningún contenido externo: las solicitudes de red reciben una respuesta vacía y quedan registradas en `warnings`.
+- `pdf.view(path, options)` abre el visor y devuelve un `PdfViewSession` con los eventos `page` / `close` y los métodos `goTo(page)`, `state()` y `close()`; falla con `UI_REQUIRES_FOREGROUND` cuando AutoJs6 no está en primer plano (en Android 10 o posterior sin el permiso de superposición).
+- Node.js y Bun: todos los métodos devuelven una Promise; `signal` (un AbortSignal) y `timeoutMs` interrumpen la llamada, que se rechaza con `CANCELLED` en ambos casos, y un tiempo agotado tiene como `cause` un `TimeoutError`; `timeoutMs` debe ser un número finito mayor que 0 y como máximo 2147483647, y los decimales se redondean hacia arriba.
 - Los fallos lanzan un `PdfError` con un `code` estable como `PASSWORD_REQUIRED`, `WRONG_PASSWORD` o `PAGE_OUT_OF_RANGE`; `pdf.isAvailable()` comprueba de antemano si el complemento está disponible.
 
 ******
@@ -132,6 +166,18 @@ Solo lo necesitan la caja de herramientas y el visor abierto desde el lanzador, 
 
 El procesamiento de PDF no usa ninguna biblioteca nativa: las páginas las renderiza el `PdfRenderer` del sistema y las demás funciones usan PDFBox-Android, en Java puro. La única biblioteca nativa del paquete es `libandroidx.graphics.path.so`, que viene con Jetpack Compose.
 
+#### Por qué el centro de complementos muestra el complemento como incompatible?
+
+El módulo de scripts y las entradas del gestor de archivos del complemento requieren AutoJs6 6.8.1 (compilación interna 6641) o posterior. Tras actualizar AutoJs6 se puede activar el complemento; mientras tanto, la caja de herramientas y el visor funcionan con normalidad.
+
+#### Puede el gestor de archivos de AutoJs6 abrir un PDF dentro de un archivo comprimido?
+
+Sí. Un PDF de hasta 512 MiB dentro de un archivo comprimido se abre directamente en el visor del complemento; extraiga primero los más grandes.
+
+#### Qué hago si un archivo de los archivos recientes ya no se abre?
+
+Los archivos abiertos con el selector de archivos del sistema conservan su permiso de lectura y se siguen abriendo directamente tras reiniciar. Si el archivo se ha eliminado o movido, o se ha revocado el permiso, al tocar la entrada se muestra un aviso y se quita de la lista; vuelva a elegir el archivo con "Abrir un PDF".
+
 ******
 
 ### Permisos Y Seguridad
@@ -142,7 +188,8 @@ El complemento reduce al máximo sus permisos:
 
 - Entradas protegidas: el servicio de capacidad, el servicio de entrada del gestor de archivos y la entrada de activación exigen el permiso de complemento de AutoJs6 (`org.autojs.permission.PLUGIN`), así que otras aplicaciones no pueden llamarlos directamente.
 - Almacenamiento: los archivos de los scripts llegan como descriptores de archivo, así que el complemento no pide permiso de almacenamiento para los scripts; el acceso a todos los archivos solo se usa para los archivos que elija en la caja de herramientas y el visor.
-- HTML a PDF: solo se renderiza la cadena HTML o el archivo local indicados; no se cargan URL remotas.
+- HTML a PDF: el complemento no carga ningún contenido externo (las solicitudes de red reciben una respuesta vacía, los archivos locales y las direcciones `content:` están bloqueados y la página no puede navegar); los scripts de la página se pueden desactivar con `javaScript: false`.
+- Archivos recientes: los archivos abiertos con el selector de archivos del sistema conservan su permiso de lectura para abrirse directamente la próxima vez, hasta un máximo de 20; el permiso se libera en cuanto una entrada sale de la lista o se quita, o se borra la lista. Los archivos que otras aplicaciones entregan con "Abrir con" o compartiendo solo tienen un permiso de un solo uso y no entran en los archivos recientes.
 - Red y contraseñas: la red solo se usa para buscar actualizaciones; las contraseñas de los documentos solo se usan en la operación en curso y el complemento nunca las guarda.
 
 ******
@@ -195,10 +242,16 @@ Los planes, las decisiones de diseño y el progreso se registran como lista de v
 
 _2026/11/12_
 
-- `Aviso` Versión preliminar de desarrollo: el centro de complementos de AutoJs6 puede detectar el complemento; la lectura, el renderizado, las operaciones de páginas, el visor y el módulo de script pdf aún no están disponibles
-- `Aviso` Requiere AutoJs6 6.8.1 (6641) o posterior (la compilación mínima exacta se indicará cuando lleguen los cambios del host)
-- `Función` Esqueleto del complemento: protocolo de activación Wake, servicio de identidad del centro de complementos, servicio de capacidad PDF (versión de contrato 1) y servicio de entrada del gestor de archivos
+- `Aviso` El módulo pdf de los scripts de AutoJs6 y las entradas del gestor de archivos requieren AutoJs6 6.8.1 (compilación interna 6641) o posterior; las versiones anteriores de AutoJs6 muestran el complemento como incompatible en el centro de complementos, y la caja de herramientas y el visor siguen funcionando por sí solos
+- `Aviso` Usarlo en scripts de Node.js o Bun requiere Node.js Runtime 2.2.0 o Bun Runtime 0.23.0 o posterior
+- `Función` Los scripts de AutoJs6 disponen del módulo pdf (también disponible como $pdf): leer la información, el texto, el esquema y las imágenes de los PDF, buscar texto, renderizar páginas como imágenes, combinar, dividir, extraer, eliminar, reordenar y girar páginas, generar PDF a partir de imágenes, texto o HTML, y cifrar y descifrar; cada método tiene una forma bloqueante y una forma Async que puede informar del progreso y cancelarse
+- `Función` La opción ocr de pdf.text reconoce las páginas escaneadas sin capa de texto con un complemento OCR instalado (ML Kit OCR, Paddle OCR o Rapid OCR)
+- `Función` pdf.view abre un PDF en el visor del complemento; los scripts reciben los eventos de cambio de página y de cierre, y pueden ir a una página o cerrar el visor
+- `Función` Los scripts de Node.js y Bun también pueden usar el módulo pdf; sus métodos devuelven Promises, y las llamadas se pueden interrumpir con signal o timeoutMs
+- `Función` Visor: desplazamiento continuo, zoom con dos dedos, miniaturas, esquema, resaltado de búsqueda, ir a una página, introducción de contraseña y modo nocturno; se abre desde el lanzador, y otras aplicaciones pueden entregarle archivos PDF con "Abrir con" o compartiendo
+- `Función` Gestor de archivos de AutoJs6: al tocar un PDF se abre en el visor del complemento, y los PDF de hasta 512 MiB dentro de archivos comprimidos también se abren directamente; el menú ofrece combinar, dividir, convertir a imágenes, extraer texto, cifrar y quitar la contraseña
 - `Función` Pantalla de inicio: las herramientas, el progreso de las tareas, los archivos recientes y la concesión del acceso a todos los archivos (solo la necesita la caja de herramientas)
+- `Función` Los archivos recientes recuerdan los archivos abiertos con el selector de archivos del sistema (hasta 20), que se siguen abriendo directamente tras reiniciar; un archivo eliminado o al que ya no se puede acceder se notifica y se quita de la lista
 - `Función` La caja de herramientas ofrece 8 herramientas: combinar, dividir (por rangos de páginas o cada n páginas), PDF a imágenes (resolución, formato, páginas), imágenes a PDF (tamaño de página, orientación, márgenes), cifrar, quitar la contraseña, extraer texto (guardado como TXT), y girar, eliminar y reordenar páginas con miniaturas; el procesamiento es el mismo que el de las entradas del gestor de archivos
 - `Función` Las tareas de la caja de herramientas se ejecutan una tras otra en un servicio en primer plano y continúan al salir de la pantalla de la herramienta; la notificación muestra el progreso y permite cancelar, y los resultados se pueden abrir en el visor o compartir
 - `Función` Un explorador de archivos integrado permite seleccionar varios archivos y crear carpetas; el selector de archivos del sistema también está disponible

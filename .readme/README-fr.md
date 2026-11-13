@@ -44,9 +44,9 @@ Le README.md actuel prend en charge les langues suivantes:
 
 3-Paper PDF est le plugin PDF d'AutoJs6, et aussi une boîte à outils et une visionneuse PDF qui fonctionnent seules, sans AutoJs6. Il lit les informations, le texte, le plan et les images intégrées d'un PDF et rend les pages en images; il fusionne, découpe, extrait, supprime, réordonne et fait pivoter les pages; il génère des PDF à partir d'images, de texte ou de HTML, et chiffre ou déchiffre les documents.
 
-Le traitement s'exécute dans le plugin avec le `PdfRenderer` d'Android et PDFBox-Android, en pur Java, si bien que l'hôte AutoJs6 reste léger. Les scripts AutoJs6 utilisent ces fonctions via le module global `pdf`; AutoJs6 ouvre les chemins transmis par les scripts et les remet au plugin, qui n'a donc besoin d'aucune autorisation de stockage pour traiter les fichiers des scripts. Le plugin possède sa propre visionneuse, que l'on ouvre depuis le lanceur, le gestionnaire de fichiers d'AutoJs6 ou un script (`pdf.view`).
+Le traitement s'exécute dans le plugin avec le `PdfRenderer` d'Android et PDFBox-Android, en pur Java, si bien que l'hôte AutoJs6 reste léger. Les scripts AutoJs6 utilisent ces fonctions via le module global `pdf`, tout comme les scripts des plugins Node.js Runtime et Bun Runtime; AutoJs6 ouvre les chemins transmis par les scripts et les remet au plugin, qui n'a donc besoin d'aucune autorisation de stockage pour traiter les fichiers des scripts. Le plugin possède sa propre visionneuse, que l'on ouvre depuis le lanceur, le gestionnaire de fichiers d'AutoJs6, la commande "Ouvrir avec" d'autres applications ou un script (`pdf.view`).
 
-> Il s'agit d'une préversion de développement: le centre des plugins d'AutoJs6 peut détecter le plugin, mais la lecture, le rendu, les opérations sur les pages, la visionneuse et le module `pdf` ne sont pas encore livrés. La suite décrit les objectifs de conception de la 1.0.0; consultez la feuille de route pour l'avancement.
+> Le module `pdf` des scripts AutoJs6 et les entrées du gestionnaire de fichiers nécessitent AutoJs6 6.8.1 (version interne 6641) ou ultérieur; les versions plus anciennes d'AutoJs6 affichent le plugin comme incompatible dans le centre des plugins. La boîte à outils et la visionneuse ne dépendent pas d'AutoJs6 et fonctionnent seules.
 
 ******
 
@@ -59,9 +59,11 @@ Le traitement s'exécute dans le plugin avec le `PdfRenderer` d'Android et PDFBo
 - Opérations sur les pages: fusionner (en conservant les signets), découper, extraire, supprimer, réordonner et faire pivoter des pages; les numéros de page commencent à 1 et les plages s'écrivent `'1-3,5,8-'`.
 - Génération: images vers PDF (JPEG intégrés tels quels, sans réencodage), texte vers PDF (avec la police de votre choix) et HTML vers PDF (aucune URL distante n'est chargée).
 - Chiffrement: ouvrir des documents chiffrés avec un mot de passe, chiffrer en AES-256 et définir les autorisations, retirer le chiffrement.
-- Visionneuse: défilement continu, zoom à deux doigts, miniatures, plan, surlignage des résultats de recherche, saisie du mot de passe et mode nuit; les scripts peuvent ouvrir la visionneuse et recevoir les événements de changement de page et de fermeture.
-- Boîte à outils et gestionnaire de fichiers: assistants pour fusionner, découper, convertir en images, convertir des images en PDF, chiffrer / déchiffrer et extraire le texte; le gestionnaire de fichiers d'AutoJs6 ouvre directement les PDF dans la visionneuse du plugin, et son menu de débordement propose les mêmes outils.
-- OCR: `pdf.text(path, { ocr: true })` appelle le moteur OCR d'AutoJs6 pour les pages numérisées sans couche de texte.
+- Visionneuse: défilement continu, zoom à deux doigts, miniatures, plan, surlignage des résultats de recherche, accès direct à une page, saisie du mot de passe et mode nuit; d'autres applications peuvent lui confier des PDF via "Ouvrir avec" ou le partage; les scripts peuvent ouvrir la visionneuse et recevoir les événements de changement de page et de fermeture.
+- Boîte à outils: 8 outils pour fusionner, découper, convertir en images, convertir des images en PDF, chiffrer, déchiffrer, extraire le texte et organiser les pages; les tâches s'exécutent l'une après l'autre en arrière-plan, avec leur progression dans la notification; les fichiers récents retiennent aussi les fichiers ouverts avec le sélecteur de fichiers du système.
+- Gestionnaire de fichiers d'AutoJs6: toucher un PDF l'ouvre dans la visionneuse du plugin, et les PDF de 512 MiB au plus contenus dans une archive s'ouvrent aussi directement; le menu propose fusionner, découper, convertir en images, extraire le texte, chiffrer et supprimer le mot de passe.
+- OCR: `pdf.text(path, { ocr: true })` reconnaît les pages numérisées sans couche de texte à l'aide d'un plugin OCR installé (ML Kit OCR, Paddle OCR ou Rapid OCR).
+- Node.js et Bun: Node.js Runtime 2.2.0 et Bun Runtime 0.23.0 ou ultérieurs proposent le même module `pdf`; ses méthodes renvoient des Promises, et les appels peuvent être interrompus avec `signal` ou `timeoutMs`.
 
 ******
 
@@ -70,10 +72,22 @@ Le traitement s'exécute dans le plugin avec le `PdfRenderer` d'Android et PDFBo
 ******
 
 1. Téléchargez l'APK depuis [Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Paper-PDF/releases) et installez-le. Il n'existe qu'un seul paquet pour toutes les ABI.
-2. Pour utiliser le module `pdf` dans les scripts, mettez à jour AutoJs6 vers la version interne 6641 (6.8.1) ou ultérieure et activez le plugin dans le centre des plugins.
+2. Pour l'utiliser dans les scripts AutoJs6 ou le gestionnaire de fichiers, mettez à jour AutoJs6 vers 6.8.1 (version interne 6641) ou ultérieur et vérifiez que le plugin est activé dans le centre des plugins.
 3. Pour utiliser la boîte à outils intégrée, ouvrez le plugin et accordez l'accès à tous les fichiers lorsqu'il est demandé; les opérations des scripts n'ont pas besoin de cette autorisation.
 
 > Le plugin prend en charge les appareils sous Android 7.0 (API 24) ou ultérieur. Le traitement des PDF n'utilise que des API du système et des bibliothèques en pur Java; la seule bibliothèque native provient de Jetpack Compose et est alignée sur des pages mémoire de 16 KB, si bien qu'un seul paquet sert toutes les ABI.
+
+******
+
+### Compatibilité
+
+******
+
+- Android 7.0 (API 24) ou ultérieur, un seul paquet pour toutes les ABI; la boîte à outils et la visionneuse ne dépendent pas d'AutoJs6.
+- Scripts AutoJs6 et gestionnaire de fichiers: nécessitent AutoJs6 6.8.1 (version interne 6641) ou ultérieur.
+- Node.js: nécessite le plugin Node.js Runtime 2.2.0 ou ultérieur, chargé avec `require('autojs6:pdf')`; le projet déclare `files` dans `node.permissions` de `project.json`, ainsi que `files.write` pour écrire des fichiers, `ocr` pour reconnaître du texte et `ui` pour ouvrir la visionneuse.
+- Bun: nécessite le plugin Bun Runtime 0.23.0 ou ultérieur (Android 13 ou ultérieur), utilisé via `host.pdf`; activez `pdf.control` dans l'écran des paramètres de Bun Runtime, ainsi que `ocr.control` pour reconnaître du texte.
+- OCR: la reconnaissance des pages numérisées nécessite un plugin OCR (ML Kit OCR, Paddle OCR ou Rapid OCR); sans lui, la reconnaissance des pages numérisées échoue avec `OCR_UNAVAILABLE`, sans effet sur les autres fonctions.
 
 ******
 
@@ -81,7 +95,7 @@ Le traitement s'exécute dans le plugin avec le `PdfRenderer` d'Android et PDFBo
 
 ******
 
-Les scripts utilisent ces fonctions via le module global `pdf` (également disponible sous le nom `$pdf`) (projet de conception de la 1.0.0; la documentation de la version publiée fait foi):
+Les scripts AutoJs6 utilisent ces fonctions via le module global `pdf` (également disponible sous le nom `$pdf`; référence complète dans [Documentation d'AutoJs6 > PDF](https://docs.autojs6.com/#/pdf)):
 
 ```javascript
 let info = pdf.info("./book.pdf");
@@ -109,9 +123,29 @@ session.on("page", (e) => console.log("page", e.page));
 session.on("close", () => console.log("closed"));
 ```
 
+Dans Node.js et Bun, les méthodes de même nom renvoient des Promises (Bun les utilise via `host.pdf`):
+
+```javascript
+"nodejs";
+const pdf = require("autojs6:pdf");
+
+(async () => {
+    const { texts, pages } = await pdf.text("./book.pdf", { pages: "1-3" });
+    console.log(pages, texts[0]);
+    const merged = await pdf.merge(["./a.pdf", "./b.pdf"], "./ab.pdf", {
+        displayNames: ["Part A", null],
+        timeoutMs: 60000,
+    });
+    console.log(merged.path, merged.pageCount);
+})();
+```
+
 - Les méthodes pratiques comme `pdf.info` / `pdf.text` / `pdf.render` / `pdf.merge` / `pdf.split` / `pdf.fromImages` ouvrent et ferment le document à chaque appel; `pdf.open(path, options)` renvoie un `PdfDocument` qui partage une seule ouverture entre plusieurs opérations, avec au plus 8 documents ouverts par script.
-- Chaque méthode existe sous une forme bloquante et sous une forme `xxxAsync` qui renvoie une Promise; `xxxAsync` accepte `options.onProgress(progress)` et sa Promise possède `cancel()`; l'arrêt du script annule les opérations en cours et supprime les sorties inachevées.
-- `pdf.view(path, options)` ouvre la visionneuse et renvoie une `PdfViewSession` avec les événements `page` et `close` et les méthodes `goTo(page)` et `close()`.
+- Chaque méthode existe sous une forme bloquante et sous une forme `xxxAsync` qui renvoie une Promise, avec les mêmes arguments et résultats; la forme bloquante ne peut pas être appelée sur le thread de l'interface (elle échoue avec `INVALID_ARGUMENT`), les scripts d'interface utilisent donc `xxxAsync`; les méthodes qui écrivent des fichiers acceptent `onProgress` et leur Promise possède `cancel()`; annuler ou arrêter le script ne laisse jamais de fichier à moitié écrit.
+- Les `displayNames` de `pdf.merge` nomment le signet de chaque entrée: `null` reprend le nom du fichier (sans `.pdf`), et une chaîne vide ou faite d'espaces reprend le titre du document (`Document <n>` s'il n'en a pas); des options de plus de 63 KiB environ échouent avec `LIMIT_EXCEEDED` sans rien écrire.
+- `pdf.fromHtml` exécute par défaut les scripts de la page, et `javaScript: false` les désactive; aucun contenu externe n'est chargé: les requêtes réseau reçoivent une réponse vide et sont consignées dans `warnings`.
+- `pdf.view(path, options)` ouvre la visionneuse et renvoie une `PdfViewSession` avec les événements `page` / `close` et les méthodes `goTo(page)`, `state()` et `close()`; elle échoue avec `UI_REQUIRES_FOREGROUND` lorsque AutoJs6 n'est pas au premier plan (sous Android 10 ou ultérieur sans l'autorisation de superposition).
+- Node.js et Bun: chaque méthode renvoie une Promise; `signal` (un AbortSignal) et `timeoutMs` interrompent l'appel, qui est rejeté avec `CANCELLED` dans les deux cas, et un délai dépassé a pour `cause` une `TimeoutError`; `timeoutMs` doit être un nombre fini supérieur à 0 et au plus égal à 2147483647, et les décimales sont arrondies à l'entier supérieur.
 - Les échecs lèvent une `PdfError` avec un `code` stable comme `PASSWORD_REQUIRED`, `WRONG_PASSWORD` ou `PAGE_OUT_OF_RANGE`; `pdf.isAvailable()` vérifie à l'avance si le plugin est disponible.
 
 ******
@@ -132,6 +166,18 @@ Seules la boîte à outils et la visionneuse ouverte depuis le lanceur en ont be
 
 Le traitement des PDF n'utilise aucune bibliothèque native: les pages sont rendues par le `PdfRenderer` du système, et les autres fonctions utilisent PDFBox-Android, en pur Java. La seule bibliothèque native du paquet est `libandroidx.graphics.path.so`, fournie avec Jetpack Compose.
 
+#### Pourquoi le centre des plugins affiche-t-il le plugin comme incompatible?
+
+Le module de script et les entrées du gestionnaire de fichiers du plugin nécessitent AutoJs6 6.8.1 (version interne 6641) ou ultérieur. Après la mise à jour d'AutoJs6, le plugin peut être activé; en attendant, la boîte à outils et la visionneuse fonctionnent normalement.
+
+#### Le gestionnaire de fichiers d'AutoJs6 peut-il ouvrir un PDF contenu dans une archive?
+
+Oui. Un PDF de 512 MiB au plus contenu dans une archive s'ouvre directement dans la visionneuse du plugin; extrayez d'abord les plus gros.
+
+#### Que faire si un fichier des fichiers récents ne s'ouvre plus?
+
+Les fichiers ouverts avec le sélecteur de fichiers du système conservent leur autorisation de lecture et s'ouvrent directement même après un redémarrage. Si le fichier a été supprimé ou déplacé, ou si l'autorisation a été révoquée, toucher l'entrée affiche un message et la retire de la liste; choisissez de nouveau le fichier avec "Ouvrir un PDF".
+
 ******
 
 ### Permissions Et Sécurité
@@ -142,7 +188,8 @@ Le plugin réduit autant que possible ses autorisations:
 
 - Entrées protégées: le service de capacité, le service d'entrée du gestionnaire de fichiers et l'entrée d'activation exigent l'autorisation de plugin d'AutoJs6 (`org.autojs.permission.PLUGIN`), les autres applications ne peuvent donc pas les appeler directement.
 - Stockage: les fichiers des scripts arrivent sous forme de descripteurs de fichiers, le plugin ne demande donc aucune autorisation de stockage pour les scripts; l'accès à tous les fichiers ne sert qu'aux fichiers que vous choisissez dans la boîte à outils et la visionneuse.
-- HTML vers PDF: seuls la chaîne HTML ou le fichier local fournis sont rendus; aucune URL distante n'est chargée.
+- HTML vers PDF: le plugin ne charge aucun contenu externe (les requêtes réseau reçoivent une réponse vide, les fichiers locaux et les adresses `content:` sont bloqués, et la page ne peut pas naviguer); les scripts de la page peuvent être désactivés avec `javaScript: false`.
+- Fichiers récents: les fichiers ouverts avec le sélecteur de fichiers du système conservent leur autorisation de lecture pour s'ouvrir directement la fois suivante, dans la limite de 20 fichiers; l'autorisation est libérée dès qu'une entrée sort de la liste ou est retirée, ou que la liste est effacée. Les fichiers transmis par d'autres applications via "Ouvrir avec" ou le partage n'ont qu'une autorisation ponctuelle et n'entrent pas dans les fichiers récents.
 - Réseau et mots de passe: le réseau ne sert qu'à vérifier les mises à jour; les mots de passe des documents ne servent qu'à l'opération en cours et ne sont jamais enregistrés par le plugin.
 
 ******
@@ -195,10 +242,16 @@ Les plans, décisions de conception et l'avancement sont suivis sous forme de li
 
 _2026/11/12_
 
-- `Note` Préversion de développement: le centre des plugins d'AutoJs6 peut détecter le plugin; la lecture, le rendu, les opérations sur les pages, la visionneuse et le module de script pdf ne sont pas encore livrés
-- `Note` Nécessite AutoJs6 6.8.1 (6641) ou ultérieur (la version minimale exacte sera indiquée une fois les modifications de l'hôte intégrées)
-- `Fonctionnalité` Squelette du plugin: protocole d'activation Wake, service d'identité du centre des plugins, service de capacité PDF (version de contrat 1) et service d'entrée du gestionnaire de fichiers
+- `Note` Le module pdf des scripts AutoJs6 et les entrées du gestionnaire de fichiers nécessitent AutoJs6 6.8.1 (version interne 6641) ou ultérieur; les versions plus anciennes d'AutoJs6 affichent le plugin comme incompatible dans le centre des plugins, et la boîte à outils et la visionneuse restent utilisables seules
+- `Note` L'utilisation dans les scripts Node.js ou Bun nécessite Node.js Runtime 2.2.0 ou Bun Runtime 0.23.0 ou ultérieur
+- `Fonctionnalité` Les scripts AutoJs6 disposent du module pdf (également disponible sous le nom $pdf): lire les informations, le texte, le plan et les images des PDF, rechercher du texte, rendre les pages en images, fusionner, découper, extraire, supprimer, réordonner et faire pivoter des pages, générer des PDF à partir d'images, de texte ou de HTML, chiffrer et déchiffrer; chaque méthode existe sous une forme bloquante et sous une forme Async qui peut signaler sa progression et être annulée
+- `Fonctionnalité` L'option ocr de pdf.text reconnaît les pages numérisées sans couche de texte à l'aide d'un plugin OCR installé (ML Kit OCR, Paddle OCR ou Rapid OCR)
+- `Fonctionnalité` pdf.view ouvre un PDF dans la visionneuse du plugin; les scripts reçoivent les événements de changement de page et de fermeture, et peuvent aller à une page ou fermer la visionneuse
+- `Fonctionnalité` Les scripts Node.js et Bun peuvent aussi utiliser le module pdf; ses méthodes renvoient des Promises, et les appels peuvent être interrompus avec signal ou timeoutMs
+- `Fonctionnalité` Visionneuse: défilement continu, zoom à deux doigts, miniatures, plan, surlignage des résultats de recherche, accès direct à une page, saisie du mot de passe et mode nuit; elle s'ouvre depuis le lanceur, et d'autres applications peuvent lui confier des PDF via "Ouvrir avec" ou le partage
+- `Fonctionnalité` Gestionnaire de fichiers d'AutoJs6: toucher un PDF l'ouvre dans la visionneuse du plugin, et les PDF de 512 MiB au plus contenus dans une archive s'ouvrent aussi directement; le menu propose fusionner, découper, convertir en images, extraire le texte, chiffrer et supprimer le mot de passe
 - `Fonctionnalité` Écran d'accueil: les outils, la progression des tâches, les fichiers récents et l'octroi de l'accès à tous les fichiers (seule la boîte à outils en a besoin)
+- `Fonctionnalité` Les fichiers récents retiennent les fichiers ouverts avec le sélecteur de fichiers du système (20 au plus), qui s'ouvrent directement même après un redémarrage; un fichier supprimé ou devenu inaccessible est signalé et retiré de la liste
 - `Fonctionnalité` La boîte à outils propose 8 outils: fusionner, découper (par plages de pages ou toutes les n pages), PDF en images (résolution, format, pages), images en PDF (format de page, orientation, marges), chiffrer, supprimer le mot de passe, extraire le texte (enregistré en TXT), ainsi que pivoter, supprimer et réordonner les pages à l'aide de miniatures; le traitement est le même que celui des entrées du gestionnaire de fichiers
 - `Fonctionnalité` Les tâches de la boîte à outils s'exécutent l'une après l'autre dans un service de premier plan et continuent après avoir quitté l'écran de l'outil; la notification affiche la progression et permet d'annuler, et les résultats peuvent être ouverts dans la visionneuse ou partagés
 - `Fonctionnalité` Un navigateur de fichiers intégré permet de sélectionner plusieurs fichiers et de créer des dossiers; le sélecteur de fichiers du système reste disponible

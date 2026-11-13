@@ -44,9 +44,9 @@ The README.md file is currently available in the following languages:
 
 3-Paper PDF is the PDF plugin of AutoJs6, and also a PDF toolbox and viewer that works on its own without AutoJs6. It reads the information, text, outline and embedded images of a PDF and renders pages to images; it merges, splits, extracts, deletes, reorders and rotates pages; it generates PDF files from images, text or HTML, and encrypts or decrypts documents.
 
-Processing runs inside the plugin with the `PdfRenderer` of Android and the pure Java PDFBox-Android, so the AutoJs6 host stays small. AutoJs6 scripts use these features through the global module `pdf`; AutoJs6 opens the paths that scripts pass and hands them to the plugin, so the plugin needs no storage permission to process script files. The plugin comes with its own viewer, which opens from the launcher, the AutoJs6 file manager or scripts (`pdf.view`).
+Processing runs inside the plugin with the `PdfRenderer` of Android and the pure Java PDFBox-Android, so the AutoJs6 host stays small. AutoJs6 scripts use these features through the global module `pdf`, and so do scripts of the Node.js Runtime and Bun Runtime plugins; AutoJs6 opens the paths that scripts pass and hands them to the plugin, so the plugin needs no storage permission to process script files. The plugin comes with its own viewer, which opens from the launcher, the AutoJs6 file manager, "Open with" in other apps or scripts (`pdf.view`).
 
-> This is a development preview: the AutoJs6 Plugin Center can discover the plugin, but reading, rendering, page operations, the viewer and the `pdf` module are not delivered yet. The text below describes the design goals of 1.0.0; see the roadmap for progress.
+> The `pdf` module of AutoJs6 scripts and the file manager entries require AutoJs6 6.8.1 (internal build 6641) or later; older AutoJs6 versions show the plugin as incompatible in the Plugin Center. The toolbox and the viewer do not depend on AutoJs6 and work on their own.
 
 ******
 
@@ -59,9 +59,11 @@ Processing runs inside the plugin with the `PdfRenderer` of Android and the pure
 - Page operations: merge (bookmarks kept), split, extract, delete, reorder and rotate pages; page numbers start at 1 and ranges are written as `'1-3,5,8-'`.
 - Generation: images to PDF (JPEG embedded as is, without re-encoding), text to PDF (with a font of your choice) and HTML to PDF (no remote URLs are loaded).
 - Encryption: open encrypted documents with a password, encrypt with AES-256 and set permissions, remove encryption.
-- Viewer: continuous scrolling, pinch zoom, thumbnails, outline, search highlights, password prompt and night mode; scripts can open the viewer and receive page change and close events.
-- Toolbox and file manager: wizards to merge, split, convert to images, convert images to PDF, encrypt / decrypt and extract text; the AutoJs6 file manager opens PDF files directly in the plugin viewer, and its overflow menu offers the same tools.
-- OCR: `pdf.text(path, { ocr: true })` calls the AutoJs6 OCR engine for scanned pages without a text layer.
+- Viewer: continuous scrolling, pinch zoom, thumbnails, outline, search highlights, go to page, password prompt and night mode; other apps can hand PDF files to it with "Open with" or sharing; scripts can open the viewer and receive page change and close events.
+- Toolbox: 8 tools to merge, split, convert to images, convert images to PDF, encrypt, decrypt, extract text and organize pages; tasks run one after another in the background, with the progress in the notification; the recent files also remember files opened with the system file picker.
+- AutoJs6 file manager: tapping a PDF opens it in the plugin viewer, and PDF files of up to 512 MiB inside archives open directly too; the menu offers merge, split, convert to images, extract text, encrypt and remove the password.
+- OCR: `pdf.text(path, { ocr: true })` recognizes scanned pages without a text layer with an installed OCR plugin (ML Kit OCR, Paddle OCR or Rapid OCR).
+- Node.js and Bun: Node.js Runtime 2.2.0 and Bun Runtime 0.23.0 and later offer the same `pdf` module; its methods return Promises, and calls can be aborted with `signal` or `timeoutMs`.
 
 ******
 
@@ -70,10 +72,22 @@ Processing runs inside the plugin with the `PdfRenderer` of Android and the pure
 ******
 
 1. Download the APK from [Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Paper-PDF/releases) and install it. There is a single package for every ABI.
-2. To use the `pdf` module in scripts, update AutoJs6 to internal build 6641 (6.8.1) or later and enable the plugin in the Plugin Center.
+2. To use it in AutoJs6 scripts or the file manager, update AutoJs6 to 6.8.1 (internal build 6641) or later and make sure the plugin is enabled in the Plugin Center.
 3. To use the built-in toolbox, open the plugin and grant all files access when asked; script operations do not need this permission.
 
 > The plugin supports devices running Android 7.0 (API 24) or later. PDF processing uses only system APIs and pure Java libraries; the only native library comes from Jetpack Compose and is aligned to 16 KB memory pages, so a single package serves every ABI.
+
+******
+
+### Compatibility
+
+******
+
+- Android 7.0 (API 24) and later, a single package for every ABI; the toolbox and the viewer do not depend on AutoJs6.
+- AutoJs6 scripts and file manager: require AutoJs6 6.8.1 (internal build 6641) or later.
+- Node.js: requires the Node.js Runtime plugin 2.2.0 or later, loaded with `require('autojs6:pdf')`; the project declares `files` in `node.permissions` of `project.json`, plus `files.write` to write files, `ocr` to recognize text and `ui` to open the viewer.
+- Bun: requires the Bun Runtime plugin 0.23.0 or later (Android 13 and later), used through `host.pdf`; turn on `pdf.control` on the settings screen of Bun Runtime, plus `ocr.control` to recognize text.
+- OCR: recognizing scanned pages needs an OCR plugin (ML Kit OCR, Paddle OCR or Rapid OCR); without one, recognizing scanned pages fails with `OCR_UNAVAILABLE`, and the other features are not affected.
 
 ******
 
@@ -81,7 +95,7 @@ Processing runs inside the plugin with the `PdfRenderer` of Android and the pure
 
 ******
 
-Scripts use these features through the global module `pdf` (also available as `$pdf`) (1.0.0 design draft; the documentation of the released version prevails):
+AutoJs6 scripts use these features through the global module `pdf` (also available as `$pdf`; see [AutoJs6 documentation > PDF](https://docs.autojs6.com/#/pdf) for the full reference):
 
 ```javascript
 let info = pdf.info("./book.pdf");
@@ -109,9 +123,29 @@ session.on("page", (e) => console.log("page", e.page));
 session.on("close", () => console.log("closed"));
 ```
 
+In Node.js and Bun, the methods of the same names return Promises (Bun uses them through `host.pdf`):
+
+```javascript
+"nodejs";
+const pdf = require("autojs6:pdf");
+
+(async () => {
+    const { texts, pages } = await pdf.text("./book.pdf", { pages: "1-3" });
+    console.log(pages, texts[0]);
+    const merged = await pdf.merge(["./a.pdf", "./b.pdf"], "./ab.pdf", {
+        displayNames: ["Part A", null],
+        timeoutMs: 60000,
+    });
+    console.log(merged.path, merged.pageCount);
+})();
+```
+
 - Convenience methods such as `pdf.info` / `pdf.text` / `pdf.render` / `pdf.merge` / `pdf.split` / `pdf.fromImages` open and close the document on each call; `pdf.open(path, options)` returns a `PdfDocument` that shares one opening across several operations, with at most 8 documents open per script.
-- Each method has a blocking form and an `xxxAsync` form that returns a Promise; `xxxAsync` accepts `options.onProgress(progress)` and its Promise has `cancel()`; stopping the script cancels running operations and deletes unfinished output.
-- `pdf.view(path, options)` opens the viewer and returns a `PdfViewSession` with the `page` and `close` events and the `goTo(page)` and `close()` methods.
+- Each method has a blocking form and an `xxxAsync` form that returns a Promise, with the same arguments and results; the blocking form cannot be called on the UI thread (it fails with `INVALID_ARGUMENT`), so UI scripts use `xxxAsync`; methods that write files accept `onProgress`, and their Promise has `cancel()`; cancelling or stopping the script never leaves a half-written file.
+- The `displayNames` of `pdf.merge` name the bookmark of each input: `null` takes the file name (without `.pdf`), and a blank string takes the document title (`Document <n>` when there is none); options larger than about 63 KiB fail with `LIMIT_EXCEEDED` and write nothing.
+- `pdf.fromHtml` runs the scripts of the page by default, and `javaScript: false` turns them off; no external content is loaded: network requests are answered with empty content and recorded in `warnings`.
+- `pdf.view(path, options)` opens the viewer and returns a `PdfViewSession` with the `page` / `close` events and the `goTo(page)`, `state()` and `close()` methods; it fails with `UI_REQUIRES_FOREGROUND` when AutoJs6 is not in the foreground (on Android 10 and later without the overlay permission).
+- Node.js and Bun: every method returns a Promise; `signal` (an AbortSignal) and `timeoutMs` abort the call, which rejects with `CANCELLED` in both cases, and a timeout has a `TimeoutError` as its `cause`; `timeoutMs` must be a finite number greater than 0 and at most 2147483647, and fractions are rounded up.
 - Failures throw a `PdfError` with a stable `code` such as `PASSWORD_REQUIRED`, `WRONG_PASSWORD` or `PAGE_OUT_OF_RANGE`; `pdf.isAvailable()` checks in advance whether the plugin is available.
 
 ******
@@ -132,6 +166,18 @@ Only the toolbox and the viewer opened from the launcher need it, to read and wr
 
 PDF processing uses no native library: pages are rendered by the system `PdfRenderer`, and the other features use the pure Java PDFBox-Android. The only native library in the package is `libandroidx.graphics.path.so`, which comes with Jetpack Compose.
 
+#### Why does the Plugin Center show the plugin as incompatible?
+
+The script module and the file manager entries of the plugin require AutoJs6 6.8.1 (internal build 6641) or later. Update AutoJs6 and the plugin can be enabled; until then the toolbox and the viewer work as usual.
+
+#### Can the AutoJs6 file manager open a PDF inside an archive?
+
+Yes. A PDF of up to 512 MiB inside an archive opens directly in the plugin viewer; extract larger ones first.
+
+#### What if a file in the recent files no longer opens?
+
+Files opened with the system file picker keep their read grant and still open directly after a restart. When a file has been deleted or moved, or its grant revoked, tapping the entry shows a message and removes it from the list; choose the file again with "Open a PDF".
+
 ******
 
 ### Permissions and security
@@ -142,7 +188,8 @@ The plugin keeps its permission surface as small as possible:
 
 - Protected entries: the capability service, the file manager entry service and the activation entry require the AutoJs6 plugin permission (`org.autojs.permission.PLUGIN`), so other apps cannot call them directly.
 - Storage: script files arrive as file descriptors, so the plugin asks for no storage permission on behalf of scripts; all files access is only used for the files you choose in the toolbox and the viewer.
-- HTML to PDF: only the given HTML string or local file is rendered; no remote URLs are loaded.
+- HTML to PDF: the plugin loads no external content (network requests are answered with empty content, local files and `content:` addresses are blocked, and the page cannot navigate); the scripts of the page can be turned off with `javaScript: false`.
+- Recent files: files opened with the system file picker keep their read grant so they open directly next time, for at most 20 files; the grant is released as soon as an entry drops out, is removed or the list is cleared. Files handed over by other apps through "Open with" or sharing have a one-time grant only and stay out of the recent files.
 - Network and passwords: the network is only used to check for updates; document passwords are only used for the current operation and are never stored by the plugin.
 
 ******
@@ -195,10 +242,16 @@ Plans, design decisions and progress are tracked as a checklist in ROADMAP.md. U
 
 _2026/11/12_
 
-- `Hint` Development preview: the AutoJs6 Plugin Center can discover the plugin; reading, rendering, page operations, the viewer and the pdf script module are not delivered yet
-- `Hint` Requires AutoJs6 6.8.1 (6641) or later (the exact minimum build will be filled in once the host changes land)
-- `Feature` Plugin skeleton: Wake activation protocol, Plugin Center identity service, PDF capability service (contract version 1) and file manager entry service
+- `Hint` The pdf module of AutoJs6 scripts and the file manager entries require AutoJs6 6.8.1 (internal build 6641) or later; older AutoJs6 versions show the plugin as incompatible in the Plugin Center, and the toolbox and the viewer still work on their own
+- `Hint` Use in Node.js or Bun scripts requires Node.js Runtime 2.2.0 or Bun Runtime 0.23.0 or later
+- `Feature` AutoJs6 scripts get the pdf module (also available as $pdf): read the information, text, outline and images of PDF files, search text, render pages to images, merge, split, extract, delete, reorder and rotate pages, generate PDF files from images, text or HTML, and encrypt and decrypt; every method has a blocking form and an Async form that can report progress and be cancelled
+- `Feature` The ocr option of pdf.text recognizes scanned pages without a text layer with an installed OCR plugin (ML Kit OCR, Paddle OCR or Rapid OCR)
+- `Feature` pdf.view opens a PDF in the plugin viewer; scripts receive page change and close events and can go to a page or close the viewer
+- `Feature` Node.js and Bun scripts can use the pdf module too; its methods return Promises, and calls can be aborted with signal or timeoutMs
+- `Feature` Viewer: continuous scrolling, pinch zoom, thumbnails, outline, search highlights, go to page, password prompt and night mode; it opens from the launcher, and other apps can hand PDF files to it with "Open with" or sharing
+- `Feature` AutoJs6 file manager: tapping a PDF opens it in the plugin viewer, and PDF files of up to 512 MiB inside archives open directly too; the menu offers merge, split, convert to images, extract text, encrypt and remove the password
 - `Feature` Home screen: the tools, task progress, recent files and the all files access grant (only the toolbox needs it)
+- `Feature` The recent files remember files opened with the system file picker (up to 20), which still open directly after a restart; a file that has been deleted or can no longer be accessed is reported and removed from the list
 - `Feature` The toolbox offers 8 tools: merge, split (by page ranges or every n pages), PDF to images (resolution, format, pages), images to PDF (page size, orientation, margins), encrypt, remove the password, extract text (saved as TXT), and rotating, deleting and reordering pages with thumbnails; they share their processing with the file manager entries
 - `Feature` Toolbox tasks run one after another in a foreground service and keep running after you leave the tool screen; the notification shows the progress and can cancel, and the results can be opened in the viewer or shared
 - `Feature` A built-in file browser that can select several files and create folders; the system file picker is also available

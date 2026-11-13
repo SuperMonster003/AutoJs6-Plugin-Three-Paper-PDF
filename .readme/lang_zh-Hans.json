@@ -7,6 +7,7 @@
   "h3_introduction": "简介",
   "h3_features": "功能亮点",
   "h3_usage": "使用方法",
+  "h3_compatibility": "兼容性",
   "h3_script_api": "脚本 API",
   "h3_faq": "常见问题",
   "h3_security": "权限与安全",
@@ -23,29 +24,42 @@
   "text_link_autojs6": "AutoJs6 项目",
   "p_roadmap": "功能规划, 设计决策与完成情况以可勾选清单维护在 ROADMAP.md 中. 未勾选条目表示规划意向, 不代表当前版本能力.",
   "p_introduction_what": "3-Paper PDF 是 AutoJs6 的 PDF 插件, 也是不装 AutoJs6 也能单独使用的 PDF 工具箱与查看器. 它可以读取 PDF 的信息, 文本, 大纲与内嵌图片, 把页面渲染为图片; 可以合并, 拆分, 抽取, 删除, 重排与旋转页面; 可以把图片, 文本或 HTML 生成为 PDF, 并对文档加密或解密.",
-  "p_introduction_how": "处理在插件内用 Android 系统的 `PdfRenderer` 与纯 Java 的 PDFBox-Android 完成, AutoJs6 宿主因此保持精简. AutoJs6 脚本通过全局模块 `pdf` 使用这些功能, 脚本传入的路径由 AutoJs6 打开后交给插件, 插件处理脚本文件不需要存储权限. 插件自带查看器, 可以从启动器, AutoJs6 的文件管理器或脚本 (`pdf.view`) 打开.",
-  "p_status_note": "当前为开发预览版: 插件可以被 AutoJs6 插件中心识别, 但读取, 渲染, 页面操作, 查看器与 `pdf` 模块尚未交付. 下文描述的是 1.0.0 的设计目标, 进度见开发路线图.",
+  "p_introduction_how": "处理在插件内用 Android 系统的 `PdfRenderer` 与纯 Java 的 PDFBox-Android 完成, AutoJs6 宿主因此保持精简. AutoJs6 脚本通过全局模块 `pdf` 使用这些功能, Node.js 与 Bun 运行时插件中的脚本也可以使用; 脚本传入的路径由 AutoJs6 打开后交给插件, 插件处理脚本文件不需要存储权限. 插件自带查看器, 可以从启动器, AutoJs6 的文件管理器, 其他应用的 \"打开方式\" 或脚本 (`pdf.view`) 打开.",
+  "p_status_note": "AutoJs6 脚本的 `pdf` 模块与文件管理器入口需要 AutoJs6 {{ required_host_version_name }} (内部版本号 {{ required_host_version_code }}) 或更高版本, 较旧的 AutoJs6 在插件中心会把本插件显示为不兼容; 工具箱与查看器不依赖 AutoJs6, 可以单独使用.",
   "features": [
     "读取: 页数, 页面尺寸, 元数据, 加密状态与权限; 按页提取文本与大纲 (书签); 搜索文字并返回页码与位置; 列出并导出内嵌图片.",
     "渲染: 把页面渲染为 `Image` 对象或 PNG / JPEG / WebP 文件, 默认 144 dpi, 也可以按 dpi, 缩放比例或目标宽高指定.",
     "页面操作: 合并 (保留书签), 拆分, 抽取, 删除, 重排与旋转页面; 页码从 1 开始, 范围写作 `'1-3,5,8-'`.",
     "生成: 图片转 PDF (JPEG 直接嵌入, 不重新编码), 文本转 PDF (可指定字体), HTML 转 PDF (不加载远程网址).",
     "加密: 用密码打开加密文档, 以 AES-256 加密并设置权限, 去除加密.",
-    "查看器: 连续滚动, 双指缩放, 缩略图, 大纲, 搜索高亮, 密码输入与夜间模式; 脚本可以打开查看器并接收翻页与关闭事件.",
-    "工具箱与文件管理器: 合并, 拆分, 转图片, 图片转 PDF, 加密 / 解密与提取文本的向导; 在 AutoJs6 的文件管理器中可以直接用插件查看器打开 PDF, 溢出菜单提供同样的工具.",
-    "OCR: `pdf.text(path, { ocr: true })` 对没有文本层的扫描页调用 AutoJs6 的 OCR 引擎."
+    "查看器: 连续滚动, 双指缩放, 缩略图, 大纲, 搜索高亮, 跳页, 密码输入与夜间模式; 其他应用可以用 \"打开方式\" 或分享把 PDF 交给它; 脚本可以打开查看器并接收翻页与关闭事件.",
+    "工具箱: 合并, 拆分, 转图片, 图片转 PDF, 加密, 解密, 提取文本与页面整理 8 项工具, 任务在后台依次执行, 通知栏显示进度; 最近文件也会记住用系统文件选择器打开的文件.",
+    "AutoJs6 文件管理器: 点按 PDF 即在插件查看器中打开, 压缩包内不超过 512 MiB 的 PDF 也能直接打开; 菜单提供合并, 拆分, 转图片, 提取文本, 加密与移除密码.",
+    "OCR: `pdf.text(path, { ocr: true })` 借助已安装的 OCR 插件 (ML Kit OCR, Paddle OCR 或 Rapid OCR) 识别没有文本层的扫描页.",
+    "Node.js 与 Bun: Node.js Runtime 2.2.0 与 Bun Runtime 0.23.0 起提供同样的 `pdf` 模块, 方法返回 Promise, 可以用 `signal` 或 `timeoutMs` 中止调用."
   ],
   "usage_steps": [
     "从 [Releases]({{ repo_url }}/releases) 下载 APK 并安装. 所有 ABI 共用一个安装包.",
-    "如需在脚本中使用 `pdf` 模块, 请把 AutoJs6 升级到内部版本 {{ required_host_version_code }} ({{ required_host_version_name }}) 或更高, 并在插件中心启用本插件.",
+    "如需在 AutoJs6 脚本或文件管理器中使用, 请把 AutoJs6 升级到 {{ required_host_version_name }} (内部版本号 {{ required_host_version_code }}) 或更高版本, 并确认插件中心中本插件已启用.",
     "如需使用插件自带的工具箱, 打开插件并按提示授予所有文件访问权限; 脚本操作不需要此权限."
   ],
   "p_usage_note": "插件支持 Android {{ min_android_version }} (API {{ android_min_sdk }}) 及以上设备. PDF 处理全部使用系统 API 与纯 Java 库, 唯一的原生库来自 Jetpack Compose, 已按 16 KB 内存页对齐, 因此所有 ABI 共用一个安装包.",
-  "p_script_api_intro": "脚本通过全局模块 `pdf` (也可写作 `$pdf`) 使用这些功能 (1.0.0 设计草案, 以发布版本的文档为准)",
+  "compatibility_points": [
+    "Android {{ min_android_version }} (API {{ android_min_sdk }}) 及以上, 所有 ABI 共用一个安装包; 工具箱与查看器不依赖 AutoJs6.",
+    "AutoJs6 脚本与文件管理器: 需要 AutoJs6 {{ required_host_version_name }} (内部版本号 {{ required_host_version_code }}) 或更高版本.",
+    "Node.js: 需要 Node.js Runtime 插件 2.2.0 及以上, 用 `require('autojs6:pdf')` 加载; 项目在 `project.json` 的 `node.permissions` 中声明 `files`, 写文件另需 `files.write`, 识别文字另需 `ocr`, 打开查看器另需 `ui`.",
+    "Bun: 需要 Bun Runtime 插件 0.23.0 及以上 (Android 13 及以上), 通过 `host.pdf` 使用; 在 Bun Runtime 的设置页开启 `pdf.control`, 识别文字另需 `ocr.control`.",
+    "OCR: 识别扫描页文字需另装 OCR 插件 (ML Kit OCR, Paddle OCR 或 Rapid OCR); 未安装时识别扫描页报 `OCR_UNAVAILABLE`, 其他功能不受影响."
+  ],
+  "p_script_api_intro": "AutoJs6 脚本通过全局模块 `pdf` (也可写作 `$pdf`) 使用这些功能 (完整说明见 [AutoJs6 文档 > PDF](https://docs.autojs6.com/#/pdf))",
+  "p_script_api_node": "Node.js 与 Bun 中同名方法返回 Promise (Bun 通过 `host.pdf` 使用)",
   "api_points": [
     "便捷方法 `pdf.info` / `pdf.text` / `pdf.render` / `pdf.merge` / `pdf.split` / `pdf.fromImages` 等每次自行打开与关闭文档; `pdf.open(path, options)` 返回 `PdfDocument`, 多次操作共用一次打开, 每个脚本最多同时打开 8 个文档.",
-    "每个方法都有阻塞形态与返回 Promise 的 `xxxAsync` 形态; `xxxAsync` 接受 `options.onProgress(progress)`, 返回的 Promise 带 `cancel()`, 停止脚本即取消进行中的操作并删除未完成的输出.",
-    "`pdf.view(path, options)` 打开查看器并返回 `PdfViewSession`, 可以监听 `page` 与 `close` 事件, 调用 `goTo(page)` 与 `close()`.",
+    "每个方法都有阻塞形态与返回 Promise 的 `xxxAsync` 形态, 二者参数与结果相同; 阻塞形态不能在 UI 线程调用 (报 `INVALID_ARGUMENT`), 界面脚本请用 `xxxAsync`; 写文件的方法接受 `onProgress`, Promise 带 `cancel()`; 取消或停止脚本时不会留下写了一半的文件.",
+    "`pdf.merge` 的 `displayNames` 为每个输入的书签项命名: `null` 取文件名 (去掉 `.pdf`), 空白字符串取该文档的标题 (没有标题时为 `Document <n>`); 选项超过约 63 KiB 时报 `LIMIT_EXCEEDED`, 不写输出.",
+    "`pdf.fromHtml` 默认执行页面中的脚本, `javaScript: false` 可关闭; 不加载任何外部内容, 网络请求以空内容应答并记入 `warnings`.",
+    "`pdf.view(path, options)` 打开查看器并返回 `PdfViewSession`, 可监听 `page` / `close` 事件, 调用 `goTo(page)`, `state()`, `close()`; AutoJs6 不在前台时 (Android 10 及以上且没有悬浮窗权限) 报 `UI_REQUIRES_FOREGROUND`.",
+    "Node.js 与 Bun: 全部方法返回 Promise; `signal` (AbortSignal) 与 `timeoutMs` 中止调用, 都以 `CANCELLED` 拒绝, 超时的 `cause` 为 `TimeoutError`; `timeoutMs` 须为大于 0 且不超过 2147483647 的有限数, 小数向上取整.",
     "失败时抛出 `PdfError`, 其 `code` 为稳定的错误码, 例如 `PASSWORD_REQUIRED`, `WRONG_PASSWORD` 或 `PAGE_OUT_OF_RANGE`; `pdf.isAvailable()` 可以预先探测插件是否可用."
   ],
   "faq": [
@@ -60,18 +74,31 @@
     {
       "q": "插件包含原生库吗?",
       "a": "PDF 处理不使用原生库: 页面渲染使用系统的 `PdfRenderer`, 其余功能使用纯 Java 的 PDFBox-Android. 安装包中唯一的原生库是 Jetpack Compose 自带的 `libandroidx.graphics.path.so`."
+    },
+    {
+      "q": "插件中心为什么显示本插件不兼容?",
+      "a": "本插件的脚本模块与文件管理器入口需要 AutoJs6 {{ required_host_version_name }} (内部版本号 {{ required_host_version_code }}) 或更高版本. 升级 AutoJs6 后即可启用; 在此之前工具箱与查看器照常可用."
+    },
+    {
+      "q": "AutoJs6 文件管理器能直接打开压缩包里的 PDF 吗?",
+      "a": "能. 压缩包内不超过 512 MiB 的 PDF 可以直接在插件查看器中打开, 更大的请先解压."
+    },
+    {
+      "q": "最近文件里的文件打不开了怎么办?",
+      "a": "用系统文件选择器打开的文件会保留读取授权, 重启后仍能直接打开. 文件被删除, 移动或授权被撤销后, 点按该条会给出提示并把它从列表中移除, 请用 \"打开 PDF\" 重新选择."
     }
   ],
   "p_security_intro": "插件在设计上尽量收窄权限面:",
   "security_points": [
     "受保护的入口: 能力服务, 文件管理器入口服务与激活入口都受 AutoJs6 插件权限 (`org.autojs.permission.PLUGIN`) 保护, 其他应用无法直接调用.",
     "存储: 脚本的文件以文件描述符传入, 插件不需要为脚本申请存储权限; 所有文件访问权限只用于工具箱与查看器中你选择的文件.",
-    "HTML 转 PDF: 只渲染提供的 HTML 字符串或本地文件, 不加载远程网址.",
+    "HTML 转 PDF: 插件不加载任何外部内容 (网络请求以空内容应答, 本地文件与 `content:` 地址被禁用, 页面不能跳转); 页面中的脚本可以用 `javaScript: false` 关闭.",
+    "最近文件: 用系统文件选择器打开的文件保留读取授权以便下次直接打开, 至多 20 个; 条目被挤出, 移除或清空时随即释放授权. 其他应用经 \"打开方式\" 或分享交来的文件只有一次性授权, 不进最近文件.",
     "网络与密码: 网络只用于检查更新; 文档密码只在当次操作中使用, 插件不保存."
   ],
   "h3_engine": "引擎与依赖",
   "p_engine": "页面渲染使用 Android 系统的 `PdfRenderer`; 文本, 大纲, 图片, 页面操作与加密使用 [PDFBox-Android](https://github.com/TomRoush/PdfBox-Android) (Apache-2.0, 纯 Java), 加密依赖 Bouncy Castle (MIT 式许可). PDF 处理不包含原生库, 不使用 pdfium 或 MuPDF 等原生渲染库.",
   "p_license": "项目代码使用 [Mozilla Public License 2.0]({{ license_url }}). 第三方组件与数据的许可见第三方声明.",
   "text_link_third_party": "第三方声明 (THIRD_PARTY_NOTICES.md)",
-  "p_instruction_docs": "开发进度与设计见 [项目主页]({{ repo_url }})."
+  "p_instruction_docs": "脚本用法见 [AutoJs6 文档 > PDF](https://docs.autojs6.com/#/pdf), 开发进度见 [项目主页]({{ repo_url }})."
 }
