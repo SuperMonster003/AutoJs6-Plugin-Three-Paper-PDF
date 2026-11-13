@@ -169,7 +169,6 @@ class ThreePaperPdfContractTest {
             } finally {
                 document.close()
             }
-            assertNotImplemented(PdfOps.OPEN_VIEWER) { sampleDescriptor().use { plugin.openViewer(it, Bundle(), null) } }
             (PdfOps.RUN_OPS - ThreePaperPdfContract.IMPLEMENTED_OPS.toSet()).forEach { op ->
                 val request = Bundle().apply {
                     putInt(PdfContract.KEY_CONTRACT_VERSION, PdfContract.CONTRACT_VERSION)

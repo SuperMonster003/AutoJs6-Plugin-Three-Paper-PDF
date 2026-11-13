@@ -34,6 +34,7 @@ import io.github.supermonster003.autojs6.plugin.three.paper.pdf.PdfServiceHarnes
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.R
 import org.autojs.plugin.pdf.api.PdfActions
 import org.json.JSONObject
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -91,16 +92,18 @@ class ViewerActivityDeviceTest {
 
     @Test
     fun aClaimedTokenStartsAtItsPageAndSearchesFromThere() {
-        val token = "device-test-" + SystemClock.elapsedRealtimeNanos()
-        ViewerSessions.register(ViewerClaim(token, PdfServiceHarness.sample("outline.pdf"), "Outline sample", null, 2, "needle"))
-        launch(tokenIntent(token)).use {
+        val claim = ViewerClaim(PdfServiceHarness.sample("outline.pdf"), "Outline sample", null, "needle")
+        val session = ViewerSessions.open(host = Any(), claim = claim, startPage = 2, events = null)
+        launch(tokenIntent(session.token)).use {
             // The needle is on pages 2 and 5: the first hit from page 3 on is on page 5.
             // zh-CN: needle 位于第 2 与第 5 页: 从第 3 页起的第一个命中在第 5 页.
             awaitIndicator(5, pagesOf("outline.pdf"))
             awaitText("viewer-search-status", context.getString(R.string.viewer_search_count, 2, 2))
+            // The token was claimed once. zh-CN: 令牌只能认领一次.
+            assertNull(ViewerSessions.claim(session.token, IdleController))
         }
-        // The token was claimed once. zh-CN: 令牌只能认领一次.
-        assertTrue(ViewerSessions.claim(token) == null)
+        // Closing the viewer ended the session. zh-CN: 关闭查看器结束了会话.
+        assertTrue(PdfServiceHarness.eventually { !session.isOpen })
     }
 
     @Test
@@ -227,6 +230,12 @@ class ViewerActivityDeviceTest {
             document.save(file)
         }
         return file
+    }
+
+    /** A viewer that never claims anything in this test. zh-CN: 本测试中不认领任何会话的查看器. */
+    private object IdleController : ViewerController {
+        override fun goTo(page: Int) = Unit
+        override fun finish() = Unit
     }
 
     private companion object {

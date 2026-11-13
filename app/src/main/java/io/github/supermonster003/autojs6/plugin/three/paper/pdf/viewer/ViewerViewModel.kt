@@ -34,9 +34,10 @@ import kotlin.math.min
 
 /**
  * What one viewer shows (roadmap P3.1): [key] identifies the request, so a recreated Activity keeps its document;
- * [open] and [name] run on the viewer's background thread.
+ * [open] and [name] run on the viewer's background thread. [session] is the claimed viewer session of a script request
+ * (P3.2).
  * zh-CN: 一个查看器要显示的内容 (路线图 P3.1): [key] 标识请求, 因此重建的 Activity 保留其文档; [open] 与 [name] 在查看器的后台
- * 线程上运行.
+ * 线程上运行. [session] 是脚本请求已认领的查看器会话 (P3.2).
  */
 internal class ViewerRequest(
     val key: String,
@@ -45,16 +46,25 @@ internal class ViewerRequest(
     val password: String? = null,
     val page: Int = 0,
     val keyword: String? = null,
+    val session: ViewerSession? = null,
 )
 
 /**
  * The state of one viewer (roadmap P3.1, D35), kept across configuration changes: loading and the password prompt,
  * the document, scroll and zoom, render requests, search, outline and night mode. PDFBox work runs on one background
  * thread, rendering on the [ViewerRenderer] thread; results come back to the main thread, where all state lives.
+ *
+ * A script request comes with its viewer session (P3.2): the model is the session's [ViewerController], reports the
+ * current page, page count and zoom to it whenever the position changes, and ends it when the document is replaced
+ * (`replaced` by another script request, `closed` by any other request, roadmap appendix D Q72) or the viewer closes
+ * for good ([onCleared]: `closed`).
  * zh-CN: 一个查看器的状态 (路线图 P3.1, D35), 在配置变更后保留: 加载与密码提示, 文档, 滚动与缩放, 渲染请求, 搜索, 大纲与夜间模式.
  * PDFBox 工作在一个后台线程上运行, 渲染在 [ViewerRenderer] 的线程上; 结果回到主线程, 全部状态都在主线程上.
+ *
+ * 脚本请求附带其查看器会话 (P3.2): 本模型是会话的 [ViewerController], 每次位置改变时向会话报告当前页, 页数与缩放, 并在文档被替换时
+ * (被另一个脚本请求替换为 `replaced`, 被其他请求替换为 `closed`, 路线图附录 D Q72) 或查看器彻底关闭时 ([onCleared]: `closed`) 结束会话.
  */
-internal class ViewerViewModel(application: Application) : AndroidViewModel(application) {
+internal class ViewerViewModel(application: Application) : AndroidViewModel(application), ViewerController {
 
     sealed interface Phase {
         data object Loading : Phase
@@ -74,6 +84,10 @@ internal class ViewerViewModel(application: Application) : AndroidViewModel(appl
 
     private var shownKey: String? = null
     private var request: ViewerRequest? = null
+    private var session: ViewerSession? = null
+    private var finisher: (() -> Unit)? = null
+    private var finishPending = false
+    private var resumed = false
     private var source: ParcelFileDescriptor? = null
     private var pendingPage = 0
     private var pendingHit = -1
@@ -88,8 +102,14 @@ internal class ViewerViewModel(application: Application) : AndroidViewModel(appl
         private set
     var layout by mutableStateOf<ViewerLayout?>(null)
         private set
-    var position by mutableStateOf(ViewerPosition(1f, 0f, 0f))
-        private set
+    private var positionState by mutableStateOf(ViewerPosition(1f, 0f, 0f))
+
+    var position: ViewerPosition
+        get() = positionState
+        private set(value) {
+            positionState = value
+            report()
+        }
 
     /** The zoom tiles are drawn at; follows [position] once a gesture settles. zh-CN: 分块所用的缩放比例; 手势稳定后跟随 [position]. */
     var tileZoom by mutableFloatStateOf(1f)
@@ -147,6 +167,7 @@ internal class ViewerViewModel(application: Application) : AndroidViewModel(appl
      */
     fun start(key: String, @StringRes missing: Int, build: () -> ViewerRequest?) {
         if (shownKey == key) return
+        endSession(if (key.startsWith(SESSION_KEY_PREFIX)) PdfContract.REASON_REPLACED else PdfContract.REASON_CLOSED)
         reset()
         shownKey = key
         val next = build()
@@ -155,6 +176,7 @@ internal class ViewerViewModel(application: Application) : AndroidViewModel(appl
             return
         }
         request = next
+        session = next.session?.also { it.visible(resumed) }
         pendingPage = max(0, next.page)
         searchQuery = next.keyword.orEmpty()
         val current = generation.get()
@@ -222,6 +244,55 @@ internal class ViewerViewModel(application: Application) : AndroidViewModel(appl
         val current = layout ?: return
         position = current.clamp(current.positionForPage(page, position))
         settle()
+    }
+
+    // Viewer session (P3.2). zh-CN: 查看器会话 (P3.2).
+
+    /** The session's host moves the viewer; before the layout exists the page waits for it. zh-CN: 会话的宿主移动查看器; 布局建立之前该页等待布局. */
+    override fun goTo(page: Int) {
+        if (layout == null) {
+            pendingPage = max(0, page)
+            pendingHit = -1
+            return
+        }
+        goToPage(page)
+    }
+
+    /** The session's host finishes the viewer. zh-CN: 会话的宿主结束查看器. */
+    override fun finish() {
+        val target = finisher
+        if (target == null) finishPending = true else target()
+    }
+
+    /**
+     * The Activity that finishes when the host asks for it ([finish]); a request that arrived while no Activity was
+     * attached (recreation) runs now.
+     * zh-CN: 宿主要求结束时 ([finish]) 结束的 Activity; 没有 Activity 挂接期间 (重建中) 到达的请求在此时执行.
+     */
+    fun attach(finish: (() -> Unit)?) {
+        finisher = finish
+        if (finish != null && finishPending) {
+            finishPending = false
+            finish()
+        }
+    }
+
+    /** Whether the viewer Activity is resumed (`visible` of the session state). zh-CN: 查看器 Activity 是否处于 resumed 状态 (会话状态的 `visible`). */
+    fun onResumed(resumed: Boolean) {
+        this.resumed = resumed
+        session?.visible(resumed)
+    }
+
+    private fun report() {
+        val target = session ?: return
+        val current = layout ?: return
+        val opened = document ?: return
+        target.update(current.currentPage(positionState), opened.pageCount, positionState.zoom)
+    }
+
+    private fun endSession(reason: String) {
+        session?.end(reason)
+        session = null
     }
 
     fun toggleNightMode() {
@@ -434,6 +505,7 @@ internal class ViewerViewModel(application: Application) : AndroidViewModel(appl
 
     override fun onCleared() {
         cleared = true
+        endSession(PdfContract.REASON_CLOSED)
         reset()
         pdf.shutdown()
     }
@@ -582,6 +654,9 @@ internal class ViewerViewModel(application: Application) : AndroidViewModel(appl
     }
 
     companion object {
+
+        /** Key prefix of script requests ([start] tells `replaced` from `closed` by it). zh-CN: 脚本请求的键前缀 ([start] 据此区分 `replaced` 与 `closed`). */
+        const val SESSION_KEY_PREFIX = "token:"
 
         const val PREFERENCES = "viewer"
         const val KEY_NIGHT = "night_mode"

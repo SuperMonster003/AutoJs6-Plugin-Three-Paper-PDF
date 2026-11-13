@@ -205,7 +205,7 @@ io.github.supermonster003.autojs6.plugin.three.paper.pdf
 | P0 | 1.0.0 | 仓库骨架: 构建链与身份, Icon Studio 图标, 测试与 CI | 完成 (paper-p0, 2026-11-12) |
 | P1 | 宿主 6.8.1 | 契约 `pdf-api`, 宿主绑定与查看器启动, 脚本模块 `pdf`, OCR 分支, Node / Bun 桥接, Explorer 文件类型与注册 | 进行中 (P1.1 完成, P1.2 待真机绑定) |
 | P2 | 1.0.0 | 插件核心: 服务与句柄, 读取, 渲染与位图传输, 页面操作, 生成, 加密, 设备矩阵 | 进行中 (P2.1 - P2.6 完成) |
-| P3 | 1.0.0 | 查看器, `pdf.view` 会话, Explorer Action 服务 | 进行中 (P3.1 插件行完成, 真机手测待做) |
+| P3 | 1.0.0 | 查看器, `pdf.view` 会话, Explorer Action 服务 | 进行中 (P3.1, P3.2 插件行完成; 真机手测与宿主联调待做) |
 | P4 | 1.0.0 | 工具箱界面: 应用骨架, 向导, 设置与启动器模式 | 未开始 |
 | P5 | 1.0.0 | 文档, 声明, 四仓库同步, 样例, 兼容矩阵, 发布与索引登记 | 未开始 |
 | P6 | 1.1.0 | 表单, 水印 / 页码 / 页眉页脚, 可搜索 PDF, 压缩, 发布 | 未开始 |
@@ -376,7 +376,7 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 
 ## P3: 查看器与 Explorer Action
 
-状态: 进行中 (P3.1 插件行完成, 真机手测待做). 设备: API 33 AVD + Sony XQ-AT72 API 31 (界面) + Xiaomi Pad API 35 (大屏) + OnePlus API 35 (ColorOS 后台启动).
+状态: 进行中 (P3.1, P3.2 插件行完成; 真机手测与宿主联调待做). 设备: API 33 AVD + Sony XQ-AT72 API 31 (界面) + Xiaomi Pad API 35 (大屏) + OnePlus API 35 (ColorOS 后台启动).
 
 ### P3.1 Compose 查看器 (D35)
 
@@ -385,9 +385,9 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 
 ### P3.2 `pdf.view` 会话 (D21, D23)
 
-- [ ] (插件) `openViewer` 返回 `IPdfViewerSession` (令牌, `goTo`, `close(finish)`, `getState`), 未在 `VIEWER_CLAIM_TIMEOUT_MS` 内被 Activity 认领则关闭; 事件 `page` / `close` 经 `IPdfViewerCallback`; 脚本退出后查看器留前台, 第二个会话替换第一个.
+- [x] (插件) `openViewer` 返回 `IPdfViewerSession` (令牌, `goTo`, `close(finish)`, `getState`), 未在 `VIEWER_CLAIM_TIMEOUT_MS` 内被 Activity 认领则关闭; 事件 `page` / `close` 经 `IPdfViewerCallback`; 脚本退出后查看器留前台, 第二个会话替换第一个. 结果 (2026-11-13, paper-p3-plugin): `viewer/ViewerSessions.kt` 的会话登记表 (令牌为 64 位随机十六进制, 按宿主进程 uid + pid 区分) 管理待认领 / 已认领 / 已结束三种状态; `service/ViewerSessionStub.kt` 是 Binder 存根: `getState` 以信封作答 (会话结束后为 `SESSION_CLOSED` 失败信封), `goTo` / `close` 以 `CODE: detail` 抛出; `close` 可重复调用. 源描述符在 `openViewer` 时复制, 认领后归查看器, 超时未认领则关闭; 同一宿主的后一个会话以 `replaced` 结束前一个; 查看器关闭给 `closed`, `close(true)` 结束 Activity 并给 `finished`, `close(false)` 只解除宿主且不再发事件, 宿主回调死亡时静默解除. 事件在单独线程上发送, `onPage` 只在页码或页数变化时发送; `goTo` 在主线程上换页 (至多等 2 秒, 之后的 `getState` 即为新页). 加载完成前 `getState` 答起始页与 `pageCount: 0`, `goTo` 只拒绝小于 1 的页 (Q73, 已先行); 新请求替换屏幕上的脚本会话时, 新的脚本会话给 `replaced`, 其他入口给 `closed` (Q72, 已先行). `IMPLEMENTED_OPS` 加入 `openViewer`, `pdfFeatures` 在所有 API 级别都声明 `viewer`. JVM `ViewerSessionTest` 11 项 (状态, 认领一次, 页事件去重, 四种关闭原因, 超时关闭源, 选项) 与 `PluginRuntimeInfoTest` 通过, 共 182 项; 仪器测试 `ViewerSessionDeviceTest` 4 项 (经服务 `openViewer` 后凭令牌启动查看器: 待认领状态, `onPage`, `goTo` 与越界, `close(true)` 结束 Activity, `closed` / `replaced`, `close(false)` 不再发事件, 被拒绝的选项) 在 AVD_API_33 与 AVD_API_24 只读实例全套通过; lint 15 项 (基线).
 - [ ] (宿主) `PdfViewSession` 联调: `pdf.view(path, { page: 3, search: 'foo' })` 打开并定位; 宿主后台时报 `UI_REQUIRES_FOREGROUND`. 状态 (2026-11-13, paper-p3-host): 代码核对完成, 无缺口 (page / search 映射为 page / keyword, 插件调用前与 startActivity 前各查一次前台, 宿主 Activity 暂停即视为后台); 补单测 `PdfScriptArgumentsTest.viewOptionsAreCheckedBeforeTheViewerOpens` (宿主 2d194f5da3); 真机联调留批次 5.
-- 验收: 真机脚本 (附录 B.5 查看器示例) 在 API 33 通过; OnePlus (ColorOS) 后台启动行为记录进附录 F.
+- 验收: 真机脚本 (附录 B.5 查看器示例) 在 API 33 通过; OnePlus (ColorOS) 后台启动行为记录进附录 F. 状态 (2026-11-13, paper-p3-plugin): 插件侧会话由上面的仪器测试覆盖; 真机脚本 (`pdf.view`) 与 ColorOS 后台启动依赖宿主联调, 留批次 5, 本批未执行.
 
 ### P3.3 Explorer Action 服务 (D6, D36)
 
@@ -681,6 +681,8 @@ AIDL:
 | Q60 | Q31 / Q35 的契约改动 (`displayNames`, `javaScript`) 版本号怎么处理 | (a) 就地改 v1: 契约版本仍为 1, 不写 v1 / v2 协商分支, `pdf-api.aar` 重出一版, P6 仍是契约版本 2 (推荐; 宿主 6.8.1 与插件 1.0.0 均未发布, 没有已部署的 v1 对端) / (b) 升到 v2 并保留 v1 回落与协商测试, P6 顺延为 3 | 批次 4 | 已决 (2026-11-13 08:58, 维护者选 (a) 就地改 v1; 调度会话追问; 影响 `pdf-api`, 宿主 `core/plugin/pdf` 与脚本模块, 插件 `PdfMerger` / `HtmlToPdf`, 协议文档) |
 | Q61 | `pdf.fromHtml` 的 `javaScript` 选项缺省值 | (a) 缺省 true, 与已实现行为和仪器测试一致, 脚本传 false 关闭 (推荐) / (b) 缺省 false | 批次 4 | 已决 (2026-11-13 08:58, 维护者选 (a) 缺省执行; 调度会话追问; 影响宿主脚本模块, 插件 `HtmlToPdf`, Node / Bun d.ts, P5.1 文档) |
 | Q71 | 查看器令牌同时带起始页与搜索词时停在哪里 (协议只写 "the start `page` and an optional `keyword`") | (a) 从起始页向后找第一个命中并居中, 起始页之后没有命中时回到第一个命中, 完全没有命中时停在起始页 (推荐, 已先行; 脚本常用 `{ page, search }` 表示 "从这里往后找") / (b) 停在起始页, 只高亮命中, 不跳转 / (c) 忽略起始页, 跳到第一个命中 | P3.1, P3.2, 文档 P5.1 | 已按推荐先行待确认 (paper-p3-plugin, `ViewerViewModel.search`; 改选返工: (b) / (c) 约 5 行 + 1 个设备测试) |
+| Q72 | 查看器正在显示脚本会话时被新请求替换, 旧会话收到哪个 reason | (a) 新的脚本会话 (`pdf.view`, 同一 Activity 收到新令牌) 给 `replaced`, 其他请求 (`ACTION_VIEW`, 文件管理器主动作, 工具箱结果页) 给 `closed` (推荐, 已先行; 契约 `replaced` 写的是 "a later `openViewer` of the same host", 不同宿主的新会话同样替换了屏幕) / (b) 只有同一宿主的新会话给 `replaced`, 其余一律 `closed` / (c) 一律 `closed` | P3.2, 宿主门面与 d.ts 的事件说明, 文档 P5.1 | 已按推荐先行待确认 (paper-p3-plugin, `ViewerViewModel.start`; 改选返工: (b) 约 5 行 + 1 个仪器测试, (c) 约 2 行) |
+| Q73 | 查看器加载完文档之前 `getState` 与 `goTo` 怎么答 (页数要等查看器打开文档后才知道) | (a) `getState` 答起始页与 `pageCount: 0`; 起始页超出末页时打开末页; 加载期间 `goTo` 只拒绝小于 1 的页, 记下的页在加载后限位到末页 (推荐, 已先行; 不在 Binder 线程上开文档) / (b) `openViewer` 时先在服务里开一次文档取页数, 超出范围的起始页与 `goTo` 立即报 `PAGE_OUT_OF_RANGE` (多一次解析, 大文件拖慢 `pdf.view` 返回) / (c) 加载完成前 `getState` / `goTo` 阻塞等待 (至多数秒) | P3.2, 文档 P5.1 | 已按推荐先行待确认 (paper-p3-plugin, `ViewerSession` / `ViewerOptions`; 改选返工: (b) 约 40 行 + 2 个测试, (c) 约 30 行 + 2 个测试) |
 
 ## 附录 E. 证据等级
 

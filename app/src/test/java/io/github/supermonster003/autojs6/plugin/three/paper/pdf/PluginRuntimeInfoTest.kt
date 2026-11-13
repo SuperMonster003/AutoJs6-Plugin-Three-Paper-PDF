@@ -76,32 +76,32 @@ class PluginRuntimeInfoTest {
         assertEquals(PdfContract.CONTRACT_VERSION, ThreePaperPdfContract.CONTRACT_VERSION)
         assertTrue(PdfOps.ALL.containsAll(ThreePaperPdfContract.IMPLEMENTED_OPS))
         assertEquals(
-            "roadmap P2.2 implements reading, P2.3 rendering, P2.4 page operations, P2.5 generation and images, P2.6 encryption",
+            "roadmap P2.2 implements reading, P2.3 rendering, P2.4 page operations, P2.5 generation and images, P2.6 encryption, P3.2 viewer sessions",
             listOf(
                 PdfOps.INFO, PdfOps.OUTLINE, PdfOps.TEXT, PdfOps.SEARCH, PdfOps.RENDER, PdfOps.RENDER_TO_FILE,
                 PdfOps.MERGE, PdfOps.PLAN_SPLIT, PdfOps.SPLIT, PdfOps.SAVE,
                 PdfOps.FROM_IMAGES, PdfOps.FROM_TEXT, PdfOps.FROM_HTML, PdfOps.PLAN_IMAGES, PdfOps.EXTRACT_IMAGE,
-                PdfOps.ENCRYPT, PdfOps.DECRYPT,
+                PdfOps.ENCRYPT, PdfOps.DECRYPT, PdfOps.OPEN_VIEWER,
             ),
             ThreePaperPdfContract.IMPLEMENTED_OPS,
         )
         assertTrue(PdfContract.FEATURES.containsAll(ThreePaperPdfContract.FEATURES))
-        assertEquals("SharedMemory needs API 27", emptyList<String>(), ThreePaperPdfContract.features(26))
-        assertEquals(listOf(PdfContract.FEATURE_RENDER_SHARED_MEMORY), ThreePaperPdfContract.features(27))
+        assertEquals("SharedMemory needs API 27; viewer sessions run everywhere", listOf(PdfContract.FEATURE_VIEWER), ThreePaperPdfContract.features(26))
+        assertEquals(listOf(PdfContract.FEATURE_RENDER_SHARED_MEMORY, PdfContract.FEATURE_VIEWER), ThreePaperPdfContract.features(27))
         assertTrue(PdfContract.FEATURES.containsAll(ThreePaperPdfContract.features(36)))
-        assertEquals("generate.html follows the print callbacks and the WebView", listOf(PdfContract.FEATURE_GENERATE_HTML), ThreePaperPdfContract.features(24, htmlAvailable = true))
+        assertEquals("generate.html follows the print callbacks and the WebView", listOf(PdfContract.FEATURE_GENERATE_HTML, PdfContract.FEATURE_VIEWER), ThreePaperPdfContract.features(24, htmlAvailable = true))
         assertEquals(
-            listOf(PdfContract.FEATURE_RENDER_SHARED_MEMORY, PdfContract.FEATURE_GENERATE_HTML),
+            listOf(PdfContract.FEATURE_RENDER_SHARED_MEMORY, PdfContract.FEATURE_GENERATE_HTML, PdfContract.FEATURE_VIEWER),
             ThreePaperPdfContract.features(36, htmlAvailable = true),
         )
         assertTrue(PdfContract.FEATURES.containsAll(ThreePaperPdfContract.features(36, htmlAvailable = true)))
-        assertEquals("crypto.aes256 follows the platform providers", listOf(PdfContract.FEATURE_CRYPTO_AES256), ThreePaperPdfContract.features(24, aes256Available = true))
+        assertEquals("crypto.aes256 follows the platform providers", listOf(PdfContract.FEATURE_CRYPTO_AES256, PdfContract.FEATURE_VIEWER), ThreePaperPdfContract.features(24, aes256Available = true))
         assertEquals(
             "the order of PdfContract.FEATURES",
-            listOf(PdfContract.FEATURE_RENDER_SHARED_MEMORY, PdfContract.FEATURE_GENERATE_HTML, PdfContract.FEATURE_CRYPTO_AES256),
+            listOf(PdfContract.FEATURE_RENDER_SHARED_MEMORY, PdfContract.FEATURE_GENERATE_HTML, PdfContract.FEATURE_CRYPTO_AES256, PdfContract.FEATURE_VIEWER),
             ThreePaperPdfContract.features(36, htmlAvailable = true, aes256Available = true),
         )
-        assertEquals(PdfContract.FEATURES.filter { it != PdfContract.FEATURE_VIEWER }, ThreePaperPdfContract.features(36, htmlAvailable = true, aes256Available = true))
+        assertEquals(PdfContract.FEATURES.toList(), ThreePaperPdfContract.features(36, htmlAvailable = true, aes256Available = true))
         assertEquals(PdfIds.PLUGIN_ID, ThreePaperPdfContract.PLUGIN_ID)
         assertEquals(PdfIds.CATEGORY, ThreePaperPdfContract.SERVICE_CATEGORY)
         assertTrue(

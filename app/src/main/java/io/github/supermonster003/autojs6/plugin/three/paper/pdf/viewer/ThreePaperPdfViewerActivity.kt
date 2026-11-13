@@ -49,6 +49,7 @@ open class ThreePaperPdfViewerActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         show(intent)
+        model.attach(::finish)
         setContent {
             PaperTheme {
                 ViewerScreen(
@@ -67,6 +68,21 @@ open class ThreePaperPdfViewerActivity : ComponentActivity() {
         show(intent)
     }
 
+    override fun onResume() {
+        super.onResume()
+        model.onResumed(true)
+    }
+
+    override fun onPause() {
+        model.onResumed(false)
+        super.onPause()
+    }
+
+    override fun onDestroy() {
+        model.attach(null)
+        super.onDestroy()
+    }
+
     /**
      * The entry of [intent]; subclasses for other entries override it.
      * zh-CN: [intent] 的入口; 其他入口的子类重写它.
@@ -74,15 +90,18 @@ open class ThreePaperPdfViewerActivity : ComponentActivity() {
     internal open fun entryOf(intent: Intent): ViewerEntry {
         if (intent.action == PdfActions.VIEWER_ACTIVITY_ACTION) {
             val token = intent.getStringExtra(PdfActions.EXTRA_SESSION_TOKEN)
-            return ViewerEntry("token:$token", R.string.viewer_error_expired) {
-                ViewerSessions.claim(token)?.let { claim ->
+            val key = ViewerViewModel.SESSION_KEY_PREFIX + token
+            return ViewerEntry(key, R.string.viewer_error_expired) {
+                ViewerSessions.claim(token, model)?.let { claimed ->
+                    val claim = claimed.claim
                     ViewerRequest(
-                        key = "token:$token",
+                        key = key,
                         open = { claim.source },
                         name = { claim.displayName },
                         password = claim.password,
-                        page = claim.page,
+                        page = claimed.session.startPage,
                         keyword = claim.keyword,
+                        session = claimed.session,
                     )
                 }
             }

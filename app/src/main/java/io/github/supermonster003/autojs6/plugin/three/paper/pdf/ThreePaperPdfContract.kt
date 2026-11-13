@@ -48,17 +48,17 @@ object ThreePaperPdfContract {
     /**
      * Operations the plugin implements end to end; every other operation answers `UNSUPPORTED` with the detail
      * `NOT_IMPLEMENTED: <op>` until its roadmap item lands (P2.2: reading, P2.3: rendering, P2.4: page operations, P2.5:
-     * generation and images, P2.6: encryption). `fromHtml` is listed on every device; where `generate.html` is not declared it answers
-     * `UNSUPPORTED` (protocol "Run operations").
+     * generation and images, P2.6: encryption, P3.2: viewer sessions). `fromHtml` is listed on every device; where
+     * `generate.html` is not declared it answers `UNSUPPORTED` (protocol "Run operations").
      * zh-CN: 插件端到端实现的操作; 其他操作在对应的路线图条目落地之前返回详情为 `NOT_IMPLEMENTED: <op>` 的 `UNSUPPORTED`
-     * (P2.2: 读取, P2.3: 渲染, P2.4: 页面操作, P2.5: 生成与图片, P2.6: 加密). `fromHtml` 在所有设备上都列出; 未声明 `generate.html` 的设备上
-     * 它返回 `UNSUPPORTED` (协议 "Run operations" 一节).
+     * (P2.2: 读取, P2.3: 渲染, P2.4: 页面操作, P2.5: 生成与图片, P2.6: 加密, P3.2: 查看器会话). `fromHtml` 在所有设备上都列出;
+     * 未声明 `generate.html` 的设备上它返回 `UNSUPPORTED` (协议 "Run operations" 一节).
      */
     val IMPLEMENTED_OPS: List<String> = listOf(
         PdfOps.INFO, PdfOps.OUTLINE, PdfOps.TEXT, PdfOps.SEARCH, PdfOps.RENDER, PdfOps.RENDER_TO_FILE,
         PdfOps.MERGE, PdfOps.PLAN_SPLIT, PdfOps.SPLIT, PdfOps.SAVE,
         PdfOps.FROM_IMAGES, PdfOps.FROM_TEXT, PdfOps.FROM_HTML, PdfOps.PLAN_IMAGES, PdfOps.EXTRACT_IMAGE,
-        PdfOps.ENCRYPT, PdfOps.DECRYPT,
+        PdfOps.ENCRYPT, PdfOps.DECRYPT, PdfOps.OPEN_VIEWER,
     )
 
     /**
@@ -77,15 +77,17 @@ object ThreePaperPdfContract {
     /**
      * Optional features on API level [sdkInt]: `render.sharedMemory` needs `SharedMemory` (API 27, roadmap P2.3),
      * `generate.html` the print callbacks and a WebView provider ([htmlAvailable], roadmap P2.5, appendix D Q5),
-     * `crypto.aes256` 256-bit AES through the platform providers ([aes256Available], roadmap P2.6, appendix D Q4).
+     * `crypto.aes256` 256-bit AES through the platform providers ([aes256Available], roadmap P2.6, appendix D Q4), `viewer`
+     * the viewer sessions of every API level (roadmap P3.2).
      * zh-CN: API 级别 [sdkInt] 上的可选特性: `render.sharedMemory` 需要 `SharedMemory` (API 27, 路线图 P2.3), `generate.html`
      * 需要打印回调与 WebView 提供方 ([htmlAvailable], 路线图 P2.5, 附录 D Q5), `crypto.aes256` 需要平台 provider 支持 256 位 AES
-     * ([aes256Available], 路线图 P2.6, 附录 D Q4).
+     * ([aes256Available], 路线图 P2.6, 附录 D Q4), `viewer` 是所有 API 级别都有的查看器会话 (路线图 P3.2).
      */
     fun features(sdkInt: Int, htmlAvailable: Boolean = false, aes256Available: Boolean = false): List<String> = buildList {
         if (sdkInt >= Build.VERSION_CODES.O_MR1) add(PdfContract.FEATURE_RENDER_SHARED_MEMORY)
         if (htmlAvailable) add(PdfContract.FEATURE_GENERATE_HTML)
         if (aes256Available) add(PdfContract.FEATURE_CRYPTO_AES256)
+        add(PdfContract.FEATURE_VIEWER)
     }
 
     /**
