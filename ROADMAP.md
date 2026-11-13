@@ -48,7 +48,7 @@
 
 ## 2. 派生技术决策
 
-D26-D42 据第 1 节派生, 进入对应阶段前可推翻 (推翻点见各条), 之后视同固定.
+D26-D45 据第 1 节派生 (D43-D45 由 Q145 (b) 于 2026-11-14 加入), 进入对应阶段前可推翻 (推翻点见各条), 之后视同固定.
 
 | 编号 | 决策 | 含义 | 推翻点 |
 | --- | --- | --- | --- |
@@ -69,6 +69,9 @@ D26-D42 据第 1 节派生, 进入对应阶段前可推翻 (推翻点见各条),
 | D40 | 文档与声明 | `AutoJs6-Documentation/api/pdf.md`, `pdfDocumentType.md`, `pdfViewSessionType.md` (版式照 `epub.md` / `epubBookType.md` / `epubReaderSessionType.md`), `runtimeApis` 加 Node / Bun 的 `pdf` 一节; d.ts, Ace 补全, Offline Docs 按 `epub` 同款补齐; 10 种语言只用半角标点. | P5.1 |
 | D41 | 发布门与版本号 | 不等宿主公开: 所有条目通过即发 1.0.0 并登记官方索引, `REQUIRES_HOST_VERSION` 写含全部宿主条目的本地构建号 (3-Macaw Speech 先例), 插件中心对旧宿主显示不兼容. 宿主 6.8.0 已于 2026-11-03 公开后仍沿用 (Q8 已决): 不等宿主 6.8.1 公开, `REQUIRES_HOST_VERSION` 写含全部宿主条目的 6.8.1 本地构建号, 公开 6.8.0 (versionCode 6640) 的用户在插件中心看到不兼容, 直到 6.8.1 公开; 发布文件 `autojs6-plugin-three-paper-pdf-v{VERSION_NAME}-{CRC32}.apk`. | P5.4 |
 | D42 | 许可与声明 | 源码 MPL-2.0; `THIRD_PARTY_NOTICES.md` 列 PDFBox-Android (Apache-2.0), Bouncy Castle (MIT 式许可, 许可全文附在声明里), 其余 AndroidX / Compose (Apache-2.0); PDFBox-Android 随包的数据文件 (LiberationSans 字体 OFL-1.1, Adobe glyphlist, CMap 等 8 项) 在声明里单列一表; README 的 "引擎" 节写明 PDF 处理无原生库与纯 Java 依赖 (Compose 的 graphics-path 例外, Q9). | P0.1 |
+| D43 | 打包应用入口 (Q145 (b)) | 照 3-Tally Sheet D60: 契约 1 就地追加 `PdfActions.PACKAGED_SERVICE_ACTION` (`org.autojs.plugin.PDF_PACKAGED`), `PACKAGED_PERMISSION` (`org.autojs.plugin.pdf.permission.RUNTIME`, normal 级, 由插件声明), `PACKAGED_VIEWER_ACTIVITY_ACTION` (`org.autojs.plugin.PDF_PACKAGED_VIEWER_OPEN`), 契约版本仍为 1 (Q60, 不写协商分支). 插件声明该权限, 打包入口服务 `.service.ThreePaperPdfPackagedService` (category `pdf`, 要求该权限, 带 `requiresHostVersion`) 与查看器别名 `.viewer.PackagedPdfViewerActivity` (要求该权限); 查看器两个 action 同样处理, 会话令牌仍是脚本通道的凭据 (P3.2). 宿主 `PdfEntry` 与 `XlsxEntry` 同样判断: 包名为 AutoJs6 且持有 `org.autojs.permission.PLUGIN` 时走签名入口, 其他 (打包应用, 未授权的 AutoJs6) 走打包入口; `PdfPluginHost` 与 `PdfViewerLauncher` 按入口取服务 action, 服务须要求的权限与查看器 action; 宿主 manifest 加该权限的 `uses-permission` 与两个 queries (打包应用的 manifest 由此带上 queries). 文件访问不变 (D7): 打包应用的运行时同样把路径打开为 fd 传给插件, 插件不为打包入口放宽导出面. | P5.5 |
+| D44 | 打包入口的调用方隔离与清理 | 照 3-Tally Sheet D54: 调用方键 = uid + pid + 入口, 打包入口的临时目录加前缀 `k` (`cache/pdf/k<uid>-<pid>/`), 两种入口的文档, 操作与临时目录互不相干; 进程内一个服务引擎, 两个服务入口共用 (渲染池 2, 每调用方进程 32 个文档, 宿主侧每脚本 8 个句柄 (D10) 都照旧), 工具箱的独立引擎不变. 打包入口每次调用校验调用方持有 `PACKAGED_PERMISSION` (插件自身 uid 放行); 文档句柄, 查看器会话与操作编号只允许创建它们的 uid 调用, 其他 uid 报 `PERMISSION_DENIED`. 调用方死亡: 回调 Binder 死亡照旧取消操作并关闭该调用方; 另由清扫线程每 60 s 用 `kill(pid, 0)` 检查有文档或操作的调用方, 只有 `ESRCH` 判为死亡, 死亡调用方的操作被取消, 文档关闭, 临时目录删除, 查看器会话不再回报事件; 服务 `onUnbind` 只关闭本入口的调用方. | P5.5 |
+| D45 | 打包应用获得 `PACKAGED_PERMISSION` 的方式 | 由宿主打包请求 (`RemoteApkBuildRequestPreparer`) 加入, 不要求用户改 `project.json`: Node.js 项目在声明 `files` 能力或未强制能力时加 (同 xlsx), Bun 项目在 `hostCapabilities` 含 `pdf.control` 时加 (Q26), Rhino 项目见 Q150 (已按 (a) 始终加入先行). 用户自定义的 `permissions` 清单只在打包请求里补, `project.json` 保持原样. | P5.5 |
 
 ---
 
@@ -207,7 +210,7 @@ io.github.supermonster003.autojs6.plugin.three.paper.pdf
 | P2 | 1.0.0 | 插件核心: 服务与句柄, 读取, 渲染与位图传输, 页面操作, 生成, 加密, 设备矩阵 | 进行中 (P2.1 - P2.6 完成) |
 | P3 | 1.0.0 | 查看器, `pdf.view` 会话, Explorer Action 服务 | 进行中 (P3.1, P3.2 / P3.3 插件行与 P3.3 宿主行完成; 真机手测与宿主联调转批次 5 真机复验卡) |
 | P4 | 1.0.0 | 工具箱界面: 应用骨架, 向导, 设置与启动器模式 | 进行中 (P4.1 / P4.2 插件行完成, AVD 验收通过; 真机手测转真机复验卡) |
-| P5 | 1.0.0 | 文档, 声明, 四仓库同步, 样例, 兼容矩阵, 发布与索引登记 | 未开始 |
+| P5 | 1.0.0 | 文档, 声明, 四仓库同步, 样例, 兼容矩阵, 打包应用支持 (Q145 (b)), 发布与索引登记 | 进行中 (P5.1 / P5.2 完成, P5.3 只差真机, P5.5 打包应用支持进行中) |
 | P6 | 1.1.0 | 表单, 水印 / 页码 / 页眉页脚, 可搜索 PDF, 压缩, 发布 | 未开始 |
 
 依赖顺序:
@@ -415,7 +418,7 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 
 ## P5: 文档, 声明, 四仓库同步, 样例与发布
 
-状态: 未开始. 设备: 发布门禁的四台 + OnePlus.
+状态: 进行中 (P5.1 / P5.2 完成, P5.3 只差真机, P5.5 打包应用支持 (Q145 (b), 2026-11-14 加入) 进行中). 设备: 发布门禁的四台 + OnePlus.
 
 ### P5.1 文档 (AutoJs6-Documentation) (D40)
 
@@ -436,7 +439,18 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 ### P5.4 1.0.0 发布 (D41)
 
 - [ ] (发布) 走第 6 节发布门禁 1-5; `REQUIRES_HOST_VERSION` 回填为含全部宿主条目的 6.8.1 本地构建号 (D41, Q8: 不等宿主 6.8.1 公开); tag `v1.0.0`, release 工作流产出 APK; (索引) 登记 `release-manifests/.../<versionCode>.json`; 宿主 changelog 与本文件阶段总览更新.
+- 前置: P5.3 与 P5.5 (打包应用支持, Q145 (b)) 全部行完成, 含两节的真机一项.
 - 验收: 插件中心从索引安装 1.0.0 并默认启用; Explorer 与脚本冒烟通过.
+
+### P5.5 打包应用支持 (Q145 (b))
+
+维护者 2026-11-13 23:57 选 Q145 (b): 1.0.0 就让由 AutoJs6 打包的应用使用 `pdf` 模块. 决策 D43 - D45, 待决 Q150 起; 先例 3-Tally Sheet (D54, D60, Q20 (b)). 状态: 进行中 (paper-packaged, 2026-11-14). 设备: AVD_API_33 只读实例; 真机一项并入批次 8 真机复验卡.
+
+- [ ] (插件) 清单声明 normal 级权限 `org.autojs.plugin.pdf.permission.RUNTIME`, 打包入口服务 `.service.ThreePaperPdfPackagedService` 与查看器别名 `.viewer.PackagedPdfViewerActivity` (D43); 两个服务入口共用进程内的服务引擎, 打包入口每次调用校验调用方权限, 文档句柄, 查看器会话与操作绑定创建者 uid, 打包入口的临时目录前缀 `k`, 清扫线程回收已死调用方, `onUnbind` 只关本入口 (D44); 文件访问仍只走 fd (D7); 换入重出的 `pdf-api.aar`. 验收: JVM 单测 (入口校验, uid 绑定, 死亡回收, 按入口关闭, 临时目录名) 与 AVD_API_33 仪器测试 (绑定打包服务完成打开 / 渲染 / 操作, 别名查看器认领会话, 清单契约) 通过; lint 不高于基线 15; `.python/prepush_check.py` 通过.
+- [ ] (宿主) 契约 `pdf-api` 就地加 3 个常量 (Q60, 版本仍为 1) 并重出 aar; `core/plugin/pdf/PdfEntry`, `PdfPluginHost` 与 `PdfViewerLauncher` 按入口选择服务与查看器 (D43); 宿主 manifest 加 `uses-permission` 与两个 queries; `RemoteApkBuildRequestPreparer` 按 D45 / Q150 为打包请求加权限; 协议文档 `docs/dev/pdf-plugin-protocol-v1.md` 补打包入口; 6.8.1 changelog 10 语言. 验收: `PdfEntryTest`, 打包请求的权限单测, 契约与 pdf 相关既有单测通过 (camera 2 项与 api-coverage 14 项既有失败是积压).
+- [ ] (文档) 文档站 `api/pdf.md` 开头 "打包应用暂不能使用" 一句改为打包应用的用法与前提 (设备要装 3-Paper PDF 1.0.0 及以上, 用 AutoJs6 6.8.1 及以上打包, 权限由打包流程加入), `runtimeApis` 的 pdf 一节补打包应用, `progress.md`, 文档站 changelog 10 语言, 重新生成 (versionCode 与离线产物照 P5.1 做法); 插件 README 与 CHANGELOG 10 语言. 验收: `normalize-markdown.py --check`, `auto-generate.py --check`, `generate_markdown.py --check` 与翻译检查通过.
+- [ ] (验证) AVD_API_33 只读实例: 用隔离克隆构建的宿主 (VERSION_BUILD 6641) 与官方签名的模板插件打一个最小打包应用, 核对 open / info / render / merge / 加密 / view 各一项, 未装插件时报 `PLUGIN_UNAVAILABLE`, 打包应用被杀后插件回收其文档与临时目录; 可复跑入口在本仓库 `.python/`, 输出只留每项通过 / 失败与关键数值. 证据等级 E2.
+- [ ] (验证, 真机) API 33 真机用同一入口复跑, 并入批次 8 真机复验卡. 证据等级 E3.
 
 ---
 
@@ -571,7 +585,9 @@ session.on('close', () => console.log('closed'));
 
 ```text
 PdfActions:        INFO, SERVICE_ACTION "org.autojs.plugin.PDF", SERVICE_CATEGORY "pdf", PLUGIN_PERMISSION "org.autojs.permission.PLUGIN",
-                   VIEWER_ACTIVITY_ACTION "org.autojs.plugin.PDF_VIEWER_OPEN", EXTRA_SESSION_TOKEN "org.autojs.plugin.pdf.extra.SESSION_TOKEN"
+                   VIEWER_ACTIVITY_ACTION "org.autojs.plugin.PDF_VIEWER_OPEN", EXTRA_SESSION_TOKEN "org.autojs.plugin.pdf.extra.SESSION_TOKEN",
+                   打包应用入口 (D43, 2026-11-14 按 Q60 就地追加) PACKAGED_SERVICE_ACTION "org.autojs.plugin.PDF_PACKAGED",
+                   PACKAGED_PERMISSION "org.autojs.plugin.pdf.permission.RUNTIME", PACKAGED_VIEWER_ACTIVITY_ACTION "org.autojs.plugin.PDF_PACKAGED_VIEWER_OPEN"
 PdfIds:            PLUGIN_ID "three-paper-pdf", ENGINE "pdf", CATEGORY "pdf", VARIANT_DEFAULT "default", OFFICIAL_PACKAGE, REQUIRED_HOST_VERSION_CODE 6641
 PdfContract:       CONTRACT_VERSION = MIN_CONTRACT_VERSION = MAX_CONTRACT_VERSION = 1
   通用键           contractVersion, requestId, op, errorCode, errorMessage, warnings
@@ -708,15 +724,16 @@ AIDL:
 | Q113 | `timeoutMs` 的取值范围 | (a) 有限数, > 0 且 <= 2147483647, 小数向上取整; 0, 负数, NaN, Infinity, 非数字报 `INVALID_ARGUMENT`; null / undefined 视为未给 (推荐, 已先行) / (b) 只收正整数 / (c) 超上限时钳到上限 | Q93 (c) 落实, Node / Bun 门面与 d.ts | 已决 (2026-11-13 19:20, 维护者选 (a) 保持现状, 经调度会话拍板; paper-host-rework 已实施, Node 1bf91959, Bun 61366e3) |
 | Q114 | Q92 (b) 共用 helper 在 camera 的范围 | (a) 迁移 `CameraScriptCalls` 的 async / callback, `CameraSession.connectInBackground` 不动 (其 LAZY 协程不落定 Promise) (推荐, 已先行) / (b) `CameraSession` 也改用 helper | Q92 (b) 落实, 3-Prism | 已决 (2026-11-13 19:33, 维护者选 (a) 保持现状, 经调度会话拍板; paper-host-rework 已实施, 宿主 8643ab0b90) |
 | Q120 | 宿主 6.8.1 changelog 是否加 Rhino async 取栈修复条目 (Q90 (a) 落实; async/await 已随 6.8.0 发布, 解释模式下 async 函数第一个 await 之前读 Error 的 `stack` 会抛 `ArrayIndexOutOfBoundsException`, 读 `.stack` 的模块错误如 `PdfError` 变成 JavaException) | (a) 加 1 条 fix, 10 语言, 放在 http 系统代理那条之后 (推荐, 已先行) / (b) 不加, 只留 fork changelog | Q90 (a) 落实, 宿主 `.changelog/lang_*.json` 与生成的 README / CHANGELOG, `translation_baseline.json` | 已决 (2026-11-13 19:33, 维护者选 (a) 保持现状, 经调度会话拍板; paper-rhino-fix 已实施, 宿主 6e4950fa3c; 改选返工: 每语言删 1 条, 重生成, `check_translations --record-sync`) |
-| Q130 | Node.js / Bun 的 pdf 样例放在哪里 (宿主样例目录只收 Rhino 脚本; 两个运行时插件各有自己的样例集) | (a) 只放本仓库 `samples/node/pdf-node/` 与 `samples/pdf.bun.js`, README 的 Node / Bun 一节指向它们 (推荐, 已先行) / (b) 另放进 Node.js Runtime 与 Bun Runtime 插件的样例集 (两个仓库各加 1 个样例与 changelog 10 语言, 随两个插件下一版发布) | P5.4 之前 | 待决 (paper-p5-plugin 已按 (a) 先行; 改选返工: 两个运行时仓库各复制 1 个样例, 写 changelog) |
-| Q131 | Node.js / Bun 样例的文件读写: 运行时插件自己的 `fs` 访问 /sdcard 要给插件授予 "所有文件访问权限" (Android 11 及以上需用户在系统设置里打开), pdf 的路径则由 AutoJs6 读写 | (a) 样例只经 pdf 读写共享存储 (用 `pdf.info` 判断样例文档是否存在, 结果摘要打印到控制台), 注释写明原因 (推荐, 已先行) / (b) 样例用 `fs` 并在注释里说明先授予运行时插件所有文件访问权限 | P5.4 之前 | 待决 (paper-p5-plugin 已按 (a) 先行; 改选返工: 两个样例各约 10 行) |
-| Q132 | 宿主样例目录 (`assets-app/sample/3-Paper PDF/`) 里没有样例文档 (`samples/fixtures/` 共 6 个 PDF) | (a) 不带样例文档: 7 个样例找不到 fixtures 时现场生成演示文档 (OCR 样例把文字页渲染成图片再生成 PDF, 得到没有文字层的一页), 宿主 APK 不增加体积 (推荐, 已先行) / (b) 宿主 assets 另带 fixtures, 首次运行时复制到 /sdcard/Documents/3-Paper PDF/fixtures/ (宿主 APK 增加约 40 KB, 另需复制逻辑) | P5.4 之前 | 待决 (paper-p5-plugin 已按 (a) 先行; 改选返工: 宿主复制 fixtures 与一段复制代码) |
-| Q140 | Node / Bun d.ts 的 text 选项 `layout` 写成 `boolean` (Node `pdf.d.ts` 与 Bun `host-client.d.mts` 的 RuntimePdf 同源, TS / Ace 的运行时镜像照搬), 宿主只收 `'reading'` (缺省) / `'raw'`, 传布尔值报 `INVALID_ARGUMENT` | (a) P5.4 之前发一张小卡: Node / Bun 各改 1 行为 `'reading' \| 'raw'`, 再用 TS 的 sync-runtime-declarations 同步 TS 与 Ace 镜像 (推荐, 未先行: 涉及 Node / Bun / TS / Ace 四个仓库, 两个运行时仓库还有其他主题在改) / (b) 宿主也接受布尔值 (true = 'reading', false = 'raw', 宿主约 5 行 + 1 个单测) | P5.4 之前, 可与 Q143 同卡 | 待决 (paper-docs 登记, 未先行; 文档站按宿主写 `'reading'` / `'raw'`) |
-| Q141 | split 的 `namePattern` 里 `{page}` 怎么展开 (一个部分含多页, 不对应单一页码; 插件现把它展开为空串, 缺省 `'{name}-{index}'` 不受影响) | (a) 保持展开为空, 文档写明 (推荐, 已先行: 文档站 pdf.md "路径与输出" 与 split 两处, 8da3399) / (b) 插件改为该部分的首页页码 (插件约 3 行 + 单测, 文档改 2 句) | P5.4 之前 | 待决 (paper-docs 已按 (a) 先行) |
-| Q142 | Rhino PdfViewSession 是 EventEmitter (23 个成员), Node / Bun 的 PdfViewSession 门面 (P1.5) 只有监听方法, 缺 emit, emitSticky, eventNames, getMaxListeners, getTimer, listeners, prependListener, prependOnceListener, setMaxListeners 9 个 | (a) 记为 Rhino 专有: 宿主 tools/api-coverage/runtime-policy.json 加排除规则 `pdf-view-session-rhino-emitter` (not-portable / rhino-only), 文档类型页的运行时支持表显示 "已支持 14 项, 不适用 9 项" (推荐, 已先行: 宿主 8f7fd28ebe, 文档站 27fc6e1) / (b) Node / Bun 门面补齐这 9 个成员 (两个运行时仓库各约半天 + 一致性测试, 删排除规则, 重生成 MATRIX.md 与类型页) | P5.4 之前 | 待决 (paper-docs 已按 (a) 先行) |
-| Q143 | Node / Bun d.ts 的 CloseReason 为 `'host' \| 'finished' \| 'overflow' \| 'error' \| string`, 缺插件给出的 `closed` / `replaced` / `timeout` 字面量 (有 `\| string`, 不影响类型检查, 只少编辑器提示) | (a) 与 Q140 同卡补齐字面量 (推荐, 未先行) / (b) 不改 | 与 Q140 同 | 待决 (paper-docs 登记, 未先行; 文档站已列全部原因) |
-| Q144 | search 的 `limit` 缺省值: 宿主 `PdfScriptArguments.search` 缺省 1000 (= 上限 `MAX_SEARCH_HITS`), 契约常量 `DEFAULT_SEARCH_LIMIT` 100 没有被宿主使用 | (a) 保持 1000, 文档与 d.ts 写 1000 (推荐, 已先行) / (b) 宿主改用 100 (宿主 1 行, 文档站 pdf.md 与 d.ts 各 1 处) | P5.4 之前 | 待决 (paper-docs 已按 (a) 先行) |
-| Q145 | 由 AutoJs6 打包的应用能否用 pdf (插件服务只认 `org.autojs.permission.PLUGIN`, 没有 3-Folio EPUB 那样的 `permission.RUNTIME` 与打包服务) | (a) 1.0.0 不支持, 文档写明 (推荐, 已先行: 文档站 pdf.md 开头一句, 27fc6e1) / (b) 1.0.0 照 3-Folio EPUB 加打包应用服务 (RUNTIME 权限, 打包服务, 宿主打包应用路由与测试, 约 1 - 2 天, 新增条目) | P5.4 之前 | 待决 (paper-docs 已按 (a) 先行) |
+| Q130 | Node.js / Bun 的 pdf 样例放在哪里 (宿主样例目录只收 Rhino 脚本; 两个运行时插件各有自己的样例集) | (a) 只放本仓库 `samples/node/pdf-node/` 与 `samples/pdf.bun.js`, README 的 Node / Bun 一节指向它们 (推荐, 已先行) / (b) 另放进 Node.js Runtime 与 Bun Runtime 插件的样例集 (两个仓库各加 1 个样例与 changelog 10 语言, 随两个插件下一版发布) | P5.4 之前 | 已决 (2026-11-14 00:04, 维护者选 (a) 保持现状, 经调度会话拍板) |
+| Q131 | Node.js / Bun 样例的文件读写: 运行时插件自己的 `fs` 访问 /sdcard 要给插件授予 "所有文件访问权限" (Android 11 及以上需用户在系统设置里打开), pdf 的路径则由 AutoJs6 读写 | (a) 样例只经 pdf 读写共享存储 (用 `pdf.info` 判断样例文档是否存在, 结果摘要打印到控制台), 注释写明原因 (推荐, 已先行) / (b) 样例用 `fs` 并在注释里说明先授予运行时插件所有文件访问权限 | P5.4 之前 | 已决 (2026-11-14 00:04, 维护者选 (a) 保持现状, 经调度会话拍板) |
+| Q132 | 宿主样例目录 (`assets-app/sample/3-Paper PDF/`) 里没有样例文档 (`samples/fixtures/` 共 6 个 PDF) | (a) 不带样例文档: 7 个样例找不到 fixtures 时现场生成演示文档 (OCR 样例把文字页渲染成图片再生成 PDF, 得到没有文字层的一页), 宿主 APK 不增加体积 (推荐, 已先行) / (b) 宿主 assets 另带 fixtures, 首次运行时复制到 /sdcard/Documents/3-Paper PDF/fixtures/ (宿主 APK 增加约 40 KB, 另需复制逻辑) | P5.4 之前 | 已决 (2026-11-14 00:04, 维护者选 (a) 保持现状, 经调度会话拍板) |
+| Q140 | Node / Bun d.ts 的 text 选项 `layout` 写成 `boolean` (Node `pdf.d.ts` 与 Bun `host-client.d.mts` 的 RuntimePdf 同源, TS / Ace 的运行时镜像照搬), 宿主只收 `'reading'` (缺省) / `'raw'`, 传布尔值报 `INVALID_ARGUMENT` | (a) P5.4 之前发一张小卡: Node / Bun 各改 1 行为 `'reading' \| 'raw'`, 再用 TS 的 sync-runtime-declarations 同步 TS 与 Ace 镜像 (推荐, 未先行: 涉及 Node / Bun / TS / Ace 四个仓库, 两个运行时仓库还有其他主题在改) / (b) 宿主也接受布尔值 (true = 'reading', false = 'raw', 宿主约 5 行 + 1 个单测) | P5.4 之前, 可与 Q143 同卡 | 已决 (2026-11-13 23:57, 维护者选 (a) 改 d.ts, 经调度会话拍板; 与 Q143 同由并行小卡 paper-dts 实施, 实施提交以看板 "子会话结果" 区为准) |
+| Q141 | split 的 `namePattern` 里 `{page}` 怎么展开 (一个部分含多页, 不对应单一页码; 插件现把它展开为空串, 缺省 `'{name}-{index}'` 不受影响) | (a) 保持展开为空, 文档写明 (推荐, 已先行: 文档站 pdf.md "路径与输出" 与 split 两处, 8da3399) / (b) 插件改为该部分的首页页码 (插件约 3 行 + 单测, 文档改 2 句) | P5.4 之前 | 已决 (2026-11-14 00:04, 维护者选 (a) 保持现状, 经调度会话拍板) |
+| Q142 | Rhino PdfViewSession 是 EventEmitter (23 个成员), Node / Bun 的 PdfViewSession 门面 (P1.5) 只有监听方法, 缺 emit, emitSticky, eventNames, getMaxListeners, getTimer, listeners, prependListener, prependOnceListener, setMaxListeners 9 个 | (a) 记为 Rhino 专有: 宿主 tools/api-coverage/runtime-policy.json 加排除规则 `pdf-view-session-rhino-emitter` (not-portable / rhino-only), 文档类型页的运行时支持表显示 "已支持 14 项, 不适用 9 项" (推荐, 已先行: 宿主 8f7fd28ebe, 文档站 27fc6e1) / (b) Node / Bun 门面补齐这 9 个成员 (两个运行时仓库各约半天 + 一致性测试, 删排除规则, 重生成 MATRIX.md 与类型页) | P5.4 之前 | 已决 (2026-11-13 23:57, 维护者选 (a) 保持现状, 经调度会话拍板) |
+| Q143 | Node / Bun d.ts 的 CloseReason 为 `'host' \| 'finished' \| 'overflow' \| 'error' \| string`, 缺插件给出的 `closed` / `replaced` / `timeout` 字面量 (有 `\| string`, 不影响类型检查, 只少编辑器提示) | (a) 与 Q140 同卡补齐字面量 (推荐, 未先行) / (b) 不改 | 与 Q140 同 | 已决 (2026-11-13 23:57, 维护者选 (a) 补齐 `closed` / `replaced` / `timeout`, 经调度会话拍板; 与 Q140 同由并行小卡 paper-dts 实施, 实施提交以看板 "子会话结果" 区为准) |
+| Q144 | search 的 `limit` 缺省值: 宿主 `PdfScriptArguments.search` 缺省 1000 (= 上限 `MAX_SEARCH_HITS`), 契约常量 `DEFAULT_SEARCH_LIMIT` 100 没有被宿主使用 | (a) 保持 1000, 文档与 d.ts 写 1000 (推荐, 已先行) / (b) 宿主改用 100 (宿主 1 行, 文档站 pdf.md 与 d.ts 各 1 处) | P5.4 之前 | 已决 (2026-11-14 00:04, 维护者选 (a) 保持 1000, 经调度会话拍板) |
+| Q145 | 由 AutoJs6 打包的应用能否用 pdf (插件服务只认 `org.autojs.permission.PLUGIN`, 没有 3-Folio EPUB 那样的 `permission.RUNTIME` 与打包服务) | (a) 1.0.0 不支持, 文档写明 (推荐, 已先行: 文档站 pdf.md 开头一句, 27fc6e1) / (b) 1.0.0 照 3-Folio EPUB 加打包应用服务 (RUNTIME 权限, 打包服务, 宿主打包应用路由与测试, 约 1 - 2 天, 新增条目) | P5.4 之前 | 已决 (2026-11-13 23:57, 维护者选 (b) 1.0.0 就支持打包应用, 非推荐项, 经调度会话拍板; 新增 P5.5 与 D43 - D45, 由 paper-packaged 实施; 文档站 pdf.md 开头一句随 P5.5 (文档) 行改写) |
+| Q150 | Rhino 项目打包的应用如何获得 `org.autojs.plugin.pdf.permission.RUNTIME` (打包流程只给 Node.js / Bun 项目按能力自动加插件权限, Rhino 项目的 `permissions` 清单里没有它时打包应用绑定不到打包服务, `pdf` 报 `PERMISSION_DENIED`; 3-Folio EPUB / 3-Tally Sheet 的 Rhino 项目同样如此) | (a) Rhino 项目 (非 Node.js / Bun 项目) 打包时始终加入该 normal 级权限, 自定义 `permissions` 清单也在打包请求里补上, `project.json` 不变 (推荐, 已先行: 打包应用开箱可用, 普通权限不弹窗, 只多一行 `uses-permission`) / (b) 同 EPUB / xlsx 现状: 只在 `project.json` 的 `permissions` 写了该权限时保留, 文档写明手动添加的方法 / (c) 扫描项目脚本, 出现 `pdf` / `$pdf` 时才加 (可能漏判动态调用) | P5.5 (宿主) 行, 影响 `RemoteApkBuildRequestPreparer`, 打包请求单测与文档站 pdf.md 打包段落 | 待决 (paper-packaged 已按 (a) 先行; 改选返工: (b) 删宿主 1 处与 1 个单测, 文档改为手动添加的说明; (c) 宿主约 30 行扫描 + 单测) |
 
 ## 附录 E. 证据等级
 
