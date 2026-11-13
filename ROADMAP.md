@@ -386,13 +386,13 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 ### P3.2 `pdf.view` 会话 (D21, D23)
 
 - [ ] (插件) `openViewer` 返回 `IPdfViewerSession` (令牌, `goTo`, `close(finish)`, `getState`), 未在 `VIEWER_CLAIM_TIMEOUT_MS` 内被 Activity 认领则关闭; 事件 `page` / `close` 经 `IPdfViewerCallback`; 脚本退出后查看器留前台, 第二个会话替换第一个.
-- [ ] (宿主) `PdfViewSession` 联调: `pdf.view(path, { page: 3, search: 'foo' })` 打开并定位; 宿主后台时报 `UI_REQUIRES_FOREGROUND`.
+- [ ] (宿主) `PdfViewSession` 联调: `pdf.view(path, { page: 3, search: 'foo' })` 打开并定位; 宿主后台时报 `UI_REQUIRES_FOREGROUND`. 状态 (2026-11-13, paper-p3-host): 代码核对完成, 无缺口 (page / search 映射为 page / keyword, 插件调用前与 startActivity 前各查一次前台, 宿主 Activity 暂停即视为后台); 补单测 `PdfScriptArgumentsTest.viewOptionsAreCheckedBeforeTheViewerOpens` (宿主 2d194f5da3); 真机联调留批次 5.
 - 验收: 真机脚本 (附录 B.5 查看器示例) 在 API 33 通过; OnePlus (ColorOS) 后台启动行为记录进附录 F.
 
 ### P3.3 Explorer Action 服务 (D6, D36)
 
 - [ ] (插件) `ThreePaperPdfExplorerActionService` 目录声明 (合并所选, 拆分, 转图片, 加密, 解密, 提取文本), 执行走 `PdfEngine`, 输出到源文件同目录 (文件名加操作后缀, 重名自动编号; Q2 已决), 进度回宿主事务界面, 错误本地化.
-- [ ] (宿主) `ExplorerPluginActionController` 对 PDF 类型的溢出工具展示与多选合并条件 (依赖 P1.6).
+- [x] (宿主) `ExplorerPluginActionController` 对 PDF 类型的溢出工具展示与多选合并条件 (依赖 P1.6). 结果 (2026-11-13, paper-p3-host): 通用匹配器已满足 (单个 PDF 的溢出工具按目录; 选择栏须全为 PDF, 同一目录, 至多 128); 补宿主规则 `ExplorerPdfActionPolicy`: 官方包的多目标选择栏动作至少 2 个目标 (Q80, 已按推荐先行); JVM 测试 `ExplorerPdfEntryPointsTest` 6 项 (宿主 f11d55ef34). 真机待下一批复验.
 - 验收: 真机 Explorer 对单个与多选 PDF 执行每个工具, 结果文件出现在约定位置并可打开.
 
 ---
@@ -565,7 +565,7 @@ session.on('close', () => console.log('closed'));
 
 ## 附录 C. 契约 (P1.1 已发布的 v1)
 
-来源与优先级: 宿主 `plugin-api/pdf-api` (提交 4e872a8741, 即 `libs/pdf-api.aar`, 40,584 B, sha256 e6bdb589...e90bb) 与协议文档 `AutoJs6/docs/dev/pdf-plugin-protocol-v1.md` 为准, 本附录只摘录事实. 2026-11-12 由 paper-p2-core 按已发布契约同步, 替换立项时的草案 (草案与发布版的差异见协议文档末节 "Differences From The Roadmap Appendix C Draft": 去掉 `fontPath` / `html` 两个键, `limits.*` 改为独立能力键, `render.sharedMemory` 等改为 `pdfFeatures` 的取值, 新增应答键与上限). 契约 v1 在批次 2 冻结, 需要改契约时写进交接目录 `pdf-api-change-requests.md` 并登记待决.
+来源与优先级: 宿主 `plugin-api/pdf-api` (提交 4e872a8741, 即 `libs/pdf-api.aar`, 40,584 B, sha256 e6bdb589...e90bb) 与协议文档 `AutoJs6/docs/dev/pdf-plugin-protocol-v1.md` 为准, 本附录只摘录事实. 2026-11-12 由 paper-p2-core 按已发布契约同步, 替换立项时的草案 (草案与发布版的差异见协议文档末节 "Differences From The Roadmap Appendix C Draft": 去掉 `fontPath` / `html` 两个键, `limits.*` 改为独立能力键, `render.sharedMemory` 等改为 `pdfFeatures` 的取值, 新增应答键与上限). 契约 v1 在批次 2 冻结, 需要改契约时写进交接目录 `pdf-api-change-requests.md` 并登记待决. 2026-11-13 按 Q60 就地在 v1 加 `displayNames` (merge) 与 `javaScript` (fromHtml), 契约版本仍为 1: 宿主 465d7a141f, 新 AAR 40,670 B, sha256 0bb80366...ff169e94 (交接目录), 由 paper-p3-plugin 换入 `libs/`.
 
 ### C.1 `plugin-api/pdf-api`
 
@@ -575,11 +575,11 @@ PdfActions:        INFO, SERVICE_ACTION "org.autojs.plugin.PDF", SERVICE_CATEGOR
 PdfIds:            PLUGIN_ID "three-paper-pdf", ENGINE "pdf", CATEGORY "pdf", VARIANT_DEFAULT "default", OFFICIAL_PACKAGE, REQUIRED_HOST_VERSION_CODE 6641
 PdfContract:       CONTRACT_VERSION = MIN_CONTRACT_VERSION = MAX_CONTRACT_VERSION = 1
   通用键           contractVersion, requestId, op, errorCode, errorMessage, warnings
-  打开             displayName, password, passwords (merge 每个输入一个)
+  打开             displayName, password, passwords / displayNames (merge 每个输入一个; displayNames 是宿主传的文件名, 作书签标题, Q31)
   渲染             page, dpi, scale, width, height, transparent, transport, sharedMemory, rowBytes, format, quality
   文本与搜索       pages, page, offset, maxChars, layout, keyword, caseSensitive, wholeWord, limit; 应答 texts, pageNumbers, hasMore, nextPage, nextOffset, items
   页面操作         ranges, every, order, degrees, rotatePages, deletePages, outline, index
-  生成             pageSize, fit, margin, orientation, fontSize, lineSpacing, title, baseUrl, timeout
+  生成             pageSize, fit, margin, orientation, fontSize, lineSpacing, title, baseUrl, timeout, javaScript (fromHtml, 缺省 DEFAULT_JAVA_SCRIPT = true, Q35 / Q61)
   加密             userPassword, ownerPassword, permissions, keyLength
   getInfo 应答     pageCount, pageWidths, pageHeights (float[], 旋转前的 crop box, 单位 pt), pageRotations (int[]), title, author, subject, keywords,
                    creator, producer, creationDate, modificationDate (ISO 8601 带时区, 无则不带该键), pdfVersion, encrypted, permissions (String[]), sizeBytes
