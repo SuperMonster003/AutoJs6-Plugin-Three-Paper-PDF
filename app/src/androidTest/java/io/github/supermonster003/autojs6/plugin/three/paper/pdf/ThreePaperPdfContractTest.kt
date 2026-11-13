@@ -16,6 +16,8 @@ import android.os.ParcelFileDescriptor
 import android.os.Parcelable
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.explorer.ExplorerCatalog
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.explorer.ExplorerTool
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.service.ThreePaperPdfInfoService
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.service.ThreePaperPdfService
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.viewer.ThreePaperPdfViewerActivity
@@ -23,7 +25,9 @@ import org.autojs.plugin.common.api.IPluginInfoProvider
 import org.autojs.plugin.common.api.PluginCapabilityKeys
 import org.autojs.plugin.common.api.PluginInfo
 import org.autojs.plugin.explorer.api.ExplorerActionCatalogKeys
+import org.autojs.plugin.explorer.api.ExplorerActionPluginActions
 import org.autojs.plugin.explorer.api.ExplorerActionPluginIds
+import org.autojs.plugin.explorer.api.ExplorerActionValues
 import org.autojs.plugin.explorer.api.IExplorerActionPlugin
 import org.autojs.plugin.pdf.api.IPdfDocument
 import org.autojs.plugin.pdf.api.IPdfPlugin
@@ -182,7 +186,7 @@ class ThreePaperPdfContractTest {
     }
 
     @Test
-    fun explorerActionServiceAnswersAnEmptyCatalog() {
+    fun explorerActionServiceAnswersTheToolCatalog() {
         val serviceInfo = discoverSingleService(
             ThreePaperPdfContract.EXPLORER_ACTION, Intent.CATEGORY_DEFAULT, ThreePaperPdfExplorerActionService::class.java.name,
         )
@@ -197,13 +201,48 @@ class ThreePaperPdfContractTest {
                 val info = plugin.info
                 assertEquals(ThreePaperPdfContract.PLUGIN_ID, info.id)
                 assertEquals(ExplorerActionPluginIds.ENGINE, info.engine)
-                val catalog = plugin.actionCatalog
-                assertEquals(ThreePaperPdfContract.EXPLORER_PROTOCOL_VERSION, catalog.getInt(ExplorerActionCatalogKeys.PROTOCOL_VERSION))
-                @Suppress("DEPRECATION")
-                assertEquals(0, catalog.getParcelableArrayList<Bundle>(ExplorerActionCatalogKeys.ACTIONS)?.size)
+                assertToolCatalog(plugin.actionCatalog)
             } else {
                 assertThrows(SecurityException::class.java) { plugin.actionCatalog }
             }
+        }
+        // The same catalog in process, so a device without the host checks it too. zh-CN: 进程内的同一目录, 没有宿主的设备也能检查.
+        assertToolCatalog(ExplorerCatalog.catalog())
+        // The host starts the tools with the EXECUTE action. zh-CN: 宿主以 EXECUTE 动作启动工具.
+        val execute = Intent(ExplorerActionPluginActions.EXECUTE).addCategory(Intent.CATEGORY_DEFAULT).setPackage(packageName)
+        assertEquals(ExplorerTool.entries.map { it.activityClass.name }.distinct().sorted(), queryActivities(execute).sorted())
+    }
+
+    /**
+     * The seven file manager tools (roadmap D36, P3.3): every action names a label in the plugin's resources and an
+     * exported Activity guarded by the plugin permission, targets PDF files and writes nothing through the host's
+     * sibling output.
+     * zh-CN: 七个文件管理器工具 (路线图 D36, P3.3): 每个动作都指向插件资源中的标签以及受插件权限保护的导出 Activity, 目标为 PDF 文件,
+     * 不经宿主的同级输出写入.
+     */
+    private fun assertToolCatalog(catalog: Bundle) {
+        assertEquals(ThreePaperPdfContract.EXPLORER_PROTOCOL_VERSION, catalog.getInt(ExplorerActionCatalogKeys.PROTOCOL_VERSION))
+        assertEquals("app_name", catalog.getString(ExplorerActionCatalogKeys.MENU_GROUP_LABEL_RESOURCE_NAME))
+        @Suppress("DEPRECATION")
+        val actions = catalog.getParcelableArrayList<Bundle>(ExplorerActionCatalogKeys.ACTIONS).orEmpty()
+        assertEquals(ExplorerTool.entries.map { it.id }, actions.map { it.getString(ExplorerActionCatalogKeys.ID) })
+        actions.forEachIndexed { index, action ->
+            val tool = ExplorerTool.entries[index]
+            val label = action.getString(ExplorerActionCatalogKeys.LABEL_RESOURCE_NAME)
+            assertTrue("$label is a string resource", context.resources.getIdentifier(label, "string", context.packageName) != 0)
+            assertEquals(tool.labelFallback, action.getString(ExplorerActionCatalogKeys.LABEL_FALLBACK))
+            val activity = action.getString(ExplorerActionCatalogKeys.ACTIVITY_CLASS_NAME)!!
+            val info = context.packageManager.getActivityInfo(ComponentName(context.packageName, activity), 0)
+            assertTrue(activity, info.exported)
+            assertEquals(activity, ThreePaperPdfContract.PLUGIN_PERMISSION, info.permission)
+            assertEquals(ExplorerActionValues.PRESENTATION_ACTIVITY, action.getInt(ExplorerActionCatalogKeys.PRESENTATION))
+            assertEquals(ExplorerActionValues.TARGET_FILE, action.getInt(ExplorerActionCatalogKeys.TARGET_KIND))
+            assertEquals(tool.placement, action.getInt(ExplorerActionCatalogKeys.PLACEMENT))
+            assertEquals(tool.cardinality, action.getInt(ExplorerActionCatalogKeys.CARDINALITY))
+            assertEquals(tool.accessMode, action.getInt(ExplorerActionCatalogKeys.ACCESS_MODE))
+            assertEquals(listOf(ThreePaperPdfContract.PDF_MIME_TYPE), action.getStringArrayList(ExplorerActionCatalogKeys.MIME_TYPES))
+            assertEquals(listOf("pdf"), action.getStringArrayList(ExplorerActionCatalogKeys.EXTENSIONS))
+            assertEquals(ExplorerActionValues.OUTPUT_NONE, action.getInt(ExplorerActionCatalogKeys.OUTPUT_MODE))
         }
     }
 

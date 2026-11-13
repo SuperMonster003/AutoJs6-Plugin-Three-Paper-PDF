@@ -168,6 +168,34 @@
         </activity>
 
         <!--
+            The file manager tools (roadmap D36, P3.3), started only by the host through the Explorer Action catalog of
+            ThreePaperPdfExplorerActionService with an explicit component and the EXECUTE action: the primary action
+            opens the viewer subclass (appendix D Q75), the other tools show their options and progress in
+            PdfToolActivity (Q70) and write the result through the host session.
+        -->
+        <activity
+            android:name=".explorer.ExplorerPdfViewerActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:permission="org.autojs.permission.PLUGIN">
+            <intent-filter>
+                <action android:name="org.autojs.plugin.EXPLORER_ACTION_EXECUTE" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".explorer.PdfToolActivity"
+            android:exported="true"
+            android:permission="org.autojs.permission.PLUGIN"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="org.autojs.plugin.EXPLORER_ACTION_EXECUTE" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <!--
             Copies of the open document handed to other apps by share and open with (roadmap P3.1), granted per intent.
         -->
         <provider

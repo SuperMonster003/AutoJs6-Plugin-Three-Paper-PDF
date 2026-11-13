@@ -7,6 +7,7 @@ import io.github.supermonster003.autojs6.plugin.three.paper.pdf.RepositoryFiles.
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.appearance.LauncherIconMode
 import org.autojs.plugin.common.api.PluginActions
 import org.autojs.plugin.common.api.PluginCapabilityKeys
+import org.autojs.plugin.explorer.api.ExplorerActionPluginActions
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -15,10 +16,10 @@ import org.w3c.dom.Element
 
 /**
  * Keeps `AndroidManifest.xml` and [ThreePaperPdfContract] from drifting apart: the host discovers the plugin through
- * the Manifest (Wake activity, INFO, PDF and EXPLORER_ACTION services, the viewer), while the services and the tests use
- * the Kotlin constants (roadmap 5.5, D7, D21, D26, D35).
+ * the Manifest (Wake activity, INFO, PDF and EXPLORER_ACTION services, the viewer, the file manager tools), while the
+ * services and the tests use the Kotlin constants (roadmap 5.5, D7, D21, D26, D35, D36).
  * zh-CN: 防止 `AndroidManifest.xml` 与 [ThreePaperPdfContract] 漂移: 宿主经 Manifest 发现插件 (Wake Activity, INFO, PDF 与
- * EXPLORER_ACTION 服务, 查看器), 服务与测试则使用 Kotlin 常量 (路线图 5.5, D7, D21, D26, D35).
+ * EXPLORER_ACTION 服务, 查看器, 文件管理器工具), 服务与测试则使用 Kotlin 常量 (路线图 5.5, D7, D21, D26, D35, D36).
  */
 class ManifestContractTest {
 
@@ -96,9 +97,15 @@ class ManifestContractTest {
     }
 
     @Test
-    fun `the activities are the wake, home and viewer screens`() {
+    fun `the activities are the wake, home, viewer and file manager tool screens`() {
         assertEquals(
-            listOf(".WakeActivity", ".ui.home.HomeActivity", ".viewer.ThreePaperPdfViewerActivity"),
+            listOf(
+                ".WakeActivity",
+                ".ui.home.HomeActivity",
+                ".viewer.ThreePaperPdfViewerActivity",
+                ".explorer.ExplorerPdfViewerActivity",
+                ".explorer.PdfToolActivity",
+            ),
             application.children("activity").map { it.android("name") },
         )
         val home = activity(".ui.home.HomeActivity")
@@ -155,6 +162,23 @@ class ManifestContractTest {
             listOf("content", "file", ThreePaperPdfContract.PDF_MIME_TYPE),
             view.children("data").map { it.androidOrNull("scheme") ?: it.android("mimeType") },
         )
+    }
+
+    @Test
+    fun `the file manager tools accept only the host's execute action`() {
+        val viewer = activity(".explorer.ExplorerPdfViewerActivity")
+        val tools = activity(".explorer.PdfToolActivity")
+        listOf(viewer, tools).forEach { activity ->
+            assertEquals("true", activity.android("exported"))
+            // Only the host starts them, with the selected files as content URIs (roadmap D36, P3.3).
+            assertEquals(PLUGIN_PERMISSION, activity.android("permission"))
+            assertFilter(activity.child("intent-filter"), action = ExplorerActionPluginActions.EXECUTE, categories = listOf(DEFAULT_CATEGORY))
+            assertTrue(activity.child("intent-filter").children("data").isEmpty())
+        }
+        // Opening another PDF from the file manager replaces the document on screen, like the viewer. zh-CN: 同查看器.
+        assertEquals("singleTop", viewer.android("launchMode"))
+        assertNull("a tool screen finishes the request it started with", tools.androidOrNull("launchMode"))
+        assertEquals("adjustResize", tools.android("windowSoftInputMode"))
     }
 
     @Test
