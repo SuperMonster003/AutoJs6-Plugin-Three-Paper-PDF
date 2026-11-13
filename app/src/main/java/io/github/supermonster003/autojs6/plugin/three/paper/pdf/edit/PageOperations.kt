@@ -75,8 +75,10 @@ object PageOperations {
     }
 
     /**
-     * Reads the `merge` request for [inputCount] inputs: `passwords` (one per input, empty for none) and `outline`.
-     * zh-CN: 读取 [inputCount] 个输入的 `merge` 请求: `passwords` (每个输入一个, 空串表示没有) 与 `outline`.
+     * Reads the `merge` request for [inputCount] inputs: `passwords` (one per input, empty for none), `displayNames` (one
+     * per input, the outline titles, empty for the fallback; appendix D Q31 (b)) and `outline`.
+     * zh-CN: 读取 [inputCount] 个输入的 `merge` 请求: `passwords` (每个输入一个, 空串表示没有), `displayNames` (每个输入一个, 作大纲
+     * 标题, 空串表示用回退值; 附录 D Q31 (b)) 与 `outline`.
      */
     fun mergeRequest(options: PdfOptions, inputCount: Int): MergeRequest {
         if (inputCount < 1) throw PdfFailure.invalid("merge needs at least one input")
@@ -92,12 +94,18 @@ object PageOperations {
                 password?.takeIf { it.isNotEmpty() }
             }
         } ?: List(inputCount) { null }
+        val displayNames = options.stringArray(PdfContract.KEY_DISPLAY_NAMES)?.let { given ->
+            if (given.size != inputCount) {
+                throw PdfFailure.invalid("${PdfContract.KEY_DISPLAY_NAMES} has ${given.size} entries for $inputCount inputs")
+            }
+            given.map { name -> name?.trim()?.takeIf { it.isNotEmpty() } }
+        } ?: List(inputCount) { null }
         val outline = checkNotNull(options.choice(PdfContract.KEY_OUTLINE, PdfContract.OUTLINE_MODES, PdfContract.OUTLINE_MERGE))
-        return MergeRequest(passwords, outline)
+        return MergeRequest(passwords, displayNames, outline)
     }
 
     /** A checked `merge` request. zh-CN: 已检查的 `merge` 请求. */
-    class MergeRequest(val passwords: List<String?>, val outline: String)
+    class MergeRequest(val passwords: List<String?>, val displayNames: List<String?>, val outline: String)
 
     /**
      * `merge`: appends [inputs] in order and writes the result to the single output; [directory] holds scratch files.
@@ -117,7 +125,7 @@ object PageOperations {
                     throw PdfFailure(e.code, "input ${index + 1}: ${e.detail}")
                 }
                 sources += loaded
-                merger.append(loaded.document)
+                merger.append(loaded.document, request.displayNames[index])
             }
             operation.progress(PdfContract.STAGE_WRITING, 0, 1)
             val size = PdfWriting.write(destination, outputStream(operation.outputs.single()), operation.stop)

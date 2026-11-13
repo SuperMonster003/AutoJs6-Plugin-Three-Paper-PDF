@@ -14,7 +14,7 @@ process and needs the AIDL stubs and constants at run time.
 | --- | --- | --- | --- |
 | `common-plugin-api.aar` | `plugin-api/common-plugin-api` | `PluginInfo`, `IPluginInfoProvider`, `PluginActions`, `PluginCapabilityKeys`, `AutoJs6HostSettingsContract`, `PluginSettingsTransferProvider` | `9849b15091dcb255cd1c47140790081eebc074aec2e3e9b28c18f12bf9ef4a6a` |
 | `explorer-action-api.aar` | `plugin-api/explorer-action-api` | `IExplorerActionPlugin` and the archive session interfaces, `ExplorerActionProtocol` (version 28), the catalog, target, session and output keys | `d387e72888214898dde23105fa0ae86d723a77dffe739ac5925c744268d87b87` |
-| `pdf-api.aar` | `plugin-api/pdf-api` | `IPdfPlugin`, `IPdfDocument`, `IPdfViewerSession`, `IPdfProgressCallback`, `IPdfViewerCallback`, `PdfActions`, `PdfIds`, `PdfContract`, `PdfCapabilityKeys`, `PdfErrorCodes`, `PdfOps` | `e6bdb5895c3af87aa1f07ac182e5156db9a0202c9367c49862d89bf6109e90bb` |
+| `pdf-api.aar` | `plugin-api/pdf-api` | `IPdfPlugin`, `IPdfDocument`, `IPdfViewerSession`, `IPdfProgressCallback`, `IPdfViewerCallback`, `PdfActions`, `PdfIds`, `PdfContract`, `PdfCapabilityKeys`, `PdfErrorCodes`, `PdfOps` | `0bb80366553dcc69d74f9c2cef79a8f157bd30536ce6fbc29c93fd8cff169e94` |
 
 Provenance (2026-11-12, roadmap P0.1):
 
@@ -23,10 +23,13 @@ Provenance (2026-11-12, roadmap P0.1):
   `AutoJs6CreateScriptContract` the plugin does not use.
 - `explorer-action-api.aar` (67,325 B) is the release build of the module at host commit `e0eda70330`, the last
   commit that touched it (protocol version 28), byte-identical to the copy AutoJs4 Runtime 1.1.0 stages.
-- `pdf-api.aar` (40,584 B) is the 1.0.0 release build (`:plugin-api:pdf-api:assembleRelease`, unsigned) of host
-  commit `4e872a8741` (roadmap P1.1, contract version 1, protocol `docs/dev/pdf-plugin-protocol-v1.md`). It
-  depends on `common-plugin-api` and does not embed its classes. It replaced the temporary stand-in the skeleton
-  was first built with (37,380 B, assembled from the roadmap appendix C draft).
+- `pdf-api.aar` (40,670 B) is the 1.0.0 release build (`:plugin-api:pdf-api:assembleRelease`, unsigned) of host
+  commit `465d7a141f` (contract version 1, protocol `docs/dev/pdf-plugin-protocol-v1.md`). It depends on
+  `common-plugin-api` and does not embed its classes. Re-staged on 2026-11-13: the contract version stays 1 and the
+  AIDL is unchanged; `PdfContract` adds `KEY_DISPLAY_NAMES` (merge), `KEY_JAVA_SCRIPT` and `DEFAULT_JAVA_SCRIPT`
+  (fromHtml), roadmap appendix D Q31, Q35, Q60 and Q61. It replaced the P1.1 release of host commit `4e872a8741`
+  (40,584 B, sha256 `e6bdb589...e90bb`), which had replaced the temporary stand-in the skeleton was first built with
+  (37,380 B, assembled from the roadmap appendix C draft).
 
 Do not commit locally assembled debug AARs or rename debug outputs to bypass this policy.
 

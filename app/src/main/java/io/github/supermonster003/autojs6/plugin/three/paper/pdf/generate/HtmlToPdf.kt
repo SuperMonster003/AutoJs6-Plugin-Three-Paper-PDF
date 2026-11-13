@@ -39,14 +39,14 @@ import kotlin.math.roundToInt
  * `fromHtml` (roadmap D8, appendix D Q5 (a)): an off-screen WebView created on the main thread loads the HTML, then its
  * print adapter lays it out on pages of `pageSize` with `margin` and writes the PDF to a file of the run directory,
  * through the callbacks of [PaperPrintCallbacks]; PDFBox then sets `title` (the title of the page), `producer` and the
- * dates. JavaScript runs; nothing remote loads (`blockNetworkLoads`, and every http / https / ftp / ws request is
+ * dates. JavaScript runs unless `javaScript` is false (appendix D Q35 (c), Q61); nothing remote loads (`blockNetworkLoads`, and every http / https / ftp / ws request is
  * answered empty and counted in `warnings`), file and content URLs are off, and navigation away from the page is
  * refused. `timeout` (milliseconds) covers the whole conversion; without it the operation waits until the page has
  * loaded or the operation is cancelled (appendix D Q7). Whatever the device refuses on the way (no WebView, hidden API
  * policy, a failed layout or write) ends with `UNSUPPORTED`.
  * zh-CN: `fromHtml` (路线图 D8, 附录 D Q5 (a)): 在主线程创建的离屏 WebView 载入 HTML, 然后由其打印适配器按 `pageSize` 与 `margin`
  * 分页排版, 经 [PaperPrintCallbacks] 的回调把 PDF 写到 run 目录的文件; 之后由 PDFBox 写入 `title` (页面标题), `producer` 与日期.
- * 执行 JavaScript; 不加载任何远程内容 (`blockNetworkLoads`, 且每个 http / https / ftp / ws 请求都以空内容应答并计入
+ * 除非 `javaScript` 为 false, 否则执行 JavaScript (附录 D Q35 (c), Q61); 不加载任何远程内容 (`blockNetworkLoads`, 且每个 http / https / ftp / ws 请求都以空内容应答并计入
  * `warnings`), 关闭 file 与 content URL, 拒绝离开该页面的导航. `timeout` (毫秒) 覆盖整个转换; 未给出时一直等到页面载入完成或操作
  * 被取消 (附录 D Q7). 途中被设备拒绝的情况 (没有 WebView, 隐藏 API 策略, 排版或写出失败) 都以 `UNSUPPORTED` 结束.
  */
@@ -59,6 +59,7 @@ internal class HtmlToPdf(private val context: Context) {
         val baseUrl: String?,
         val timeoutMs: Long?,
         val warnings: List<String>,
+        val javaScript: Boolean = PdfContract.DEFAULT_JAVA_SCRIPT,
     )
 
     fun write(request: Request, inputs: List<ParcelFileDescriptor>, directory: File, operation: Operations.Operation): Map<String, Any?> {
@@ -115,7 +116,7 @@ internal class HtmlToPdf(private val context: Context) {
                 val view = WebView(context)
                 webView = view
                 view.settings.apply {
-                    javaScriptEnabled = true
+                    javaScriptEnabled = request.javaScript
                     allowFileAccess = false
                     allowContentAccess = false
                     blockNetworkLoads = true
@@ -255,7 +256,8 @@ internal class HtmlToPdf(private val context: Context) {
             PageLayout.contentBox(page, margin, minimum = MIN_CONTENT_POINTS)
             val timeout = options.long(PdfContract.KEY_TIMEOUT)
             if (timeout != null && timeout <= 0) throw PdfFailure.invalid("${PdfContract.KEY_TIMEOUT} must be greater than 0, got $timeout")
-            return Request(page, margin, options.string(PdfContract.KEY_BASE_URL)?.takeIf { it.isNotEmpty() }, timeout, warnings)
+            val baseUrl = options.string(PdfContract.KEY_BASE_URL)?.takeIf { it.isNotEmpty() }
+            return Request(page, margin, baseUrl, timeout, warnings, options.boolean(PdfContract.KEY_JAVA_SCRIPT, PdfContract.DEFAULT_JAVA_SCRIPT))
         }
 
         /** Smallest box inside the margins the print adapter gets. zh-CN: 交给打印适配器的页边距以内最小方框. */

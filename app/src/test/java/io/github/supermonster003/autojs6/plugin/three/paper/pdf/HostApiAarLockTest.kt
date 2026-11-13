@@ -64,7 +64,7 @@ class HostApiAarLockTest {
     }
 
     @Test
-    fun `pdf-api is the P1_1 release recorded with its host commit`() {
+    fun `pdf-api is the contract release recorded with its host commit`() {
         val lockText = RepositoryFiles.text(HOST_LOCK)
         val readme = RepositoryFiles.text("libs/README.md")
         assertFalse("the temporary stand-in was replaced", lockText.contains("TEMPORARY") || readme.contains("**temporary stand-in**"))
@@ -84,7 +84,7 @@ class HostApiAarLockTest {
 
     private companion object {
         const val HOST_LOCK = "locks/host-api-aars.lock"
-        const val PDF_API_HOST_COMMIT = "4e872a8741"
+        const val PDF_API_HOST_COMMIT = "465d7a141f"
     }
 
 }

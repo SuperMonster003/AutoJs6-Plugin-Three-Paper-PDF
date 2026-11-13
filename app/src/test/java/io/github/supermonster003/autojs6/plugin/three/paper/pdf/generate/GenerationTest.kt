@@ -292,6 +292,11 @@ class GenerationTest {
         assertEquals(5_000L, request.timeoutMs)
         assertNull(HtmlToPdf.request(options(PdfContract.KEY_BASE_URL to ""), 1).baseUrl)
         assertNull(HtmlToPdf.request(options(), 1).timeoutMs)
+        // JavaScript runs unless the request turns it off (appendix D Q35 (c), Q61). zh-CN: 除非请求关闭, 否则执行 JavaScript.
+        assertEquals(PdfContract.DEFAULT_JAVA_SCRIPT, HtmlToPdf.request(options(), 1).javaScript)
+        assertTrue(HtmlToPdf.request(options(PdfContract.KEY_JAVA_SCRIPT to true), 1).javaScript)
+        assertFalse(HtmlToPdf.request(options(PdfContract.KEY_JAVA_SCRIPT to false), 1).javaScript)
+        assertCode(PdfErrorCodes.INVALID_ARGUMENT) { HtmlToPdf.request(options(PdfContract.KEY_JAVA_SCRIPT to "false"), 1) }
         assertEquals(1, HtmlToPdf.request(options(PdfContract.KEY_PAGE_SIZE to PdfContract.PAGE_SIZE_FIT), 1).warnings.size)
         assertCode(PdfErrorCodes.INVALID_ARGUMENT) { HtmlToPdf.request(options(PdfContract.KEY_TIMEOUT to 0L), 1) }
         assertCode(PdfErrorCodes.INVALID_ARGUMENT) { HtmlToPdf.request(options(), 2) }

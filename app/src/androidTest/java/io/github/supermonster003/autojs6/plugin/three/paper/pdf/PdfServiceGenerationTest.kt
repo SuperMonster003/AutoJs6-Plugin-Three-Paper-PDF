@@ -304,6 +304,19 @@ class PdfServiceGenerationTest {
         val slow = output("slow.html").apply { writeText("<html><body><script>var e = Date.now() + 5000; while (Date.now() < e) {}</script></body></html>") }
         val timedOut = plugin.generate(PdfOps.FROM_HTML, listOf(slow), output("slow.pdf")) { putLong(PdfContract.KEY_TIMEOUT, 500) }
         assertEquals(PdfErrorCodes.TIMEOUT, timedOut.failedWith())
+        // With javaScript false the page is laid out as written and the busy loop never runs (appendix D Q35 (c), Q61).
+        // zh-CN: javaScript 为 false 时按原文排版, 忙循环也不会执行 (附录 D Q35 (c), Q61).
+        val plain = output("plain.pdf")
+        plugin.generate(PdfOps.FROM_HTML, listOf(html), plain) {
+            putBoolean(PdfContract.KEY_JAVA_SCRIPT, false)
+            putLong(PdfContract.KEY_TIMEOUT, 30_000)
+        }.completed()
+        val written = plugin.allText(plain)
+        assertTrue(written.contains("script did not run") && !written.contains("script ran"))
+        plugin.generate(PdfOps.FROM_HTML, listOf(slow), output("slow-plain.pdf")) {
+            putBoolean(PdfContract.KEY_JAVA_SCRIPT, false)
+            putLong(PdfContract.KEY_TIMEOUT, 4_000)
+        }.completed()
     }
 
     @Test

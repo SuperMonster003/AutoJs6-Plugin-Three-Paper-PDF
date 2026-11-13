@@ -125,10 +125,16 @@ class PageEditPlanTest {
     }
 
     @Test
-    fun `merge requests check passwords and outline`() {
+    fun `merge requests check passwords, display names and outline`() {
         val plain = PageOperations.mergeRequest(options(), 2)
         assertEquals(listOf(null, null), plain.passwords)
+        assertEquals(listOf(null, null), plain.displayNames)
         assertEquals(PdfContract.OUTLINE_MERGE, plain.outline)
+        // Blank names fall back to the document title. zh-CN: 空白名称回退为文档标题.
+        val named = PageOperations.mergeRequest(options(PdfContract.KEY_DISPLAY_NAMES to arrayOf(" Report 2026 ", "", "  ")), 3)
+        assertEquals(listOf("Report 2026", null, null), named.displayNames)
+        assertCode(PdfErrorCodes.INVALID_ARGUMENT) { PageOperations.mergeRequest(options(PdfContract.KEY_DISPLAY_NAMES to arrayOf("a", "b", "c")), 2) }
+        assertCode(PdfErrorCodes.INVALID_ARGUMENT) { PageOperations.mergeRequest(options(PdfContract.KEY_DISPLAY_NAMES to "a"), 1) }
         val given = PageOperations.mergeRequest(options(PdfContract.KEY_PASSWORDS to arrayOf("", "secret"), PdfContract.KEY_OUTLINE to PdfContract.OUTLINE_NONE), 2)
         assertEquals(listOf(null, "secret"), given.passwords)
         assertEquals(PdfContract.OUTLINE_NONE, given.outline)

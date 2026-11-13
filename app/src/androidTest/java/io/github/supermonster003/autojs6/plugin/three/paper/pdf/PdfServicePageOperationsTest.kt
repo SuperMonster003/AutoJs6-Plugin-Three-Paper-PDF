@@ -271,6 +271,32 @@ class PdfServicePageOperationsTest {
         assertTrue(eventually { !hostDirectory.exists() })
     }
 
+    @Test
+    fun displayNamesTitleTheOutlineEntriesOfAMerge() = withPdfPlugin { plugin ->
+        val merged = output("named.pdf")
+        // A blank name falls back to the document title (appendix D Q31 (b)). zh-CN: 空白名称回退为文档标题 (附录 D Q31 (b)).
+        val merge = plugin.merge(merged, "outline.pdf", "rotated.pdf", "text.pdf") {
+            putStringArray(PdfContract.KEY_DISPLAY_NAMES, arrayOf("outline", "", "Chapter 1.2"))
+        }.completed()
+        val document = plugin.openFile(merged)
+        try {
+            val titles = document.outlineTitles()
+            assertEquals("outline", titles.first())
+            assertTrue(titles.containsAll(listOf("Chapter 1", "Rotated sample", "Chapter 1.2")))
+            assertFalse(titles.contains("Outline sample"))
+            assertEquals(merge.getInt(PdfContract.KEY_PAGE_COUNT), document.info.getInt(PdfContract.KEY_PAGE_COUNT))
+        } finally {
+            document.close()
+        }
+        // A length other than the input count is refused before the operation starts. zh-CN: 长度与输入数不同时在操作开始前被拒绝.
+        val mismatched = assertThrows(IllegalArgumentException::class.java) {
+            plugin.merge(output("mismatched.pdf"), "outline.pdf", "rotated.pdf") {
+                putStringArray(PdfContract.KEY_DISPLAY_NAMES, arrayOf("one"))
+            }
+        }
+        assertEquals(PdfErrorCodes.INVALID_ARGUMENT, PdfErrorCodes.decode(mismatched.message)?.first)
+    }
+
     /**
      * Appendix F "100-page merge": four A4 text documents of 25 pages, merged through Binder once to warm up and then
      * three times; logcat tag `PaperMergePerf` gives the median.

@@ -19,13 +19,14 @@ import kotlin.math.absoluteValue
 /**
  * Appends documents to [destination] for `merge` (protocol "Run operations", roadmap P2.4) with PDFBox's
  * `PDFMergerUtility`: pages, forms, named destinations and the structure tree are merged by PDFBox, the document
- * information of the first input wins. With `outline` `merge` every input gets one closed outline entry (its title, or
- * `Document <n>`, leading to its first page) holding its own outline; `none` drops every outline. Sources must stay
- * open until [destination] is written: PDFBox may still read from them.
+ * information of the first input wins. With `outline` `merge` every input gets one closed outline entry (its display
+ * name from the host's `displayNames`, else its document title, else `Document <n>`; appendix D Q31 (b)), leading to its
+ * first page and holding its own outline; `none` drops every outline. Sources must stay open until [destination] is
+ * written: PDFBox may still read from them.
  * zh-CN: 为 `merge` 把文档追加到 [destination] (协议 "Run operations" 一节, 路线图 P2.4), 使用 PDFBox 的 `PDFMergerUtility`: 页,
  * 表单, 命名目标与结构树由 PDFBox 合并, 文档信息以第一个输入为准. `outline` 为 `merge` 时每个输入得到一个折叠的大纲条目 (标题为
- * 其文档标题或 `Document <n>`, 指向其第一页), 其中放该输入自己的大纲; `none` 丢弃全部大纲. 源文档在 [destination] 写出之前必须
- * 保持打开: PDFBox 可能仍会读取它们.
+ * 宿主 `displayNames` 中的显示名, 没有时为其文档标题, 再没有时为 `Document <n>`; 附录 D Q31 (b)), 指向其第一页, 其中放该输入自己的
+ * 大纲; `none` 丢弃全部大纲. 源文档在 [destination] 写出之前必须保持打开: PDFBox 可能仍会读取它们.
  */
 class PdfMerger(private val destination: PDDocument, private val outline: String = PdfContract.OUTLINE_MERGE) {
 
@@ -40,14 +41,15 @@ class PdfMerger(private val destination: PDDocument, private val outline: String
     }
 
     /**
-     * Appends [source], the next input; an encrypted one must have been opened with its owner password (appendix D Q30).
-     * zh-CN: 追加下一个输入 [source]; 加密的输入必须用所有者密码打开 (附录 D Q30).
+     * Appends [source], the next input, titled [displayName] in the outline when it is not blank; an encrypted one must
+     * have been opened with its owner password (appendix D Q30).
+     * zh-CN: 追加下一个输入 [source], [displayName] 不为空白时作为其大纲标题; 加密的输入必须用所有者密码打开 (附录 D Q30).
      */
-    fun append(source: PDDocument) {
+    fun append(source: PDDocument, displayName: String? = null) {
         val number = count + 1
         PdfWriting.checkWritable(source, "input $number")
         when (outline) {
-            PdfContract.OUTLINE_MERGE -> wrapOutline(source, number)
+            PdfContract.OUTLINE_MERGE -> wrapOutline(source, number, displayName)
             else -> source.documentCatalog.documentOutline = null
         }
         try {
@@ -59,7 +61,7 @@ class PdfMerger(private val destination: PDDocument, private val outline: String
     }
 
     /** Puts the outline of [source] under one entry for input [number]. zh-CN: 把 [source] 的大纲放到第 [number] 个输入的条目之下. */
-    private fun wrapOutline(source: PDDocument, number: Int) {
+    private fun wrapOutline(source: PDDocument, number: Int, displayName: String?) {
         val catalog = source.documentCatalog
         val original = try {
             catalog.documentOutline
@@ -67,7 +69,7 @@ class PdfMerger(private val destination: PDDocument, private val outline: String
             null
         }
         val entry = PDOutlineItem()
-        entry.title = title(source, number)
+        entry.title = title(source, number, displayName)
         if (source.numberOfPages > 0) entry.destination = PDPageFitDestination().apply { page = source.getPage(0) }
         val first = original?.cosObject?.getDictionaryObject(COSName.FIRST) as? COSDictionary
         if (original != null && first != null) {
@@ -87,8 +89,10 @@ class PdfMerger(private val destination: PDDocument, private val outline: String
         catalog.documentOutline = PDDocumentOutline().apply { addLast(entry) }
     }
 
-    private fun title(source: PDDocument, number: Int): String =
-        source.documentInformation?.title?.trim()?.takeIf { it.isNotEmpty() } ?: "Document $number"
+    private fun title(source: PDDocument, number: Int, displayName: String?): String =
+        displayName?.trim()?.takeIf { it.isNotEmpty() }
+            ?: source.documentInformation?.title?.trim()?.takeIf { it.isNotEmpty() }
+            ?: "Document $number"
 
     private fun failure(error: IOException, number: Int): PdfFailure = when {
         error is PdfSourceException || error.cause is PdfSourceException -> PdfFailure(PdfErrorCodes.IO_ERROR, "input $number: ${error.message}")

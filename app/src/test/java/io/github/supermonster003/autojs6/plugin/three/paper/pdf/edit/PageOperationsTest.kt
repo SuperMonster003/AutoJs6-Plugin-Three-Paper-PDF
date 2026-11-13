@@ -190,7 +190,7 @@ class PageOperationsTest {
             val merger = PdfMerger(destination)
             val sources = listOf(PdfFixtures.multiPageWithOutline(), PdfFixtures.rotatedPages()).map { PDDocument.load(it) }
             try {
-                sources.forEach(merger::append)
+                sources.forEach { merger.append(it) }
                 assertEquals(2, merger.count)
                 written(destination).use { merged ->
                     assertEquals(11, merged.numberOfPages)
@@ -213,12 +213,32 @@ class PageOperationsTest {
     }
 
     @Test
+    fun `merge titles the outline entries with the display names, falling back for blank ones`() {
+        PDDocument().use { destination ->
+            val merger = PdfMerger(destination)
+            val sources = listOf(PdfFixtures.multiPageWithOutline(), PdfFixtures.multiPageWithOutline(), PdfFixtures.rotatedPages()).map { PDDocument.load(it) }
+            try {
+                merger.append(sources[0], "chapter-files 1.2")
+                merger.append(sources[1], " ")
+                merger.append(sources[2], null)
+                written(destination).use { merged ->
+                    val outline = checkNotNull(merged.documentCatalog.documentOutline)
+                    assertEquals(listOf("chapter-files 1.2", PdfFixtures.TITLE, "Document 3"), outline.titles())
+                    assertEquals(PdfFixtures.CHAPTERS + PdfFixtures.OUTLINE_WITHOUT_PAGE, outline.firstChild.titles())
+                }
+            } finally {
+                sources.forEach { it.close() }
+            }
+        }
+    }
+
+    @Test
     fun `merge with outline none drops every outline`() {
         PDDocument().use { destination ->
             val merger = PdfMerger(destination, PdfContract.OUTLINE_NONE)
             val sources = List(2) { PDDocument.load(PdfFixtures.multiPageWithOutline()) }
             try {
-                sources.forEach(merger::append)
+                sources.forEach { merger.append(it, "ignored") }
                 written(destination).use { merged ->
                     assertEquals(12, merged.numberOfPages)
                     assertNull(merged.documentCatalog.documentOutline?.firstChild)
