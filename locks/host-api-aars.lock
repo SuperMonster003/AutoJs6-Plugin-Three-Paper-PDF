@@ -2,12 +2,13 @@
 # common-plugin-api: 1.1.1 release from host commit 1676e7489d (unsigned), byte-identical to the copy 3-Slate Studio stages.
 # explorer-action-api: protocol version 28 release from host commit e0eda70330, byte-identical to the copy AutoJs4 Runtime
 #   1.1.0 stages.
-# pdf-api: 1.0.0 release from host commit 465d7a141f (contract version 1), unsigned; re-staged on 2026-11-13 for the
-#   merge displayNames and the fromHtml javaScript option (roadmap appendix D Q31, Q35, Q60).
+# pdf-api: 1.0.0 release from host commit c37a23258d (contract version 1), unsigned; re-staged on 2026-11-14 for the
+#   packaged-app entry (roadmap Q145 (b), D43), after the 2026-11-13 re-stage for the merge displayNames and the
+#   fromHtml javaScript option (roadmap appendix D Q31, Q35, Q60).
 format=1
 common-plugin-api.file=common-plugin-api.aar
 common-plugin-api.sha256=9849b15091dcb255cd1c47140790081eebc074aec2e3e9b28c18f12bf9ef4a6a
 explorer-action-api.file=explorer-action-api.aar
 explorer-action-api.sha256=d387e72888214898dde23105fa0ae86d723a77dffe739ac5925c744268d87b87
 pdf-api.file=pdf-api.aar
-pdf-api.sha256=0bb80366553dcc69d74f9c2cef79a8f157bd30536ce6fbc29c93fd8cff169e94
+pdf-api.sha256=9d5714febc489ac6f5be26045a64c776be451d22285e810b891acaceaf35cc49

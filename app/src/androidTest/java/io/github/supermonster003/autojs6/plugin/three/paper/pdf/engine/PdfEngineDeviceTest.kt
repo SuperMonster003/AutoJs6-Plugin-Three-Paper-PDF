@@ -30,9 +30,11 @@ import java.util.concurrent.atomic.AtomicReference
 /**
  * The engine pieces of roadmap P2.1 that need Android (descriptors, `Os`, Binder callbacks): asynchronous operations
  * (progress throttled to 250 ms, completion after flushing, cancellation truncating the output), the idle release of
- * parsed state (appendix D Q10) and `close()` ending a call in flight with `SESSION_CLOSED`.
+ * parsed state (appendix D Q10), `close()` ending a call in flight with `SESSION_CLOSED`, and the callers of the
+ * packaged entry (roadmap D44): dead callers reaped, one entry closed apart from the other, operations bound to their uid.
  * zh-CN: 路线图 P2.1 中需要 Android (描述符, `Os`, Binder 回调) 的引擎部分: 异步操作 (进度节流 250 ms, 刷新后完成, 取消时截断
- * 输出), 解析状态的空闲释放 (附录 D Q10), 以及 `close()` 使在途调用以 `SESSION_CLOSED` 结束.
+ * 输出), 解析状态的空闲释放 (附录 D Q10), `close()` 使在途调用以 `SESSION_CLOSED` 结束, 以及打包入口的调用方 (路线图 D44):
+ * 回收已死调用方, 单独关闭一个入口, 操作绑定其 uid.
  */
 @RunWith(AndroidJUnit4::class)
 class PdfEngineDeviceTest {
@@ -206,6 +208,74 @@ class PdfEngineDeviceTest {
         assertFalse(session.directory.exists())
         val failure = runCatching { session.call { it.pdf } }.exceptionOrNull() as PdfFailure
         assertEquals(PdfErrorCodes.SESSION_CLOSED, failure.code)
+    }
+
+    @Test
+    fun deadCallersLoseTheirDocumentsAndTempDirectories() {
+        // Roadmap D44: the sweeper reaps callers whose process is gone; the liveness check is injected here.
+        // zh-CN: 路线图 D44: 清扫器回收进程已不存在的调用方; 此处注入存活判断.
+        val dead = HostKey(1, 2, packaged = true)
+        val alive = HostKey(1, 3, packaged = true)
+        val reaped = CopyOnWriteArrayList<HostKey>()
+        val engine = PdfEngine(root, onHostDead = { reaped += it }, isAlive = { it != dead })
+        try {
+            repeat(2) { sample("text.pdf").use { engine.documents.open(dead, PdfContract.CONTRACT_VERSION, it, null, null) } }
+            val kept = sample("text.pdf").use { engine.documents.open(alive, PdfContract.CONTRACT_VERSION, it, null, null) }
+            assertEquals("k1-2", engine.documents.hostDirectory(dead).name)
+            assertEquals(2, engine.documents.hostDirectory(dead).listFiles()?.size)
+            assertEquals(listOf(dead), engine.reapDeadHosts())
+            assertEquals(listOf(dead), reaped.toList())
+            assertEquals(0, engine.documents.count(dead))
+            assertFalse("the temp directory of the dead caller is gone", engine.documents.hostDirectory(dead).exists())
+            assertEquals(1, engine.documents.count(alive))
+            assertTrue(kept.call { it.pdf.numberOfPages } > 0)
+            assertTrue("nothing left to reap", engine.reapDeadHosts().isEmpty())
+        } finally {
+            engine.shutdown()
+        }
+    }
+
+    @Test
+    fun closingOneEntryKeepsTheCallersOfTheOther() {
+        val engine = PdfEngine(root, isAlive = { true })
+        try {
+            val signed = HostKey(1, 2)
+            val packaged = HostKey(1, 2, packaged = true)
+            sample("text.pdf").use { engine.documents.open(signed, PdfContract.CONTRACT_VERSION, it, null, null) }
+            sample("text.pdf").use { engine.documents.open(packaged, PdfContract.CONTRACT_VERSION, it, null, null) }
+            engine.closeEntry(packaged = true)
+            assertEquals(0, engine.documents.count(packaged))
+            assertFalse(engine.documents.hostDirectory(packaged).exists())
+            assertEquals(1, engine.documents.count(signed))
+            engine.closeEntry(packaged = false)
+            assertEquals(0, engine.documents.count())
+        } finally {
+            engine.shutdown()
+        }
+    }
+
+    @Test
+    fun anOperationAnswersOnlyTheUidThatStartedIt() {
+        val operations = Operations(executor)
+        val events = Events()
+        val started = CountDownLatch(1)
+        val id = operations.start(HostKey(10_100, 2, packaged = true), PdfContract.CONTRACT_VERSION, "merge", emptyList(), events) { op ->
+            started.countDown()
+            while (true) {
+                op.stop.checkStop()
+                Thread.sleep(5)
+            }
+            @Suppress("UNREACHABLE_CODE")
+            emptyMap()
+        }
+        assertTrue(started.await(10, TimeUnit.SECONDS))
+        val refusal = runCatching { operations.cancel(id, callerUid = 10_101) }.exceptionOrNull() as PdfFailure
+        assertEquals(PdfErrorCodes.PERMISSION_DENIED, refusal.code)
+        assertEquals(1, operations.count())
+        assertFalse("an unknown id answers false", operations.cancel(Int.MAX_VALUE, callerUid = 10_101))
+        assertTrue(operations.cancel(id, callerUid = 10_100))
+        assertTrue(events.ended.await(10, TimeUnit.SECONDS))
+        assertEquals(PdfErrorCodes.CANCELLED, events.failed.get().getString(PdfContract.KEY_ERROR_CODE))
     }
 
 }

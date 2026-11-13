@@ -85,6 +85,7 @@
 
 - Android 7.0 (API 24) 以上, 所有 ABI 共用一個安裝套件; 工具箱與檢視器不依賴 AutoJs6.
 - AutoJs6 指令碼與檔案管理員: 需要 AutoJs6 6.8.1 (內部版本號 6641) 或更新版本.
+- AutoJs6 封裝的應用程式: 需由 AutoJs6 6.8.1 (內部版本號 6641) 或更新版本封裝, 執行的裝置上需安裝本外掛; 封裝時自動加入 `org.autojs.plugin.pdf.permission.RUNTIME` 權限, 不需要修改 `project.json` (Node.js 專案需宣告 `files`, Bun 專案需宣告 `pdf.control`).
 - Node.js: 需要 Node.js Runtime 外掛 2.2.0 以上, 以 `require('autojs6:pdf')` 載入; 專案在 `project.json` 的 `node.permissions` 中宣告 `files`, 寫入檔案另需 `files.write`, 辨識文字另需 `ocr`, 開啟檢視器另需 `ui`.
 - Bun: 需要 Bun Runtime 外掛 0.23.0 以上 (Android 13 以上), 透過 `host.pdf` 使用; 在 Bun Runtime 的設定頁開啟 `pdf.control`, 辨識文字另需 `ocr.control`.
 - OCR: 辨識掃描頁文字需另外安裝 OCR 外掛 (ML Kit OCR, Paddle OCR 或 Rapid OCR); 未安裝時辨識掃描頁會回報 `OCR_UNAVAILABLE`, 其他功能不受影響.
@@ -186,7 +187,7 @@ PDF 處理不使用原生程式庫: 頁面算繪使用系統的 `PdfRenderer`, �
 
 外掛在設計上盡量縮小權限範圍:
 
-- 受保護的入口: 能力服務, 檔案管理員入口服務與啟用入口都受 AutoJs6 外掛權限 (`org.autojs.permission.PLUGIN`) 保護, 其他應用程式無法直接呼叫.
+- 受保護的入口: 能力服務, 檔案管理員入口服務與啟用入口都受 AutoJs6 外掛權限 (`org.autojs.permission.PLUGIN`) 保護, 其他應用程式無法直接呼叫. 供 AutoJs6 封裝的應用程式使用的服務與檢視器入口需要 `org.autojs.plugin.pdf.permission.RUNTIME` 權限 (封裝時自動加入); 經這兩個入口開啟的文件與檢視器工作階段只允許建立它們的應用程式呼叫, 檔案同樣以檔案描述元傳入.
 - 儲存空間: 指令碼的檔案以檔案描述元傳入, 外掛不需要為指令碼申請儲存權限; 所有檔案存取權限只用於工具箱與檢視器中你選擇的檔案.
 - HTML 轉 PDF: 外掛不載入任何外部內容 (網路請求以空內容回應, 本機檔案與 `content:` 位址遭到封鎖, 頁面不能跳轉); 頁面中的指令碼可以用 `javaScript: false` 關閉.
 - 最近的檔案: 用系統檔案選擇器開啟的檔案保留讀取授權, 以便下次直接開啟, 最多 20 個; 項目被擠出, 移除或清除時隨即釋放授權. 其他應用程式透過 "開啟方式" 或分享交來的檔案只有一次性授權, 不會進入最近的檔案.
@@ -248,6 +249,7 @@ _2026/11/12_
 - `新增` pdf.text 的 ocr 選項借助已安裝的 OCR 外掛 (ML Kit OCR, Paddle OCR 或 Rapid OCR) 辨識沒有文字層的掃描頁
 - `新增` pdf.view 在外掛檢視器中開啟 PDF, 指令碼可以接收翻頁與關閉事件, 也可以跳到指定頁或關閉檢視器
 - `新增` Node.js 與 Bun 指令碼也能使用 pdf 模組, 方法傳回 Promise, 可以用 signal 或 timeoutMs 中止呼叫
+- `新增` 由 AutoJs6 6.8.1 或更新版本封裝的應用程式也能使用 pdf 模組, 封裝時自動加入所需權限; 開啟的文件與檢視器工作階段只允許建立它們的應用程式呼叫
 - `新增` 檢視器: 連續捲動, 雙指縮放, 縮圖, 大綱, 搜尋醒目提示, 跳頁, 密碼輸入與夜間模式; 可以從啟動器開啟, 也可以在其他應用程式中用 "開啟方式" 或分享交給本外掛
 - `新增` AutoJs6 檔案管理員: 輕觸 PDF 即在外掛檢視器中開啟, 壓縮檔內不超過 512 MiB 的 PDF 也能直接開啟; 選單提供合併, 分割, 轉換為圖片, 擷取文字, 加密與移除密碼
 - `新增` 首頁: 工具入口, 工作進度, 最近的檔案, 以及所有檔案存取權限的授權入口 (僅工具箱需要)

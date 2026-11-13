@@ -31,11 +31,13 @@ import org.autojs.plugin.pdf.api.PdfOps
  * (`contractVersion`, `requestId` echoed, result keys or `errorCode` + `errorMessage`); methods without a request
  * (`getInfo`, `getOutline`) answer with the version negotiated at `open`. Calls on one document run one at a time
  * ([PdfSession.call]); after [close] they end with `SESSION_CLOSED`. Received descriptors are closed when the call
- * returns: the plugin duplicates what it keeps.
+ * returns: the plugin duplicates what it keeps. Only the uid that opened the document may call it; other uids get
+ * `PERMISSION_DENIED` (roadmap D44, [PdfCallerGuard.checkOwner]).
  * zh-CN: 一个已打开文档的 `IPdfDocument` 句柄 (协议 "Methods" 一节). 每个 Bundle 方法返回应答信封 (`contractVersion`, 回显的
  * `requestId`, 结果键或 `errorCode` + `errorMessage`); 没有请求的方法 (`getInfo`, `getOutline`) 用 `open` 时协商的版本作答.
  * 同一文档的调用逐个执行 ([PdfSession.call]); [close] 之后以 `SESSION_CLOSED` 结束. 收到的描述符在调用返回时关闭: 插件自己
- * 复制需要保留的.
+ * 复制需要保留的. 只有打开该文档的 uid 可以调用它; 其他 uid 得到 `PERMISSION_DENIED` (路线图 D44,
+ * [PdfCallerGuard.checkOwner]).
  */
 internal class PdfDocumentStub(private val session: PdfSession, private val engine: PdfEngine) : IPdfDocument.Stub() {
 
@@ -104,6 +106,7 @@ internal class PdfDocumentStub(private val session: PdfSession, private val engi
      * "Rendering" 一节).
      */
     override fun onTransact(code: Int, data: Parcel, reply: Parcel?, flags: Int): Boolean {
+        PdfCallerGuard.checkOwner(code, session.host.uid)
         val outer = afterReply.get()
         val pending = ArrayList<AutoCloseable>(1)
         afterReply.set(pending)

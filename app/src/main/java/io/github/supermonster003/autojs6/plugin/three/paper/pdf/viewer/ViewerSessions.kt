@@ -395,6 +395,16 @@ internal open class ViewerSessionRegistry(
 
     class Claimed(val session: ViewerSession, val claim: ViewerClaim)
 
+    /**
+     * Ends the sessions of [host] without an event, once the engine found its process gone (roadmap D44); a viewer
+     * on screen keeps showing its document.
+     * zh-CN: 引擎发现 [host] 的进程已不存在后, 结束其会话且不发送事件 (路线图 D44); 屏幕上的查看器继续显示其文档.
+     */
+    fun detachHost(host: Any) {
+        val ended = synchronized(sessions) { sessions.values.filter { it.host == host } }
+        ended.forEach { it.detach() }
+    }
+
     /** Open sessions (tests and diagnostics). zh-CN: 打开中的会话 (测试与诊断). */
     fun openCount(): Int = synchronized(sessions) { sessions.size }
 

@@ -85,6 +85,7 @@
 
 - Android 7.0 (API 24) 及以上, 所有 ABI 共用一个安装包; 工具箱与查看器不依赖 AutoJs6.
 - AutoJs6 脚本与文件管理器: 需要 AutoJs6 6.8.1 (内部版本号 6641) 或更高版本.
+- AutoJs6 打包的应用: 需由 AutoJs6 6.8.1 (内部版本号 6641) 或更高版本打包, 运行的设备上需安装本插件; 打包时自动加入 `org.autojs.plugin.pdf.permission.RUNTIME` 权限, 不需要修改 `project.json` (Node.js 项目需声明 `files`, Bun 项目需声明 `pdf.control`).
 - Node.js: 需要 Node.js Runtime 插件 2.2.0 及以上, 用 `require('autojs6:pdf')` 加载; 项目在 `project.json` 的 `node.permissions` 中声明 `files`, 写文件另需 `files.write`, 识别文字另需 `ocr`, 打开查看器另需 `ui`.
 - Bun: 需要 Bun Runtime 插件 0.23.0 及以上 (Android 13 及以上), 通过 `host.pdf` 使用; 在 Bun Runtime 的设置页开启 `pdf.control`, 识别文字另需 `ocr.control`.
 - OCR: 识别扫描页文字需另装 OCR 插件 (ML Kit OCR, Paddle OCR 或 Rapid OCR); 未安装时识别扫描页报 `OCR_UNAVAILABLE`, 其他功能不受影响.
@@ -186,7 +187,7 @@ PDF 处理不使用原生库: 页面渲染使用系统的 `PdfRenderer`, 其余�
 
 插件在设计上尽量收窄权限面:
 
-- 受保护的入口: 能力服务, 文件管理器入口服务与激活入口都受 AutoJs6 插件权限 (`org.autojs.permission.PLUGIN`) 保护, 其他应用无法直接调用.
+- 受保护的入口: 能力服务, 文件管理器入口服务与激活入口都受 AutoJs6 插件权限 (`org.autojs.permission.PLUGIN`) 保护, 其他应用无法直接调用. 供 AutoJs6 打包的应用使用的服务与查看器入口需要 `org.autojs.plugin.pdf.permission.RUNTIME` 权限 (打包时自动加入); 经这两个入口打开的文档与查看器会话只允许创建它们的应用调用, 文件同样以文件描述符传入.
 - 存储: 脚本的文件以文件描述符传入, 插件不需要为脚本申请存储权限; 所有文件访问权限只用于工具箱与查看器中你选择的文件.
 - HTML 转 PDF: 插件不加载任何外部内容 (网络请求以空内容应答, 本地文件与 `content:` 地址被禁用, 页面不能跳转); 页面中的脚本可以用 `javaScript: false` 关闭.
 - 最近文件: 用系统文件选择器打开的文件保留读取授权以便下次直接打开, 至多 20 个; 条目被挤出, 移除或清空时随即释放授权. 其他应用经 "打开方式" 或分享交来的文件只有一次性授权, 不进最近文件.
@@ -248,6 +249,7 @@ _2026/11/12_
 - `新增` pdf.text 的 ocr 选项借助已安装的 OCR 插件 (ML Kit OCR, Paddle OCR 或 Rapid OCR) 识别没有文本层的扫描页
 - `新增` pdf.view 在插件查看器中打开 PDF, 脚本可以接收翻页与关闭事件, 也可以跳到指定页或关闭查看器
 - `新增` Node.js 与 Bun 脚本也能使用 pdf 模块, 方法返回 Promise, 可以用 signal 或 timeoutMs 中止调用
+- `新增` 由 AutoJs6 6.8.1 或更高版本打包的应用也能使用 pdf 模块, 打包时自动加入所需权限; 打开的文档与查看器会话只允许创建它们的应用调用
 - `新增` 查看器: 连续滚动, 双指缩放, 缩略图, 大纲, 搜索高亮, 跳页, 密码输入与夜间模式; 可以从启动器打开, 也可以在其他应用中用 "打开方式" 或分享交给本插件
 - `新增` AutoJs6 文件管理器: 点按 PDF 即在插件查看器中打开, 压缩包内不超过 512 MiB 的 PDF 也能直接打开; 菜单提供合并, 拆分, 转图片, 提取文本, 加密与移除密码
 - `新增` 首页: 工具入口, 任务进度, 最近文件, 以及所有文件访问权限的授权入口 (仅工具箱需要)

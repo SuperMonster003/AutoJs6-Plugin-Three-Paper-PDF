@@ -16,6 +16,7 @@
         "La opción ocr de pdf.text reconoce las páginas escaneadas sin capa de texto con un complemento OCR instalado (ML Kit OCR, Paddle OCR o Rapid OCR)",
         "pdf.view abre un PDF en el visor del complemento; los scripts reciben los eventos de cambio de página y de cierre, y pueden ir a una página o cerrar el visor",
         "Los scripts de Node.js y Bun también pueden usar el módulo pdf; sus métodos devuelven Promises, y las llamadas se pueden interrumpir con signal o timeoutMs",
+        "Las aplicaciones empaquetadas por AutoJs6 {{ required_host_version_name }} o posterior también pueden usar el módulo pdf, y el permiso necesario se añade al empaquetar; los documentos y las sesiones del visor que abren solo responden a la aplicación que los creó",
         "Visor: desplazamiento continuo, zoom con dos dedos, miniaturas, esquema, resaltado de búsqueda, ir a una página, introducción de contraseña y modo nocturno; se abre desde el lanzador, y otras aplicaciones pueden entregarle archivos PDF con \"Abrir con\" o compartiendo",
         "Gestor de archivos de AutoJs6: al tocar un PDF se abre en el visor del complemento, y los PDF de hasta 512 MiB dentro de archivos comprimidos también se abren directamente; el menú ofrece combinar, dividir, convertir a imágenes, extraer texto, cifrar y quitar la contraseña",
         "Pantalla de inicio: las herramientas, el progreso de las tareas, los archivos recientes y la concesión del acceso a todos los archivos (solo la necesita la caja de herramientas)",

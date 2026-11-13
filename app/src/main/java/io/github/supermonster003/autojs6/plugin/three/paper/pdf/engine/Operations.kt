@@ -172,7 +172,27 @@ class Operations(
     /** `IPdfPlugin.cancel`: true when the operation was still running. zh-CN: `IPdfPlugin.cancel`: 操作仍在运行时返回 true. */
     fun cancel(opId: Int): Boolean = running[opId]?.cancel() ?: false
 
+    /**
+     * `IPdfPlugin.cancel` for the caller [callerUid]: an operation another uid started is refused with
+     * `PERMISSION_DENIED` (roadmap D44); an unknown or ended id answers false.
+     * zh-CN: 调用方 [callerUid] 的 `IPdfPlugin.cancel`: 其他 uid 启动的操作以 `PERMISSION_DENIED` 拒绝 (路线图 D44); 未知或已结束的
+     * id 返回 false.
+     */
+    fun cancel(opId: Int, callerUid: Int): Boolean {
+        val operation = running[opId] ?: return false
+        if (operation.host.uid != callerUid) {
+            throw PdfFailure(PdfErrorCodes.PERMISSION_DENIED, "operation $opId belongs to another caller")
+        }
+        return operation.cancel()
+    }
+
     fun cancelHost(host: HostKey) = running.values.filter { it.host == host }.forEach { it.cancel() }
+
+    /** Cancels the operations of the hosts matching [filter]. zh-CN: 取消符合 [filter] 的宿主的操作. */
+    fun cancelHosts(filter: (HostKey) -> Boolean) = running.values.filter { filter(it.host) }.forEach { it.cancel() }
+
+    /** The hosts with running operations. zh-CN: 有运行中操作的宿主. */
+    fun hosts(): Set<HostKey> = running.values.mapTo(LinkedHashSet()) { it.host }
 
     fun cancelDocument(documentId: Int) = running.values.filter { it.documentId == documentId }.forEach { it.cancel() }
 

@@ -85,6 +85,7 @@ El procesamiento se ejecuta en el complemento con el `PdfRenderer` de Android y 
 
 - Android 7.0 (API 24) o posterior, un único paquete para todas las ABI; la caja de herramientas y el visor no dependen de AutoJs6.
 - Scripts de AutoJs6 y gestor de archivos: requieren AutoJs6 6.8.1 (compilación interna 6641) o posterior.
+- Aplicaciones empaquetadas por AutoJs6: deben empaquetarse con AutoJs6 6.8.1 (compilación interna 6641) o posterior, y este complemento debe estar instalado en el dispositivo que las ejecuta; el empaquetado añade el permiso `org.autojs.plugin.pdf.permission.RUNTIME`, así que no hace falta modificar `project.json` (un proyecto Node.js declara `files` y un proyecto Bun declara `pdf.control`).
 - Node.js: requiere el complemento Node.js Runtime 2.2.0 o posterior, cargado con `require('autojs6:pdf')`; el proyecto declara `files` en `node.permissions` de `project.json`, además de `files.write` para escribir archivos, `ocr` para reconocer texto y `ui` para abrir el visor.
 - Bun: requiere el complemento Bun Runtime 0.23.0 o posterior (Android 13 o posterior), usado mediante `host.pdf`; active `pdf.control` en la pantalla de ajustes de Bun Runtime, además de `ocr.control` para reconocer texto.
 - OCR: reconocer páginas escaneadas requiere un complemento OCR (ML Kit OCR, Paddle OCR o Rapid OCR); sin él, el reconocimiento de páginas escaneadas falla con `OCR_UNAVAILABLE`, y las demás funciones no se ven afectadas.
@@ -186,7 +187,7 @@ Los archivos abiertos con el selector de archivos del sistema conservan su permi
 
 El complemento reduce al máximo sus permisos:
 
-- Entradas protegidas: el servicio de capacidad, el servicio de entrada del gestor de archivos y la entrada de activación exigen el permiso de complemento de AutoJs6 (`org.autojs.permission.PLUGIN`), así que otras aplicaciones no pueden llamarlos directamente.
+- Entradas protegidas: el servicio de capacidad, el servicio de entrada del gestor de archivos y la entrada de activación exigen el permiso de complemento de AutoJs6 (`org.autojs.permission.PLUGIN`), así que otras aplicaciones no pueden llamarlos directamente. El servicio y la entrada del visor para aplicaciones empaquetadas por AutoJs6 exigen `org.autojs.plugin.pdf.permission.RUNTIME` (se añade al empaquetar); los documentos y las sesiones del visor abiertos por esas entradas solo responden a la aplicación que los creó, y los archivos también llegan como descriptores de archivo.
 - Almacenamiento: los archivos de los scripts llegan como descriptores de archivo, así que el complemento no pide permiso de almacenamiento para los scripts; el acceso a todos los archivos solo se usa para los archivos que elija en la caja de herramientas y el visor.
 - HTML a PDF: el complemento no carga ningún contenido externo (las solicitudes de red reciben una respuesta vacía, los archivos locales y las direcciones `content:` están bloqueados y la página no puede navegar); los scripts de la página se pueden desactivar con `javaScript: false`.
 - Archivos recientes: los archivos abiertos con el selector de archivos del sistema conservan su permiso de lectura para abrirse directamente la próxima vez, hasta un máximo de 20; el permiso se libera en cuanto una entrada sale de la lista o se quita, o se borra la lista. Los archivos que otras aplicaciones entregan con "Abrir con" o compartiendo solo tienen un permiso de un solo uso y no entran en los archivos recientes.
@@ -248,6 +249,7 @@ _2026/11/12_
 - `Función` La opción ocr de pdf.text reconoce las páginas escaneadas sin capa de texto con un complemento OCR instalado (ML Kit OCR, Paddle OCR o Rapid OCR)
 - `Función` pdf.view abre un PDF en el visor del complemento; los scripts reciben los eventos de cambio de página y de cierre, y pueden ir a una página o cerrar el visor
 - `Función` Los scripts de Node.js y Bun también pueden usar el módulo pdf; sus métodos devuelven Promises, y las llamadas se pueden interrumpir con signal o timeoutMs
+- `Función` Las aplicaciones empaquetadas por AutoJs6 6.8.1 o posterior también pueden usar el módulo pdf, y el permiso necesario se añade al empaquetar; los documentos y las sesiones del visor que abren solo responden a la aplicación que los creó
 - `Función` Visor: desplazamiento continuo, zoom con dos dedos, miniaturas, esquema, resaltado de búsqueda, ir a una página, introducción de contraseña y modo nocturno; se abre desde el lanzador, y otras aplicaciones pueden entregarle archivos PDF con "Abrir con" o compartiendo
 - `Función` Gestor de archivos de AutoJs6: al tocar un PDF se abre en el visor del complemento, y los PDF de hasta 512 MiB dentro de archivos comprimidos también se abren directamente; el menú ofrece combinar, dividir, convertir a imágenes, extraer texto, cifrar y quitar la contraseña
 - `Función` Pantalla de inicio: las herramientas, el progreso de las tareas, los archivos recientes y la concesión del acceso a todos los archivos (solo la necesita la caja de herramientas)

@@ -14,6 +14,7 @@
 * `Feature` The ocr option of pdf.text recognizes scanned pages without a text layer with an installed OCR plugin (ML Kit OCR, Paddle OCR or Rapid OCR)
 * `Feature` pdf.view opens a PDF in the plugin viewer; scripts receive page change and close events and can go to a page or close the viewer
 * `Feature` Node.js and Bun scripts can use the pdf module too; its methods return Promises, and calls can be aborted with signal or timeoutMs
+* `Feature` Apps packaged by AutoJs6 6.8.1 or later can use the pdf module too, with the needed permission added when packaging; documents and viewer sessions they open answer only the app that created them
 * `Feature` Viewer: continuous scrolling, pinch zoom, thumbnails, outline, search highlights, go to page, password prompt and night mode; it opens from the launcher, and other apps can hand PDF files to it with "Open with" or sharing
 * `Feature` AutoJs6 file manager: tapping a PDF opens it in the plugin viewer, and PDF files of up to 512 MiB inside archives open directly too; the menu offers merge, split, convert to images, extract text, encrypt and remove the password
 * `Feature` Home screen: the tools, task progress, recent files and the all files access grant (only the toolbox needs it)

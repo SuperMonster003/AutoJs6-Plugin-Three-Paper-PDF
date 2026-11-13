@@ -73,6 +73,15 @@ class DocumentRegistry(
     /** Closes every document of [host]. zh-CN: 关闭 [host] 的全部文档. */
     fun closeHost(host: HostKey) = snapshot { it.host == host }.forEach { it.close() }
 
+    /**
+     * Closes the documents of the hosts matching [filter], for example those of one service entry (roadmap D44).
+     * zh-CN: 关闭符合 [filter] 的宿主的文档, 例如某一服务入口的宿主 (路线图 D44).
+     */
+    fun closeHosts(filter: (HostKey) -> Boolean) = snapshot { filter(it.host) }.forEach { it.close() }
+
+    /** The hosts holding documents or opening one. zh-CN: 持有文档或正在打开文档的宿主. */
+    fun hosts(): Set<HostKey> = synchronized(lock) { sessions.values.mapTo(LinkedHashSet()) { it.host } + reserved.keys }
+
     /** Closes every document, for example when the last host unbinds. zh-CN: 关闭全部文档, 例如最后一个宿主解绑时. */
     fun closeAll() = snapshot { true }.forEach { it.close() }
 

@@ -51,6 +51,18 @@ class ManifestContractTest {
     }
 
     @Test
+    fun `the packaged entry permission is declared at the normal level`() {
+        // Roadmap Q145 (b), D43: packaged script apps declare it, the host asks for it when packaging (D45).
+        // zh-CN: 打包的脚本应用声明它, 宿主在打包时为其加入 (D45).
+        val permission = manifest.children("permission").single()
+        assertEquals(ThreePaperPdfContract.PACKAGED_PERMISSION, permission.android("name"))
+        assertEquals("normal", permission.android("protectionLevel"))
+        assertEquals("org.autojs.plugin.pdf.permission.RUNTIME", ThreePaperPdfContract.PACKAGED_PERMISSION)
+        assertEquals("org.autojs.plugin.PDF_PACKAGED", ThreePaperPdfContract.PACKAGED_SERVICE_ACTION)
+        assertEquals("org.autojs.plugin.PDF_PACKAGED_VIEWER_OPEN", ThreePaperPdfContract.PACKAGED_VIEWER_ACTION)
+    }
+
+    @Test
     fun `package queries name the host only`() {
         val queries = manifest.child("queries")
         assertEquals(listOf("org.autojs.autojs6"), queries.children("package").map { it.android("name") })
@@ -116,7 +128,17 @@ class ManifestContractTest {
 
     @Test
     fun `four launcher aliases point at the home screen and only the automatic one is enabled`() {
-        val aliases = application.children("activity-alias")
+        assertEquals(
+            listOf(
+                ".launcher.AdaptiveLightIconAlias",
+                ".launcher.AdaptiveDarkIconAlias",
+                ".launcher.AdaptiveAutoIconAlias",
+                ".launcher.TransparentIconAlias",
+                ".viewer.PackagedPdfViewerActivity",
+            ),
+            application.children("activity-alias").map { it.android("name") },
+        )
+        val aliases = application.children("activity-alias").filter { it.android("name").startsWith(".launcher.") }
         assertEquals(
             listOf(
                 ".launcher.AdaptiveLightIconAlias" to "@mipmap/ic_launcher_system_light",
@@ -165,6 +187,16 @@ class ManifestContractTest {
     }
 
     @Test
+    fun `the packaged viewer alias takes the packaged action behind the packaged permission`() {
+        val alias = application.children("activity-alias").single { it.android("name") == ".viewer.PackagedPdfViewerActivity" }
+        assertEquals(".viewer.ThreePaperPdfViewerActivity", alias.android("targetActivity"))
+        assertEquals("true", alias.android("exported"))
+        assertEquals(ThreePaperPdfContract.PACKAGED_PERMISSION, alias.android("permission"))
+        assertFilter(alias.child("intent-filter"), action = ThreePaperPdfContract.PACKAGED_VIEWER_ACTION, categories = listOf(DEFAULT_CATEGORY))
+        assertTrue(alias.child("intent-filter").children("data").isEmpty())
+    }
+
+    @Test
     fun `the file manager tools accept only the host's execute action`() {
         val viewer = activity(".explorer.ExplorerPdfViewerActivity")
         val tools = activity(".explorer.PdfToolActivity")
@@ -187,6 +219,7 @@ class ManifestContractTest {
             listOf(
                 ".service.ThreePaperPdfInfoService",
                 ".service.ThreePaperPdfService",
+                ".service.ThreePaperPdfPackagedService",
                 ".ThreePaperPdfExplorerActionService",
                 ".ui.toolbox.ToolTaskService",
             ),
@@ -213,6 +246,20 @@ class ManifestContractTest {
             assertNull("services run in the plugin's default process", service.androidOrNull("process"))
             assertNull("discovery services are not foreground services", service.androidOrNull("foregroundServiceType"))
         }
+
+        // The packaged-app entry (roadmap D43): same category, its own action and the normal permission.
+        // zh-CN: 打包应用入口 (路线图 D43): 同一 category, 自己的 action 与普通权限.
+        val packaged = service(".service.ThreePaperPdfPackagedService")
+        assertFilter(
+            packaged.child("intent-filter"),
+            action = ThreePaperPdfContract.PACKAGED_SERVICE_ACTION,
+            categories = listOf(ThreePaperPdfContract.SERVICE_CATEGORY),
+        )
+        assertRequiresHostVersion(packaged)
+        assertEquals("true", packaged.android("exported"))
+        assertEquals(ThreePaperPdfContract.PACKAGED_PERMISSION, packaged.android("permission"))
+        assertNull(packaged.androidOrNull("process"))
+        assertNull(packaged.androidOrNull("foregroundServiceType"))
     }
 
     @Test
@@ -231,9 +278,13 @@ class ManifestContractTest {
         val components = listOf("activity", "service", "receiver", "provider").flatMap { application.children(it) }
         val exported = components.filter { it.androidOrNull("exported") == "true" }
         assertEquals(
-            listOf(".viewer.ThreePaperPdfViewerActivity"),
+            listOf(".viewer.ThreePaperPdfViewerActivity", ".service.ThreePaperPdfPackagedService"),
             exported.filter { it.androidOrNull("permission") != PLUGIN_PERMISSION }.map { it.android("name") },
         )
+        // Only the packaged entry (its service and its viewer alias) takes the packaged permission (roadmap D43).
+        // zh-CN: 只有打包入口 (其服务与查看器别名) 使用打包权限 (路线图 D43).
+        val packaged = (components + application.children("activity-alias")).filter { it.androidOrNull("permission") == ThreePaperPdfContract.PACKAGED_PERMISSION }
+        assertEquals(listOf(".service.ThreePaperPdfPackagedService", ".viewer.PackagedPdfViewerActivity"), packaged.map { it.android("name") })
         assertTrue("no receivers", application.children("receiver").isEmpty())
     }
 

@@ -47,6 +47,7 @@
   "compatibility_points": [
     "Android {{ min_android_version }} (API {{ android_min_sdk }}) 以上, 所有 ABI 共用一個安裝套件; 工具箱與檢視器不依賴 AutoJs6.",
     "AutoJs6 指令碼與檔案管理員: 需要 AutoJs6 {{ required_host_version_name }} (內部版本號 {{ required_host_version_code }}) 或更新版本.",
+    "AutoJs6 封裝的應用程式: 需由 AutoJs6 {{ required_host_version_name }} (內部版本號 {{ required_host_version_code }}) 或更新版本封裝, 執行的裝置上需安裝本外掛; 封裝時自動加入 `org.autojs.plugin.pdf.permission.RUNTIME` 權限, 不需要修改 `project.json` (Node.js 專案需宣告 `files`, Bun 專案需宣告 `pdf.control`).",
     "Node.js: 需要 Node.js Runtime 外掛 2.2.0 以上, 以 `require('autojs6:pdf')` 載入; 專案在 `project.json` 的 `node.permissions` 中宣告 `files`, 寫入檔案另需 `files.write`, 辨識文字另需 `ocr`, 開啟檢視器另需 `ui`.",
     "Bun: 需要 Bun Runtime 外掛 0.23.0 以上 (Android 13 以上), 透過 `host.pdf` 使用; 在 Bun Runtime 的設定頁開啟 `pdf.control`, 辨識文字另需 `ocr.control`.",
     "OCR: 辨識掃描頁文字需另外安裝 OCR 外掛 (ML Kit OCR, Paddle OCR 或 Rapid OCR); 未安裝時辨識掃描頁會回報 `OCR_UNAVAILABLE`, 其他功能不受影響."
@@ -90,7 +91,7 @@
   ],
   "p_security_intro": "外掛在設計上盡量縮小權限範圍:",
   "security_points": [
-    "受保護的入口: 能力服務, 檔案管理員入口服務與啟用入口都受 AutoJs6 外掛權限 (`org.autojs.permission.PLUGIN`) 保護, 其他應用程式無法直接呼叫.",
+    "受保護的入口: 能力服務, 檔案管理員入口服務與啟用入口都受 AutoJs6 外掛權限 (`org.autojs.permission.PLUGIN`) 保護, 其他應用程式無法直接呼叫. 供 AutoJs6 封裝的應用程式使用的服務與檢視器入口需要 `org.autojs.plugin.pdf.permission.RUNTIME` 權限 (封裝時自動加入); 經這兩個入口開啟的文件與檢視器工作階段只允許建立它們的應用程式呼叫, 檔案同樣以檔案描述元傳入.",
     "儲存空間: 指令碼的檔案以檔案描述元傳入, 外掛不需要為指令碼申請儲存權限; 所有檔案存取權限只用於工具箱與檢視器中你選擇的檔案.",
     "HTML 轉 PDF: 外掛不載入任何外部內容 (網路請求以空內容回應, 本機檔案與 `content:` 位址遭到封鎖, 頁面不能跳轉); 頁面中的指令碼可以用 `javaScript: false` 關閉.",
     "最近的檔案: 用系統檔案選擇器開啟的檔案保留讀取授權, 以便下次直接開啟, 最多 20 個; 項目被擠出, 移除或清除時隨即釋放授權. 其他應用程式透過 \"開啟方式\" 或分享交來的檔案只有一次性授權, 不會進入最近的檔案.",

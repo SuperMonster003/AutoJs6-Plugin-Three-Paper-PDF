@@ -5,6 +5,15 @@
     <uses-permission android:name="org.autojs.permission.PLUGIN" />
 
     <!--
+        The packaged-app entry (roadmap Q145 (b), D43): packaged script apps declare this normal permission and reach
+        the packaged service and the packaged viewer alias below; PdfCallerGuard checks it on every call and binds every
+        handle to its calling uid (D44).
+    -->
+    <permission
+        android:name="org.autojs.plugin.pdf.permission.RUNTIME"
+        android:protectionLevel="normal" />
+
+    <!--
         Roadmap D7: script operations receive file descriptors from the host and need no storage permission of the
         plugin; only the standalone toolbox reads and writes the paths you choose, so it asks for all files access on
         Android 11+ and for the legacy storage permissions below.
@@ -169,6 +178,21 @@
         </activity>
 
         <!--
+            The viewer for packaged apps (roadmap D43): the PDF_PACKAGED_VIEWER_OPEN action behind the normal permission
+            of the packaged entry; the viewer handles it like the host action, the session token stays the credential.
+        -->
+        <activity-alias
+            android:name=".viewer.PackagedPdfViewerActivity"
+            android:exported="true"
+            android:permission="org.autojs.plugin.pdf.permission.RUNTIME"
+            android:targetActivity=".viewer.ThreePaperPdfViewerActivity">
+            <intent-filter>
+                <action android:name="org.autojs.plugin.PDF_PACKAGED_VIEWER_OPEN" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity-alias>
+
+        <!--
             The file manager tools (roadmap D36, P3.3), started only by the host through the Explorer Action catalog of
             ThreePaperPdfExplorerActionService with an explicit component and the EXECUTE action: the primary action
             opens the viewer subclass (appendix D Q75), the other tools show their options and progress in
@@ -232,6 +256,24 @@
                 android:value="@string/plugin_requires_host_version" />
             <intent-filter>
                 <action android:name="org.autojs.plugin.PDF" />
+                <category android:name="pdf" />
+            </intent-filter>
+        </service>
+
+        <!--
+            The packaged-app entry (roadmap Q145 (b), D43): the same engine behind the normal permission
+            org.autojs.plugin.pdf.permission.RUNTIME. The host picks it when the caller is not AutoJs6 holding
+            org.autojs.permission.PLUGIN (a packaged script app); callers stay apart from the signed entry (D44).
+        -->
+        <service
+            android:name=".service.ThreePaperPdfPackagedService"
+            android:exported="true"
+            android:permission="org.autojs.plugin.pdf.permission.RUNTIME">
+            <meta-data
+                android:name="requiresHostVersion"
+                android:value="@string/plugin_requires_host_version" />
+            <intent-filter>
+                <action android:name="org.autojs.plugin.PDF_PACKAGED" />
                 <category android:name="pdf" />
             </intent-filter>
         </service>

@@ -29,6 +29,11 @@ object ThreePaperPdfContract {
     const val PLUGIN_PERMISSION = PdfActions.PLUGIN_PERMISSION
 
     const val VIEWER_ACTION = PdfActions.VIEWER_ACTIVITY_ACTION
+
+    /** The packaged-app entry (roadmap Q145 (b), D43). zh-CN: 打包应用入口 (路线图 Q145 (b), D43). */
+    const val PACKAGED_SERVICE_ACTION = PdfActions.PACKAGED_SERVICE_ACTION
+    const val PACKAGED_PERMISSION = PdfActions.PACKAGED_PERMISSION
+    const val PACKAGED_VIEWER_ACTION = PdfActions.PACKAGED_VIEWER_ACTIVITY_ACTION
     const val PDF_MIME_TYPE = "application/pdf"
 
     const val EXPLORER_ACTION = ExplorerActionPluginActions.EXPLORER_ACTION

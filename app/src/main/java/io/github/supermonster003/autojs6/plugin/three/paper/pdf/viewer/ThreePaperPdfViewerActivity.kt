@@ -82,11 +82,14 @@ open class ThreePaperPdfViewerActivity : StandaloneActivity() {
     }
 
     /**
-     * The entry of [intent]; subclasses for other entries override it.
-     * zh-CN: [intent] 的入口; 其他入口的子类重写它.
+     * The entry of [intent]; subclasses for other entries override it. The host action and the packaged-app action
+     * (reaching this Activity through the alias `.viewer.PackagedPdfViewerActivity`, roadmap D43) claim a session alike:
+     * the session token stays the credential.
+     * zh-CN: [intent] 的入口; 其他入口的子类重写它. 宿主 action 与打包应用 action (经别名 `.viewer.PackagedPdfViewerActivity`
+     * 到达本 Activity, 路线图 D43) 同样认领会话: 会话令牌仍是凭据.
      */
     internal open fun entryOf(intent: Intent): ViewerEntry {
-        if (intent.action == PdfActions.VIEWER_ACTIVITY_ACTION) {
+        if (intent.action == PdfActions.VIEWER_ACTIVITY_ACTION || intent.action == PdfActions.PACKAGED_VIEWER_ACTIVITY_ACTION) {
             val token = intent.getStringExtra(PdfActions.EXTRA_SESSION_TOKEN)
             val key = ViewerViewModel.SESSION_KEY_PREFIX + token
             return ViewerEntry(key, R.string.viewer_error_expired) {

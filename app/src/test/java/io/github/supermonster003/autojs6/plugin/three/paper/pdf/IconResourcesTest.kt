@@ -103,7 +103,9 @@ class IconResourcesTest {
     @Test
     fun `the four launcher aliases point at the generated icon modes`() {
         val application = RepositoryFiles.xml("app/src/main/AndroidManifest.xml").child("application")
-        val aliases = application.children("activity-alias").associate { it.android("name") to it.android("icon") }
+        // The packaged viewer alias (roadmap D43) is no launcher alias. zh-CN: 打包查看器别名 (路线图 D43) 不是启动器别名.
+        val launcherAliases = application.children("activity-alias").filter { it.android("name").startsWith(".launcher.") }
+        val aliases = launcherAliases.associate { it.android("name") to it.android("icon") }
         assertEquals(
             mapOf(
                 ".launcher.AdaptiveLightIconAlias" to "@mipmap/ic_launcher_system_light",
@@ -113,7 +115,7 @@ class IconResourcesTest {
             ),
             aliases,
         )
-        assertEquals(listOf(".launcher.AdaptiveAutoIconAlias"), application.children("activity-alias").filter { it.android("enabled") == "true" }.map { it.android("name") })
+        assertEquals(listOf(".launcher.AdaptiveAutoIconAlias"), launcherAliases.filter { it.android("enabled") == "true" }.map { it.android("name") })
         // The automatic mode follows the system theme: dark by default, light under notnight.
         assertEquals("@mipmap/ic_launcher_system_foreground", foreground("mipmap-anydpi-v26/ic_launcher_system_auto.xml"))
         assertEquals("@mipmap/ic_launcher_system_light_foreground", foreground("mipmap-notnight-anydpi-v26/ic_launcher_system_auto.xml"))

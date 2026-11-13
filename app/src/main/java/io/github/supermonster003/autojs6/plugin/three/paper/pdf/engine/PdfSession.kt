@@ -9,17 +9,25 @@ import java.util.concurrent.locks.ReentrantLock
 
 /**
  * The caller of a Binder call: the host process whose documents and operations the plugin counts and cleans up
- * together (protocol "Ceilings": `MAX_DOCUMENTS_PER_HOST` per host process). Its temp directory is
- * `cache/pdf/<uid>-<pid>/` (roadmap P2.1 "token").
- * zh-CN: Binder 调用方: 插件按宿主进程统计与一并清理其文档与操作 (协议 "Ceilings": 每个宿主进程 `MAX_DOCUMENTS_PER_HOST`).
- * 其临时目录为 `cache/pdf/<uid>-<pid>/` (路线图 P2.1 所说的 "token").
+ * together (protocol "Ceilings": `MAX_DOCUMENTS_PER_HOST` per host process), and the service entry it called through
+ * ([packaged]: the packaged-app entry of roadmap D43). Its temp directory is `cache/pdf/<uid>-<pid>/`, or
+ * `cache/pdf/k<uid>-<pid>/` for the packaged entry (roadmap P2.1 "token", D44), so the two entries never share
+ * documents, operations or temp files.
+ * zh-CN: Binder 调用方: 插件按宿主进程统计与一并清理其文档与操作 (协议 "Ceilings": 每个宿主进程 `MAX_DOCUMENTS_PER_HOST`),
+ * 以及它所经由的服务入口 ([packaged]: 路线图 D43 的打包应用入口). 其临时目录为 `cache/pdf/<uid>-<pid>/`, 打包入口为
+ * `cache/pdf/k<uid>-<pid>/` (路线图 P2.1 所说的 "token", D44), 因此两种入口的文档, 操作与临时文件互不相干.
  */
-data class HostKey(val uid: Int, val pid: Int) {
+data class HostKey(val uid: Int, val pid: Int, val packaged: Boolean = false) {
 
-    val directoryName: String get() = "$uid-$pid"
+    val directoryName: String get() = (if (packaged) PACKAGED_PREFIX else "") + "$uid-$pid"
 
     companion object {
-        fun calling() = HostKey(Binder.getCallingUid(), Binder.getCallingPid())
+
+        /** Prefix of the temp directories of packaged callers. zh-CN: 打包入口调用方临时目录的前缀. */
+        const val PACKAGED_PREFIX = "k"
+
+        fun calling(packaged: Boolean = false) = HostKey(Binder.getCallingUid(), Binder.getCallingPid(), packaged)
+
     }
 
 }

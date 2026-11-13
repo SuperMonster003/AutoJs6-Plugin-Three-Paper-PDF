@@ -1,5 +1,6 @@
 package io.github.supermonster003.autojs6.plugin.three.paper.pdf
 
+import android.app.Service
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -30,8 +31,12 @@ object PdfServiceHarness {
     val context: Context
         get() = InstrumentationRegistry.getInstrumentation().targetContext
 
-    /** Binds [ThreePaperPdfService] explicitly, runs [block] and unbinds. zh-CN: 显式绑定 [ThreePaperPdfService], 执行 [block] 后解绑. */
-    fun <T> withPdfPlugin(block: (IPdfPlugin) -> T): T {
+    /**
+     * Binds [service] ([ThreePaperPdfService], or the packaged-app entry `ThreePaperPdfPackagedService`) explicitly, runs
+     * [block] and unbinds.
+     * zh-CN: 显式绑定 [service] ([ThreePaperPdfService], 或打包应用入口 `ThreePaperPdfPackagedService`), 执行 [block] 后解绑.
+     */
+    fun <T> withPdfPlugin(service: Class<out Service> = ThreePaperPdfService::class.java, block: (IPdfPlugin) -> T): T {
         val binder = AtomicReference<IBinder>()
         val connected = CountDownLatch(1)
         val connection = object : ServiceConnection {
@@ -42,7 +47,7 @@ object PdfServiceHarness {
 
             override fun onServiceDisconnected(name: ComponentName) = Unit
         }
-        val intent = Intent().setComponent(ComponentName(context, ThreePaperPdfService::class.java))
+        val intent = Intent().setComponent(ComponentName(context, service))
         assertTrue("bindService returned false", context.bindService(intent, connection, Context.BIND_AUTO_CREATE))
         try {
             assertTrue("timed out binding the PDF service", connected.await(10, TimeUnit.SECONDS))

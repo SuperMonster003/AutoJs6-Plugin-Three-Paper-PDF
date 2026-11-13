@@ -34,6 +34,7 @@ import io.github.supermonster003.autojs6.plugin.three.paper.pdf.PdfServiceHarnes
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.R
 import org.autojs.plugin.pdf.api.PdfActions
 import org.json.JSONObject
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -107,6 +108,25 @@ class ViewerActivityDeviceTest {
     }
 
     @Test
+    fun thePackagedActionReachesTheViewerThroughItsAliasAndClaimsAToken() {
+        // Roadmap D43: packaged apps start the alias `.viewer.PackagedPdfViewerActivity` with the packaged action; the
+        // session token stays the credential.
+        // zh-CN: 路线图 D43: 打包应用以打包 action 启动别名 `.viewer.PackagedPdfViewerActivity`; 会话令牌仍是凭据.
+        val query = Intent(PdfActions.PACKAGED_VIEWER_ACTIVITY_ACTION).setPackage(context.packageName)
+        val resolved = context.packageManager.queryIntentActivities(query, 0).single().activityInfo
+        assertEquals(ThreePaperPdfViewerActivity::class.java.`package`!!.name + ".PackagedPdfViewerActivity", resolved.name)
+        assertEquals(ThreePaperPdfViewerActivity::class.java.name, resolved.targetActivity)
+        val claim = ViewerClaim(PdfServiceHarness.sample("outline.pdf"), "Outline sample", null, null)
+        // startPage is the zero-based index: page 3. zh-CN: startPage 是从 0 起的下标: 第 3 页.
+        val session = ViewerSessions.open(host = Any(), claim = claim, startPage = 2, events = null)
+        launch(tokenIntent(session.token, PdfActions.PACKAGED_VIEWER_ACTIVITY_ACTION)).use {
+            awaitIndicator(3, pagesOf("outline.pdf"))
+            assertNull(ViewerSessions.claim(session.token, IdleController))
+        }
+        assertTrue(PdfServiceHarness.eventually { !session.isOpen })
+    }
+
+    @Test
     fun anUnknownTokenShowsTheExpiredMessage() {
         launch(tokenIntent("unknown-token")).use {
             awaitText("viewer-error", context.getString(R.string.viewer_error_expired))
@@ -162,7 +182,7 @@ class ViewerActivityDeviceTest {
         .setClass(context, ThreePaperPdfViewerActivity::class.java)
         .setDataAndType(uri, ThreePaperPdfViewerActivity.MIME_PDF)
 
-    private fun tokenIntent(token: String) = Intent(PdfActions.VIEWER_ACTIVITY_ACTION)
+    private fun tokenIntent(token: String, action: String = PdfActions.VIEWER_ACTIVITY_ACTION) = Intent(action)
         .setClass(context, ThreePaperPdfViewerActivity::class.java)
         .putExtra(PdfActions.EXTRA_SESSION_TOKEN, token)
 

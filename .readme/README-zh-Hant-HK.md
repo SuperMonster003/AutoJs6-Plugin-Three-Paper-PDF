@@ -85,6 +85,7 @@
 
 - Android 7.0 (API 24) 或以上, 所有 ABI 共用一個安裝套件; 工具箱與檢視器不依賴 AutoJs6.
 - AutoJs6 腳本與檔案管理器: 需要 AutoJs6 6.8.1 (內部版本號 6641) 或更新版本.
+- AutoJs6 打包的應用程式: 需由 AutoJs6 6.8.1 (內部版本號 6641) 或更新版本打包, 執行的裝置上需安裝本插件; 打包時自動加入 `org.autojs.plugin.pdf.permission.RUNTIME` 權限, 不需要修改 `project.json` (Node.js 專案需聲明 `files`, Bun 專案需聲明 `pdf.control`).
 - Node.js: 需要 Node.js Runtime 插件 2.2.0 或以上, 以 `require('autojs6:pdf')` 載入; 專案在 `project.json` 的 `node.permissions` 中聲明 `files`, 寫入檔案另需 `files.write`, 識別文字另需 `ocr`, 開啟檢視器另需 `ui`.
 - Bun: 需要 Bun Runtime 插件 0.23.0 或以上 (Android 13 或以上), 透過 `host.pdf` 使用; 在 Bun Runtime 的設定頁開啟 `pdf.control`, 識別文字另需 `ocr.control`.
 - OCR: 識別掃描頁文字需另外安裝 OCR 插件 (ML Kit OCR, Paddle OCR 或 Rapid OCR); 未安裝時識別掃描頁會報 `OCR_UNAVAILABLE`, 其他功能不受影響.
@@ -186,7 +187,7 @@ PDF 處理不使用原生程式庫: 頁面渲染使用系統的 `PdfRenderer`, �
 
 插件在設計上盡量收窄權限範圍:
 
-- 受保護的入口: 能力服務, 檔案管理器入口服務與啟動入口都受 AutoJs6 插件權限 (`org.autojs.permission.PLUGIN`) 保護, 其他應用程式無法直接呼叫.
+- 受保護的入口: 能力服務, 檔案管理器入口服務與啟動入口都受 AutoJs6 插件權限 (`org.autojs.permission.PLUGIN`) 保護, 其他應用程式無法直接呼叫. 供 AutoJs6 打包的應用程式使用的服務與檢視器入口需要 `org.autojs.plugin.pdf.permission.RUNTIME` 權限 (打包時自動加入); 經這兩個入口開啟的文件與檢視器工作階段只允許建立它們的應用程式呼叫, 檔案同樣以檔案描述符傳入.
 - 儲存空間: 腳本的檔案以檔案描述符傳入, 插件不需要為腳本申請儲存權限; 所有檔案存取權限只用於工具箱與檢視器中你選擇的檔案.
 - HTML 轉 PDF: 插件不載入任何外部內容 (網絡請求以空內容回應, 本機檔案與 `content:` 位址被禁止, 頁面不能跳轉); 頁面中的腳本可以用 `javaScript: false` 關閉.
 - 最近檔案: 用系統檔案選擇器開啟的檔案保留讀取授權, 以便下次直接開啟, 最多 20 個; 項目被擠出, 移除或清除時隨即釋放授權. 其他應用程式經 "開啟方式" 或分享交來的檔案只有一次性授權, 不會進入最近檔案.
@@ -248,6 +249,7 @@ _2026/11/12_
 - `新增` pdf.text 的 ocr 選項借助已安裝的 OCR 插件 (ML Kit OCR, Paddle OCR 或 Rapid OCR) 識別沒有文字層的掃描頁
 - `新增` pdf.view 在插件檢視器中開啟 PDF, 腳本可以接收翻頁與關閉事件, 也可以跳到指定頁或關閉檢視器
 - `新增` Node.js 與 Bun 腳本也能使用 pdf 模組, 方法傳回 Promise, 可以用 signal 或 timeoutMs 中止呼叫
+- `新增` 由 AutoJs6 6.8.1 或更新版本打包的應用程式也能使用 pdf 模組, 打包時自動加入所需權限; 開啟的文件與檢視器工作階段只允許建立它們的應用程式呼叫
 - `新增` 檢視器: 連續捲動, 雙指縮放, 縮圖, 大綱, 搜尋醒目標示, 跳頁, 密碼輸入與夜間模式; 可以從啟動器開啟, 也可以在其他應用程式中用 "開啟方式" 或分享交給本插件
 - `新增` AutoJs6 檔案管理器: 點按 PDF 即在插件檢視器中開啟, 壓縮檔內不超過 512 MiB 的 PDF 也能直接開啟; 選單提供合併, 拆分, 轉圖片, 提取文字, 加密與移除密碼
 - `新增` 首頁: 工具入口, 任務進度, 最近檔案, 以及所有檔案存取權限的授權入口 (僅工具箱需要)

@@ -2,6 +2,7 @@ package io.github.supermonster003.autojs6.plugin.three.paper.pdf.service
 
 import android.os.Bundle
 import android.os.IBinder
+import android.os.Parcel
 import android.os.RemoteException
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfAnswers
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfBundles
@@ -14,11 +15,21 @@ import org.autojs.plugin.pdf.api.PdfContract
 /**
  * The `IPdfViewerSession` handle of one viewer session (protocol "Viewer Sessions", roadmap P3.2): `getState` answers the
  * envelope with the negotiated version (`SESSION_CLOSED` as `errorCode` once the session ended), `goTo` and `close`
- * throw across Binder with `CODE: detail`.
+ * throw across Binder with `CODE: detail`. Only [ownerUid], the uid that opened the session, may call it (roadmap D44).
  * zh-CN: 一个查看器会话的 `IPdfViewerSession` 句柄 (协议 "Viewer Sessions" 一节, 路线图 P3.2): `getState` 以协商版本返回应答信封
- * (会话结束后以 `errorCode` 返回 `SESSION_CLOSED`), `goTo` 与 `close` 以 `CODE: detail` 跨 Binder 抛出.
+ * (会话结束后以 `errorCode` 返回 `SESSION_CLOSED`), `goTo` 与 `close` 以 `CODE: detail` 跨 Binder 抛出. 只有打开会话的 uid
+ * [ownerUid] 可以调用它 (路线图 D44).
  */
-internal class ViewerSessionStub(private val session: ViewerSession, private val version: Int) : IPdfViewerSession.Stub() {
+internal class ViewerSessionStub(
+    private val session: ViewerSession,
+    private val version: Int,
+    private val ownerUid: Int,
+) : IPdfViewerSession.Stub() {
+
+    override fun onTransact(code: Int, data: Parcel, reply: Parcel?, flags: Int): Boolean {
+        PdfCallerGuard.checkOwner(code, ownerUid)
+        return super.onTransact(code, data, reply, flags)
+    }
 
     override fun getState(): Bundle {
         val answer = try {

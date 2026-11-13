@@ -47,6 +47,7 @@
   "compatibility_points": [
     "Android {{ min_android_version }} (API {{ android_min_sdk }}) 以降. パッケージはすべての ABI 共通の 1 つです. ツールボックスとビューアーは AutoJs6 に依存しません.",
     "AutoJs6 のスクリプトとファイルマネージャー: AutoJs6 {{ required_host_version_name }} (内部バージョン {{ required_host_version_code }}) 以降が必要です.",
+    "AutoJs6 でパッケージ化したアプリ: AutoJs6 {{ required_host_version_name }} (内部バージョン {{ required_host_version_code }}) 以降でパッケージ化し, 実行する端末に本プラグインをインストールしておく必要があります. パッケージ化の際に `org.autojs.plugin.pdf.permission.RUNTIME` 権限が自動で追加されるため, `project.json` を変更する必要はありません (Node.js プロジェクトは `files`, Bun プロジェクトは `pdf.control` を宣言します).",
     "Node.js: Node.js Runtime プラグイン 2.2.0 以降が必要で, `require('autojs6:pdf')` で読み込みます. プロジェクトの `project.json` の `node.permissions` に `files` を宣言し, ファイルの書き込みには `files.write`, 文字認識には `ocr`, ビューアーを開くには `ui` も宣言します.",
     "Bun: Bun Runtime プラグイン 0.23.0 以降 (Android 13 以降) が必要で, `host.pdf` から使います. Bun Runtime の設定画面で `pdf.control` をオンにし, 文字認識には `ocr.control` もオンにします.",
     "OCR: スキャンページの文字認識には別途 OCR プラグイン (ML Kit OCR, Paddle OCR, Rapid OCR) が必要です. ない場合, スキャンページの認識は `OCR_UNAVAILABLE` で失敗しますが, その他の機能には影響しません."
@@ -90,7 +91,7 @@
   ],
   "p_security_intro": "プラグインは必要な権限をできるだけ少なくしています:",
   "security_points": [
-    "保護された入口: 機能サービス, ファイルマネージャーの入口サービス, 有効化の入口は AutoJs6 のプラグイン権限 (`org.autojs.permission.PLUGIN`) で保護されており, 他のアプリから直接呼び出すことはできません.",
+    "保護された入口: 機能サービス, ファイルマネージャーの入口サービス, 有効化の入口は AutoJs6 のプラグイン権限 (`org.autojs.permission.PLUGIN`) で保護されており, 他のアプリから直接呼び出すことはできません. AutoJs6 でパッケージ化したアプリ向けのサービスとビューアーの入口には `org.autojs.plugin.pdf.permission.RUNTIME` 権限が必要です (パッケージ化の際に自動で追加されます). これらの入口で開いた文書とビューアーのセッションは, それを作成したアプリからしか呼び出せず, ファイルもファイル記述子として渡されます.",
     "ストレージ: スクリプトのファイルはファイル記述子として渡されるため, プラグインはスクリプトのためにストレージ権限を求めません. すべてのファイルへのアクセスは, ツールボックスとビューアーで選んだファイルにだけ使われます.",
     "HTML から PDF: プラグインは外部のコンテンツを一切読み込みません (ネットワーク要求には空の内容で応答し, ローカルファイルと `content:` アドレスはブロックされ, ページの移動もできません). ページ内のスクリプトは `javaScript: false` で無効にできます.",
     "最近のファイル: システムのファイル選択から開いたファイルは, 次回そのまま開けるよう読み取りの許可を保持します (最大 20 件). 項目が押し出されたとき, 削除されたとき, リストがクリアされたときは, すぐに許可を解放します. 他のアプリから \"アプリで開く\" や共有で渡されたファイルには一時的な許可しかなく, 最近のファイルには入りません.",

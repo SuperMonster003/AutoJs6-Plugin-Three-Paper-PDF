@@ -85,6 +85,7 @@ Processing runs inside the plugin with the `PdfRenderer` of Android and the pure
 
 - Android 7.0 (API 24) and later, a single package for every ABI; the toolbox and the viewer do not depend on AutoJs6.
 - AutoJs6 scripts and file manager: require AutoJs6 6.8.1 (internal build 6641) or later.
+- Apps packaged by AutoJs6: must be packaged by AutoJs6 6.8.1 (internal build 6641) or later, and this plugin must be installed on the device that runs them; packaging adds the permission `org.autojs.plugin.pdf.permission.RUNTIME`, so `project.json` needs no change (a Node.js project declares `files`, a Bun project declares `pdf.control`).
 - Node.js: requires the Node.js Runtime plugin 2.2.0 or later, loaded with `require('autojs6:pdf')`; the project declares `files` in `node.permissions` of `project.json`, plus `files.write` to write files, `ocr` to recognize text and `ui` to open the viewer.
 - Bun: requires the Bun Runtime plugin 0.23.0 or later (Android 13 and later), used through `host.pdf`; turn on `pdf.control` on the settings screen of Bun Runtime, plus `ocr.control` to recognize text.
 - OCR: recognizing scanned pages needs an OCR plugin (ML Kit OCR, Paddle OCR or Rapid OCR); without one, recognizing scanned pages fails with `OCR_UNAVAILABLE`, and the other features are not affected.
@@ -186,7 +187,7 @@ Files opened with the system file picker keep their read grant and still open di
 
 The plugin keeps its permission surface as small as possible:
 
-- Protected entries: the capability service, the file manager entry service and the activation entry require the AutoJs6 plugin permission (`org.autojs.permission.PLUGIN`), so other apps cannot call them directly.
+- Protected entries: the capability service, the file manager entry service and the activation entry require the AutoJs6 plugin permission (`org.autojs.permission.PLUGIN`), so other apps cannot call them directly. The service and viewer entry for apps packaged by AutoJs6 require `org.autojs.plugin.pdf.permission.RUNTIME` (added when the app is packaged); documents and viewer sessions opened through them answer only the app that created them, and files are passed as file descriptors here too.
 - Storage: script files arrive as file descriptors, so the plugin asks for no storage permission on behalf of scripts; all files access is only used for the files you choose in the toolbox and the viewer.
 - HTML to PDF: the plugin loads no external content (network requests are answered with empty content, local files and `content:` addresses are blocked, and the page cannot navigate); the scripts of the page can be turned off with `javaScript: false`.
 - Recent files: files opened with the system file picker keep their read grant so they open directly next time, for at most 20 files; the grant is released as soon as an entry drops out, is removed or the list is cleared. Files handed over by other apps through "Open with" or sharing have a one-time grant only and stay out of the recent files.
@@ -248,6 +249,7 @@ _2026/11/12_
 - `Feature` The ocr option of pdf.text recognizes scanned pages without a text layer with an installed OCR plugin (ML Kit OCR, Paddle OCR or Rapid OCR)
 - `Feature` pdf.view opens a PDF in the plugin viewer; scripts receive page change and close events and can go to a page or close the viewer
 - `Feature` Node.js and Bun scripts can use the pdf module too; its methods return Promises, and calls can be aborted with signal or timeoutMs
+- `Feature` Apps packaged by AutoJs6 6.8.1 or later can use the pdf module too, with the needed permission added when packaging; documents and viewer sessions they open answer only the app that created them
 - `Feature` Viewer: continuous scrolling, pinch zoom, thumbnails, outline, search highlights, go to page, password prompt and night mode; it opens from the launcher, and other apps can hand PDF files to it with "Open with" or sharing
 - `Feature` AutoJs6 file manager: tapping a PDF opens it in the plugin viewer, and PDF files of up to 512 MiB inside archives open directly too; the menu offers merge, split, convert to images, extract text, encrypt and remove the password
 - `Feature` Home screen: the tools, task progress, recent files and the all files access grant (only the toolbox needs it)
