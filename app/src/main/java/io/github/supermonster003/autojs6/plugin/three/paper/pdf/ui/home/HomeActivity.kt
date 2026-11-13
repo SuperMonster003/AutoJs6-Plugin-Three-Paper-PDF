@@ -2,8 +2,8 @@ package io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.home
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -34,11 +34,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -72,6 +74,8 @@ import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.release.Relea
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.release.ReleaseHistoryParser
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.release.ReleaseHistoryScreen
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.settings.SettingsScreen
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.OpenPersistableDocument
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.RecentEntry
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.RecentFiles
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.ToolTask
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.ToolTasks
@@ -80,6 +84,9 @@ import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.remem
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.update.AppUpdateController
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.update.AppUpdateStore
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.update.UpdateDialogs
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.text.NumberFormat
 
@@ -186,13 +193,17 @@ class HomeActivity : StandaloneActivity() {
 
 /**
  * The home screen: the all files access card while it is missing, the toolbox tasks (newest first), opening a PDF and
- * the eight tools, then the recent files. The lists reload on every resume and when a task finishes.
+ * the eight tools, then the recent files. The lists reload on every resume and when a task finishes. A PDF picked with
+ * the system file picker opens at once and joins the recent files when its read grant can be kept (appendix D
+ * Q106 = B); such an entry is checked before it opens and removed with a notice when it cannot open any more.
  * zh-CN: 首页: 缺少所有文件访问权限时显示授权卡片, 工具箱任务 (最新的在前), 打开 PDF 与八个工具, 然后是最近文件. 每次恢复时以及任务结束时
- * 重新加载列表.
+ * 重新加载列表. 用系统文件选择器选取的 PDF 立即打开, 读取授权可以保留时加入最近文件 (附录 D Q106 = B); 这类条目在打开前检查, 已无法
+ * 打开时提示并移除.
  */
 @Composable
 private fun HomeScreen(onTool: (ToolKind) -> Unit, onSettings: () -> Unit) {
     val context = LocalContext.current
+    val resources = LocalResources.current
     val storage = rememberStorageAccess()
     var browsing by rememberSaveable { mutableStateOf(false) }
     var reload by remember { mutableIntStateOf(0) }
@@ -203,8 +214,35 @@ private fun HomeScreen(onTool: (ToolKind) -> Unit, onSettings: () -> Unit) {
     val tasks = ToolTasks.tasks.reversed()
     val finished = tasks.count { it.finished }
     val recents = remember(reload, finished, storage.generation) { RecentFiles.read(context) }
-    val pickPdf = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri != null) ToolboxFiles.openUriInViewer(context, uri)
+    val scope = rememberCoroutineScope()
+    val pickPdf = rememberLauncherForActivityResult(OpenPersistableDocument()) { picked ->
+        if (picked == null) return@rememberLauncherForActivityResult
+        ToolboxFiles.openUriInViewer(context, picked.uri)
+        val app = context.applicationContext
+        scope.launch {
+            if (withContext(Dispatchers.IO) { RecentFiles.adopt(app, picked.uri, picked.flags) } != null) reload++
+        }
+    }
+    val openRecent: (RecentEntry) -> Unit = { entry ->
+        when (entry) {
+            is RecentEntry.Local -> {
+                RecentFiles.add(context, entry.file)
+                reload++
+                ToolboxFiles.openInViewer(context, entry.file)
+            }
+            is RecentEntry.Document -> {
+                val app = context.applicationContext
+                scope.launch {
+                    val fresh = withContext(Dispatchers.IO) { RecentFiles.reopen(app, entry) }
+                    reload++
+                    if (fresh != null) {
+                        ToolboxFiles.openUriInViewer(context, fresh.uri.toUri())
+                    } else {
+                        Toast.makeText(context, resources.getString(R.string.home_recent_unavailable, entry.name), Toast.LENGTH_LONG).show()
+                    }
+                }
+            }
+        }
     }
 
     if (browsing) {
@@ -220,7 +258,7 @@ private fun HomeScreen(onTool: (ToolKind) -> Unit, onSettings: () -> Unit) {
                     ToolboxFiles.openInViewer(context, file)
                 }
             },
-            start = recents.firstOrNull()?.parentFile,
+            start = recents.firstNotNullOfOrNull { (it as? RecentEntry.Local)?.file?.parentFile },
             onSystemPicker = {
                 browsing = false
                 runCatching { pickPdf.launch(arrayOf(MIME_PDF)) }
@@ -273,16 +311,12 @@ private fun HomeScreen(onTool: (ToolKind) -> Unit, onSettings: () -> Unit) {
                     )
                 }
             }
-            items(recents, key = { "recent-${it.absolutePath}" }) { file ->
+            items(recents, key = { "recent-${it.key}" }) { entry ->
                 RecentRow(
-                    file = file,
-                    onOpen = {
-                        RecentFiles.add(context, file)
-                        reload++
-                        ToolboxFiles.openInViewer(context, file)
-                    },
+                    entry = entry,
+                    onOpen = { openRecent(entry) },
                     onRemove = {
-                        RecentFiles.remove(context, file)
+                        RecentFiles.remove(context, entry)
                         reload++
                     },
                 )
@@ -388,30 +422,37 @@ private fun TaskCard(task: ToolTask) {
     }
 }
 
+/**
+ * One recent file: the name, then the folder of a local file or a note that the system file picker opened it.
+ * zh-CN: 一个最近文件: 名称, 下方是本地文件所在的文件夹, 或说明它经系统文件选择器打开.
+ */
 @Composable
-private fun RecentRow(file: File, onOpen: () -> Unit, onRemove: () -> Unit) {
+private fun RecentRow(entry: RecentEntry, onOpen: () -> Unit, onRemove: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(role = Role.Button, onClick = onOpen)
             .padding(start = 24.dp, end = 8.dp, top = 8.dp, bottom = 8.dp)
-            .testTag("paper.home.recent.${file.name}"),
+            .testTag("paper.home.recent.${entry.name}"),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(painterResource(R.drawable.ic_description_24), contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(24.dp))
         Spacer(Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(file.name, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.MiddleEllipsis)
+            Text(entry.name, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.MiddleEllipsis)
             Text(
-                text = file.parent.orEmpty(),
+                text = when (entry) {
+                    is RecentEntry.Local -> entry.file.parent.orEmpty()
+                    is RecentEntry.Document -> stringResource(R.string.home_recent_picked)
+                },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.MiddleEllipsis,
             )
         }
-        IconButton(onClick = onRemove, modifier = Modifier.testTag("paper.home.recent.${file.name}.remove")) {
-            Icon(painterResource(R.drawable.ic_close_24), contentDescription = stringResource(R.string.home_recent_remove, file.name))
+        IconButton(onClick = onRemove, modifier = Modifier.testTag("paper.home.recent.${entry.name}.remove")) {
+            Icon(painterResource(R.drawable.ic_close_24), contentDescription = stringResource(R.string.home_recent_remove, entry.name))
         }
     }
 }

@@ -23,7 +23,9 @@
     <string name="home_recent">الملفات الأخيرة</string>
     <string name="home_recent_clear">مسح</string>
     <string name="home_recent_empty">تظهر هنا ملفات PDF التي تفتحها من هنا والتي ينشئها صندوق الأدوات</string>
+    <string name="home_recent_picked">فُتح باستخدام منتقي الملفات في النظام</string>
     <string name="home_recent_remove">إزالة %1$s من الملفات الأخيرة</string>
+    <string name="home_recent_unavailable">تعذّر فتح %1$s (حُذف الملف أو أُلغي الوصول إليه). تمت إزالته من الملفات الأخيرة.</string>
     <string name="home_storage_denied">لم يتم منح الوصول إلى جميع الملفات. حتى تمنحه لا يستطيع صندوق الأدوات قراءة الملفات التي تختارها أو الكتابة فيها; عمليات السكربتات لا تتأثر.</string>
     <string name="home_storage_grant">منح الوصول</string>
     <string name="home_storage_title">الوصول إلى الملفات</string>

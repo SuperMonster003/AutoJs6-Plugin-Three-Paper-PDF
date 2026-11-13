@@ -23,7 +23,9 @@
     <string name="home_recent">最近のファイル</string>
     <string name="home_recent_clear">クリア</string>
     <string name="home_recent_empty">ここで開いた PDF とツールボックスで作成した PDF がここに表示されます</string>
+    <string name="home_recent_picked">システムのファイル選択から開いたファイル</string>
     <string name="home_recent_remove">%1$s を最近のファイルから削除</string>
+    <string name="home_recent_unavailable">%1$s を開けなくなりました (ファイルが削除されたか, アクセス許可が取り消されました). 最近のファイルから削除しました.</string>
     <string name="home_storage_denied">すべてのファイルへのアクセスが許可されていません. 許可するまでツールボックスは選んだファイルを読み書きできません. スクリプトの操作には影響しません.</string>
     <string name="home_storage_grant">許可する</string>
     <string name="home_storage_title">ファイルアクセス</string>

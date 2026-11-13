@@ -23,7 +23,9 @@
     <string name="home_recent">Недавние файлы</string>
     <string name="home_recent_clear">Очистить</string>
     <string name="home_recent_empty">Здесь появятся PDF, открытые отсюда, и PDF, созданные набором инструментов</string>
+    <string name="home_recent_picked">Открыт через системный выбор файлов</string>
     <string name="home_recent_remove">Убрать %1$s из недавних файлов</string>
+    <string name="home_recent_unavailable">Не удаётся открыть %1$s (файл удалён или доступ отозван). Он убран из недавних файлов.</string>
     <string name="home_storage_denied">Доступ ко всем файлам не предоставлен. Пока вы его не предоставите, набор инструментов не может читать и записывать выбранные файлы; операции скриптов это не затрагивает.</string>
     <string name="home_storage_grant">Предоставить доступ</string>
     <string name="home_storage_title">Доступ к файлам</string>

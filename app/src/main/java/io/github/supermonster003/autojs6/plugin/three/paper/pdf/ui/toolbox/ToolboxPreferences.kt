@@ -7,8 +7,6 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Environment
 import androidx.core.content.ContextCompat
-import androidx.core.content.edit
-import org.json.JSONArray
 import java.io.File
 
 /**
@@ -54,44 +52,6 @@ internal object ToolboxPreferences {
     fun setDefaultDpi(context: Context, dpi: Int): Boolean {
         require(dpi in DPI_CHOICES)
         return prefs(context).edit().putInt(KEY_DEFAULT_DPI, dpi).commit()
-    }
-
-    private fun prefs(context: Context) = context.applicationContext.getSharedPreferences(FILE, Context.MODE_PRIVATE)
-
-}
-
-/**
- * The files the toolbox opened or wrote, newest first, at most [MAX] (roadmap P4.1); files that no longer exist are
- * left out when read.
- * zh-CN: 工具箱打开或写出的文件, 最新的在前, 至多 [MAX] 个 (路线图 P4.1); 读取时略去已不存在的文件.
- */
-internal object RecentFiles {
-
-    const val FILE = "recent-files"
-
-    private const val KEY_PATHS = "paths"
-
-    const val MAX = 20
-
-    fun read(context: Context): List<File> = runCatching {
-        val array = JSONArray(prefs(context).getString(KEY_PATHS, "[]"))
-        List(array.length()) { File(array.getString(it)) }.filter { it.isFile }
-    }.getOrDefault(emptyList())
-
-    @Synchronized
-    fun add(context: Context, file: File) {
-        val paths = (listOf(file) + read(context)).map { it.absolutePath }.distinct().take(MAX)
-        prefs(context).edit { putString(KEY_PATHS, JSONArray(paths).toString()) }
-    }
-
-    @Synchronized
-    fun remove(context: Context, file: File) {
-        val paths = read(context).map { it.absolutePath }.filter { it != file.absolutePath }
-        prefs(context).edit { putString(KEY_PATHS, JSONArray(paths).toString()) }
-    }
-
-    fun clear(context: Context) {
-        prefs(context).edit { remove(KEY_PATHS) }
     }
 
     private fun prefs(context: Context) = context.applicationContext.getSharedPreferences(FILE, Context.MODE_PRIVATE)

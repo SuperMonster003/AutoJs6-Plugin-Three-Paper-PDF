@@ -23,7 +23,9 @@
     <string name="home_recent">最近檔案</string>
     <string name="home_recent_clear">清除</string>
     <string name="home_recent_empty">從這裏開啟的 PDF 與工具箱生成的 PDF 會顯示在這裏</string>
+    <string name="home_recent_picked">經系統檔案選擇器開啟</string>
     <string name="home_recent_remove">從最近檔案中移除 %1$s</string>
+    <string name="home_recent_unavailable">%1$s 已無法開啟 (檔案已刪除或存取授權已失效), 已從最近檔案中移除.</string>
     <string name="home_storage_denied">尚未授予所有檔案存取權限. 授權前工具箱無法讀寫你選擇的檔案; 腳本操作不受影響.</string>
     <string name="home_storage_grant">前往授權</string>
     <string name="home_storage_title">檔案存取</string>

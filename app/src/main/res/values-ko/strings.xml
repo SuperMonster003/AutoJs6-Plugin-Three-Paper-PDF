@@ -23,7 +23,9 @@
     <string name="home_recent">최근 파일</string>
     <string name="home_recent_clear">지우기</string>
     <string name="home_recent_empty">여기에서 연 PDF와 도구 상자가 만든 PDF가 여기에 표시됩니다</string>
+    <string name="home_recent_picked">시스템 파일 선택기로 연 파일</string>
     <string name="home_recent_remove">최근 파일에서 %1$s 제거</string>
+    <string name="home_recent_unavailable">%1$s을(를) 더 이상 열 수 없습니다 (파일이 삭제되었거나 접근 권한이 취소되었습니다). 최근 파일에서 제거했습니다.</string>
     <string name="home_storage_denied">모든 파일 접근 권한이 허용되지 않았습니다. 허용하기 전까지 도구 상자는 선택한 파일을 읽거나 쓸 수 없습니다. 스크립트 작업에는 영향이 없습니다.</string>
     <string name="home_storage_grant">권한 허용</string>
     <string name="home_storage_title">파일 접근</string>

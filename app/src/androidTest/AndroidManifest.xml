@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The test APK's own components. GrantingTestProvider stands in for a documents provider of another app (appendix D
+    Q106 = B): it runs in the test APK's process under the test APK's uid, so the grants it gives the plugin are real URI
+    grants that the plugin can persist. Reading needs MANAGE_DOCUMENTS, which the plugin does not hold, so the plugin
+    reads only through those grants, as with a real documents provider; writing is left open so the plugin can reach
+    call().
+    zh-CN: 测试 APK 自己的组件. GrantingTestProvider 充当其他应用的文档提供方 (附录 D Q106 = B): 它运行在测试 APK 的进程中, 使用测试 APK
+    的 uid, 因此授予插件的是插件可以持久化的真实 URI 授权. 读取需要插件不持有的 MANAGE_DOCUMENTS, 插件只能凭这些授权读取, 与真实文档
+    提供方相同; 写入不设权限, 以便插件调用 call().
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <provider
+            android:name="io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.GrantingTestProvider"
+            android:authorities="${applicationId}.grants"
+            android:exported="true"
+            android:grantUriPermissions="true"
+            android:readPermission="android.permission.MANAGE_DOCUMENTS" />
+    </application>
+
+</manifest>
