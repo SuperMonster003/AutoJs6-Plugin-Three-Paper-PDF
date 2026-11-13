@@ -1,11 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="home_skeleton_note">Esta compilación es el esqueleto del repositorio: la lectura, el renderizado, las operaciones de páginas, el visor y la caja de herramientas llegarán en compilaciones posteriores.</string>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="home_skeleton_note">Esta compilación ofrece las operaciones de scripts y el visor de PDF; la caja de herramientas llegará en una compilación posterior.</string>
     <string name="home_storage_denied">El acceso a todos los archivos no está concedido. Hasta que lo concedas, la caja de herramientas no puede leer ni escribir los archivos que elijas; las operaciones de scripts no se ven afectadas.</string>
     <string name="home_storage_grant">Conceder acceso</string>
     <string name="home_storage_granted">El acceso a todos los archivos está concedido. La caja de herramientas puede leer y escribir los archivos que elijas.</string>
     <string name="home_storage_title">Acceso a archivos</string>
     <string name="plugin_description">Lectura, renderizado, combinación, división, generación y cifrado de archivos PDF, con visor integrado y entradas en el gestor de archivos</string>
+    <string name="viewer_back">Atrás</string>
+    <string name="viewer_cancel">Cancelar</string>
     <string name="viewer_close">Cerrar</string>
-    <string name="viewer_skeleton_note">El visor de PDF llegará en una compilación posterior.</string>
+    <string name="viewer_error_denied">La aplicación no tiene permiso para leer el archivo.</string>
+    <string name="viewer_error_empty">El documento no tiene páginas.</string>
+    <string name="viewer_error_expired">Esta solicitud del visor ha caducado. Vuelve a ejecutar el script para abrir el documento.</string>
+    <string name="viewer_error_invalid">El archivo no es un documento PDF válido o está dañado.</string>
+    <string name="viewer_error_no_source">No hay ningún documento que abrir.</string>
+    <string name="viewer_error_read">No se puede leer el documento.</string>
+    <string name="viewer_error_title">No se puede abrir el documento</string>
+    <string name="viewer_jump_go">Ir</string>
+    <string name="viewer_jump_hint">Página (1-%1$d)</string>
+    <string name="viewer_jump_title">Ir a la página</string>
+    <string name="viewer_loading" tools:ignore="TypographyEllipsis">Abriendo el documento...</string>
+    <string name="viewer_more">Más opciones</string>
+    <string name="viewer_night_mode">Modo nocturno</string>
+    <string name="viewer_no_app">Ninguna aplicación puede abrir este documento.</string>
+    <string name="viewer_open_with">Abrir con otra aplicación</string>
+    <string name="viewer_open_with_title">Abrir con</string>
+    <string name="viewer_outline">Esquema</string>
+    <string name="viewer_outline_empty">Este documento no tiene esquema.</string>
+    <string name="viewer_page_indicator">%1$d / %2$d</string>
+    <string name="viewer_page_thumbnail">Página %1$d</string>
+    <string name="viewer_password_hint">Contraseña</string>
+    <string name="viewer_password_message">%1$s está protegido con contraseña. Introdúcela para abrir el documento.</string>
+    <string name="viewer_password_open">Abrir</string>
+    <string name="viewer_password_title">Se requiere contraseña</string>
+    <string name="viewer_password_wrong">Contraseña incorrecta. Inténtalo de nuevo.</string>
+    <string name="viewer_search">Buscar</string>
+    <string name="viewer_search_close">Cerrar búsqueda</string>
+    <string name="viewer_search_count">%1$d / %2$d</string>
+    <string name="viewer_search_count_limited">%1$d / %2$d+</string>
+    <string name="viewer_search_hint">Buscar en el documento</string>
+    <string name="viewer_search_next">Siguiente coincidencia</string>
+    <string name="viewer_search_none">Sin coincidencias</string>
+    <string name="viewer_search_previous">Coincidencia anterior</string>
+    <string name="viewer_search_running" tools:ignore="TypographyEllipsis">Buscando...</string>
+    <string name="viewer_share">Compartir</string>
+    <string name="viewer_share_failed">No se puede preparar el documento para compartir.</string>
+    <string name="viewer_share_title">Compartir PDF</string>
+    <string name="viewer_untitled">Documento sin título</string>
 </resources>

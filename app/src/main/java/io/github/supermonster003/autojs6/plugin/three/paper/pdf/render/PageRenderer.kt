@@ -46,6 +46,31 @@ internal class PageRenderer private constructor(private val renderer: PdfRendere
         }
     }
 
+    /** Pages the system renderer finds. zh-CN: 系统渲染器识别出的页数. */
+    val pageCount: Int get() = renderer.pageCount
+
+    /**
+     * Draws the part of page [number] (from 1) that starts at [left], [top] (pixels of the page drawn [scale] pixels per
+     * point) onto [bitmap], for the tiles of the viewer (roadmap D35). Below API 28 the transform applies to the
+     * unrotated, uncropped page, so callers pass only pages whose rotation is 0 and whose crop box is the media box
+     * from the origin there ([regionSafe]).
+     * zh-CN: 把第 [number] 页 (从 1 起) 中从 [left], [top] 开始的部分 (页面按每点 [scale] 像素绘制时的像素) 画到 [bitmap] 上, 供
+     * 查看器分块使用 (路线图 D35). 低于 API 28 时变换作用于未旋转, 未裁剪的页面, 因此调用方在那里只传旋转为 0 且裁剪框即从原点起
+     * 的媒体框的页面 ([regionSafe]).
+     */
+    fun drawRegion(number: Int, scale: Float, left: Float, top: Float, bitmap: Bitmap) {
+        if (number > renderer.pageCount) {
+            throw PdfFailure(PdfErrorCodes.INVALID_PDF, "the system renderer finds ${renderer.pageCount} pages, page $number cannot be drawn")
+        }
+        renderer.openPage(number - 1).use { page ->
+            val transform = Matrix().apply {
+                setScale(scale, scale)
+                postTranslate(-left, -top)
+            }
+            page.render(bitmap, null, transform, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+        }
+    }
+
     override fun close() {
         try {
             renderer.close()
@@ -95,6 +120,28 @@ internal class PageRenderer private constructor(private val renderer: PdfRendere
                 throw t
             }
         }
+
+        /**
+         * A renderer of [descriptor] for the viewer, which holds no session (roadmap P3.1); it takes [descriptor] over
+         * and deletes [decrypted], the decrypted copy it reads if any, on [close].
+         * zh-CN: 供查看器使用的 [descriptor] 渲染器, 查看器不持有会话 (路线图 P3.1); 它接管 [descriptor], 并在 [close] 时删除它所读的
+         * 解密副本 [decrypted] (如有).
+         */
+        fun of(descriptor: ParcelFileDescriptor, decrypted: File? = null): PageRenderer = try {
+            PageRenderer(create(descriptor), decrypted)
+        } catch (t: Throwable) {
+            decrypted?.delete()
+            throw t
+        }
+
+        /**
+         * Whether [drawRegion] maps the page as displayed on every level: always from API 28, below it only for a page
+         * with no rotation whose crop box is the media box from the origin.
+         * zh-CN: [drawRegion] 是否在所有级别都映射显示后的页面: API 28 起总是如此, 低于它时只对无旋转且裁剪框即从原点起的媒体框的
+         * 页面成立.
+         */
+        fun regionSafe(rotation: Int, cropBox: FloatArray, mediaBox: FloatArray): Boolean =
+            Build.VERSION.SDK_INT >= TRANSFORM_ON_DISPLAYED_PAGE || (rotation == 0 && cropBox.contentEquals(mediaBox) && cropBox[0] == 0f && cropBox[1] == 0f)
 
         /** Takes [descriptor] over: the renderer closes it, or this does when the renderer refuses it. zh-CN: 接管 [descriptor]: 由渲染器关闭, 渲染器拒绝时由本函数关闭. */
         private fun create(descriptor: ParcelFileDescriptor): PdfRenderer = try {

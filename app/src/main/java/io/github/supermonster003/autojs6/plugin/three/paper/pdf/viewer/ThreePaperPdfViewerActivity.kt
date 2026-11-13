@@ -1,56 +1,173 @@
 package io.github.supermonster003.autojs6.plugin.three.paper.pdf.viewer
 
+import android.content.ActivityNotFoundException
+import android.content.ClipData
+import android.content.ComponentName
+import android.content.ContentResolver
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.os.ParcelFileDescriptor
+import android.provider.OpenableColumns
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextDirection
-import androidx.compose.ui.unit.dp
+import androidx.activity.viewModels
+import androidx.annotation.StringRes
+import androidx.core.content.FileProvider
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.R
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.PaperTheme
+import org.autojs.plugin.pdf.api.PdfActions
+import java.io.File
+import java.io.FileNotFoundException
 
 /**
- * The viewer entry (roadmap 5.5): `org.autojs.plugin.PDF_VIEWER_OPEN` from the host with a session token, and
- * `ACTION_VIEW` + `application/pdf` from the launcher and other apps. The skeleton only tells that the viewer comes in a
- * later build; roadmap P3.1 lands the Compose viewer and P3.2 the session claim.
- * zh-CN: 查看器入口 (路线图 5.5): 宿主带会话令牌发来的 `org.autojs.plugin.PDF_VIEWER_OPEN`, 以及启动器与其他应用发来的
- * `ACTION_VIEW` + `application/pdf`. 骨架只提示查看器将在后续构建中提供; 路线图 P3.1 落地 Compose 查看器, P3.2 落地会话认领.
+ * What an intent asks the viewer to show: [key] identifies it across Activity recreation, [build] creates the request
+ * (claiming a session token at most once) and [missing] is the message when it answers null.
+ * zh-CN: intent 要查看器显示的内容: [key] 在 Activity 重建后仍标识它, [build] 创建请求 (会话令牌至多认领一次), 它返回 null 时显示
+ * [missing].
  */
-class ThreePaperPdfViewerActivity : ComponentActivity() {
+internal class ViewerEntry(val key: String, @param:StringRes val missing: Int, val build: () -> ViewerRequest?)
+
+/**
+ * The viewer (roadmap 5.5, D21, D35, P3.1). Every entry shares this Activity: `org.autojs.plugin.PDF_VIEWER_OPEN`
+ * from the host with a session token (claimed from [ViewerSessions]), `ACTION_VIEW` of a `content:` or `file:` PDF from
+ * the launcher, other apps and the toolbox result page, and the file manager's primary action (a subclass that
+ * overrides [entryOf]). A new intent replaces the document on screen; share and open with hand a copy to other apps
+ * through the FileProvider.
+ * zh-CN: 查看器 (路线图 5.5, D21, D35, P3.1). 所有入口共用此 Activity: 宿主带会话令牌发来的 `org.autojs.plugin.PDF_VIEWER_OPEN`
+ * (从 [ViewerSessions] 认领), 启动器, 其他应用与工具箱结果页发来的 `content:` 或 `file:` PDF 的 `ACTION_VIEW`, 以及文件管理器的主
+ * 操作 (重写 [entryOf] 的子类). 新的 intent 替换屏幕上的文档; 分享与用其他应用打开通过 FileProvider 把副本交给其他应用.
+ */
+open class ThreePaperPdfViewerActivity : ComponentActivity() {
+
+    private val model: ViewerViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        show(intent)
         setContent {
             PaperTheme {
-                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    Column(
-                        modifier = Modifier
-                            .safeDrawingPadding()
-                            .padding(24.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
-                    ) {
-                        Text(
-                            text = stringResource(R.string.app_name),
-                            style = MaterialTheme.typography.headlineMedium.copy(textDirection = TextDirection.Content),
-                        )
-                        Text(text = stringResource(R.string.viewer_skeleton_note), style = MaterialTheme.typography.bodyLarge)
-                        Button(onClick = ::finish) { Text(text = stringResource(R.string.viewer_close)) }
-                    }
+                ViewerScreen(
+                    model = model,
+                    onClose = ::finish,
+                    onShare = { handOff(send = true) },
+                    onOpenWith = { handOff(send = false) },
+                )
+            }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        show(intent)
+    }
+
+    /**
+     * The entry of [intent]; subclasses for other entries override it.
+     * zh-CN: [intent] 的入口; 其他入口的子类重写它.
+     */
+    internal open fun entryOf(intent: Intent): ViewerEntry {
+        if (intent.action == PdfActions.VIEWER_ACTIVITY_ACTION) {
+            val token = intent.getStringExtra(PdfActions.EXTRA_SESSION_TOKEN)
+            return ViewerEntry("token:$token", R.string.viewer_error_expired) {
+                ViewerSessions.claim(token)?.let { claim ->
+                    ViewerRequest(
+                        key = "token:$token",
+                        open = { claim.source },
+                        name = { claim.displayName },
+                        password = claim.password,
+                        page = claim.page,
+                        keyword = claim.keyword,
+                    )
                 }
             }
         }
+        val uri = intent.data
+        return ViewerEntry("uri:$uri", R.string.viewer_error_no_source) { uri?.let { requestOf(it) } }
+    }
+
+    private fun show(intent: Intent) {
+        val entry = entryOf(intent)
+        model.start(entry.key, entry.missing, entry.build)
+    }
+
+    private fun handOff(send: Boolean) {
+        model.exportCopy { file ->
+            if (isFinishing || isDestroyed) return@exportCopy
+            if (file == null) {
+                toast(R.string.viewer_share_failed)
+                return@exportCopy
+            }
+            val uri = try {
+                FileProvider.getUriForFile(this, authorityOf(this), file)
+            } catch (_: IllegalArgumentException) {
+                toast(R.string.viewer_share_failed)
+                return@exportCopy
+            }
+            val target = if (send) {
+                Intent(Intent.ACTION_SEND).setType(MIME_PDF).putExtra(Intent.EXTRA_STREAM, uri).also { it.clipData = ClipData.newRawUri(file.name, uri) }
+            } else {
+                Intent(Intent.ACTION_VIEW).setDataAndType(uri, MIME_PDF)
+            }
+            target.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            val chooser = Intent.createChooser(target, getString(if (send) R.string.viewer_share_title else R.string.viewer_open_with_title))
+            if (!send) {
+                chooser.putExtra(Intent.EXTRA_EXCLUDE_COMPONENTS, arrayOf(ComponentName(this, ThreePaperPdfViewerActivity::class.java)))
+            }
+            try {
+                startActivity(chooser)
+            } catch (_: ActivityNotFoundException) {
+                toast(R.string.viewer_no_app)
+            }
+        }
+    }
+
+    private fun toast(@StringRes message: Int) = Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+
+    companion object {
+
+        const val MIME_PDF = "application/pdf"
+
+        /** The FileProvider of shared copies (see the Manifest). zh-CN: 分享副本的 FileProvider (见 Manifest). */
+        fun authorityOf(context: Context) = "${context.packageName}.viewer.files"
+
+        /**
+         * A request for [uri]: a `content:` URI through the content resolver (the name from `OpenableColumns`), a
+         * `file:` URI by its path.
+         * zh-CN: [uri] 的请求: `content:` URI 经内容解析器打开 (名称取自 `OpenableColumns`), `file:` URI 按路径打开.
+         */
+        internal fun requestOf(uri: Uri): ViewerRequest? = when (uri.scheme) {
+            ContentResolver.SCHEME_CONTENT -> ViewerRequest(
+                key = "uri:$uri",
+                open = { context ->
+                    context.contentResolver.openFileDescriptor(uri, "r") ?: throw FileNotFoundException(uri.toString())
+                },
+                name = { context -> displayNameOf(context, uri) },
+            )
+            ContentResolver.SCHEME_FILE -> uri.path?.let { path ->
+                ViewerRequest(
+                    key = "uri:$uri",
+                    open = { ParcelFileDescriptor.open(File(path), ParcelFileDescriptor.MODE_READ_ONLY) },
+                    name = { File(path).name },
+                )
+            }
+            else -> null
+        }
+
+        private fun displayNameOf(context: Context, uri: Uri): String? {
+            val queried = runCatching {
+                context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
+                    if (cursor.moveToFirst() && !cursor.isNull(0)) cursor.getString(0) else null
+                }
+            }.getOrNull()
+            return queried?.takeIf { it.isNotBlank() } ?: uri.lastPathSegment?.substringAfterLast('/')
+        }
+
     }
 
 }

@@ -1,11 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="home_skeleton_note">Эта сборка - каркас репозитория: чтение, отрисовка, операции со страницами, просмотрщик и набор инструментов появятся в следующих сборках.</string>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="home_skeleton_note">Эта сборка предоставляет операции скриптов и просмотрщик PDF; набор инструментов появится в следующих сборках.</string>
     <string name="home_storage_denied">Доступ ко всем файлам не предоставлен. Пока вы его не предоставите, набор инструментов не может читать и записывать выбранные файлы; операции скриптов это не затрагивает.</string>
     <string name="home_storage_grant">Предоставить доступ</string>
     <string name="home_storage_granted">Доступ ко всем файлам предоставлен. Набор инструментов может читать и записывать выбранные файлы.</string>
     <string name="home_storage_title">Доступ к файлам</string>
     <string name="plugin_description">Чтение, отрисовка, объединение, разделение, создание и шифрование PDF-файлов, встроенный просмотрщик и пункты в файловом менеджере</string>
+    <string name="viewer_back">Назад</string>
+    <string name="viewer_cancel">Отмена</string>
     <string name="viewer_close">Закрыть</string>
-    <string name="viewer_skeleton_note">Просмотрщик PDF появится в следующей сборке.</string>
+    <string name="viewer_error_denied">Нет разрешения на чтение этого файла.</string>
+    <string name="viewer_error_empty">В документе нет страниц.</string>
+    <string name="viewer_error_expired">Срок действия этого запроса на просмотр истёк. Запустите скрипт снова, чтобы открыть документ.</string>
+    <string name="viewer_error_invalid">Файл не является допустимым документом PDF или повреждён.</string>
+    <string name="viewer_error_no_source">Нет документа для открытия.</string>
+    <string name="viewer_error_read">Не удаётся прочитать документ.</string>
+    <string name="viewer_error_title">Не удаётся открыть документ</string>
+    <string name="viewer_jump_go">Перейти</string>
+    <string name="viewer_jump_hint">Страница (1-%1$d)</string>
+    <string name="viewer_jump_title">Перейти к странице</string>
+    <string name="viewer_loading" tools:ignore="TypographyEllipsis">Открытие документа...</string>
+    <string name="viewer_more">Другие параметры</string>
+    <string name="viewer_night_mode">Ночной режим</string>
+    <string name="viewer_no_app">Нет приложений, которые могут открыть этот документ.</string>
+    <string name="viewer_open_with">Открыть в другом приложении</string>
+    <string name="viewer_open_with_title">Открыть с помощью</string>
+    <string name="viewer_outline">Оглавление</string>
+    <string name="viewer_outline_empty">В этом документе нет оглавления.</string>
+    <string name="viewer_page_indicator">%1$d / %2$d</string>
+    <string name="viewer_page_thumbnail">Страница %1$d</string>
+    <string name="viewer_password_hint">Пароль</string>
+    <string name="viewer_password_message">Документ %1$s защищён паролем. Введите пароль, чтобы открыть его.</string>
+    <string name="viewer_password_open">Открыть</string>
+    <string name="viewer_password_title">Требуется пароль</string>
+    <string name="viewer_password_wrong">Неверный пароль. Попробуйте ещё раз.</string>
+    <string name="viewer_search">Поиск</string>
+    <string name="viewer_search_close">Закрыть поиск</string>
+    <string name="viewer_search_count">%1$d / %2$d</string>
+    <string name="viewer_search_count_limited">%1$d / %2$d+</string>
+    <string name="viewer_search_hint">Поиск в документе</string>
+    <string name="viewer_search_next">Следующее совпадение</string>
+    <string name="viewer_search_none">Нет совпадений</string>
+    <string name="viewer_search_previous">Предыдущее совпадение</string>
+    <string name="viewer_search_running" tools:ignore="TypographyEllipsis">Поиск...</string>
+    <string name="viewer_share">Поделиться</string>
+    <string name="viewer_share_failed">Не удаётся подготовить документ для отправки.</string>
+    <string name="viewer_share_title">Поделиться PDF</string>
+    <string name="viewer_untitled">Документ без названия</string>
 </resources>

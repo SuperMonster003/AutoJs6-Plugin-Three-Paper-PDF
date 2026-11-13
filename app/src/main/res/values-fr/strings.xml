@@ -1,11 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="home_skeleton_note">Cette version est le squelette du dépôt: la lecture, le rendu, les opérations sur les pages, la visionneuse et la boîte à outils arrivent dans les versions suivantes.</string>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="home_skeleton_note">Cette version propose les opérations des scripts et la visionneuse PDF; la boîte à outils arrive dans une version suivante.</string>
     <string name="home_storage_denied">L\'accès à tous les fichiers n\'est pas accordé. Tant que vous ne l\'accordez pas, la boîte à outils ne peut ni lire ni écrire les fichiers choisis; les opérations des scripts ne sont pas concernées.</string>
     <string name="home_storage_grant">Accorder l\'accès</string>
     <string name="home_storage_granted">L\'accès à tous les fichiers est accordé. La boîte à outils peut lire et écrire les fichiers choisis.</string>
     <string name="home_storage_title">Accès aux fichiers</string>
     <string name="plugin_description">Lecture, rendu, fusion, découpage, génération et chiffrement de fichiers PDF, avec une visionneuse intégrée et des entrées dans le gestionnaire de fichiers</string>
+    <string name="viewer_back">Retour</string>
+    <string name="viewer_cancel">Annuler</string>
     <string name="viewer_close">Fermer</string>
-    <string name="viewer_skeleton_note">La visionneuse PDF arrive dans une version suivante.</string>
+    <string name="viewer_error_denied">L\'application n\'a pas l\'autorisation de lire ce fichier.</string>
+    <string name="viewer_error_empty">Le document ne contient aucune page.</string>
+    <string name="viewer_error_expired">Cette demande d\'affichage a expiré. Relancez le script pour ouvrir le document.</string>
+    <string name="viewer_error_invalid">Le fichier n\'est pas un document PDF valide ou il est endommagé.</string>
+    <string name="viewer_error_no_source">Aucun document à ouvrir.</string>
+    <string name="viewer_error_read">Impossible de lire le document.</string>
+    <string name="viewer_error_title">Impossible d\'ouvrir le document</string>
+    <string name="viewer_jump_go">Aller</string>
+    <string name="viewer_jump_hint">Page (1-%1$d)</string>
+    <string name="viewer_jump_title">Aller à la page</string>
+    <string name="viewer_loading" tools:ignore="TypographyEllipsis">Ouverture du document...</string>
+    <string name="viewer_more">Plus d\'options</string>
+    <string name="viewer_night_mode">Mode nuit</string>
+    <string name="viewer_no_app">Aucune application ne peut ouvrir ce document.</string>
+    <string name="viewer_open_with">Ouvrir avec une autre application</string>
+    <string name="viewer_open_with_title">Ouvrir avec</string>
+    <string name="viewer_outline">Sommaire</string>
+    <string name="viewer_outline_empty">Ce document n\'a pas de sommaire.</string>
+    <string name="viewer_page_indicator">%1$d / %2$d</string>
+    <string name="viewer_page_thumbnail">Page %1$d</string>
+    <string name="viewer_password_hint">Mot de passe</string>
+    <string name="viewer_password_message">%1$s est protégé par un mot de passe. Saisissez-le pour ouvrir le document.</string>
+    <string name="viewer_password_open">Ouvrir</string>
+    <string name="viewer_password_title">Mot de passe requis</string>
+    <string name="viewer_password_wrong">Mot de passe incorrect. Réessayez.</string>
+    <string name="viewer_search">Rechercher</string>
+    <string name="viewer_search_close">Fermer la recherche</string>
+    <string name="viewer_search_count">%1$d / %2$d</string>
+    <string name="viewer_search_count_limited">%1$d / %2$d+</string>
+    <string name="viewer_search_hint">Rechercher dans le document</string>
+    <string name="viewer_search_next">Résultat suivant</string>
+    <string name="viewer_search_none">Aucun résultat</string>
+    <string name="viewer_search_previous">Résultat précédent</string>
+    <string name="viewer_search_running" tools:ignore="TypographyEllipsis">Recherche en cours...</string>
+    <string name="viewer_share">Partager</string>
+    <string name="viewer_share_failed">Impossible de préparer le document pour le partage.</string>
+    <string name="viewer_share_title">Partager le PDF</string>
+    <string name="viewer_untitled">Document sans titre</string>
 </resources>

@@ -205,7 +205,7 @@ io.github.supermonster003.autojs6.plugin.three.paper.pdf
 | P0 | 1.0.0 | 仓库骨架: 构建链与身份, Icon Studio 图标, 测试与 CI | 完成 (paper-p0, 2026-11-12) |
 | P1 | 宿主 6.8.1 | 契约 `pdf-api`, 宿主绑定与查看器启动, 脚本模块 `pdf`, OCR 分支, Node / Bun 桥接, Explorer 文件类型与注册 | 进行中 (P1.1 完成, P1.2 待真机绑定) |
 | P2 | 1.0.0 | 插件核心: 服务与句柄, 读取, 渲染与位图传输, 页面操作, 生成, 加密, 设备矩阵 | 进行中 (P2.1 - P2.6 完成) |
-| P3 | 1.0.0 | 查看器, `pdf.view` 会话, Explorer Action 服务 | 未开始 |
+| P3 | 1.0.0 | 查看器, `pdf.view` 会话, Explorer Action 服务 | 进行中 (P3.1 插件行完成, 真机手测待做) |
 | P4 | 1.0.0 | 工具箱界面: 应用骨架, 向导, 设置与启动器模式 | 未开始 |
 | P5 | 1.0.0 | 文档, 声明, 四仓库同步, 样例, 兼容矩阵, 发布与索引登记 | 未开始 |
 | P6 | 1.1.0 | 表单, 水印 / 页码 / 页眉页脚, 可搜索 PDF, 压缩, 发布 | 未开始 |
@@ -376,12 +376,12 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 
 ## P3: 查看器与 Explorer Action
 
-状态: 未开始. 设备: API 33 AVD + Sony XQ-AT72 API 31 (界面) + Xiaomi Pad API 35 (大屏) + OnePlus API 35 (ColorOS 后台启动).
+状态: 进行中 (P3.1 插件行完成, 真机手测待做). 设备: API 33 AVD + Sony XQ-AT72 API 31 (界面) + Xiaomi Pad API 35 (大屏) + OnePlus API 35 (ColorOS 后台启动).
 
 ### P3.1 Compose 查看器 (D35)
 
-- [ ] (插件) `ThreePaperPdfViewerActivity` + `ViewerScreen`: 连续纵向滚动, 双指缩放与 tile 重渲染, 页码指示与跳页, 缩略图栏, 大纲抽屉, 搜索与高亮, 密码对话框, 夜间模式 (Q3 已决: 反色渲染, 图片保留原色), 分享 / 用其他应用打开, 三个入口 (令牌, `ACTION_VIEW` content URI, 工具箱结果页) 共用.
-- 验收: 仪器测试打开夹具并断言页数与跳页; 真机 API 31 / 35 的缩放与搜索手测 (E4); 100 页文档滚动无 ANR (API 28).
+- [x] (插件) `ThreePaperPdfViewerActivity` + `ViewerScreen`: 连续纵向滚动, 双指缩放与 tile 重渲染, 页码指示与跳页, 缩略图栏, 大纲抽屉, 搜索与高亮, 密码对话框, 夜间模式 (Q3 已决: 反色渲染, 图片保留原色), 分享 / 用其他应用打开, 三个入口 (令牌, `ACTION_VIEW` content URI, 工具箱结果页) 共用. 结果 (2026-11-13, paper-p3-plugin): `viewer/` 下 9 个文件. 布局按页适配宽度连续纵排 (缩放 0.5-8, 双击 1 / 2.5), 基础位图两档宽度且有像素上限, 放大后对视口内 512 px 分块重渲染 (API < 28 只对未旋转且裁剪框 = 媒体框的页分块, 其余页整页放大), 位图缓存上限为最大堆的 1/8, 单个渲染线程按需求列表取件, 内存不足时减半缓存并跳过该件; 夜间模式用反色矩阵绘制页面, 再按 `read/ImageBounds` 找到的图片矩形不带滤镜画回原色, 开关存在偏好里; 搜索按 8 页一段在后台进行, 命中矩形高亮, 上一个 / 下一个跳转并居中; 大纲抽屉最多 5000 条; 缩略图栏按可见范围渲染; 跳页对话框只收数字. 分享 / 用其他应用打开: 把源复制到 `cacheDir/viewer-share/<uuid>/` 后经私有 FileProvider (`<包名>.viewer.files`, 不导出) 授权读取, 打开方式选择器排除本插件. 入口: 会话令牌 (`VIEWER_ACTIVITY_ACTION` + `EXTRA_SESSION_TOKEN`, 由 `ViewerSessions` 认领一次, Activity 重建不再认领, 未知或过期令牌显示提示), `ACTION_VIEW` 的 content / file URI; 工具箱结果页 (P4) 用同一 `ACTION_VIEW` 入口. Activity 为 `singleTop`, 新请求替换屏幕上的文档. 令牌带起始页与搜索词时跳到起始页及之后的第一个命中 (Q71, 已先行). 新增字符串 40 条 (替换骨架占位 `viewer_skeleton_note`), 11 个 values 目录写全.
+- 验收: 仪器测试打开夹具并断言页数与跳页; 真机 API 31 / 35 的缩放与搜索手测 (E4); 100 页文档滚动无 ANR (API 28). 结果 (2026-11-13, paper-p3-plugin): JVM `ViewerLayoutTest` 10 项, `RenderPlanTest` 6 项, `ManifestContractTest` 的 FileProvider 一项通过; 仪器测试 `ViewerActivityDeviceTest` 6 项 (file URI 打开 outline.pdf 断言 6 页, 跳到第 4 页且重建后保持; content URI 显示提供方名称; 令牌起始页 3 + needle 停在第 5 页且命中计数 2 / 2, 令牌只能认领一次; 未知令牌提示过期; 加密样例错误密码提示后用户密码打开; 100 页滚动) 在 AVD_API_33 与 AVD_API_24 只读实例全套 68 / 68 通过. 100 页滚动 30 次快滑: AVD 33 到第 97 页, 主线程最长延迟 79 ms; AVD 24 到第 69 页, 102 ms. 未执行: G8441 (API 28) 的 100 页滚动 (设备由 paper-integ 占用, 待释放后补); 真机 API 31 / 35 的缩放与搜索手测 (E4).
 
 ### P3.2 `pdf.view` 会话 (D21, D23)
 
@@ -680,6 +680,7 @@ AIDL:
 | Q59 | 查看器 `close` 事件的 reason | (a) 插件给的 reason 照传 (closed / replaced / timeout / finished), 宿主积压时 `overflow`, 轮询失败时门面本地给 `error`, 事件缺 reason 时为 `host` (推荐, 已先行) / (b) 门面归一成 `user` / `script` / `error` 三种 | 两仓门面, d.ts, P3.2, P5.1 | 已决 (2026-11-13 08:58, 维护者选 (a) 照传插件的值, 保持现状; paper-rt-facade 先行; 插件 P3.2 按契约 `REASONS` 发 closed / replaced / timeout / finished) |
 | Q60 | Q31 / Q35 的契约改动 (`displayNames`, `javaScript`) 版本号怎么处理 | (a) 就地改 v1: 契约版本仍为 1, 不写 v1 / v2 协商分支, `pdf-api.aar` 重出一版, P6 仍是契约版本 2 (推荐; 宿主 6.8.1 与插件 1.0.0 均未发布, 没有已部署的 v1 对端) / (b) 升到 v2 并保留 v1 回落与协商测试, P6 顺延为 3 | 批次 4 | 已决 (2026-11-13 08:58, 维护者选 (a) 就地改 v1; 调度会话追问; 影响 `pdf-api`, 宿主 `core/plugin/pdf` 与脚本模块, 插件 `PdfMerger` / `HtmlToPdf`, 协议文档) |
 | Q61 | `pdf.fromHtml` 的 `javaScript` 选项缺省值 | (a) 缺省 true, 与已实现行为和仪器测试一致, 脚本传 false 关闭 (推荐) / (b) 缺省 false | 批次 4 | 已决 (2026-11-13 08:58, 维护者选 (a) 缺省执行; 调度会话追问; 影响宿主脚本模块, 插件 `HtmlToPdf`, Node / Bun d.ts, P5.1 文档) |
+| Q71 | 查看器令牌同时带起始页与搜索词时停在哪里 (协议只写 "the start `page` and an optional `keyword`") | (a) 从起始页向后找第一个命中并居中, 起始页之后没有命中时回到第一个命中, 完全没有命中时停在起始页 (推荐, 已先行; 脚本常用 `{ page, search }` 表示 "从这里往后找") / (b) 停在起始页, 只高亮命中, 不跳转 / (c) 忽略起始页, 跳到第一个命中 | P3.1, P3.2, 文档 P5.1 | 已按推荐先行待确认 (paper-p3-plugin, `ViewerViewModel.search`; 改选返工: (b) / (c) 约 5 行 + 1 个设备测试) |
 
 ## 附录 E. 证据等级
 

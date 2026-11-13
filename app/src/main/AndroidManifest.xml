@@ -147,11 +147,12 @@
         <!--
             The viewer (roadmap 5.5, D21, D35): the host starts it with an explicit component, the PDF_VIEWER_OPEN action
             and the session token as the only extra (two-step launch, guarded by the plugin permission); the launcher and
-            other apps open PDF files through ACTION_VIEW.
+            other apps open PDF files through ACTION_VIEW. singleTop: a new request replaces the document on screen.
         -->
         <activity
             android:name=".viewer.ThreePaperPdfViewerActivity"
-            android:exported="true">
+            android:exported="true"
+            android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="org.autojs.plugin.PDF_VIEWER_OPEN" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -165,6 +166,19 @@
                 <data android:mimeType="application/pdf" />
             </intent-filter>
         </activity>
+
+        <!--
+            Copies of the open document handed to other apps by share and open with (roadmap P3.1), granted per intent.
+        -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.viewer.files"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/viewer_file_paths" />
+        </provider>
 
         <service
             android:name=".service.ThreePaperPdfInfoService"

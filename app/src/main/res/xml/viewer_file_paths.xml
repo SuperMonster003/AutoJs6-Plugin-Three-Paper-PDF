@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copies handed to other apps by the viewer (ViewerViewModel.SHARE_DIRECTORY, roadmap P3.1). -->
+<paths>
+    <cache-path
+        name="viewer"
+        path="viewer-share/" />
+</paths>

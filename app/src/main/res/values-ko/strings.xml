@@ -1,11 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="home_skeleton_note">이 빌드는 저장소 골격입니다. 읽기, 렌더링, 페이지 작업, 뷰어와 도구 상자는 이후 빌드에서 제공됩니다.</string>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="home_skeleton_note">이 빌드는 스크립트 작업과 PDF 뷰어를 제공합니다. 도구 상자는 이후 빌드에서 제공됩니다.</string>
     <string name="home_storage_denied">모든 파일 접근 권한이 허용되지 않았습니다. 허용하기 전까지 도구 상자는 선택한 파일을 읽거나 쓸 수 없습니다. 스크립트 작업에는 영향이 없습니다.</string>
     <string name="home_storage_grant">권한 허용</string>
     <string name="home_storage_granted">모든 파일 접근 권한이 허용되었습니다. 도구 상자에서 선택한 파일을 읽고 쓸 수 있습니다.</string>
     <string name="home_storage_title">파일 접근</string>
     <string name="plugin_description">PDF 파일 읽기, 렌더링, 병합, 분할, 생성과 암호화, 뷰어와 파일 관리자 진입점 내장</string>
+    <string name="viewer_back">뒤로</string>
+    <string name="viewer_cancel">취소</string>
     <string name="viewer_close">닫기</string>
-    <string name="viewer_skeleton_note">PDF 뷰어는 이후 빌드에서 제공됩니다.</string>
+    <string name="viewer_error_denied">이 파일을 읽을 권한이 없습니다.</string>
+    <string name="viewer_error_empty">문서에 페이지가 없습니다.</string>
+    <string name="viewer_error_expired">이 뷰어 요청이 만료되었습니다. 스크립트를 다시 실행하여 문서를 여세요.</string>
+    <string name="viewer_error_invalid">유효한 PDF 문서가 아니거나 손상된 파일입니다.</string>
+    <string name="viewer_error_no_source">열 문서가 없습니다.</string>
+    <string name="viewer_error_read">문서를 읽을 수 없습니다.</string>
+    <string name="viewer_error_title">문서를 열 수 없음</string>
+    <string name="viewer_jump_go">이동</string>
+    <string name="viewer_jump_hint">페이지 (1-%1$d)</string>
+    <string name="viewer_jump_title">페이지로 이동</string>
+    <string name="viewer_loading" tools:ignore="TypographyEllipsis">문서를 여는 중...</string>
+    <string name="viewer_more">추가 옵션</string>
+    <string name="viewer_night_mode">야간 모드</string>
+    <string name="viewer_no_app">이 문서를 열 수 있는 앱이 없습니다.</string>
+    <string name="viewer_open_with">다른 앱으로 열기</string>
+    <string name="viewer_open_with_title">다음으로 열기</string>
+    <string name="viewer_outline">개요</string>
+    <string name="viewer_outline_empty">이 문서에는 개요가 없습니다.</string>
+    <string name="viewer_page_indicator">%1$d / %2$d</string>
+    <string name="viewer_page_thumbnail">%1$d페이지</string>
+    <string name="viewer_password_hint">비밀번호</string>
+    <string name="viewer_password_message">%1$s 문서는 비밀번호로 보호되어 있습니다. 비밀번호를 입력하여 여세요.</string>
+    <string name="viewer_password_open">열기</string>
+    <string name="viewer_password_title">비밀번호 필요</string>
+    <string name="viewer_password_wrong">비밀번호가 틀렸습니다. 다시 시도하세요.</string>
+    <string name="viewer_search">검색</string>
+    <string name="viewer_search_close">검색 닫기</string>
+    <string name="viewer_search_count">%1$d / %2$d</string>
+    <string name="viewer_search_count_limited">%1$d / %2$d+</string>
+    <string name="viewer_search_hint">문서에서 검색</string>
+    <string name="viewer_search_next">다음 일치 항목</string>
+    <string name="viewer_search_none">일치 항목 없음</string>
+    <string name="viewer_search_previous">이전 일치 항목</string>
+    <string name="viewer_search_running" tools:ignore="TypographyEllipsis">검색 중...</string>
+    <string name="viewer_share">공유</string>
+    <string name="viewer_share_failed">공유할 문서를 준비할 수 없습니다.</string>
+    <string name="viewer_share_title">PDF 공유</string>
+    <string name="viewer_untitled">제목 없는 문서</string>
 </resources>

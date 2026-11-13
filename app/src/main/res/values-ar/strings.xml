@@ -1,11 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="home_skeleton_note">هذا الإصدار هو الهيكل الأولي للمستودع: القراءة والعرض وعمليات الصفحات والعارض وصندوق الأدوات ستأتي في إصدارات لاحقة.</string>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="home_skeleton_note">يوفر هذا الإصدار عمليات السكربتات وعارض PDF; صندوق الأدوات سيأتي في إصدار لاحق.</string>
     <string name="home_storage_denied">لم يتم منح الوصول إلى جميع الملفات. حتى تمنحه لا يستطيع صندوق الأدوات قراءة الملفات التي تختارها أو الكتابة فيها; عمليات السكربتات لا تتأثر.</string>
     <string name="home_storage_grant">منح الوصول</string>
     <string name="home_storage_granted">تم منح الوصول إلى جميع الملفات. يمكن لصندوق الأدوات قراءة الملفات التي تختارها والكتابة فيها.</string>
     <string name="home_storage_title">الوصول إلى الملفات</string>
     <string name="plugin_description">قراءة ملفات PDF وعرضها ودمجها وتقسيمها وإنشاؤها وتشفيرها, مع عارض مدمج ومداخل في مدير الملفات</string>
+    <string name="viewer_back">رجوع</string>
+    <string name="viewer_cancel">إلغاء</string>
     <string name="viewer_close">إغلاق</string>
-    <string name="viewer_skeleton_note">سيأتي عارض PDF في إصدار لاحق.</string>
+    <string name="viewer_error_denied">لا يوجد إذن لقراءة هذا الملف.</string>
+    <string name="viewer_error_empty">لا يحتوي المستند على صفحات.</string>
+    <string name="viewer_error_expired">انتهت صلاحية طلب العرض هذا. شغّل السكربت مرة أخرى لفتح المستند.</string>
+    <string name="viewer_error_invalid">الملف ليس مستند PDF صالحا أو أنه تالف.</string>
+    <string name="viewer_error_no_source">لا يوجد مستند لفتحه.</string>
+    <string name="viewer_error_read">تعذرت قراءة المستند.</string>
+    <string name="viewer_error_title">تعذر فتح المستند</string>
+    <string name="viewer_jump_go">انتقال</string>
+    <string name="viewer_jump_hint">الصفحة (1-%1$d)</string>
+    <string name="viewer_jump_title">الانتقال إلى صفحة</string>
+    <string name="viewer_loading" tools:ignore="TypographyEllipsis">جارٍ فتح المستند...</string>
+    <string name="viewer_more">خيارات إضافية</string>
+    <string name="viewer_night_mode">الوضع الليلي</string>
+    <string name="viewer_no_app">لا يوجد تطبيق يمكنه فتح هذا المستند.</string>
+    <string name="viewer_open_with">الفتح بتطبيق آخر</string>
+    <string name="viewer_open_with_title">الفتح باستخدام</string>
+    <string name="viewer_outline">المخطط</string>
+    <string name="viewer_outline_empty">لا يحتوي هذا المستند على مخطط.</string>
+    <string name="viewer_page_indicator">%1$d / %2$d</string>
+    <string name="viewer_page_thumbnail">الصفحة %1$d</string>
+    <string name="viewer_password_hint">كلمة المرور</string>
+    <string name="viewer_password_message">المستند %1$s محمي بكلمة مرور. أدخلها لفتح المستند.</string>
+    <string name="viewer_password_open">فتح</string>
+    <string name="viewer_password_title">كلمة المرور مطلوبة</string>
+    <string name="viewer_password_wrong">كلمة المرور غير صحيحة. حاول مرة أخرى.</string>
+    <string name="viewer_search">بحث</string>
+    <string name="viewer_search_close">إغلاق البحث</string>
+    <string name="viewer_search_count">%1$d / %2$d</string>
+    <string name="viewer_search_count_limited">%1$d / %2$d+</string>
+    <string name="viewer_search_hint">البحث في المستند</string>
+    <string name="viewer_search_next">التطابق التالي</string>
+    <string name="viewer_search_none">لا توجد تطابقات</string>
+    <string name="viewer_search_previous">التطابق السابق</string>
+    <string name="viewer_search_running" tools:ignore="TypographyEllipsis">جارٍ البحث...</string>
+    <string name="viewer_share">مشاركة</string>
+    <string name="viewer_share_failed">تعذر تجهيز المستند للمشاركة.</string>
+    <string name="viewer_share_title">مشاركة PDF</string>
+    <string name="viewer_untitled">مستند بلا عنوان</string>
 </resources>

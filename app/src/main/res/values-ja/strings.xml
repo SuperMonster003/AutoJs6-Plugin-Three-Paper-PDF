@@ -1,11 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="home_skeleton_note">このビルドはリポジトリの骨格です. 読み込み, レンダリング, ページ操作, ビューアーとツールボックスは今後のビルドで提供されます.</string>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="home_skeleton_note">このビルドではスクリプトの操作と PDF ビューアーを利用できます. ツールボックスは今後のビルドで提供されます.</string>
     <string name="home_storage_denied">すべてのファイルへのアクセスが許可されていません. 許可するまでツールボックスは選んだファイルを読み書きできません. スクリプトの操作には影響しません.</string>
     <string name="home_storage_grant">許可する</string>
     <string name="home_storage_granted">すべてのファイルへのアクセスが許可されています. ツールボックスは選んだファイルを読み書きできます.</string>
     <string name="home_storage_title">ファイルアクセス</string>
     <string name="plugin_description">PDF ファイルの読み込み, レンダリング, 結合, 分割, 生成と暗号化, ビューアーとファイルマネージャーの入口を内蔵</string>
+    <string name="viewer_back">戻る</string>
+    <string name="viewer_cancel">キャンセル</string>
     <string name="viewer_close">閉じる</string>
-    <string name="viewer_skeleton_note">PDF ビューアーは今後のビルドで提供されます.</string>
+    <string name="viewer_error_denied">このファイルを読み取る権限がありません.</string>
+    <string name="viewer_error_empty">ドキュメントにページがありません.</string>
+    <string name="viewer_error_expired">この表示リクエストは期限切れです. スクリプトを再実行してドキュメントを開いてください.</string>
+    <string name="viewer_error_invalid">このファイルは有効な PDF ドキュメントではないか, 破損しています.</string>
+    <string name="viewer_error_no_source">開くドキュメントがありません.</string>
+    <string name="viewer_error_read">ドキュメントを読み取れません.</string>
+    <string name="viewer_error_title">ドキュメントを開けません</string>
+    <string name="viewer_jump_go">移動</string>
+    <string name="viewer_jump_hint">ページ (1-%1$d)</string>
+    <string name="viewer_jump_title">ページへ移動</string>
+    <string name="viewer_loading" tools:ignore="TypographyEllipsis">ドキュメントを開いています...</string>
+    <string name="viewer_more">その他のオプション</string>
+    <string name="viewer_night_mode">ナイトモード</string>
+    <string name="viewer_no_app">このドキュメントを開けるアプリがありません.</string>
+    <string name="viewer_open_with">他のアプリで開く</string>
+    <string name="viewer_open_with_title">アプリで開く</string>
+    <string name="viewer_outline">アウトライン</string>
+    <string name="viewer_outline_empty">このドキュメントにはアウトラインがありません.</string>
+    <string name="viewer_page_indicator">%1$d / %2$d</string>
+    <string name="viewer_page_thumbnail">%1$d ページ</string>
+    <string name="viewer_password_hint">パスワード</string>
+    <string name="viewer_password_message">%1$s はパスワードで保護されています. パスワードを入力して開いてください.</string>
+    <string name="viewer_password_open">開く</string>
+    <string name="viewer_password_title">パスワードが必要です</string>
+    <string name="viewer_password_wrong">パスワードが違います. もう一度お試しください.</string>
+    <string name="viewer_search">検索</string>
+    <string name="viewer_search_close">検索を閉じる</string>
+    <string name="viewer_search_count">%1$d / %2$d</string>
+    <string name="viewer_search_count_limited">%1$d / %2$d+</string>
+    <string name="viewer_search_hint">ドキュメント内を検索</string>
+    <string name="viewer_search_next">次の一致</string>
+    <string name="viewer_search_none">一致なし</string>
+    <string name="viewer_search_previous">前の一致</string>
+    <string name="viewer_search_running" tools:ignore="TypographyEllipsis">検索しています...</string>
+    <string name="viewer_share">共有</string>
+    <string name="viewer_share_failed">共有用のドキュメントを準備できません.</string>
+    <string name="viewer_share_title">PDF を共有</string>
+    <string name="viewer_untitled">無題のドキュメント</string>
 </resources>

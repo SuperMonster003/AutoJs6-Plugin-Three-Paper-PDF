@@ -1,11 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="home_skeleton_note">This build is the repository skeleton: reading, rendering, page operations, the viewer and the toolbox come in later builds.</string>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="home_skeleton_note">This build provides the script operations and the PDF viewer; the toolbox comes in a later build.</string>
     <string name="home_storage_denied">All files access is not granted. Until you grant it, the toolbox cannot read or write the files you choose; script operations are not affected.</string>
     <string name="home_storage_grant">Grant access</string>
     <string name="home_storage_granted">All files access is granted. The toolbox can read and write the files you choose.</string>
     <string name="home_storage_title">File access</string>
     <string name="plugin_description">Read, render, merge, split, generate and encrypt PDF files, with a built-in viewer and file manager entries</string>
+    <string name="viewer_back">Back</string>
+    <string name="viewer_cancel">Cancel</string>
     <string name="viewer_close">Close</string>
-    <string name="viewer_skeleton_note">The PDF viewer comes in a later build.</string>
+    <string name="viewer_error_denied">This app has no permission to read the file.</string>
+    <string name="viewer_error_empty">The document has no pages.</string>
+    <string name="viewer_error_expired">This viewer request has expired. Run the script again to open the document.</string>
+    <string name="viewer_error_invalid">The file is not a valid PDF document or is damaged.</string>
+    <string name="viewer_error_no_source">There is no document to open.</string>
+    <string name="viewer_error_read">The document cannot be read.</string>
+    <string name="viewer_error_title">Cannot open the document</string>
+    <string name="viewer_jump_go">Go</string>
+    <string name="viewer_jump_hint">Page (1-%1$d)</string>
+    <string name="viewer_jump_title">Go to page</string>
+    <string name="viewer_loading" tools:ignore="TypographyEllipsis">Opening the document...</string>
+    <string name="viewer_more">More options</string>
+    <string name="viewer_night_mode">Night mode</string>
+    <string name="viewer_no_app">No app can open this document.</string>
+    <string name="viewer_open_with">Open with another app</string>
+    <string name="viewer_open_with_title">Open with</string>
+    <string name="viewer_outline">Outline</string>
+    <string name="viewer_outline_empty">This document has no outline.</string>
+    <string name="viewer_page_indicator">%1$d / %2$d</string>
+    <string name="viewer_page_thumbnail">Page %1$d</string>
+    <string name="viewer_password_hint">Password</string>
+    <string name="viewer_password_message">%1$s is protected by a password. Enter it to open the document.</string>
+    <string name="viewer_password_open">Open</string>
+    <string name="viewer_password_title">Password required</string>
+    <string name="viewer_password_wrong">Wrong password. Try again.</string>
+    <string name="viewer_search">Search</string>
+    <string name="viewer_search_close">Close search</string>
+    <string name="viewer_search_count">%1$d / %2$d</string>
+    <string name="viewer_search_count_limited">%1$d / %2$d+</string>
+    <string name="viewer_search_hint">Search in the document</string>
+    <string name="viewer_search_next">Next match</string>
+    <string name="viewer_search_none">No matches</string>
+    <string name="viewer_search_previous">Previous match</string>
+    <string name="viewer_search_running" tools:ignore="TypographyEllipsis">Searching...</string>
+    <string name="viewer_share">Share</string>
+    <string name="viewer_share_failed">Cannot prepare the document for sharing.</string>
+    <string name="viewer_share_title">Share PDF</string>
+    <string name="viewer_untitled">Untitled document</string>
 </resources>

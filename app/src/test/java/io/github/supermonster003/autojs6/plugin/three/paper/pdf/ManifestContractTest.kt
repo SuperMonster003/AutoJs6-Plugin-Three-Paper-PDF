@@ -144,6 +144,8 @@ class ManifestContractTest {
         // Other apps open PDF files with ACTION_VIEW, so the viewer cannot require the plugin permission; the session
         // token of roadmap P3.2 guards the script channel instead.
         assertNull(viewer.androidOrNull("permission"))
+        // A new request (a later session of the host, another file) replaces the document on screen (roadmap P3.1, P3.2).
+        assertEquals("singleTop", viewer.android("launchMode"))
         val (host, view) = viewer.children("intent-filter").also { assertEquals(2, it.size) }
         assertFilter(host, action = ThreePaperPdfContract.VIEWER_ACTION, categories = listOf(DEFAULT_CATEGORY))
         assertTrue(host.children("data").isEmpty())
@@ -193,8 +195,22 @@ class ManifestContractTest {
             listOf(".viewer.ThreePaperPdfViewerActivity"),
             exported.filter { it.androidOrNull("permission") != PLUGIN_PERMISSION }.map { it.android("name") },
         )
-        assertTrue("no receivers in the skeleton", application.children("receiver").isEmpty())
-        assertTrue("no providers in the skeleton", application.children("provider").isEmpty())
+        assertTrue("no receivers", application.children("receiver").isEmpty())
+    }
+
+    @Test
+    fun `the only provider is the private FileProvider of the viewer's shared copies`() {
+        val provider = application.children("provider").single()
+        assertEquals("androidx.core.content.FileProvider", provider.android("name"))
+        assertEquals("\${applicationId}.viewer.files", provider.android("authorities"))
+        assertEquals("false", provider.android("exported"))
+        assertEquals("true", provider.android("grantUriPermissions"))
+        val paths = provider.child("meta-data")
+        assertEquals("android.support.FILE_PROVIDER_PATHS", paths.android("name"))
+        assertEquals("@xml/viewer_file_paths", paths.android("resource"))
+        val shared = RepositoryFiles.xml("app/src/main/res/xml/viewer_file_paths.xml").children("cache-path").single()
+        // FileProvider reads plain attributes here. zh-CN: FileProvider 在此读取不带命名空间的属性.
+        assertEquals("viewer-share/", shared.getAttribute("path"))
     }
 
     private fun activity(name: String): Element = application.children("activity").single { it.android("name") == name }

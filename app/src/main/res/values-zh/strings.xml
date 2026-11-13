@@ -1,11 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="home_skeleton_note">当前构建为仓库骨架: 读取, 渲染, 页面操作, 查看器与工具箱将在后续构建中提供.</string>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="home_skeleton_note">当前构建提供脚本操作与 PDF 查看器; 工具箱将在后续构建中提供.</string>
     <string name="home_storage_denied">尚未授予所有文件访问权限. 授权前工具箱无法读写你选择的文件; 脚本操作不受影响.</string>
     <string name="home_storage_grant">去授权</string>
     <string name="home_storage_granted">已授予所有文件访问权限. 工具箱可以读写你选择的文件.</string>
     <string name="home_storage_title">文件访问</string>
     <string name="plugin_description">读取, 渲染, 合并, 拆分, 生成与加密 PDF 文件, 内置查看器与文件管理器入口</string>
+    <string name="viewer_back">返回</string>
+    <string name="viewer_cancel">取消</string>
     <string name="viewer_close">关闭</string>
-    <string name="viewer_skeleton_note">PDF 查看器将在后续构建中提供.</string>
+    <string name="viewer_error_denied">没有读取该文件的权限.</string>
+    <string name="viewer_error_empty">文档没有页面.</string>
+    <string name="viewer_error_expired">此查看请求已过期. 请重新运行脚本打开文档.</string>
+    <string name="viewer_error_invalid">该文件不是有效的 PDF 文档或已损坏.</string>
+    <string name="viewer_error_no_source">没有要打开的文档.</string>
+    <string name="viewer_error_read">无法读取文档.</string>
+    <string name="viewer_error_title">无法打开文档</string>
+    <string name="viewer_jump_go">跳转</string>
+    <string name="viewer_jump_hint">页码 (1-%1$d)</string>
+    <string name="viewer_jump_title">跳转到页</string>
+    <string name="viewer_loading" tools:ignore="TypographyEllipsis">正在打开文档...</string>
+    <string name="viewer_more">更多选项</string>
+    <string name="viewer_night_mode">夜间模式</string>
+    <string name="viewer_no_app">没有可以打开此文档的应用.</string>
+    <string name="viewer_open_with">用其他应用打开</string>
+    <string name="viewer_open_with_title">打开方式</string>
+    <string name="viewer_outline">大纲</string>
+    <string name="viewer_outline_empty">此文档没有大纲.</string>
+    <string name="viewer_page_indicator">%1$d / %2$d</string>
+    <string name="viewer_page_thumbnail">第 %1$d 页</string>
+    <string name="viewer_password_hint">密码</string>
+    <string name="viewer_password_message">%1$s 受密码保护. 输入密码以打开文档.</string>
+    <string name="viewer_password_open">打开</string>
+    <string name="viewer_password_title">需要密码</string>
+    <string name="viewer_password_wrong">密码错误, 请重试.</string>
+    <string name="viewer_search">搜索</string>
+    <string name="viewer_search_close">关闭搜索</string>
+    <string name="viewer_search_count">%1$d / %2$d</string>
+    <string name="viewer_search_count_limited">%1$d / %2$d+</string>
+    <string name="viewer_search_hint">在文档中搜索</string>
+    <string name="viewer_search_next">下一个匹配</string>
+    <string name="viewer_search_none">无匹配</string>
+    <string name="viewer_search_previous">上一个匹配</string>
+    <string name="viewer_search_running" tools:ignore="TypographyEllipsis">正在搜索...</string>
+    <string name="viewer_share">分享</string>
+    <string name="viewer_share_failed">无法准备要分享的文档.</string>
+    <string name="viewer_share_title">分享 PDF</string>
+    <string name="viewer_untitled">未命名文档</string>
 </resources>

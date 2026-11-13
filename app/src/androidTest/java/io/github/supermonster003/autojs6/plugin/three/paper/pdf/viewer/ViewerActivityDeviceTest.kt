@@ -1,0 +1,241 @@
+package io.github.supermonster003.autojs6.plugin.three.paper.pdf.viewer
+
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.os.Handler
+import android.os.Looper
+import android.os.SystemClock
+import android.util.Log
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTextReplacement
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipe
+import androidx.core.content.FileProvider
+import androidx.test.core.app.ActivityScenario
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import com.tom_roush.pdfbox.pdmodel.PDDocument
+import com.tom_roush.pdfbox.pdmodel.PDPage
+import com.tom_roush.pdfbox.pdmodel.PDPageContentStream
+import com.tom_roush.pdfbox.pdmodel.common.PDRectangle
+import com.tom_roush.pdfbox.pdmodel.font.PDType1Font
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.PdfServiceHarness
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.R
+import org.autojs.plugin.pdf.api.PdfActions
+import org.json.JSONObject
+import org.junit.Assert.assertTrue
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+import java.io.File
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import kotlin.math.max
+
+/**
+ * The viewer Activity on a device (roadmap P3.1): page count and jump on a sample opened by a `file:` URI, the state
+ * kept across recreation, a `content:` URI with its provider name, the session token entry (start page, search from
+ * there, an unknown token), the password prompt, and 100 pages scrolled without blocking the main thread (the timing
+ * is logged under `PaperViewerPerf`).
+ * zh-CN: 设备上的查看器 Activity (路线图 P3.1): 以 `file:` URI 打开样例时的页数与跳页, 重建后保留的状态, 带提供方名称的 `content:`
+ * URI, 会话令牌入口 (起始页, 从起始页搜索, 未知令牌), 密码提示, 以及滚动 100 页时主线程不被阻塞 (耗时记录在 `PaperViewerPerf` 下).
+ */
+@OptIn(ExperimentalTestApi::class)
+@RunWith(AndroidJUnit4::class)
+class ViewerActivityDeviceTest {
+
+    @get:Rule
+    val compose = createEmptyComposeRule()
+
+    private val context get() = PdfServiceHarness.context
+
+    @Test
+    fun aFileUriShowsThePageCountJumpsAndKeepsThePageAcrossRecreation() {
+        val count = pagesOf("outline.pdf")
+        launch(viewIntent(Uri.fromFile(PdfServiceHarness.sampleFile("outline.pdf")))).use { scenario ->
+            awaitIndicator(1, count)
+            compose.onNodeWithTag("viewer-page-indicator").performClick()
+            compose.onNodeWithTag("viewer-jump-field").performTextInput("4")
+            compose.onNodeWithTag("viewer-jump-go").performClick()
+            awaitIndicator(4, count)
+            scenario.recreate()
+            awaitIndicator(4, count)
+        }
+    }
+
+    @Test
+    fun aContentUriShowsTheProviderNameAndItsPages() {
+        val directory = File(context.cacheDir, "${ViewerViewModel.SHARE_DIRECTORY}/device-test").apply { mkdirs() }
+        try {
+            val file = PdfServiceHarness.sampleFile("text.pdf").copyTo(File(directory, "text.pdf"), overwrite = true)
+            val uri = FileProvider.getUriForFile(context, ThreePaperPdfViewerActivity.authorityOf(context), file)
+            launch(viewIntent(uri).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)).use {
+                awaitIndicator(1, pagesOf("text.pdf"))
+                compose.waitUntil(TIMEOUT_MILLIS) { compose.onAllNodesWithText("text.pdf").fetchSemanticsNodes().isNotEmpty() }
+            }
+        } finally {
+            directory.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun aClaimedTokenStartsAtItsPageAndSearchesFromThere() {
+        val token = "device-test-" + SystemClock.elapsedRealtimeNanos()
+        ViewerSessions.register(ViewerClaim(token, PdfServiceHarness.sample("outline.pdf"), "Outline sample", null, 2, "needle"))
+        launch(tokenIntent(token)).use {
+            // The needle is on pages 2 and 5: the first hit from page 3 on is on page 5.
+            // zh-CN: needle 位于第 2 与第 5 页: 从第 3 页起的第一个命中在第 5 页.
+            awaitIndicator(5, pagesOf("outline.pdf"))
+            awaitText("viewer-search-status", context.getString(R.string.viewer_search_count, 2, 2))
+        }
+        // The token was claimed once. zh-CN: 令牌只能认领一次.
+        assertTrue(ViewerSessions.claim(token) == null)
+    }
+
+    @Test
+    fun anUnknownTokenShowsTheExpiredMessage() {
+        launch(tokenIntent("unknown-token")).use {
+            awaitText("viewer-error", context.getString(R.string.viewer_error_expired))
+        }
+    }
+
+    @Test
+    fun anEncryptedFileAsksForThePasswordUntilItIsRight() {
+        launch(viewIntent(Uri.fromFile(PdfServiceHarness.sampleFile("encrypted.pdf")))).use {
+            awaitTag("viewer-password-field")
+            compose.onNodeWithTag("viewer-password-field").performTextInput("wrong")
+            submitPassword()
+            compose.waitUntil(TIMEOUT_MILLIS) {
+                compose.onAllNodesWithText(context.getString(R.string.viewer_password_wrong)).fetchSemanticsNodes().isNotEmpty()
+            }
+            compose.onNodeWithTag("viewer-password-field").performTextReplacement(fixture("encrypted.pdf").getString("userPassword"))
+            submitPassword()
+            awaitIndicator(1, pagesOf("encrypted.pdf"))
+        }
+    }
+
+    @Test
+    fun aHundredPagesScrollWithoutBlockingTheMainThread() {
+        val file = hundredPages()
+        launch(viewIntent(Uri.fromFile(file))).use {
+            awaitIndicator(1, HUNDRED)
+            var worst = 0L
+            val started = SystemClock.elapsedRealtime()
+            repeat(SWIPES) {
+                // The middle of the canvas: the bars cover its edges. zh-CN: 画布中部: 两端被工具栏覆盖.
+                compose.onNodeWithTag(VIEWER_CANVAS_TAG).performTouchInput {
+                    swipe(Offset(centerX, height * 0.75f), Offset(centerX, height * 0.25f), durationMillis = 150)
+                }
+                worst = max(worst, mainThreadLatency())
+            }
+            compose.waitForIdle()
+            val page = indicatorPage()
+            Log.i(
+                "PaperViewerPerf",
+                "scroll pages=$HUNDRED swipes=$SWIPES lastPage=$page worstMainLatencyMs=$worst " +
+                    "totalMs=${SystemClock.elapsedRealtime() - started} model=${Build.MODEL} api=${Build.VERSION.SDK_INT}",
+            )
+            assertTrue("the swipes did not scroll (page $page)", page > 1)
+            assertTrue("the main thread was blocked for $worst ms", worst < MAX_MAIN_LATENCY_MILLIS)
+        }
+    }
+
+    // Helpers. zh-CN: 辅助方法.
+
+    private fun launch(intent: Intent): ActivityScenario<ThreePaperPdfViewerActivity> = ActivityScenario.launch(intent)
+
+    private fun viewIntent(uri: Uri) = Intent(Intent.ACTION_VIEW)
+        .setClass(context, ThreePaperPdfViewerActivity::class.java)
+        .setDataAndType(uri, ThreePaperPdfViewerActivity.MIME_PDF)
+
+    private fun tokenIntent(token: String) = Intent(PdfActions.VIEWER_ACTIVITY_ACTION)
+        .setClass(context, ThreePaperPdfViewerActivity::class.java)
+        .putExtra(PdfActions.EXTRA_SESSION_TOKEN, token)
+
+    private fun submitPassword() {
+        compose.onNodeWithText(context.getString(R.string.viewer_password_open)).performClick()
+    }
+
+    private fun awaitTag(tag: String) {
+        compose.waitUntil(TIMEOUT_MILLIS) { compose.onAllNodesWithTag(tag).fetchSemanticsNodes().isNotEmpty() }
+    }
+
+    private fun awaitText(tag: String, expected: String) {
+        compose.waitUntil(TIMEOUT_MILLIS) { textsOf(tag).any { it == expected } }
+    }
+
+    private fun awaitIndicator(page: Int, count: Int) = awaitText("viewer-page-indicator", context.getString(R.string.viewer_page_indicator, page, count))
+
+    private fun textsOf(tag: String): List<String> = compose.onAllNodesWithTag(tag).fetchSemanticsNodes().flatMap { node ->
+        node.config.getOrNull(SemanticsProperties.Text).orEmpty().map { it.text }
+    }
+
+    /** The current page of the indicator, read back through the indicator format. zh-CN: 页码指示中的当前页, 按指示格式反向读取. */
+    private fun indicatorPage(): Int {
+        val text = textsOf("viewer-page-indicator").single()
+        return (1..HUNDRED).first { context.getString(R.string.viewer_page_indicator, it, HUNDRED) == text }
+    }
+
+    /** Milliseconds until a runnable posted now runs on the main thread. zh-CN: 现在投递的任务在主线程上运行前经过的毫秒数. */
+    private fun mainThreadLatency(): Long {
+        val latch = CountDownLatch(1)
+        val start = SystemClock.elapsedRealtime()
+        Handler(Looper.getMainLooper()).post { latch.countDown() }
+        latch.await(30, TimeUnit.SECONDS)
+        return SystemClock.elapsedRealtime() - start
+    }
+
+    private fun fixture(name: String): JSONObject {
+        val json = InstrumentationRegistry.getInstrumentation().context.assets.open("fixtures.json").bufferedReader().use { it.readText() }
+        return JSONObject(json).getJSONObject("fixtures").getJSONObject(name)
+    }
+
+    private fun pagesOf(name: String): Int = fixture(name).getInt("pages")
+
+    /** A text document of [HUNDRED] A4 pages, generated once into the cache. zh-CN: [HUNDRED] 页 A4 文本文档, 只生成一次到缓存. */
+    private fun hundredPages(): File {
+        val file = File(context.cacheDir, "samples/hundred-pages.pdf")
+        if (file.exists()) return file
+        file.parentFile?.mkdirs()
+        PDDocument().use { document ->
+            repeat(HUNDRED) { index ->
+                val page = PDPage(PDRectangle.A4)
+                document.addPage(page)
+                PDPageContentStream(document, page).use { stream ->
+                    stream.beginText()
+                    stream.setFont(PDType1Font.HELVETICA_BOLD, 28f)
+                    stream.newLineAtOffset(72f, 760f)
+                    stream.showText("Page ${index + 1} of $HUNDRED")
+                    stream.setFont(PDType1Font.HELVETICA, 11f)
+                    stream.setLeading(15f)
+                    stream.newLineAtOffset(0f, -36f)
+                    repeat(40) { line -> stream.showText("Line ${line + 1}: The quick brown fox jumps over the lazy dog."); stream.newLine() }
+                    stream.endText()
+                }
+            }
+            document.save(file)
+        }
+        return file
+    }
+
+    private companion object {
+        const val TIMEOUT_MILLIS = 20_000L
+        const val HUNDRED = 100
+        const val SWIPES = 30
+
+        /** Well below the 5 s input ANR threshold. zh-CN: 远低于 5 秒的输入 ANR 阈值. */
+        const val MAX_MAIN_LATENCY_MILLIS = 1_000L
+    }
+
+}
