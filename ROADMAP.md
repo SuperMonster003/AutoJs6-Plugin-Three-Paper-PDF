@@ -207,10 +207,10 @@ io.github.supermonster003.autojs6.plugin.three.paper.pdf
 | --- | --- | --- | --- |
 | P0 | 1.0.0 | 仓库骨架: 构建链与身份, Icon Studio 图标, 测试与 CI | 完成 (paper-p0, 2026-11-12) |
 | P1 | 宿主 6.8.1 | 契约 `pdf-api`, 宿主绑定与查看器启动, 脚本模块 `pdf`, OCR 分支, Node / Bun 桥接, Explorer 文件类型与注册 | 完成 (P1.1 - P1.6 各行已勾选; 状态于 2026-11-14 paper-device 核对后同步) |
-| P2 | 1.0.0 | 插件核心: 服务与句柄, 读取, 渲染与位图传输, 页面操作, 生成, 加密, 设备矩阵 | 进行中 (P2.1 - P2.6 完成; P2.7 四台真机回归通过, 只差 XQ-DQ72 (离线, Q160)) |
-| P3 | 1.0.0 | 查看器, `pdf.view` 会话, Explorer Action 服务 | 完成 (2026-11-13 各行; 真机复验与 P3.2 宿主联调 paper-device 2026-11-14, 验收里的 API 33 一项随 Q160 补跑) |
+| P2 | 1.0.0 | 插件核心: 服务与句柄, 读取, 渲染与位图传输, 页面操作, 生成, 加密, 设备矩阵 | 完成 (P2.1 - P2.6 完成; P2.7 五台真机回归通过, paper-device 2026-11-14) |
+| P3 | 1.0.0 | 查看器, `pdf.view` 会话, Explorer Action 服务 | 完成 (2026-11-13 各行; 真机复验与 P3.2 宿主联调 paper-device 2026-11-14, 含 API 33 真机) |
 | P4 | 1.0.0 | 工具箱界面: 应用骨架, 向导, 设置与启动器模式 | 完成 (paper-p4 2026-11-13; 真机手测 paper-device 2026-11-14) |
-| P5 | 1.0.0 | 文档, 声明, 四仓库同步, 样例, 兼容矩阵, 打包应用支持 (Q145 (b)), 发布与索引登记 | 进行中 (P5.1 / P5.2 完成, P5.3 / P5.5 只差 API 33 真机 (XQ-DQ72 离线, Q160), P5.4 发布未开始) |
+| P5 | 1.0.0 | 文档, 声明, 四仓库同步, 样例, 兼容矩阵, 打包应用支持 (Q145 (b)), 发布与索引登记 | 进行中 (P5.1 - P5.3 与 P5.5 完成 (API 33 真机 paper-device 2026-11-14), 只剩 P5.4 发布) |
 | P6 | 1.1.0 | 表单, 水印 / 页码 / 页眉页脚, 可搜索 PDF, 压缩, 发布 | 未开始 |
 
 依赖顺序:
@@ -328,7 +328,7 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 
 ## P2: 插件核心
 
-状态: 进行中 (paper-p2-core: P2.1 - P2.3 完成; paper-p2-ops: P2.4 - P2.6 完成; P2.7: 2026-11-14 paper-device 在 G8441 / XQ-AT72 / Xiaomi Pad / OnePlus 回归通过并回填附录 F, 只差 XQ-DQ72 (离线, Q160)). 设备: API 33 AVD (仪器测试) + Sony XQ-DQ72 API 33 (联调) + G8441 API 28 (SharedMemory 回落与低端性能).
+状态: 完成 (paper-p2-core: P2.1 - P2.3 完成; paper-p2-ops: P2.4 - P2.6 完成; P2.7: 2026-11-14 paper-device 在 G8441 / XQ-AT72 / Xiaomi Pad / OnePlus 回归通过, XQ-DQ72 接回后 (Q160 (a)) 补跑通过, 附录 F 已回填). 设备: API 33 AVD (仪器测试) + Sony XQ-DQ72 API 33 (联调) + G8441 API 28 (SharedMemory 回落与低端性能).
 
 ### P2.1 服务, 句柄与任务模型 (D10, D11, D28)
 
@@ -372,14 +372,14 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 
 ### P2.7 设备矩阵与性能基线
 
-- [ ] (测试) `scripts/device-regression.js` 覆盖附录 B 的每个方法 (读取, 渲染, 页面操作, 生成, 加密, 进度与取消), 只输出通过 / 失败与关键数值; 在附录 F 的设备上各跑一次, 回填性能基线表 (A4 文本页 144 dpi 渲染耗时, 100 页合并耗时, 20 张图片转 PDF 耗时). 状态 (2026-11-14, paper-device): 宿主 debug 6641 (隔离克隆 `a87375e387`), 运行器 `tools/paper-pdf/device_regression.py --ocr-sample --view`: G8441 (API 28), XQ-AT72 (API 31), Xiaomi Pad (API 35) 与 OnePlus OPD2413 (API 35, ColorOS) 均 45 / 0 / 0, `ocr.sample` 通过 (OCR 引擎认出 1 / 7 个词, 按 Q91 的手动做法判通过), `b5.view` 页面事件 5, 2 且 `close` 原因 finished; 脚本端到端计时与仪器测试计时都已回填附录 F (OnePlus 新增一行, XQ-AT72 / Xiaomi Pad 的渲染与合并列, AVD 27 / 25 / 37.1 的空缺列). XQ-DQ72 (API 33) 2026-11-14 10:33 离线, 回归未跑, 登记 Q160, 所以本行不勾. 证据等级 E3.
+- [x] (测试) `scripts/device-regression.js` 覆盖附录 B 的每个方法 (读取, 渲染, 页面操作, 生成, 加密, 进度与取消), 只输出通过 / 失败与关键数值; 在附录 F 的设备上各跑一次, 回填性能基线表 (A4 文本页 144 dpi 渲染耗时, 100 页合并耗时, 20 张图片转 PDF 耗时). 状态 (2026-11-14, paper-device): 宿主 debug 6641 (隔离克隆 `a87375e387`), 运行器 `tools/paper-pdf/device_regression.py --ocr-sample --view`: G8441 (API 28), XQ-AT72 (API 31), Xiaomi Pad (API 35) 与 OnePlus OPD2413 (API 35, ColorOS) 均 45 / 0 / 0, `ocr.sample` 通过 (OCR 引擎认出 1 / 7 个词, 按 Q91 的手动做法判通过), `b5.view` 页面事件 5, 2 且 `close` 原因 finished; 脚本端到端计时与仪器测试计时都已回填附录 F (OnePlus 新增一行, XQ-AT72 / Xiaomi Pad 的渲染与合并列, AVD 27 / 25 / 37.1 的空缺列). XQ-DQ72 (API 33) 10:33 离线 (Q160), 维护者选 (a), 13:05 接回后补跑 (宿主 6641, 插件 39): 45 / 0 / 0, `ocr.sample` 通过 (认出 1 / 7 个词, 按 Q91 判通过), `b5.view` 页面事件 5, 2 且 `close` 原因 finished, 两种计时已回填附录 F. 证据等级 E3.
 - 验收: 四台 Sony / Xiaomi 设备通过, OnePlus (ColorOS) 至少一次; 失败项登记为条目或待决.
 
 ---
 
 ## P3: 查看器与 Explorer Action
 
-状态: 完成 (P3.1, P3.2 / P3.3 插件行与 P3.3 宿主行 2026-11-13 完成; 2026-11-14 paper-device 真机复验: G8441 100 页滚动, XQ-AT72 / Xiaomi Pad 查看器 E4, XQ-AT72 宿主文件管理器 E4, P3.2 宿主联调; P3.2 验收里的 API 33 真机一项随 Q160 补跑). 设备: API 33 AVD + Sony XQ-AT72 API 31 (界面) + Xiaomi Pad API 35 (大屏) + OnePlus API 35 (ColorOS 后台启动).
+状态: 完成 (P3.1, P3.2 / P3.3 插件行与 P3.3 宿主行 2026-11-13 完成; 2026-11-14 paper-device 真机复验: G8441 100 页滚动, XQ-AT72 / Xiaomi Pad 查看器 E4, XQ-AT72 宿主文件管理器 E4, P3.2 宿主联调; XQ-DQ72 接回后 (Q160 (a)) 补跑了 P3.2 验收里的 API 33 真机一项). 设备: API 33 AVD + Sony XQ-AT72 API 31 (界面) + Xiaomi Pad API 35 (大屏) + OnePlus API 35 (ColorOS 后台启动).
 
 ### P3.1 Compose 查看器 (D35)
 
@@ -390,7 +390,7 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 
 - [x] (插件) `openViewer` 返回 `IPdfViewerSession` (令牌, `goTo`, `close(finish)`, `getState`), 未在 `VIEWER_CLAIM_TIMEOUT_MS` 内被 Activity 认领则关闭; 事件 `page` / `close` 经 `IPdfViewerCallback`; 脚本退出后查看器留前台, 第二个会话替换第一个. 结果 (2026-11-13, paper-p3-plugin): `viewer/ViewerSessions.kt` 的会话登记表 (令牌为 64 位随机十六进制, 按宿主进程 uid + pid 区分) 管理待认领 / 已认领 / 已结束三种状态; `service/ViewerSessionStub.kt` 是 Binder 存根: `getState` 以信封作答 (会话结束后为 `SESSION_CLOSED` 失败信封), `goTo` / `close` 以 `CODE: detail` 抛出; `close` 可重复调用. 源描述符在 `openViewer` 时复制, 认领后归查看器, 超时未认领则关闭; 同一宿主的后一个会话以 `replaced` 结束前一个; 查看器关闭给 `closed`, `close(true)` 结束 Activity 并给 `finished`, `close(false)` 只解除宿主且不再发事件, 宿主回调死亡时静默解除. 事件在单独线程上发送, `onPage` 只在页码或页数变化时发送; `goTo` 在主线程上换页 (至多等 2 秒, 之后的 `getState` 即为新页). 加载完成前 `getState` 答起始页与 `pageCount: 0`, `goTo` 只拒绝小于 1 的页 (Q73, 已先行); 新请求替换屏幕上的脚本会话时, 新的脚本会话给 `replaced`, 其他入口给 `closed` (Q72, 已先行). `IMPLEMENTED_OPS` 加入 `openViewer`, `pdfFeatures` 在所有 API 级别都声明 `viewer`. JVM `ViewerSessionTest` 11 项 (状态, 认领一次, 页事件去重, 四种关闭原因, 超时关闭源, 选项) 与 `PluginRuntimeInfoTest` 通过, 共 182 项; 仪器测试 `ViewerSessionDeviceTest` 4 项 (经服务 `openViewer` 后凭令牌启动查看器: 待认领状态, `onPage`, `goTo` 与越界, `close(true)` 结束 Activity, `closed` / `replaced`, `close(false)` 不再发事件, 被拒绝的选项) 在 AVD_API_33 与 AVD_API_24 只读实例全套通过; lint 15 项 (基线).
 - [x] (宿主) `PdfViewSession` 联调: `pdf.view(path, { page: 3, search: 'foo' })` 打开并定位; 宿主后台时报 `UI_REQUIRES_FOREGROUND`. 状态 (2026-11-13, paper-p3-host): 代码核对完成, 无缺口 (page / search 映射为 page / keyword, 插件调用前与 startActivity 前各查一次前台, 宿主 Activity 暂停即视为后台); 补单测 `PdfScriptArgumentsTest.viewOptionsAreCheckedBeforeTheViewerOpens` (宿主 2d194f5da3); 真机联调留批次 5. 结果 (2026-11-14, paper-device, E3): 本仓库 `.python/device_view_check.py` (宿主 6641 隔离克隆 `a87375e387`, 插件 36 / 39). view.front 在 G8441, XQ-AT72, Xiaomi Pad, OnePlus 均通过: 先停在第 3 页, 再按 `search` 跳到命中所在的第 5 页 (共 6 页, 页面事件 [3, 5]), 插件查看器在前台, `close` 原因 finished. view.background (脚本按 HOME 后再调用): Xiaomi Pad (API 35, 无 "显示在其他应用上层" 权限) 报 `UI_REQUIRES_FOREGROUND` 且不打开; G8441 (API 28, 低于 Android 10) 与 XQ-AT72 / OnePlus (该权限为 allow) 按宿主规则打开查看器并到前台.
-- 验收: 真机脚本 (附录 B.5 查看器示例) 在 API 33 通过; OnePlus (ColorOS) 后台启动行为记录进附录 F. 状态 (2026-11-13, paper-p3-plugin): 插件侧会话由上面的仪器测试覆盖; 真机脚本 (`pdf.view`) 与 ColorOS 后台启动依赖宿主联调, 留批次 5, 本批未执行. 结果 (2026-11-14, paper-device): 附录 B.5 查看器示例 (回归脚本 `b5.view`) 在 API 28 / 31 / 35 / 35 四台真机通过, 样例 `pdf-view` 在 XQ-AT72 (API 31) 通过 (原因 finished, 页面 [2, 6]); API 33 真机 (XQ-DQ72) 离线未跑, 随 Q160 补跑. OnePlus (ColorOS) 后台启动行为已记入附录 F.
+- 验收: 真机脚本 (附录 B.5 查看器示例) 在 API 33 通过; OnePlus (ColorOS) 后台启动行为记录进附录 F. 状态 (2026-11-13, paper-p3-plugin): 插件侧会话由上面的仪器测试覆盖; 真机脚本 (`pdf.view`) 与 ColorOS 后台启动依赖宿主联调, 留批次 5, 本批未执行. 结果 (2026-11-14, paper-device): 附录 B.5 查看器示例 (回归脚本 `b5.view`) 在 API 28 / 31 / 35 / 35 四台真机通过, 样例 `pdf-view` 在 XQ-AT72 (API 31) 通过 (原因 finished, 页面 [2, 6]); API 33 真机 (XQ-DQ72, 宿主 6641, 插件 39) 10:33 离线, 接回后 (Q160 (a)) 补跑通过: 回归 `b5.view` 页面事件 5, 2 且原因 finished, 样例 `pdf-view` 原因 finished 页面 [2, 6]. OnePlus (ColorOS) 后台启动行为已记入附录 F.
 
 ### P3.3 Explorer Action 服务 (D6, D36)
 
@@ -418,7 +418,7 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 
 ## P5: 文档, 声明, 四仓库同步, 样例与发布
 
-状态: 进行中 (P5.1 / P5.2 完成, P5.3 只差 API 33 真机 (XQ-AT72 API 31 的 Rhino 样例 14 / 14 已通过), P5.5 打包应用支持 (Q145 (b), 2026-11-14 加入) 只差真机; 两项都等 XQ-DQ72 (2026-11-14 10:33 离线, Q160)). 设备: 发布门禁的四台 + OnePlus.
+状态: 进行中 (P5.1 / P5.2 完成; P5.3 与 P5.5 打包应用支持 (Q145 (b), 2026-11-14 加入) 的 API 33 真机一项由 paper-device 在 XQ-DQ72 接回后 (Q160 (a)) 补跑通过, 两节完成; 只剩 P5.4 发布). 设备: 发布门禁的四台 + OnePlus.
 
 ### P5.1 文档 (AutoJs6-Documentation) (D40)
 
@@ -433,7 +433,7 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 
 ### P5.3 README, changelog, 样例与兼容矩阵
 
-- [ ] (插件) README (功能, 安装, 引擎与依赖, 权限说明, 脚本示例, 兼容矩阵), `CHANGELOG.md` 10 语言一次写全 (以 zh-Hans 为源翻译, all-languages 规则), `samples/` (读取, 渲染, 合并拆分, 图片转 PDF, 加密, 查看器, OCR 手动) 与宿主 `samples/` 同步. 状态 (2026-11-13, paper-p5-plugin): README 与 CHANGELOG 10 语言 `f47fa81`; 样例 9 个 (Rhino 7 个: `pdf-read`, `pdf-render`, `pdf-pages`, `pdf-generate`, `pdf-encrypt`, `pdf-ocr-manual`, `pdf-view`; Node 项目 `samples/node/pdf-node/`; Bun `samples/pdf.bun.js`) 与设备运行器 `.python/device_samples_run.py` 随本行提交; 宿主 `144d8e04d6` (示例代码 > 3-Paper PDF 收 7 个 Rhino 样例, 与本仓库逐字节相同, 不带 fixtures (Q132), 6.8.1 changelog 的 pdf 条目 10 语言指向它们); Node / Bun 样例只在本仓库 (Q130, Q131). 只差验收的 API 33 真机运行, 所以本行不勾. 状态 (2026-11-14, paper-device): XQ-AT72 (API 31, 宿主 6641, 插件 36) `device_samples_run.py --only read,render,pages,generate,encrypt,ocr-manual,view --view` 14 / 14 通过 (7 个样例与 7 个不带 fixtures 的演示轮): 合并的大纲为 ['Cover', 'outline'] (displayNames), `fromHtml` 的 scriptSkipped 为 true (`javaScript: false`), `pdf-ocr-manual` 7 行 2042 ms, `pdf-view` 原因 finished 页面 [2, 6]. Node / Bun 样例 (含 timeoutMs) 与 API 33 真机运行未做: XQ-DQ72 2026-11-14 10:33 离线 (Q160), 本行仍不勾.
+- [x] (插件) README (功能, 安装, 引擎与依赖, 权限说明, 脚本示例, 兼容矩阵), `CHANGELOG.md` 10 语言一次写全 (以 zh-Hans 为源翻译, all-languages 规则), `samples/` (读取, 渲染, 合并拆分, 图片转 PDF, 加密, 查看器, OCR 手动) 与宿主 `samples/` 同步. 状态 (2026-11-13, paper-p5-plugin): README 与 CHANGELOG 10 语言 `f47fa81`; 样例 9 个 (Rhino 7 个: `pdf-read`, `pdf-render`, `pdf-pages`, `pdf-generate`, `pdf-encrypt`, `pdf-ocr-manual`, `pdf-view`; Node 项目 `samples/node/pdf-node/`; Bun `samples/pdf.bun.js`) 与设备运行器 `.python/device_samples_run.py` 随本行提交; 宿主 `144d8e04d6` (示例代码 > 3-Paper PDF 收 7 个 Rhino 样例, 与本仓库逐字节相同, 不带 fixtures (Q132), 6.8.1 changelog 的 pdf 条目 10 语言指向它们); Node / Bun 样例只在本仓库 (Q130, Q131). 只差验收的 API 33 真机运行, 所以本行不勾. 状态 (2026-11-14, paper-device): XQ-AT72 (API 31, 宿主 6641, 插件 36) `device_samples_run.py --only read,render,pages,generate,encrypt,ocr-manual,view --view` 14 / 14 通过 (7 个样例与 7 个不带 fixtures 的演示轮): 合并的大纲为 ['Cover', 'outline'] (displayNames), `fromHtml` 的 scriptSkipped 为 true (`javaScript: false`), `pdf-ocr-manual` 7 行 2042 ms, `pdf-view` 原因 finished 页面 [2, 6]. XQ-DQ72 (API 33) 10:33 离线 (Q160), 接回后 (维护者选 (a)) 补跑全部样例 (宿主 6641, 插件 39, Node.js Runtime 396, Bun Runtime 369, `device_samples_run.py --view`): 16 / 16 通过 (7 个 Rhino 样例, Node, Bun 与 7 个演示轮); 合并的大纲为 ['Cover', 'outline'], `fromHtml` 的 scriptSkipped 为 true, `pdf-ocr-manual` 7 行 1476 ms, `pdf-view` 原因 finished 页面 [2, 6]; Node 样例合并的大纲为 ['First copy', 'outline'], 取消报 CANCELLED; Bun 样例的 timeoutMs 到期报 CANCELLED (TimeoutError), 运行器临时授予的 Bun 授权 `pdf.control` 之后恢复为原来的未设置. 证据等级 E3.
 - 验收: `prepush_check.py` 通过; 样例在 API 33 真机全部通过. 结果 (2026-11-13, paper-p5-plugin): AVD_API_33 只读实例 (宿主隔离克隆 debug 6641, Node.js Runtime 2.2.0, Bun Runtime 0.23.0, 本仓库 debug 包) 上运行器 16 / 16 通过 (带 fixtures 9 项, 去掉 fixtures 的演示轮 7 项; 演示轮的 OCR 样例首次因演示扫描页按图片像素定页面大小报 LIMIT_EXCEEDED, 改为 A4 页面后通过); `prepush_check.py` 要求工作区干净, 在本提交上运行, 结果记在交接笔记与看板; API 33 真机运行待批次 7 真机复验卡 (命令与步骤见共享笔记 paper-p5-plugin-handoff.md).
 
 ### P5.4 1.0.0 发布 (D41)
@@ -444,13 +444,13 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 
 ### P5.5 打包应用支持 (Q145 (b))
 
-维护者 2026-11-13 23:57 选 Q145 (b): 1.0.0 就让由 AutoJs6 打包的应用使用 `pdf` 模块. 决策 D43 - D45, 待决 Q150 起; 先例 3-Tally Sheet (D54, D60, Q20 (b)). 状态: 只差真机 (paper-packaged, 2026-11-14: 插件, 宿主, 文档与 AVD_API_33 验证完成; 真机一项并入批次 8). 设备: AVD_API_33 只读实例; 真机一项并入批次 8 真机复验卡.
+维护者 2026-11-13 23:57 选 Q145 (b): 1.0.0 就让由 AutoJs6 打包的应用使用 `pdf` 模块. 决策 D43 - D45, 待决 Q150 起; 先例 3-Tally Sheet (D54, D60, Q20 (b)). 状态: 完成 (paper-packaged, 2026-11-14: 插件, 宿主, 文档与 AVD_API_33 验证完成; 真机一项 paper-device 2026-11-14 在 XQ-DQ72 通过). 设备: AVD_API_33 只读实例; 真机一项并入批次 8 真机复验卡.
 
 - [x] (插件) 清单声明 normal 级权限 `org.autojs.plugin.pdf.permission.RUNTIME`, 打包入口服务 `.service.ThreePaperPdfPackagedService` 与查看器别名 `.viewer.PackagedPdfViewerActivity` (D43); 两个服务入口共用进程内的服务引擎, 打包入口每次调用校验调用方权限, 文档句柄, 查看器会话与操作绑定创建者 uid, 打包入口的临时目录前缀 `k`, 清扫线程回收已死调用方, `onUnbind` 只关本入口 (D44); 文件访问仍只走 fd (D7); 换入重出的 `pdf-api.aar`. 验收: JVM 单测 (入口校验, uid 绑定, 死亡回收, 按入口关闭, 临时目录名) 与 AVD_API_33 仪器测试 (绑定打包服务完成打开 / 渲染 / 操作, 别名查看器认领会话, 清单契约) 通过; lint 不高于基线 15; `.python/prepush_check.py` 通过. 结果 (paper-packaged, 2026-11-14, VERSION_BUILD 36): JVM 单测 215 项 0 失败 (新增 `PdfCallerGuardTest` 6 项, `ManifestContractTest` 补打包入口, `IconResourcesTest` 只看启动器别名); AVD_API_33 只读实例仪器测试 116 / 116 (新增 `PdfServicePackagedTest` 4 项, `PdfEngineDeviceTest` +3, `ViewerActivityDeviceTest` +1); lint 0 错误 / 15 警告 (= 基线); prepush 6 / 6 通过.
 - [x] (宿主) 契约 `pdf-api` 就地加 3 个常量 (Q60, 版本仍为 1) 并重出 aar; `core/plugin/pdf/PdfEntry`, `PdfPluginHost` 与 `PdfViewerLauncher` 按入口选择服务与查看器 (D43); 宿主 manifest 加 `uses-permission` 与两个 queries; `RemoteApkBuildRequestPreparer` 按 D45 / Q150 为打包请求加权限; 协议文档 `docs/dev/pdf-plugin-protocol-v1.md` 补打包入口; 6.8.1 changelog 10 语言. 验收: `PdfEntryTest`, 打包请求的权限单测, 契约与 pdf 相关既有单测通过 (camera 2 项与 api-coverage 14 项既有失败是积压). 结果 (paper-packaged, 2026-11-14): 宿主本地提交 `c37a23258d` (43 个文件, 未推送), 新 `pdf-api` aar 40,772 B (sha256 `9d5714fe...`, 已换进 `libs/`); `PdfEntryTest`, 打包请求权限单测与 pdf 相关单测共 150 项 0 失败; `generate_markdown.py --check` 与 changelog 翻译检查通过.
 - [x] (文档) 文档站 `api/pdf.md` 开头 "打包应用暂不能使用" 一句改为打包应用的用法与前提 (设备要装 3-Paper PDF 1.0.0 及以上, 用 AutoJs6 6.8.1 及以上打包, 权限由打包流程加入), `runtimeApis` 的 pdf 一节补打包应用, `progress.md`, 文档站 changelog 10 语言, 重新生成 (versionCode 与离线产物照 P5.1 做法); 插件 README 与 CHANGELOG 10 语言. 验收: `normalize-markdown.py --check`, `auto-generate.py --check`, `generate_markdown.py --check` 与翻译检查通过. 结果 (paper-packaged, 2026-11-14): 文档站本地提交 `4dd6ed6` / `ba8493e` (versionCode 218), 离线文档插件 `df366e4` (VERSION_BUILD 293), 均未推送, 文档站与离线文档的生成与翻译检查通过; 插件 README 与 CHANGELOG 10 语言随本行提交, `generate_markdown.py --check` 通过.
 - [x] (验证) AVD_API_33 只读实例: 用隔离克隆构建的宿主 (VERSION_BUILD 6641) 与官方签名的模板插件打一个最小打包应用, 核对 open / info / render / merge / 加密 / view 各一项, 未装插件时报 `PLUGIN_UNAVAILABLE`, 打包应用被杀后插件回收其文档与临时目录; 可复跑入口在本仓库 `.python/`, 输出只留每项通过 / 失败与关键数值. 证据等级 E2. 结果 (paper-packaged, 2026-11-14, E2): 入口 `.python/packaged_app_check.py`, 打包应用由宿主仪器测试 `PackagedAppPdfDeviceTest` (按需, 宿主本地提交) 经官方签名的模板插件生成 (Rhino, `org.autojs.autojs6.paperpdf`, 38,115,725 B, 21 s); emulator-5990 (API 33, 宿主 6641, 插件 debug 包 versionCode 33, 代码与 VERSION_BUILD 36 的提交相同) 全部 14 项检查通过: 打包流程授予 `org.autojs.plugin.pdf.permission.RUNTIME`; `fromText` 2 页, `open` 1 页, `render` 72 dpi 595 x 842, `merge` 2 页 368,694 B, `info` 2 页未加密, `encrypt` 后不给密码报 `PASSWORD_REQUIRED`, `view` 跳到 2 / 2 页可见, `close({ finish: true })` 的原因为 `finished`; 保持打开的文档在插件 `cache/pdf/k10193-11756/`, `am force-stop` 打包应用后 0 s 内删除; `pm uninstall -k` 插件后 `isAvailable()` 为 false, 7 / 7 项调用报 `PLUGIN_UNAVAILABLE` (输入文件须存在: 宿主先检查输入路径, 不存在时报 `FILE_NOT_FOUND`), 之后装回插件.
-- [ ] (验证, 真机) API 33 真机用同一入口复跑, 并入批次 8 真机复验卡. 证据等级 E3. 状态 (2026-11-14, paper-device): 维护者已同意在 XQ-DQ72 上运行 (含未装插件那一遍的 `pm uninstall -k`); 设备 10:33 离线, 未跑, 随 Q160 补跑.
+- [x] (验证, 真机) API 33 真机用同一入口复跑, 并入批次 8 真机复验卡. 证据等级 E3. 结果 (2026-11-14, paper-device, E3): XQ-DQ72 (API 33) 10:33 离线 (Q160), 维护者选 (a), 接回后补跑 `.python/packaged_app_check.py` (宿主 debug 6641 与其测试包, 插件 39). 设备原有的模板是官方 6.8.0 的 664002, 不含 6.8.1 的打包入口, 不可调试也不能降级覆盖, 所以先备份并卸载, 装隔离克隆构建的官方签名模板 6641, 检查完再装回 664002. 远程 adb 拉取约 37 KB/s, 超过脚本 600 s 的 adb 超时, 本次用临时包装把超时调为 3600 s 运行 (仓库脚本未改). 结果 14 项全部通过: 打包 38,152,605 B (打包加拉取共 713 s); 打包流程授予 `org.autojs.plugin.pdf.permission.RUNTIME`; `isAvailable()` 为 true, `fromText` 2 页, `open` 1 页, `render` 72 dpi 595 x 842, `merge` 2 页 368,694 B, `info` 2 页未加密, `encrypt` 后不给密码报 `PASSWORD_REQUIRED`, `view` 跳到 2 / 2 页可见且原因 `finished`; 保持打开的文档在插件 `cache/pdf/k10985-18981/`, `am force-stop` 打包应用后 1 s 内删除; `pm uninstall -k` 插件后 `isAvailable()` 为 false, 7 / 7 项调用报 `PLUGIN_UNAVAILABLE`, 之后装回插件 39. 打包应用与宿主里的 APK 副本由脚本删除, 宿主测试包已卸载.
 
 ---
 
@@ -734,7 +734,7 @@ AIDL:
 | Q144 | search 的 `limit` 缺省值: 宿主 `PdfScriptArguments.search` 缺省 1000 (= 上限 `MAX_SEARCH_HITS`), 契约常量 `DEFAULT_SEARCH_LIMIT` 100 没有被宿主使用 | (a) 保持 1000, 文档与 d.ts 写 1000 (推荐, 已先行) / (b) 宿主改用 100 (宿主 1 行, 文档站 pdf.md 与 d.ts 各 1 处) | P5.4 之前 | 已决 (2026-11-14 00:04, 维护者选 (a) 保持 1000, 经调度会话拍板) |
 | Q145 | 由 AutoJs6 打包的应用能否用 pdf (插件服务只认 `org.autojs.permission.PLUGIN`, 没有 3-Folio EPUB 那样的 `permission.RUNTIME` 与打包服务) | (a) 1.0.0 不支持, 文档写明 (推荐, 已先行: 文档站 pdf.md 开头一句, 27fc6e1) / (b) 1.0.0 照 3-Folio EPUB 加打包应用服务 (RUNTIME 权限, 打包服务, 宿主打包应用路由与测试, 约 1 - 2 天, 新增条目) | P5.4 之前 | 已决 (2026-11-13 23:57, 维护者选 (b) 1.0.0 就支持打包应用, 非推荐项, 经调度会话拍板; 新增 P5.5 与 D43 - D45, 由 paper-packaged 实施; 文档站 pdf.md 开头一句随 P5.5 (文档) 行改写) |
 | Q150 | Rhino 项目打包的应用如何获得 `org.autojs.plugin.pdf.permission.RUNTIME` (打包流程只给 Node.js / Bun 项目按能力自动加插件权限, Rhino 项目的 `permissions` 清单里没有它时打包应用绑定不到打包服务, `pdf` 报 `PERMISSION_DENIED`; 3-Folio EPUB / 3-Tally Sheet 的 Rhino 项目同样如此) | (a) Rhino 项目 (非 Node.js / Bun 项目) 打包时始终加入该 normal 级权限, 自定义 `permissions` 清单也在打包请求里补上, `project.json` 不变 (推荐, 已实施: 打包应用开箱可用, 普通权限不弹窗, 只多一行 `uses-permission`) / (b) 同 EPUB / xlsx 现状: 只在 `project.json` 的 `permissions` 写了该权限时保留, 文档写明手动添加的方法 / (c) 扫描项目脚本, 出现 `pdf` / `$pdf` 时才加 (可能漏判动态调用) | P5.5 (宿主) 行, 影响 `RemoteApkBuildRequestPreparer`, 打包请求单测与文档站 pdf.md 打包段落 | 已决 (2026-11-14, 维护者选 (a) "保持现状 (推荐, 已实施)", 经调度会话拍板; 由 paper-packaged 在宿主 c37a23258d 实施, 不用改代码) |
-| Q160 | XQ-DQ72 (`QV770340J7`, API 33, 主力联调机) 在批次 8 中途离线 (2026-11-14 10:33, 维护者告知需要离线一段时间), 依赖它的三行未跑: P2.7 的第四台 Sony / Xiaomi 设备回归, P5.3 样例的 API 33 真机运行 (含 Node / Bun 样例与 timeoutMs), P5.5 (验证, 真机); P3.2 验收里的 "API 33 真机" 也在其中 (已由 API 28 / 31 / 35 / 35 四台真机覆盖) | (a) 等 XQ-DQ72 接回后补跑 (推荐): 保留所需 APK (宿主 6641 的 androidTest 包, 官方签名打包模板, Node 396, Bun 369), 接回后约 40 分钟跑完回归, 计时, 样例与打包检查再勾三行; 设备上已装宿主 6641, 插件 39 / Node 396 / Bun 369 要补装 / (b) 改用 Redmi 22120RN86C (API 33): 要覆盖它用于旧宿主隐藏验证的旧宿主, 跑完再装回 / (c) 接受现有证据: P5.3 以 XQ-AT72 (API 31) Rhino 样例 14 / 14 与 AVD 为准, P5.5 以 AVD_API_33 (E2) 为准, P2.7 以三台 Sony / Xiaomi 加 OnePlus 为准, 改写三行验收后勾选; Node / Bun 样例没有真机证据 | P5.4 发布之前 | 需拍板 (2026-11-14 paper-device 登记) |
+| Q160 | XQ-DQ72 (`QV770340J7`, API 33, 主力联调机) 在批次 8 中途离线 (2026-11-14 10:33, 维护者告知需要离线一段时间), 依赖它的三行未跑: P2.7 的第四台 Sony / Xiaomi 设备回归, P5.3 样例的 API 33 真机运行 (含 Node / Bun 样例与 timeoutMs), P5.5 (验证, 真机); P3.2 验收里的 "API 33 真机" 也在其中 (已由 API 28 / 31 / 35 / 35 四台真机覆盖) | (a) 等 XQ-DQ72 接回后补跑 (推荐): 保留所需 APK (宿主 6641 的 androidTest 包, 官方签名打包模板, Node 396, Bun 369), 接回后约 40 分钟跑完回归, 计时, 样例与打包检查再勾三行; 设备上已装宿主 6641, 插件 39 / Node 396 / Bun 369 要补装 / (b) 改用 Redmi 22120RN86C (API 33): 要覆盖它用于旧宿主隐藏验证的旧宿主, 跑完再装回 / (c) 接受现有证据: P5.3 以 XQ-AT72 (API 31) Rhino 样例 14 / 14 与 AVD 为准, P5.5 以 AVD_API_33 (E2) 为准, P2.7 以三台 Sony / Xiaomi 加 OnePlus 为准, 改写三行验收后勾选; Node / Bun 样例没有真机证据 | P5.4 发布之前 | 已决 (2026-11-14 13:0x, 维护者选 (a) "接回后续跑"; paper-device 当天在 XQ-DQ72 补跑, P2.7 / P5.3 / P5.5 真机三行已勾) |
 
 ## 附录 E. 证据等级
 
@@ -786,6 +786,7 @@ ColorOS 后台启动 (P3.2 验收, 2026-11-14 paper-device, `.python/device_view
 | AVD API 25 (x86_64) | 132.0 ms (接收 32.1 ms) | 203 ms (192 - 239 ms; 输入共 1.8 MB, 输出 1.8 MB) | 55 ms / 1167 ms (JPEG 输入共 504 KB, 输出 515 KB) | fd 回落 (PNG 编码 + 解码); 单独运行; 合并与图片列 2026-11-14 paper-device (只读实例, 插件 36, 单独运行) |
 | AVD API 24 (x86) | 264.1 ms (接收 53.1 ms) | 1261 ms (901 - 1353 ms; 输入共 1.8 MB, 输出 1.8 MB; 与其他模拟器并行) | 158 ms / 1621 ms (全套中) | fd 回落 (PNG 编码 + 解码); 单独运行, 32 位镜像, 与其他模拟器并行时为 200 - 420 ms |
 | Sony XQ-AT72 (API 31) | 9.9 ms (接收 4.2 ms) | 259 ms (257 - 283 ms; 输入共 882 KB, 输出 899 KB) | 95 ms / 940 ms (2026-11-14 复测 83 ms / 907 ms) | SharedMemory; 图片列 2026-11-13 paper-p2-ops, 只跑 `PdfServiceGenerationTest`; 渲染与合并列 2026-11-14 paper-device (宿主 6641, 插件 36, 三项单独运行) |
+| Sony XQ-DQ72 (API 33) | 7.3 ms (接收 3.5 ms) | 164 ms (156 - 189 ms; 输入共 882 KB, 输出 899 KB) | 65 ms / 651 ms (JPEG 输入共 509 KB, 输出 520 KB) | SharedMemory; 2026-11-14 paper-device (宿主 6641, 插件 39, 四项一起运行; 100 页滚动 lastPage 89, 最差 13 ms) |
 | Xiaomi Pad 23046RP50C (API 35) | 6.5 ms (接收 4.0 ms) | 278 ms (269 - 304 ms; 输入共 230 KB, 输出 248 KB) | 50 ms / 694 ms (2026-11-14 复测 48 ms / 662 ms) | SharedMemory; 图片列 2026-11-13 paper-p2-ops, 只跑 `PdfServiceGenerationTest`; 渲染与合并列 2026-11-14 paper-device (宿主 6641, 插件 36, 四项一起运行) |
 | OnePlus OPD2413 (API 35, ColorOS) | 5.0 ms (接收 3.1 ms) | 261 ms (257 - 296 ms; 输入共 283 KB, 输出 303 KB) | 33 ms / 439 ms (JPEG 输入共 507 KB, 输出 518 KB) | SharedMemory; 2026-11-14 paper-device (宿主 6641, 插件 39, 三项一起运行) |
 | AVD API 37.1 16 KB (x86_64) | 10.6 ms (接收 5.1 ms) | 270 ms (238 - 297 ms; 输入共 229 KB, 输出 249 KB) | 169 ms / 1318 ms | SharedMemory; 图片列 2026-11-13 paper-p2-ops, 只跑 `PdfServiceGenerationTest`; 渲染与合并列 2026-11-14 paper-device (只读实例, 插件 36, 单独运行) |
@@ -798,7 +799,7 @@ ColorOS 后台启动 (P3.2 验收, 2026-11-14 paper-device, `.python/device_view
 | Sony XQ-AT72 (API 31) | 50 ms (31 - 80 ms) | 302 ms | 100 ms | 36 |
 | Xiaomi Pad 23046RP50C (API 35) | 31 ms (23 - 143 ms) | 215 ms | 97 ms | 36 |
 | OnePlus OPD2413 (API 35, ColorOS) | 27 ms (25 - 88 ms) | 149 ms | 60 ms | 39 |
-| Sony XQ-DQ72 (API 33) | 未跑 (2026-11-14 离线, Q160) | - | - | - |
+| Sony XQ-DQ72 (API 33) | 34 ms (20 - 82 ms) | 185 ms | 117 ms | 39 |
 
 ## 附录 G. 已评估暂缓
 
