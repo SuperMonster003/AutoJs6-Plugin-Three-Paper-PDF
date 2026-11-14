@@ -156,9 +156,11 @@ class ViewerActivityDeviceTest {
             var worst = 0L
             val started = SystemClock.elapsedRealtime()
             repeat(SWIPES) {
-                // The middle of the canvas: the bars cover its edges. zh-CN: 画布中部: 两端被工具栏覆盖.
+                // The press point decides which node gets the gesture: start above the page indicator, which reaches
+                // 0.74 of the height on a 720 x 1280 screen (G8441), and above the thumbnail bar.
+                // zh-CN: 按下点决定由哪个节点接收手势: 从页码指示器上方开始 (720 x 1280 屏幕 (G8441) 上它伸到高度的 0.74), 也避开缩略图栏.
                 compose.onNodeWithTag(VIEWER_CANVAS_TAG).performTouchInput {
-                    swipe(Offset(centerX, height * 0.75f), Offset(centerX, height * 0.25f), durationMillis = 150)
+                    swipe(Offset(centerX, height * 0.6f), Offset(centerX, height * 0.15f), durationMillis = 150)
                 }
                 worst = max(worst, mainThreadLatency())
             }

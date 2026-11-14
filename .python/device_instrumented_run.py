@@ -6,18 +6,22 @@ The script installs the debug plugin and its test package (`assembleDebug` + `as
 lines of the timing and probe tags (`PaperRenderPerf`, `PaperMergePerf`, `PaperImagesPerf`, `PaperHtmlSpike`,
 `PaperCryptoSpike`, `PaperViewerPerf`). At the end the test package is uninstalled; the plugin is uninstalled too
 unless it was installed before, in which case the original APK (pulled first) is installed back with `install -r -d`.
-The script never taps the screen; an installation that waits for a confirmation on the device times out and is
-reported.
+With `--installed` the plugin already on the device is used as it is (it must be a debuggable build): only the test
+package is installed and uninstalled, so a device that asks to confirm every installation (MIUI / HyperOS, ColorOS)
+asks once per run. The script never taps the screen; an installation that waits for a confirmation on the device
+times out and is reported.
 
 Usage:
   py .python/device_instrumented_run.py --serial BH900ASK9E --tests PdfServiceGenerationTest[,PdfServiceCryptoTest#name]
   py .python/device_instrumented_run.py --serial emulator-5850 --tests all
+  py .python/device_instrumented_run.py --serial 968e9f18 --installed --tests PdfServiceRenderingTest#timingOfAnA4TextPageAt144Dpi
 
 A device behind a remote adb server is reached by setting `ADB_SERVER_SOCKET=tcp:<host>:<port>` before the call.
 
 Output: the device line, one line per test, the tagged logcat lines, then `RESULT PASS` or `RESULT FAIL` (exit code 1).
 zh-CN: 在一台设备上运行 3-Paper PDF 的仪器测试类, 只输出结论与关键数值; 结束时卸载测试包, 插件此前未安装时一并卸载, 否则装回事先
-拉取的原 APK. 不点按屏幕; 需要在设备上确认的安装会超时并报告.
+拉取的原 APK. 给出 `--installed` 时直接使用设备上已装的插件 (须为可调试版本), 只安装与卸载测试包, 每次安装都要确认的设备 (MIUI / HyperOS,
+ColorOS) 每次运行只需确认一次. 不点按屏幕; 需要在设备上确认的安装会超时并报告.
 """
 
 from __future__ import annotations
@@ -109,14 +113,24 @@ def main() -> int:
     parser.add_argument("--serial", required=True)
     parser.add_argument("--tests", required=True, help="comma-separated classes or Class#method (package optional), or all")
     parser.add_argument("--timeout", type=int, default=1800, help="seconds for the whole instrumentation")
+    parser.add_argument("--installed", action="store_true",
+                        help="use the plugin already installed (debuggable); install only the test package")
     arguments = parser.parse_args()
     device = Device(arguments.serial)
-    for apk in (PLUGIN_APK, TEST_APK):
+    for apk in ((TEST_APK,) if arguments.installed else (PLUGIN_APK, TEST_APK)):
         if not apk.exists():
             print(f"FAIL build: {apk.relative_to(ROOT)} is missing (run assembleDebug assembleDebugAndroidTest)")
             return 1
     print(f"device {arguments.serial}: {device.prop('ro.product.model')} API {device.prop('ro.build.version.sdk')}")
     original = device.shell(f"pm path {PLUGIN_PACKAGE}", check=False).strip()
+    if arguments.installed:
+        installed = re.search(r"versionCode=(\d+)", device.shell(f"dumpsys package {PLUGIN_PACKAGE}", check=False))
+        if not original.startswith("package:") or installed is None:
+            print("FAIL setup: --installed needs 3-Paper PDF on the device")
+            print("RESULT FAIL")
+            return 1
+        print(f"INFO using the installed plugin (versionCode {installed.group(1)})")
+        original = ""
     backup_dir = tempfile.TemporaryDirectory(prefix="paper-device-run-")
     backup: Path | None = None
     if original.startswith("package:"):
@@ -131,7 +145,8 @@ def main() -> int:
         print("INFO plugin was installed before; it is put back at the end")
     failed = False
     try:
-        device.install(PLUGIN_APK, "-r", "-t", "-d")
+        if not arguments.installed:
+            device.install(PLUGIN_APK, "-r", "-t", "-d")
         device.install(TEST_APK, "-r", "-t")
         device.adb("logcat", "-c", check=False)
         for verdict, name, detail in instrument(device, [t.strip() for t in arguments.tests.split(",") if t.strip()], arguments.timeout):
@@ -146,7 +161,9 @@ def main() -> int:
         print(f"FAIL setup: {e}")
     finally:
         device.adb("uninstall", TEST_PACKAGE, check=False)
-        if backup is not None:
+        if arguments.installed:
+            pass
+        elif backup is not None:
             try:
                 device.install(backup, "-r", "-d")
             except RuntimeError as e:

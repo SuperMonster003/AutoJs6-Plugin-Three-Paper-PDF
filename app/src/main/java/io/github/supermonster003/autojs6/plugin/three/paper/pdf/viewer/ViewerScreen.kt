@@ -37,6 +37,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -110,6 +111,7 @@ internal fun ViewerScreen(model: ViewerViewModel, onClose: () -> Unit, onShare: 
 @Composable
 private fun Ready(model: ViewerViewModel, onClose: () -> Unit, onShare: () -> Unit, onOpenWith: () -> Unit) {
     val colors = MaterialTheme.colorScheme
+    val bars = ViewerBarColors.of(colors)
     BackHandler(enabled = model.outlineOpen || model.searchOpen || model.jumpOpen) {
         when {
             model.jumpOpen -> model.jumpOpen = false
@@ -120,7 +122,7 @@ private fun Ready(model: ViewerViewModel, onClose: () -> Unit, onShare: () -> Un
     Box(modifier = Modifier.fillMaxSize()) {
         ViewerCanvas(model, background = colors.surfaceVariant, modifier = Modifier.fillMaxSize())
         AnimatedVisibility(visible = model.chromeVisible || model.searchOpen, enter = fadeIn(), exit = fadeOut(), modifier = Modifier.align(Alignment.TopCenter)) {
-            Surface(color = colors.surface.copy(alpha = BAR_ALPHA), shadowElevation = 2.dp) {
+            Surface(color = bars.container, contentColor = bars.content, shadowElevation = 2.dp) {
                 if (model.searchOpen) SearchBar(model) else TopBar(model, onClose, onShare, onOpenWith)
             }
         }
@@ -130,7 +132,7 @@ private fun Ready(model: ViewerViewModel, onClose: () -> Unit, onShare: () -> Un
         ) {
             PageIndicator(model)
             AnimatedVisibility(visible = model.chromeVisible, enter = fadeIn(), exit = fadeOut()) {
-                Surface(color = colors.surface.copy(alpha = BAR_ALPHA), shadowElevation = 2.dp) {
+                Surface(color = bars.container, contentColor = bars.content, shadowElevation = 2.dp) {
                     ThumbnailStrip(model, modifier = Modifier.navigationBarsPadding())
                 }
             }
@@ -499,6 +501,19 @@ private fun Failure(message: Int, onClose: () -> Unit) {
         Text(text = stringResource(R.string.viewer_error_title), style = MaterialTheme.typography.headlineSmall)
         Text(text = stringResource(message), modifier = Modifier.testTag("viewer-error"), style = MaterialTheme.typography.bodyLarge)
         Button(onClick = onClose) { Text(text = stringResource(R.string.viewer_close)) }
+    }
+}
+
+/**
+ * Colors of the translucent top bar and thumbnail bar. `Surface` derives its content color only from a color equal to a
+ * scheme role, and a translucent surface equals none, so the content would fall back to black and be unreadable on the dark
+ * theme; the content color is therefore given explicitly.
+ * zh-CN: 半透明顶栏与缩略图栏的颜色. `Surface` 只能从与配色方案角色相等的颜色推出内容色, 半透明表面与任何角色都不相等, 内容色会退回黑色,
+ * 在深色主题下看不清; 因此显式给出内容色.
+ */
+internal data class ViewerBarColors(val container: Color, val content: Color) {
+    companion object {
+        fun of(scheme: ColorScheme) = ViewerBarColors(scheme.surface.copy(alpha = BAR_ALPHA), scheme.onSurface)
     }
 }
 
