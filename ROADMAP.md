@@ -1,6 +1,8 @@
 # 3-Paper PDF 插件路线图
 
-更新: 2026-11-12 (调度会话首轮拍板 Q1-Q3 / Q6-Q8 落盘, 基线刷新见附录 F 的 2026-11-12 快照: 宿主 6.8.0 已于 2026-11-03 公开, 宿主侧条目进 6.8.1; 多语言文案改为所有语言一次写全); 2026-10-22 (立项). 本文件是 `AutoJs6-Plugin-Three-Paper-PDF` (显示名 `3-Paper PDF`, PDF 方向, 插件选题分析 2026-10 的第 4 优先级候选) 的唯一进度与决策记录. 立项基线: 宿主 AutoJs6 `master` `e25e28f88` (2026-10-22, `VERSION_NAME` 6.8.0 未发布, `VERSION_BUILD` 4283, versionCode 5935; 该 hash 已因 6.8.0 公开时的历史重写失效, 现行基线见附录 F), 3-Folio EPUB (契约 `epub-api`, 阅读器两步启动, Explorer 预览器降级对话框) 与 3-Prism Camera (SharedMemory 位图传输, 契约模块版式) 作技术先例, 3-Slate Studio `ROADMAP.md` 作为版式与流程模板.
+更新: 2026-11-14 (P5.4: 1.0.0 发布并登记官方索引, paper-release); 2026-11-12 (调度会话首轮拍板 Q1-Q3 / Q6-Q8 落盘, 基线刷新见附录 F 的 2026-11-12 快照: 宿主 6.8.0 已于 2026-11-03 公开, 宿主侧条目进 6.8.1; 多语言文案改为所有语言一次写全); 2026-10-22 (立项). 本文件是 `AutoJs6-Plugin-Three-Paper-PDF` (显示名 `3-Paper PDF`, PDF 方向, 插件选题分析 2026-10 的第 4 优先级候选) 的唯一进度与决策记录. 立项基线: 宿主 AutoJs6 `master` `e25e28f88` (2026-10-22, `VERSION_NAME` 6.8.0 未发布, `VERSION_BUILD` 4283, versionCode 5935; 该 hash 已因 6.8.0 公开时的历史重写失效, 现行基线见附录 F), 3-Folio EPUB (契约 `epub-api`, 阅读器两步启动, Explorer 预览器降级对话框) 与 3-Prism Camera (SharedMemory 位图传输, 契约模块版式) 作技术先例, 3-Slate Studio `ROADMAP.md` 作为版式与流程模板.
+
+发布状态 (2026-11-14): 1.0.0 已发布并登记官方索引 (P5.4): `VERSION_NAME` 1.0.0, versionCode 41, 源码 `9f61b3e` (tag `v1.0.0`), APK `autojs6-plugin-three-paper-pdf-v1.0.0-2bf2221b.apk` 8,231,848 字节, CRC32 `2bf2221b`, 最低宿主 6641 (6.8.1, 未公开). 下一阶段 P6 (1.1.0).
 
 使用方式:
 
@@ -210,7 +212,7 @@ io.github.supermonster003.autojs6.plugin.three.paper.pdf
 | P2 | 1.0.0 | 插件核心: 服务与句柄, 读取, 渲染与位图传输, 页面操作, 生成, 加密, 设备矩阵 | 完成 (P2.1 - P2.6 完成; P2.7 五台真机回归通过, paper-device 2026-11-14) |
 | P3 | 1.0.0 | 查看器, `pdf.view` 会话, Explorer Action 服务 | 完成 (2026-11-13 各行; 真机复验与 P3.2 宿主联调 paper-device 2026-11-14, 含 API 33 真机) |
 | P4 | 1.0.0 | 工具箱界面: 应用骨架, 向导, 设置与启动器模式 | 完成 (paper-p4 2026-11-13; 真机手测 paper-device 2026-11-14) |
-| P5 | 1.0.0 | 文档, 声明, 四仓库同步, 样例, 兼容矩阵, 打包应用支持 (Q145 (b)), 发布与索引登记 | 进行中 (P5.1 - P5.3 与 P5.5 完成 (API 33 真机 paper-device 2026-11-14), 只剩 P5.4 发布) |
+| P5 | 1.0.0 | 文档, 声明, 四仓库同步, 样例, 兼容矩阵, 打包应用支持 (Q145 (b)), 发布与索引登记 | 完成 (P5.1 - P5.3 与 P5.5 完成, API 33 真机 paper-device 2026-11-14; P5.4 1.0.0 于 2026-11-14 发布并登记官方索引, paper-release) |
 | P6 | 1.1.0 | 表单, 水印 / 页码 / 页眉页脚, 可搜索 PDF, 压缩, 发布 | 未开始 |
 
 依赖顺序:
@@ -418,7 +420,7 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 
 ## P5: 文档, 声明, 四仓库同步, 样例与发布
 
-状态: 进行中 (P5.1 / P5.2 完成; P5.3 与 P5.5 打包应用支持 (Q145 (b), 2026-11-14 加入) 的 API 33 真机一项由 paper-device 在 XQ-DQ72 接回后 (Q160 (a)) 补跑通过, 两节完成; 只剩 P5.4 发布). 设备: 发布门禁的四台 + OnePlus.
+状态: 完成 (P5.1 / P5.2 完成; P5.3 与 P5.5 打包应用支持 (Q145 (b), 2026-11-14 加入) 的 API 33 真机一项由 paper-device 在 XQ-DQ72 接回后 (Q160 (a)) 补跑通过, 两节完成; P5.4 1.0.0 于 2026-11-14 发布并登记官方索引, paper-release). 设备: 发布门禁的四台 + OnePlus.
 
 ### P5.1 文档 (AutoJs6-Documentation) (D40)
 
@@ -438,9 +440,9 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 
 ### P5.4 1.0.0 发布 (D41)
 
-- [ ] (发布) 走第 6 节发布门禁 1-5; `REQUIRES_HOST_VERSION` 回填为含全部宿主条目的 6.8.1 本地构建号 (D41, Q8: 不等宿主 6.8.1 公开); tag `v1.0.0`, release 工作流产出 APK; (索引) 登记 `release-manifests/.../<versionCode>.json`; 宿主 changelog 与本文件阶段总览更新.
+- [x] (发布) 走第 6 节发布门禁 1-5; `REQUIRES_HOST_VERSION` 回填为含全部宿主条目的 6.8.1 本地构建号 (D41, Q8: 不等宿主 6.8.1 公开); tag `v1.0.0`, release 工作流产出 APK; (索引) 登记 `release-manifests/.../<versionCode>.json`; 宿主 changelog 与本文件阶段总览更新; (插件) 发布后 `VERSION_BUILD` 推进到 42, `VERSION_NAME` 保持 1.0.0, 到第一笔 1.1.0 改动时再改并新增 10 种语言的 changelog 条目 (`generate_markdown.py --check` 要求 `VERSION_NAME` 等于最新 changelog 条目, 同 3-Slate 附录 D Q122 (a)). 证据 (2026-11-14, paper-release): 插件提交 `9f61b3e` (发布提交: changelog 日期改为实际发布日 2026/11/14, `packaged_app_check.py` 加 `--adb-timeout`, 附录 D Q170 / Q171; `VERSION_BUILD` 41, 即 1.0.0 的源码), 本条的 ROADMAP 提交 (`VERSION_BUILD` 42). `REQUIRES_HOST_VERSION` 6641 不需回填: 已与 3-Prism / 3-Slate 相同, 宿主 HEAD `2a96bd05a8` (`VERSION_BUILD` 6640, 6.8.1 开发线) 含全部宿主条目 (`c37a23258d`, `b0856877b3` 等都是其祖先). 门禁 1 (E1 + E2): 插件 `test connectedDebugAndroidTest` (`9f61b3e`, AVD_API_33 只读实例) 单测 217 例 0 失败, 仪器测试 116 例 0 失败; 宿主隔离克隆 (`2a96bd05a8`) pdf 相关单测 app 21 个类 159 例 + `pdf-api` 10 例 0 失败; 其中 `RuntimePdfBridgeTest` 自 `2822672962` (Q81 (B) 向脚本开放 merge 的 displayNames) 起有 1 处过时断言, 宿主本地提交 `521d5b8f4e` 只改该测试. 门禁 2 (E3): 批次 8 之后插件无代码改动, 沿用 P2.7 / P5.5 的五台真机 debug 回归 (paper-device 2026-11-14, 45 / 0); 另用 release 包 41 在 G8441 (API 28, R8 优化包在旧 API 上的覆盖, 3-Slate Q121 的教训) 跑 `device_regression.py --view --ocr-sample` 45 通过 / 0 失败 / 0 跳过 (render144 中位 86 ms, merge100 244 ms, fromImages20 140 ms). 门禁 3 (E1): `prepush_check.py` 6 / 6, `generate_third_party_notices.py --check` NOTICES_OK (host 3, maven 73, data 8), `generate_markdown.py --check` MARKDOWN_OK (10 种语言, 36 个产物), `check_repository.py` 无错误, 跟踪文件无全角标点; `master` 推送后 Build integrity, Icon Studio recipe, Emulator tests 三个工作流全绿. 门禁 4 见下方验收. 门禁 5: 插件 changelog 10 种语言的 v1.0.0 条目在 P5.3 已写全, 本卡只把日期改为 2026/11/14; 宿主 6.8.1 changelog 的 3 条 pdf 条目 10 种语言齐全 (`generate_markdown.py --check` MARKDOWN_OK 22, `check_translations.py` 通过), 本卡无需补充. 文档站两处小补 (输入文件先于插件可用性检查, Node.js / Bun 的 PdfViewSession 关闭原因 `overflow`): AutoJs6-Documentation `f02412d` / `abec795` / `3027366`, AutoJs6-Plugin-Offline-Docs `7375ee6`, 与宿主 `521d5b8f4e` 一样只本地提交. 仓库与发布: `SuperMonster003/AutoJs6-Plugin-Three-Paper-PDF` 于 2026-11-14 建立 (Q171 (B), 公开, wiki / projects / discussions 关), 推送前扫描历史无签名文件, 口令, 令牌, 私钥与本机用户路径; 4 个签名 secret 由维护者配置; tag `v1.0.0` -> `9f61b3e`, `release.yml` 签名构建成功 (运行 43570667883); Release <https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Paper-PDF/releases/tag/v1.0.0> 附 `autojs6-plugin-three-paper-pdf-v1.0.0-2bf2221b.apk` 与 `SHA256SUMS` (源码归档为 GitHub 自动生成), 说明取 CHANGELOG-en 1.0.0 条目, 版式同 3-Slate. APK 核对: v2 签名证书 sha256 `31a681fc...` (官方证书), versionCode 41, 文件名 CRC32 与内容一致, sha256 `44e6c96b...` 与 `SHA256SUMS` 及清单一致, `plugin_requires_host_version` 6641, 原生库只有 4 个 ABI 的 `libandroidx.graphics.path.so`. 索引: AutoJs6-Official-Plugins-Index `73a9e37` (`official-repositories.json` 56 -> 57 及 README 10 种语言的计数, `release-manifests/<包名>/41.json`, `catalog-icons.json` 与日 / 夜两张图标 (源提交 `9f61b3e`, recipe sha256 `89d9b7aa...`), 本地生成的 `plugins.official.generated.json` 只多本插件一项, `requiresHostVersion` 6641), 推送后机器人 `22854e3` 只改 3-Chime 元数据, 之后 3-Chime 1.3.0 的登记 `59f1d97` 基于它.
 - 前置: P5.3 与 P5.5 (打包应用支持, Q145 (b)) 全部行完成, 含两节的真机一项.
-- 验收: 插件中心从索引安装 1.0.0 并默认启用; Explorer 与脚本冒烟通过.
+- 验收: 插件中心从索引安装 1.0.0 并默认启用; Explorer 与脚本冒烟通过. 结果 (2026-11-14, paper-release): OnePlus (63751f63, API 35, ColorOS 15, 宿主 6641): 卸掉调试包 39 后由维护者在插件中心从索引安装 1.0.0 (versionCode 41, 安装来源 `com.android.packageinstaller`), 宿主启用状态表无本插件条目 (默认启用); `device_samples_run.py --view --only read,render,pages,generate,encrypt,ocr-manual,view,bun` 14 / 14 通过 (7 个 Rhino 样例与 7 个不带 fixtures 的演示轮: 合并的大纲为 ['Cover', 'outline'], `fromHtml` 的 scriptSkipped 为 true, `pdf-ocr-manual` 7 行 1466 ms, `pdf-view` 原因 finished 页面 [2, 6]), Bun 未安装跳过, Node 为已发布的 2.0.0 (还没有 pdf 模块) 未跑 (E3); Explorer 由维护者手测 (E4): 文件管理器点按 PDF 以文件名为标题打开查看器, 多选两个 PDF 有 "合并所选" 并生成 `outline_merged.pdf` (6,021 字节) 可打开, 桌面图标启动到首页. G8441 (BH900ASK9E, API 28, adb 装同一 Release APK, 宿主 6641): 除上面门禁 2 的回归外, 样例 Rhino 7 个与演示轮 7 个全部通过, Bun 跳过 (API 28 < 33), Node 样例报 `unknown option 'options.timeoutMs'`: 设备上的 Node.js Runtime 是 2.2.0 的早期本地构建 390, 早于加入 timeoutMs 门面的构建 395 (Node 仓库 `1bf91959`, Q93 (C)), 批次 8 在 396 上已通过, 属设备运行时过旧, 不是本插件问题; 第一轮有 12 项暂时性 `PLUGIN_UNAVAILABLE`, 原因是另一会话 15:40 在该机覆盖安装宿主 (locks.md 冲突说明), 复跑全部通过; 宿主 Explorer 的发现逻辑多次绑定并连上 release 包的 `ThreePaperPdfExplorerActionService`. 两台 logcat 无 FATAL 与 ANR.
 
 ### P5.5 打包应用支持 (Q145 (b))
 
