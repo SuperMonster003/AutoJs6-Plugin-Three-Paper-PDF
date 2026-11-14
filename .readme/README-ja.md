@@ -241,7 +241,7 @@ native libraries: libandroidx.graphics.path.so of Jetpack Compose only (arm64-v8
 
 #### v1.0.0
 
-_2026/11/12_
+_2026/11/14_
 
 - `ヒント` AutoJs6 スクリプトの pdf モジュールとファイルマネージャーの入口には AutoJs6 6.8.1 (内部バージョン 6641) 以降が必要です. それより古い AutoJs6 ではプラグインセンターでこのプラグインが非対応と表示されますが, ツールボックスとビューアーは単独で使えます
 - `ヒント` Node.js や Bun のスクリプトで使うには Node.js Runtime 2.2.0 または Bun Runtime 0.23.0 以降が必要です

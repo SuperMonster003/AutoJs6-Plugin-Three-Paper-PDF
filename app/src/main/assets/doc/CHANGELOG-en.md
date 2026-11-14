@@ -6,7 +6,7 @@
 
 # v1.0.0
 
-###### 2026/11/12
+###### 2026/11/14
 
 * `Hint` The pdf module of AutoJs6 scripts and the file manager entries require AutoJs6 6.8.1 (internal build 6641) or later; older AutoJs6 versions show the plugin as incompatible in the Plugin Center, and the toolbox and the viewer still work on their own
 * `Hint` Use in Node.js or Bun scripts requires Node.js Runtime 2.2.0 or Bun Runtime 0.23.0 or later

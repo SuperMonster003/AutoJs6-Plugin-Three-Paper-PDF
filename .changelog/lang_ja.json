@@ -6,7 +6,7 @@
   "changelog_label_dependency": "依存関係",
   "$data": {
     "v1.0.0": {
-      "released_date": "2026/11/12",
+      "released_date": "2026/11/14",
       "hint": [
         "AutoJs6 スクリプトの pdf モジュールとファイルマネージャーの入口には AutoJs6 {{ required_host_version_name }} (内部バージョン {{ required_host_version_code }}) 以降が必要です. それより古い AutoJs6 ではプラグインセンターでこのプラグインが非対応と表示されますが, ツールボックスとビューアーは単独で使えます",
         "Node.js や Bun のスクリプトで使うには Node.js Runtime 2.2.0 または Bun Runtime 0.23.0 以降が必要です"

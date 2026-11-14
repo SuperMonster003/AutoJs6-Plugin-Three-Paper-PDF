@@ -6,7 +6,7 @@
   "changelog_label_dependency": "Dependencia",
   "$data": {
     "v1.0.0": {
-      "released_date": "2026/11/12",
+      "released_date": "2026/11/14",
       "hint": [
         "El módulo pdf de los scripts de AutoJs6 y las entradas del gestor de archivos requieren AutoJs6 {{ required_host_version_name }} (compilación interna {{ required_host_version_code }}) o posterior; las versiones anteriores de AutoJs6 muestran el complemento como incompatible en el centro de complementos, y la caja de herramientas y el visor siguen funcionando por sí solos",
         "Usarlo en scripts de Node.js o Bun requiere Node.js Runtime 2.2.0 o Bun Runtime 0.23.0 o posterior"

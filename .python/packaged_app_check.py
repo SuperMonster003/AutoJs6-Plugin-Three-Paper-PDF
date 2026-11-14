@@ -1,7 +1,7 @@
 """Checks that an app packaged by AutoJs6 can use the pdf module (3-Paper PDF roadmap P5.5, Q145 (b)).
 
 Usage: py -3.12 -I .python/packaged_app_check.py -s SERIAL [--host-apk APK] [--host-test-apk APK] [--template-apk APK]
-       [--plugin-apk APK] [--app-apk APK] [--no-unavailable] [--keep]
+       [--plugin-apk APK] [--app-apk APK] [--no-unavailable] [--keep] [--adb-timeout SECONDS]
 
 1. Needs on the device: a debuggable AutoJs6 host with the packaged entry of the pdf module (6.8.1, build 6641 or
    later), its instrumentation package (org.autojs.autojs6.test) with PackagedAppPdfDeviceTest, an APK Builder template
@@ -20,6 +20,8 @@ Usage: py -3.12 -I .python/packaged_app_check.py -s SERIAL [--host-apk APK] [--h
    from the device before the uninstall).
 5. Afterwards the packaged app and the host's copies of its APK are removed and Plugin Center is put back, unless
    --keep is given. The host, its test package and the template stay installed.
+--adb-timeout (default 600 s) limits each adb install / push / pull; raise it for a device behind a slow remote adb
+server (the packaged app is about 38 MB: at 37 KB/s it needs about 1100 s, so use 3600).
 Every check prints one line "PASS|FAIL|SKIP <name> <key values>"; the exit code is 1 when a check failed.
 
 zh-CN: 检查由 AutoJs6 打包的应用能否使用 pdf 模块 (3-Paper PDF 路线图 P5.5, Q145 (b)). 1. 设备上需要: 可调试的 AutoJs6 宿主, 带 pdf 模块的
@@ -32,6 +34,8 @@ zh-CN: 检查由 AutoJs6 打包的应用能否使用 pdf 模块 (3-Paper PDF 路
 cache/pdf/k<uid>-<pid>/, 应用被杀 (am force-stop) 后 90 秒内释放. 4. 未给 --no-unavailable 时, 保留数据卸载插件 (pm uninstall -k), 再运行一次应用,
 每项调用都应报 PLUGIN_UNAVAILABLE; 之后装回插件 (--plugin-apk, 或卸载前从设备拉取的 APK). 5. 结束时删除打包应用与宿主里的 APK 副本,
 恢复插件中心状态, 给出 --keep 时保留. 宿主, 其测试包与模板插件保持安装.
+--adb-timeout (默认 600 秒) 限制每次 adb install / push / pull 的时长; 经慢速远程 adb 服务器连接的设备要调大 (打包应用约 38 MB,
+37 KB/s 时约需 1100 秒, 可用 3600).
 每项检查输出一行 "PASS|FAIL|SKIP <名称> <关键数值>"; 有检查失败时退出码为 1.
 """
 import argparse
@@ -62,9 +66,11 @@ TEMPLATE_ON = f'<boolean name="key_$_enabled_plugin_$_{TEMPLATE}" value="true" /
 CALLS = ("fromText", "open", "render", "merge", "info", "encrypt", "view", "hold")
 RESULT_TIMEOUT = 90
 RELEASE_TIMEOUT = 90
+ADB_TIMEOUT = 600  # seconds for each adb install / push / pull, --adb-timeout; zh-CN: 每次 adb 传输的秒数
 
 
-def adb(serial, *args, check=True, timeout=600):
+def adb(serial, *args, check=True, timeout=None):
+    timeout = ADB_TIMEOUT if timeout is None else timeout
     result = subprocess.run(["adb", "-s", serial, *args], capture_output=True, text=True, encoding="utf-8",
                             errors="replace", timeout=timeout)
     if check and result.returncode != 0:
@@ -241,6 +247,7 @@ def check_unavailable(checks, serial, plugin_apk, work):
 
 
 def main():
+    global ADB_TIMEOUT
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("-s", "--serial", required=True)
     parser.add_argument("--host-apk", help="AutoJs6 debug APK to install first")
@@ -250,7 +257,12 @@ def main():
     parser.add_argument("--app-apk", help="a packaged app built before, instead of producing one")
     parser.add_argument("--no-unavailable", action="store_true", help="skip the pass without the plugin")
     parser.add_argument("--keep", action="store_true", help="keep the packaged app and the produced files")
+    parser.add_argument("--adb-timeout", type=int, default=ADB_TIMEOUT, metavar="SECONDS",
+                        help=f"limit of each adb install / push / pull (default {ADB_TIMEOUT}); raise it for a slow remote adb")
     args = parser.parse_args()
+    if args.adb_timeout <= 0:
+        parser.error("--adb-timeout must be positive")
+    ADB_TIMEOUT = args.adb_timeout
     serial = args.serial
     for apk in (args.host_apk, args.host_test_apk, args.template_apk, args.plugin_apk):
         if apk:

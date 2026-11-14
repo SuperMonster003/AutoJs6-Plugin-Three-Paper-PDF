@@ -6,7 +6,7 @@
   "changelog_label_dependency": "Dépendance",
   "$data": {
     "v1.0.0": {
-      "released_date": "2026/11/12",
+      "released_date": "2026/11/14",
       "hint": [
         "Le module pdf des scripts AutoJs6 et les entrées du gestionnaire de fichiers nécessitent AutoJs6 {{ required_host_version_name }} (version interne {{ required_host_version_code }}) ou ultérieur; les versions plus anciennes d'AutoJs6 affichent le plugin comme incompatible dans le centre des plugins, et la boîte à outils et la visionneuse restent utilisables seules",
         "L'utilisation dans les scripts Node.js ou Bun nécessite Node.js Runtime 2.2.0 ou Bun Runtime 0.23.0 ou ultérieur"

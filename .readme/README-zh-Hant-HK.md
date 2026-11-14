@@ -241,7 +241,7 @@ native libraries: libandroidx.graphics.path.so of Jetpack Compose only (arm64-v8
 
 #### v1.0.0
 
-_2026/11/12_
+_2026/11/14_
 
 - `提示` AutoJs6 腳本的 pdf 模組與檔案管理器入口需要 AutoJs6 6.8.1 (內部版本號 6641) 或更新版本; 較舊的 AutoJs6 在插件中心顯示本插件不相容, 工具箱與檢視器仍可單獨使用
 - `提示` 在 Node.js 或 Bun 腳本中使用需要 Node.js Runtime 2.2.0 或 Bun Runtime 0.23.0 或更新版本

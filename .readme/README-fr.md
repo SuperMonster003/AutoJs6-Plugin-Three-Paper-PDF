@@ -241,7 +241,7 @@ Les plans, décisions de conception et l'avancement sont suivis sous forme de li
 
 #### v1.0.0
 
-_2026/11/12_
+_2026/11/14_
 
 - `Note` Le module pdf des scripts AutoJs6 et les entrées du gestionnaire de fichiers nécessitent AutoJs6 6.8.1 (version interne 6641) ou ultérieur; les versions plus anciennes d'AutoJs6 affichent le plugin comme incompatible dans le centre des plugins, et la boîte à outils et la visionneuse restent utilisables seules
 - `Note` L'utilisation dans les scripts Node.js ou Bun nécessite Node.js Runtime 2.2.0 ou Bun Runtime 0.23.0 ou ultérieur

@@ -6,7 +6,7 @@
   "changelog_label_dependency": "Зависимость",
   "$data": {
     "v1.0.0": {
-      "released_date": "2026/11/12",
+      "released_date": "2026/11/14",
       "hint": [
         "Модулю pdf в скриптах AutoJs6 и пунктам файлового менеджера нужен AutoJs6 {{ required_host_version_name }} (внутренняя сборка {{ required_host_version_code }}) или новее; более старые версии AutoJs6 показывают плагин в центре плагинов как несовместимый, а набор инструментов и просмотрщик по-прежнему работают сами по себе",
         "Для использования в скриптах Node.js или Bun нужен Node.js Runtime 2.2.0 или Bun Runtime 0.23.0 и новее"

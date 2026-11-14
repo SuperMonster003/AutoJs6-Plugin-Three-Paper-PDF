@@ -6,7 +6,7 @@
   "changelog_label_dependency": "تبعية",
   "$data": {
     "v1.0.0": {
-      "released_date": "2026/11/12",
+      "released_date": "2026/11/14",
       "hint": [
         "تتطلب الوحدة pdf في سكربتات AutoJs6 ومداخل مدير الملفات الإصدار {{ required_host_version_name }} من AutoJs6 (الإصدار الداخلي {{ required_host_version_code }}) أو أحدث; وتعرض إصدارات AutoJs6 الأقدم هذه الإضافة في مركز الإضافات على أنها غير متوافقة, ويبقى صندوق الأدوات والعارض قابلين للاستخدام وحدهما",
         "يتطلب الاستخدام في سكربتات Node.js أو Bun الإصدار Node.js Runtime 2.2.0 أو Bun Runtime 0.23.0 أو أحدث"

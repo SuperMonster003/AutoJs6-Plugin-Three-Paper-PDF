@@ -241,7 +241,7 @@ Los planes, las decisiones de diseño y el progreso se registran como lista de v
 
 #### v1.0.0
 
-_2026/11/12_
+_2026/11/14_
 
 - `Aviso` El módulo pdf de los scripts de AutoJs6 y las entradas del gestor de archivos requieren AutoJs6 6.8.1 (compilación interna 6641) o posterior; las versiones anteriores de AutoJs6 muestran el complemento como incompatible en el centro de complementos, y la caja de herramientas y el visor siguen funcionando por sí solos
 - `Aviso` Usarlo en scripts de Node.js o Bun requiere Node.js Runtime 2.2.0 o Bun Runtime 0.23.0 o posterior
