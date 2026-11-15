@@ -1,13 +1,13 @@
 # 3-Paper PDF 插件路线图
 
-更新: 2026-11-14 (P5.4: 1.0.0 发布并登记官方索引, paper-release); 2026-11-12 (调度会话首轮拍板 Q1-Q3 / Q6-Q8 落盘, 基线刷新见附录 F 的 2026-11-12 快照: 宿主 6.8.0 已于 2026-11-03 公开, 宿主侧条目进 6.8.1; 多语言文案改为所有语言一次写全); 2026-10-22 (立项). 本文件是 `AutoJs6-Plugin-Three-Paper-PDF` (显示名 `3-Paper PDF`, PDF 方向, 插件选题分析 2026-10 的第 4 优先级候选) 的唯一进度与决策记录. 立项基线: 宿主 AutoJs6 `master` `e25e28f88` (2026-10-22, `VERSION_NAME` 6.8.0 未发布, `VERSION_BUILD` 4283, versionCode 5935; 该 hash 已因 6.8.0 公开时的历史重写失效, 现行基线见附录 F), 3-Folio EPUB (契约 `epub-api`, 阅读器两步启动, Explorer 预览器降级对话框) 与 3-Prism Camera (SharedMemory 位图传输, 契约模块版式) 作技术先例, 3-Slate Studio `ROADMAP.md` 作为版式与流程模板.
+更新: 2026-11-15 (1.1.0 立项: 维护者三轮选择题 Q173 - Q184 定下 D46 - D57, 派生决策 D58 - D70, P6 由 5 行粗条目改写为 P6.1 - P6.16, 附录 B.6 / C.4 为 1.1.0 草案; 立项会话 `local_c97cab7f`, 调研笔记在看板的 `notes/3-paper/`); 2026-11-14 (P5.4: 1.0.0 发布并登记官方索引, paper-release); 2026-11-12 (调度会话首轮拍板 Q1-Q3 / Q6-Q8 落盘, 基线刷新见附录 F 的 2026-11-12 快照: 宿主 6.8.0 已于 2026-11-03 公开, 宿主侧条目进 6.8.1; 多语言文案改为所有语言一次写全); 2026-10-22 (立项). 本文件是 `AutoJs6-Plugin-Three-Paper-PDF` (显示名 `3-Paper PDF`, PDF 方向, 插件选题分析 2026-10 的第 4 优先级候选) 的唯一进度与决策记录. 立项基线: 宿主 AutoJs6 `master` `e25e28f88` (2026-10-22, `VERSION_NAME` 6.8.0 未发布, `VERSION_BUILD` 4283, versionCode 5935; 该 hash 已因 6.8.0 公开时的历史重写失效, 现行基线见附录 F), 3-Folio EPUB (契约 `epub-api`, 阅读器两步启动, Explorer 预览器降级对话框) 与 3-Prism Camera (SharedMemory 位图传输, 契约模块版式) 作技术先例, 3-Slate Studio `ROADMAP.md` 作为版式与流程模板.
 
-发布状态 (2026-11-14): 1.0.0 已发布并登记官方索引 (P5.4): `VERSION_NAME` 1.0.0, versionCode 41, 源码 `9f61b3e` (tag `v1.0.0`), APK `autojs6-plugin-three-paper-pdf-v1.0.0-2bf2221b.apk` 8,231,848 字节, CRC32 `2bf2221b`, 最低宿主 6641 (6.8.1, 未公开). 下一阶段 P6 (1.1.0).
+发布状态 (2026-11-14): 1.0.0 已发布并登记官方索引 (P5.4): `VERSION_NAME` 1.0.0, versionCode 41, 源码 `9f61b3e` (tag `v1.0.0`), APK `autojs6-plugin-three-paper-pdf-v1.0.0-2bf2221b.apk` 8,231,848 字节, CRC32 `2bf2221b`, 最低宿主 6641 (6.8.1, 未公开). 下一阶段 P6 (1.1.0): 2026-11-15 立项完成, 范围与决策见 1.1 节, 条目见 P6 一节, 尚未开工.
 
 使用方式:
 
 - 每个条目完成时在条目前打勾 (`[x]`), 在条目末尾写提交 hash (插件仓库) 或 "宿主本地提交 `<hash>`" (宿主仓库只落本地提交, 推送由维护者决定). 阶段总览的状态列同步更新.
-- 第 1 节是维护者经七轮选择题 (2026-10-22) 选定的固定决策, 不再重问. 第 2 节是据此派生的技术决策, 进入对应阶段前可推翻 (推翻点见各条), 推翻时在条目里写明理由并改写该行.
+- 第 1 节是维护者经七轮选择题 (2026-10-22) 选定的固定决策, 1.1 节是 1.1.0 立项时三轮选择题 (2026-11-15) 选定的固定决策, 都不再重问. 第 2 节是据此派生的技术决策, 进入对应阶段前可推翻 (推翻点见各条), 推翻时在条目里写明理由并改写该行.
 - 实现中遇到需要维护者拍板的事, 不阻塞的按推荐项先行, 登记到附录 D (编号, 问题, 选项, 推荐项, 是否已先行, 影响的条目, 改选返工量) 与看板 `D:/idea-projects/.claude/boards/3-paper.md`; 阻塞的停下来用选择题问维护者.
 - 每完成一个子阶段就把进度写进本文件, 不靠会话上下文记住.
 - 条目前缀: (插件) 本仓库; (宿主) AutoJs6 仓库; (索引) AutoJs6-Official-Plugins-Index; (文档) AutoJs6-Documentation / TypeScript-Declarations / Ace / Offline-Docs; (测试) 设备或 AVD 验证; (发布) 发布门禁.
@@ -39,18 +39,37 @@
 | D17 | 渲染默认值 | 默认 144 dpi (A4 约 1190 x 1684), 单次渲染上限 16 M 像素 (超出 `LIMIT_EXCEEDED`); 选项 `dpi` / `scale` / `width` / `height` (四选一, 等比), `transparent` (默认白底), `page` 从 1 计. |
 | D18 | 图片转 PDF | `pageSize` 默认 `'fit'` (页面等于图片尺寸), 可选 `'A4'` / `'Letter'` / `[w, h]` 磅; `fit` 为 `contain` (默认) / `cover`; `margin` 磅; `orientation` 默认 `auto` (按图片长宽); JPEG 直接嵌入不重编码, 其他格式按 `quality` (默认 90) 转 JPEG, `quality: 'lossless'` 走无损 (Flate). |
 | D19 | OCR | 宿主侧实现 `pdf.text(path, { ocr: true })`: 对无文本层的页 (或 `ocr: 'always'`) 经插件渲染后调用宿主 `ocr` 模块的可用引擎, 无引擎时报 `OCR_UNAVAILABLE`; 文档另给 "渲染 + `ocr.recognize`" 的手动样例. |
-| D20 | 1.1.0 | 表单 (AcroForm 读取, 填写, 扁平化), 水印 / 页码 / 页眉页脚, 可搜索 PDF (OCR 结果写成不可见文本层), 压缩 (图片重采样与对象流). |
+| D20 | 1.1.0 | 表单 (AcroForm 读取, 填写, 扁平化), 水印 / 页码 / 页眉页脚, 可搜索 PDF (OCR 结果写成不可见文本层), 压缩 (图片重采样与对象流). 2026-11-15 立项时范围扩为六项 (D46), 对象流由自写的写出器兑现 (D48). |
 | D21 | 查看器会话 | `pdf.view(path, { page, password, search })` 打开查看器并返回 `PdfViewSession`: 事件 `page` / `close`, 方法 `goTo(page)` / `close()` / `state()`; 宿主不在前台且无法启动 Activity 时报 `UI_REQUIRES_FOREGROUND`. |
 | D22 | 文本转 PDF | `pdf.fromText` 由插件用 `PdfDocument` + `StaticLayout` 排版 (系统字体或 `fontPath` 指定的 TTF / OTF), 选项 `pageSize` / `margin` / `fontSize` / `lineSpacing` / `title`. |
 | D23 | 查看器生命周期 | 脚本退出后查看器留在前台 (3-Folio EPUB D32 同款), `session.close()` 只断开事件, `session.close({ finish: true })` 结束查看器 Activity. |
 | D24 | 图标 | 候选 B "叠页 (前页折角 + 三条文本线)": 源图 `.python/icons/three-paper-ic-launcher-light.png` / `-dark.png` (1024 px 透明 RGBA, alpha 相同, 不透明像素 `#272727` / `#D8D8D8`, 本次立项会话生成并入库), 正式资源由 Icon Studio 在 P0.2 生成. |
 | D25 | 立项会话交付 | 立项会话只交付 ROADMAP, 图标源图与看板 `3-paper.md`; 不启动调度会话, 不发任务卡片; 调度由维护者在新会话 (从桌面端已保存环境 dispatch 启动) 输入 `/dispatch 3-paper` 启用. |
 
+### 1.1 1.1.0 的固定决策
+
+维护者 2026-11-15 经三轮选择题 (附录 D Q173 - Q184) 选定, 不再重问. 标 "非推荐项" 的是维护者没有选立项会话推荐项的地方, 不要建议改回.
+
+| 编号 | 事项 | 决策 |
+| --- | --- | --- |
+| D46 | 1.1.0 范围 (Q173, 两个增项为非推荐项) | D20 的四项 (表单, 水印 / 页码 / 页眉页脚, 可搜索 PDF, 压缩) 加两项: 元数据与大纲编辑 (`pdf.setInfo` / `pdf.setOutline`, 工具箱 "文档属性"), 工具箱向导生成等价脚本代码 (附录 G 原列 "1.1.0 后再评估"). 每项连同 Rhino 同步与 Async 形态, `PdfDocument` 对象层, Node / Bun 门面, 文档与声明, 打包应用检查一并做全. |
+| D47 | 表单界面 (Q174) | 工具箱向导 "填写表单": 字段按页分组的可折叠列表 (文本, 勾选, 单选, 下拉 / 列表), 填完另存, 可选扁平化. 查看器保持只读, 只显示已填好的外观. |
+| D48 | 压缩与对象流 (Q175) | 锁定的 PDFBox-Android 2.0.27.0 没有对象流写出类 (4.3 节), 由插件自写对象流写出器 (对象流加 xref 流), 只给 `compress` 用; 写完用 PDFBox 回读并用系统 `PdfRenderer` 打开校验, 失败回落经典写法. |
+| D49 | 可搜索 PDF 的界面入口 (Q176, 非推荐项) | 宿主文件管理器的 `.pdf` 溢出菜单提供 "生成可搜索 PDF", 由宿主驱动 OCR (带进度与取消). 插件工具箱不提供该工具, 插件不直连 OCR 插件 (会绕过插件中心对 OCR 插件的启用与授权). |
+| D50 | 文件管理器菜单 (Q177) | 插件的溢出工具只加 "压缩" 与 "添加水印" (5 -> 7 项, 连同 D49 的宿主命令共 8 项); 页码 / 页眉页脚, 填写表单, 文档属性只在工具箱. |
+| D51 | 生成脚本的引擎 (Q178, 非推荐项) | Rhino, Node.js, Bun 三种写法都生成, 结果页可切换; 提供 "复制脚本" 与 "另存为 .js". |
+| D52 | 文档属性界面 (Q179) | 标题, 作者, 主题, 关键词可改并另存; 大纲只读显示, 可一键清除; 大纲的增删改只有脚本 API. |
+| D53 | 发版 (Q180) | 六项全部完成后一次发 1.1.0; 契约版本 2 与文档一次定稿, 发布门禁与真机回归只走一遍. |
+| D54 | 低层文本层 API (Q181) | 开放 `pdf.addTextLayer(path, output, layers)`, 脚本可自带识别结果 (云端 OCR, 自定义引擎); `pdf.makeSearchable` 在宿主内部走同一步. |
+| D55 | 压缩默认值 (Q182) | 默认 `imageDpi` 150, `imageQuality` 75; `preset` 取 `'low'` (96 dpi / 60), `'medium'` (即默认), `'high'` (220 dpi / 85); 显式给 `imageDpi` / `imageQuality` 时覆盖预设. 工具箱用三档单选, 数值折叠在 "高级" 里. |
+| D56 | 表单未知字段名 (Q183) | `values` 里有表单中不存在的字段名时默认 `INVALID_ARGUMENT` 并列出未知名称 (最多 5 个); `ignoreMissing: true` 时跳过并在 `warnings` 列出. |
+| D57 | 压缩结果不变小 (Q184, 非推荐项) | 照样输出重写结果, 输出可能比输入大; 只在 `warnings` 说明, 返回值同时给 `sizeBytes` 与 `sourceBytes`, 由脚本自己比较. 不复制原文件, 不报错. |
+
 ---
 
 ## 2. 派生技术决策
 
-D26-D45 据第 1 节派生 (D43-D45 由 Q145 (b) 于 2026-11-14 加入), 进入对应阶段前可推翻 (推翻点见各条), 之后视同固定.
+D26-D45 据第 1 节派生 (D43-D45 由 Q145 (b) 于 2026-11-14 加入), D58-D70 据 1.1 节派生 (2026-11-15 的 1.1.0 立项, 依据见看板 `notes/3-paper/research-01` - `03`), 进入对应阶段前可推翻 (推翻点见各条), 之后视同固定.
 
 | 编号 | 决策 | 含义 | 推翻点 |
 | --- | --- | --- | --- |
@@ -74,6 +93,19 @@ D26-D45 据第 1 节派生 (D43-D45 由 Q145 (b) 于 2026-11-14 加入), 进入�
 | D43 | 打包应用入口 (Q145 (b)) | 照 3-Tally Sheet D60: 契约 1 就地追加 `PdfActions.PACKAGED_SERVICE_ACTION` (`org.autojs.plugin.PDF_PACKAGED`), `PACKAGED_PERMISSION` (`org.autojs.plugin.pdf.permission.RUNTIME`, normal 级, 由插件声明), `PACKAGED_VIEWER_ACTIVITY_ACTION` (`org.autojs.plugin.PDF_PACKAGED_VIEWER_OPEN`), 契约版本仍为 1 (Q60, 不写协商分支). 插件声明该权限, 打包入口服务 `.service.ThreePaperPdfPackagedService` (category `pdf`, 要求该权限, 带 `requiresHostVersion`) 与查看器别名 `.viewer.PackagedPdfViewerActivity` (要求该权限); 查看器两个 action 同样处理, 会话令牌仍是脚本通道的凭据 (P3.2). 宿主 `PdfEntry` 与 `XlsxEntry` 同样判断: 包名为 AutoJs6 且持有 `org.autojs.permission.PLUGIN` 时走签名入口, 其他 (打包应用, 未授权的 AutoJs6) 走打包入口; `PdfPluginHost` 与 `PdfViewerLauncher` 按入口取服务 action, 服务须要求的权限与查看器 action; 宿主 manifest 加该权限的 `uses-permission` 与两个 queries (打包应用的 manifest 由此带上 queries). 文件访问不变 (D7): 打包应用的运行时同样把路径打开为 fd 传给插件, 插件不为打包入口放宽导出面. | P5.5 |
 | D44 | 打包入口的调用方隔离与清理 | 照 3-Tally Sheet D54: 调用方键 = uid + pid + 入口, 打包入口的临时目录加前缀 `k` (`cache/pdf/k<uid>-<pid>/`), 两种入口的文档, 操作与临时目录互不相干; 进程内一个服务引擎, 两个服务入口共用 (渲染池 2, 每调用方进程 32 个文档, 宿主侧每脚本 8 个句柄 (D10) 都照旧), 工具箱的独立引擎不变. 打包入口每次调用校验调用方持有 `PACKAGED_PERMISSION` (插件自身 uid 放行); 文档句柄, 查看器会话与操作编号只允许创建它们的 uid 调用, 其他 uid 报 `PERMISSION_DENIED`. 调用方死亡: 回调 Binder 死亡照旧取消操作并关闭该调用方; 另由清扫线程每 60 s 用 `kill(pid, 0)` 检查有文档或操作的调用方, 只有 `ESRCH` 判为死亡, 死亡调用方的操作被取消, 文档关闭, 临时目录删除, 查看器会话不再回报事件; 服务 `onUnbind` 只关闭本入口的调用方. | P5.5 |
 | D45 | 打包应用获得 `PACKAGED_PERMISSION` 的方式 | 由宿主打包请求 (`RemoteApkBuildRequestPreparer`) 加入, 不要求用户改 `project.json`: Node.js 项目在声明 `files` 能力或未强制能力时加 (同 xlsx), Bun 项目在 `hostCapabilities` 含 `pdf.control` 时加 (Q26), Rhino 项目始终加入 (Q150 (a), 2026-11-14 已决). 用户自定义的 `permissions` 清单只在打包请求里补, `project.json` 保持原样. | P5.5 |
+| D58 | 契约版本 2 | 插件 1.0.0 已公开, Q60 "就地改 v1" 的前提 (没有已发布的插件或宿主) 不再成立. `PdfContract.MAX_CONTRACT_VERSION` 升为 2, `MIN_CONTRACT_VERSION` 仍为 1. 版本 2 只追加: `IPdfDocument` 末尾的 `getFormFields(request)`, `PdfOps` 的新名 (`formFields`, `fillForm`, `stamp`, `addTextLayer`, `compress`, `setInfo`, `setOutline`, 后六个是新的 run op), 可选键, `getInfo` 应答的可选键 (`formFieldCount`, `xfa`). 插件 1.1.0 声明 `pdfContractVersion` 1 与 `pdfMaxContractVersion` 2, 对协商为 1 的宿主行为与 1.0.0 相同. 宿主对协商为 1 的插件 (1.0.0) 不发版本 2 的请求, 直接以 `UNSUPPORTED` 结束, 消息以本地化提示 "需要 3-Paper PDF 1.1.0 或更高版本" 开头. 契约 Maven 版本 `autojs6-pdf-api` 1.1.0. 草案见附录 C.4. | P6.1 |
+| D59 | 结构化参数走数据输入 | 表单值, 印章条目, 文本层, 文档信息, 大纲条目是嵌套结构, 且可能超过 `MAX_OPTIONS_BYTES` (64 KiB): 一律由宿主写成 UTF-8 JSON 临时文件, 作为 run 操作的第 2 个输入 (下称 payload) 传给插件, 上限 `MAX_PAYLOAD_BYTES` 16 MiB; Bundle 只放标量选项. 图片水印的图片与 `fontPath` 的字体排在 payload 之后 (顺序见附录 C.4). 插件不读脚本路径 (D7) 不变; 先例是 `fromText` 的字体与 `fromHtml` 的 HTML 都是输入 fd. | P6.1 |
+| D60 | 文字绘制 (Canvas 印章) | 水印文字, 页码, 页眉页脚与表单外观回落统一用系统 `PdfDocument` + Canvas (`StaticLayout` / `TextPaint`, 系统字体回退链, 可选 `fontPath` 字体) 画到临时 PDF, 由 PDFBox 的 `LayerUtility.importPageAsForm` 导入为 Form XObject 再叠加到目标页 (与 `fromText` 的 D22 管线同款). 理由: PDFBox 2.0 的 `PDType0Font.load` 不能内嵌 CFF 轮廓的系统中日韩字体, 标准 14 字体只有拉丁字符. 逐页不同的文字 (页码) 在同一个临时文档里每页画一张, 用同一个 `LayerUtility` 导入以共享字体子集. 摆放按页面显示方向 (处理 `/Rotate` 与 CropBox 偏移). | P6.2 (spike S2: API 24 的 Skia PDF 后端) |
+| D61 | 印章模型 | 契约 op `stamp` 的 payload 是 `items` 数组, 每项 `{ type, text, image, pages, position, offsetX, offsetY, rotation, opacity, fontSize, color, bold, italic, tile, gapX, gapY, layer, width, height, scale }` (`type` 取 `'text'` 或 `'image'`, `image` 是图片输入的序号, `layer` 取 `'over'` 或 `'under'`). `position` 取九宫格名称 (`top-left`, `top-center`, `top-right`, `center-left`, `center`, `center-right`, `bottom-left`, `bottom-center`, `bottom-right`) 或 `[x, y]` (pt, 以显示方向的页面左上角为原点); 文本占位符 `{page}`, `{total}`, `{date}` (ISO 日期), `{name}` (源文件名, 不含扩展名). 脚本层两个方法都映射到它: `pdf.watermark` (单项; 默认居中, 逆时针 45 度, 不透明度 0.3, 灰色, 字号按页宽自适应) 与 `pdf.stamp` (`pageNumbers`, `header`, `footer` 三个便捷键加通用的 `items`). `layer: 'under'` 把印章放在页面内容之下 (整页是图片的扫描件上看不见, 文档写明). | P6.3 |
+| D62 | 表单模型 | 字段类型 `text`, `checkbox`, `radio`, `combo`, `list`, `button`, `signature`. `pdf.forms` 每项 `{ name (全限定名), type, value, defaultValue, options: [{ value, label }], label (替代名称), readOnly, required, multiline, password, maxLength, multiSelect, page, rect, widgets: [{ page, rect }] }`, 矩形与搜索命中同一坐标系 (pt, 显示方向, 左上角原点). `fillForm` 的值: 文本为字符串, 勾选为布尔, 单选为选项值, 下拉 / 列表为字符串或字符串数组, `null` 恢复默认值; 类型不符, 只读字段, 按钮与签名字段为 `INVALID_ARGUMENT`. 外观: 先由 PDFBox 生成 (保留表单自带字体); 字体编码不了该值 (中日韩文字等) 时回落到 D60 的 Canvas 外观并置 `NeedAppearances`. `flatten` 取 `true` (全部字段) 或字段名数组. 静态 XFA 照填 AcroForm 并移除 XFA; 动态 XFA 报 `UNSUPPORTED`. 字段上的 JavaScript (计算, 校验, 格式化) 不执行, 已签名的文档被改动, 各给一条警告. 加密文档需要 `fillForms` 权限, 写出照 Q30 (输出不带加密, 须以所有者密码打开). | P6.4 (spike S1) |
+| D63 | 文本层 | 契约 op `addTextLayer`, payload 为 `layers: [{ page, width, height, lines: [{ text, bounds: [left, top, right, bottom] }] }]`, 坐标是覆盖整页显示区域的 `width` x `height` 图像上的像素. 插件按页面旋转与 CropBox 换算, 每行一个文本对象: 渲染模式 3 (不可见), 字号取行框高度, 水平缩放把字符串宽度拉到行框宽度. 字体是手工构造的无字形 Type0 字体 (Identity-H, 所有 CID 映到同一个空字形, ToUnicode 对 UTF-16BE 码元做恒等映射, 字体程序是只含空字形的极小 TrueType, 中日韩等宽字符按全宽计宽), 每个文档只嵌一份. 已有文本层的页默认跳过, `force: true` 时照写. `pdf.makeSearchable` 在宿主: 对范围内没有文本层的页 (或 `force`) 逐页 "经插件以 `ocrDpi` (默认 300, Q6) 渲染 -> `OcrPluginHost.detect` 取行文本与矩形", 汇总成 payload 后调用同一个 op; 进度先按页报 `ocr` 阶段, 再转插件的 `processing` / `writing`; 引擎选择与 `ocrOptions` 同 `pdf.text` (D19), 没有引擎时 `OCR_UNAVAILABLE`. OCR 结果是行级的轴对齐矩形: 行内字符位置按字宽比例估算, 竖排与倾斜行按水平处理 (文档写明). | P6.5 (spike S3) |
+| D64 | 压缩 | 遍历页资源里的图片 XObject (同一对象只处理一次), 按 "像素数 / 它在各页上的最大显示尺寸" 算有效 dpi, 高于 `imageDpi` 的降采样到 `imageDpi` 并重编码为 JPEG (`imageQuality`); 带软蒙版的图片同比例缩小蒙版 (蒙版无损); 重编码后不比原流小的保留原图. 不处理: 1 位图 (CCITT / JBIG2), 模板蒙版, PDFBox-Android 解不了的编码 (JPEG 2000, JBIG2), 内联图片. 另外: 未压缩的流补 Flate, 全量保存丢弃不可达对象, `removeMetadata: true` 时删除 XMP, 文档信息 (`producer` 除外) 与页面缩略图. 完成键 `sourceBytes`, `imagesTotal`, `imagesRecompressed`, `imagesSkipped`, `objectStreams`; 结果不变小时照样输出 (D57). `preset` 是脚本与界面层的便捷键 (D55), 契约只带数值, 三档的数值放在契约常量里供宿主与插件界面共用. | P6.6 |
+| D65 | 对象流写出器 | 插件 `write/` 包里的写出器把 `PDDocument` 序列化为 PDF 1.5 以上: 非流对象 (加密字典, 代号非 0 的对象除外) 每至多 200 个装进一个 Flate 压缩的 `/Type /ObjStm` 流, 末尾用 `/Type /XRef` 流代替 xref 表与 trailer. 只用于不带加密的输出 (`compress` 的输出本来就不带加密, Q30). 校验: 写完用 PDFBox 重新加载 (页数一致, 每页的资源与内容流可读, 文档信息一致), 再用系统 `PdfRenderer` 打开并渲染第一页; 任一步失败就丢弃该结果, 改用 `PDDocument.save` 的经典写法, 给一条警告, 完成键 `objectStreams` 为 false. 选项 `objectStreams: false` 可关闭. merge, save, encrypt 等其他写出操作在 1.1.0 不改用它 (附录 G). | P6.7 (spike S4) |
+| D66 | 元数据与大纲 | `pdf.setInfo(path, output, info)` 的键 `title`, `author`, `subject`, `keywords`, `creator`: 给出的键被设置, `null` 清除, 未给出的保持; `producer` 与 `modificationDate` 仍由插件写 (P2.4). 文档带 XMP 元数据流时用平台 XML 解析器同步对应属性 (`dc:title`, `dc:creator`, `dc:description`, `pdf:Keywords`, `xmp:CreatorTool`), 解析失败时删除该 XMP 流并给警告 (否则读者会看到与文档信息不一致的旧值). `pdf.setOutline(path, output, items)`: `items` 是树 `[{ title, page, children }]` (与 `pdf.outline` 的返回同形, `level` 忽略, `page` 省略为没有目标的分组条目), 整体替换原大纲, `[]` 或 `null` 清除; 条目上限 10,000, 深度上限 32, `page` 越界为 `PAGE_OUT_OF_RANGE`. | P6.8 |
+| D67 | 宿主文件管理器命令 | D49 用 Explorer Action 协议 v28 的 `presentation = hostEngine` 承载 (AutoJs4 Runtime 1.1.0 的 "使用 AutoJs4 运行" 是先例: 插件只声明菜单项, 宿主执行同名命令, 不启动插件 Activity): 插件目录声明动作 `pdf-make-searchable` (单目标, 只读, 溢出菜单, 无输出), 宿主在 `ExplorerActionHostEngineIds` 加同名命令, `ExplorerHostEngineActionPolicy` 只允许官方 3-Paper PDF 包声明它. 菜单项因此与插件的其他工具同在 "3-Paper PDF" 菜单组. 宿主执行: 对话框 (输出默认 `<源名>-searchable.pdf`, 与源文件同目录, 重名自动编号, 同 Q2; 页范围, dpi, 引擎折叠在 "高级"), 确认后显示逐页进度, 可取消, 关闭对话框即取消并删除未完成的输出, 完成后可直接打开; 没有可用 OCR 引擎时给出去插件中心安装的引导. 不认识该命令的宿主上这一项不出现, 目录的其他动作照常. | P6.11 |
+| D68 | 1.1.0 的界面 | 工具界面新增 5 个工具 (`ToolKind`): `watermark` (文字或图片, 九宫格位置, 不透明度, 旋转, 平铺, 带单页预览), `page-numbers` (页码格式, 位置, 起始号, 页眉 / 页脚的左中右三段文字), `compress` (D55 的三档单选, "高级" 里是 dpi, 质量, 删除元数据, 对象流), `fill-form` (D47), `properties` (D52: 文件信息的键值块, 元数据编辑, 大纲只读与清除). 文件管理器 `ExplorerTool` 加 `compress`, `watermark` (D50) 与宿主命令 `pdf-make-searchable` (D67). 界面遵守维护者的对话框偏好: 不常用项折叠, 键值信息对齐成块, 选项不平铺. | P6.12 |
+| D69 | 脚本生成 | `codegen/` 以工具请求 (`ToolRequest`) 为输入, 输出三种写法的完整脚本 (D51): Rhino (`pdf.xxx(...)` 同步写法), Node.js (`require('pdf')` 的 Promise 写法, 文件头注释列出 `project.json` 的 `node.permissions` 要声明的能力), Bun (文件头 `"bun";`, `host.pdf`, 带 `pdf.control` 授权检查). 字符串转义完整 (引号, 反斜杠, 换行, U+2028 / U+2029, 非 BMP 字符), 路径写原值. 密码不写进脚本: 加密, 解密与带密码打开的工具在密码处写占位符与一行注释. 覆盖全部 13 个工具 (现有 8 个加 D68 的 5 个). 结果页: 引擎切换, "复制脚本", "另存为 .js" (默认存到设置里输出目录下的 `scripts/`; Node.js 写法存成项目目录 `main.js` + `project.json`), "在 AutoJs6 中打开" (宿主已有的 `org.autojs.autojs.action.CREATE_SCRIPT` 入口, 3-Slate Studio D19; 宿主不可用或不支持该写法时隐藏). | P6.13 |
+| D70 | 1.1.0 的版本与兼容 | 插件 1.1.0 的 `REQUIRED_HOST_VERSION` 保持 6641: 对契约 1 的宿主, 版本 1 的操作不变, 工具箱与文件管理器工具不依赖宿主的脚本模块; 版本 2 的脚本方法与 "生成可搜索 PDF" 需要含 P6 宿主条目的宿主. 宿主侧条目进宿主当前开发线 (立项时为未公开的 6.8.1; 发布卡核对, 届时 6.8.1 已公开则进下一版并改文档与样例的版本标注). Node / Bun 门面进各自当前未发版的开发线 (立项时 Node.js Runtime 2.2.0, Bun Runtime 0.23.0, Q170). 发布不等宿主公开 (D41). `PdfDocument` 对象层的新方法以句柄的文件与打开时的密码重新走 run 管线 (宿主句柄为此记住密码). | P6.9, P6.16 |
 
 ---
 
@@ -88,13 +120,31 @@ D26-D45 据第 1 节派生 (D43-D45 由 Q145 (b) 于 2026-11-14 加入), 进入�
 - 工具箱界面: 首页, 向导, 设置, 发行历史, 更新检查, Icon Studio 图标与四种启动器模式.
 - 文档, d.ts, Ace, Offline Docs, README, changelog, 宿主样例脚本, 兼容矩阵, 1.0.0 发布.
 
-非目标 (不做或排到 1.1.0 之后, 评估记录见附录 G):
+范围 (1.1.0, D46):
+
+- 表单: 读取字段, 填写, 扁平化 (`pdf.forms`, `pdf.fillForm`); 工具箱 "填写表单" 向导 (D47, D62).
+- 水印, 页码, 页眉页脚 (`pdf.watermark`, `pdf.stamp`); 工具箱两个工具, 文件管理器 "添加水印" (D50, D60, D61).
+- 可搜索 PDF (`pdf.makeSearchable`, `pdf.addTextLayer`); 宿主文件管理器 "生成可搜索 PDF" (D49, D54, D63, D67).
+- 压缩 (`pdf.compress`): 图片重采样重编码, 自写对象流写出器; 工具箱与文件管理器 "压缩" (D48, D55, D57, D64, D65).
+- 元数据与大纲编辑 (`pdf.setInfo`, `pdf.setOutline`); 工具箱 "文档属性" (D52, D66).
+- 工具箱向导生成等价脚本代码, Rhino / Node.js / Bun 三种写法 (D51, D69).
+- 契约版本 2, 宿主脚本模块与对象层, Node / Bun 门面, 文档, 声明, 样例, 打包应用检查, 1.1.0 发布 (D53, D58, D59, D70).
+
+非目标 (1.1.0, 评估记录见附录 G):
+
+- 查看器内填写表单 (D47), 插件界面里的可搜索 PDF 与插件直连 OCR 插件 (D49), 工具箱里的大纲编辑器 (D52).
+- 执行字段上的 JavaScript, 填写动态 XFA 表单, 填写或创建签名字段, 新建表单字段 (D62).
+- 竖排与倾斜行文本层的精确定位, 字符级定位 (D63).
+- merge, save, encrypt 等其他写出操作改用对象流写出器; 字体子集化, 内容流重写等更深的压缩 (D65).
+- 其余同下面 1.0.0 的非目标 (注释, 数字签名, PDF/A, reflow, 远程 URL, 第三方原生渲染库).
+
+非目标 (1.0.0: 不做或排到 1.1.0 之后, 评估记录见附录 G):
 
 - 表单, 水印 / 页码 / 页眉页脚, 可搜索 PDF, 压缩均为 1.1.0 (D20).
 - 注释 (高亮, 批注, 手写), 数字签名与证书校验, PDF/A 校验与转换, 重排 (reflow) 阅读模式.
 - 远程 URL 直接转 PDF, 云端转换服务, Office 文档转 PDF.
 - 第三方原生渲染库 (pdfium, MuPDF) 与 `androidx.pdf` (D3).
-- 工具箱向导生成等价脚本代码 (3-Slate Studio D11 同款) 不在 1.0.0.
+- 工具箱向导生成等价脚本代码 (3-Slate Studio D11 同款) 不在 1.0.0 (已选入 1.1.0, D46).
 
 ---
 
@@ -120,6 +170,12 @@ D26-D45 据第 1 节派生 (D43-D45 由 Q145 (b) 于 2026-11-14 加入), 进入�
 - `androidx.pdf` 1.0.0-beta01 (2026-08): minSdk 28, 仅查看器组件, 不提供编辑; pdfium / MuPDF 系库为原生库且 MuPDF 为 AGPL; 均不采用 (D3).
 - WebView `createPrintDocumentAdapter` (API 21+): `onLayout` / `onWrite` 的回调类构造器为隐藏 API, 同包壳类技巧被多个开源库使用但未被官方承诺, 需 spike (附录 D Q5); WebView 必须在主线程创建, 插件服务进程可用 Application 上下文离屏创建.
 - Android 10+ 后台启动 Activity 受限: 宿主在后台时 `pdf.view` 可能被系统拦截, 报 `UI_REQUIRES_FOREGROUND` (D21); 宿主前台时两步启动与 EPUB 相同.
+- 1.1.0 立项时核对的 PDFBox-Android 2.0.27.0 能力 (2026-11-15, 用 `javap` 看 AAR 的类签名, E5; 明细在看板 `notes/3-paper/research-02-pdfbox-capabilities.md`):
+  - 表单类齐全: `PDAcroForm` (`getFieldTree`, `flatten()`, `flatten(fields, refreshAppearances)`, `refreshAppearances()`, `setNeedAppearances`, `hasXFA`, `xfaIsDynamic`, `setXFA`), `PDTextField`, `PDCheckBox`, `PDRadioButton`, `PDComboBox`, `PDListBox`, `PDPushButton`, `PDSignatureField`. 上游 2.0 的已知行为: `PDTextField.setValue` 用字段的 DA 字体生成外观, 值超出该字体编码 (中日韩文字等) 时抛 `IllegalArgumentException`; 系统 `PdfRenderer` (API 35 以下) 只画已有的外观流.
+  - 叠加手段齐全: `PDPageContentStream` 的追加与前置模式, `PDExtendedGraphicsState.setNonStrokingAlphaConstant`, `multipdf.LayerUtility.importPageAsForm` / `wrapInSaveRestore`, `multipdf.Overlay`, `RenderingMode.NEITHER` (不可见文本). `PDType0Font.load` 只吃 TrueType 轮廓, 内嵌不了 Android 系统的中日韩字体 (`NotoSansCJK`, CFF 轮廓的 OpenType 集合).
+  - 写出端只有 `pdfwriter.COSWriter` 等 4 个类, 没有 PDFBox 3.0 的 `pdfwriter.compress` 包: 能读对象流与 xref 流, 保存一律写经典 xref 表. 输入本身用了对象流的 PDF 重新保存后非流对象部分会变大. 单样本估算 (`ECMA TR-104.pdf`, 397,408 B, 10 页, 用 pypdf 的经典写法近似): 重存后 414,310 B (原体积的 104.3%), 改写对象流后估约 381,729 B (经典写法的 92.1%).
+  - 图片: `PDImageXObject.getImage()` 返回 `Bitmap`, 有 `getSoftMask` / `getMask` / `isStencil`; `JPEGFactory.createFromImage(doc, bitmap, quality, dpi)`, `LosslessFactory`. 解码器没有 JBIG2; JPEG 2000 依赖本插件未引入的可选库.
+- 1.1.0 可复用的宿主机制 (2026-11-15): `OcrPluginHost.detect` 返回行级结果 (`text`, `confidence`, 轴对齐的 `bounds`); Explorer Action 协议 v28 的 `presentation = hostEngine` (`core/plugin/explorer/ExplorerHostEngineActionPolicy.kt`, 插件声明菜单项, 宿主执行同名命令); `external/open/CreateScriptActivity.kt` 的 `org.autojs.autojs.action.CREATE_SCRIPT` 入口 (3-Slate Studio D19); Node / Bun 门面逐方法登记 (宿主 `engine/RuntimePdfBridge.kt` 的方法清单, Bun `host-client.mjs` 的方法表, Node 的 `pdf.d.ts`), 新方法不会自动出现.
 
 ---
 
@@ -213,7 +269,7 @@ io.github.supermonster003.autojs6.plugin.three.paper.pdf
 | P3 | 1.0.0 | 查看器, `pdf.view` 会话, Explorer Action 服务 | 完成 (2026-11-13 各行; 真机复验与 P3.2 宿主联调 paper-device 2026-11-14, 含 API 33 真机) |
 | P4 | 1.0.0 | 工具箱界面: 应用骨架, 向导, 设置与启动器模式 | 完成 (paper-p4 2026-11-13; 真机手测 paper-device 2026-11-14) |
 | P5 | 1.0.0 | 文档, 声明, 四仓库同步, 样例, 兼容矩阵, 打包应用支持 (Q145 (b)), 发布与索引登记 | 完成 (P5.1 - P5.3 与 P5.5 完成, API 33 真机 paper-device 2026-11-14; P5.4 1.0.0 于 2026-11-14 发布并登记官方索引, paper-release) |
-| P6 | 1.1.0 | 表单, 水印 / 页码 / 页眉页脚, 可搜索 PDF, 压缩, 发布 | 未开始 |
+| P6 | 1.1.0 (宿主侧进当前开发线, D70) | 契约版本 2; 表单, 水印 / 页码 / 页眉页脚, 可搜索 PDF, 压缩 (含对象流写出器), 元数据与大纲, 工具箱新工具与生成脚本代码; 文档, 真机回归, 发布 | 立项完成 (2026-11-15, P6.1 - P6.16), 未开工 |
 
 依赖顺序:
 
@@ -236,6 +292,25 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 - 批次 5: P4.1 + P4.2 (应用骨架与向导).
 - 批次 6: P5.1 + P5.2 (文档与声明) 与 P5.3 (README, 样例, 兼容矩阵) 并行; P5.4 发布.
 
+P6 (1.1.0) 内部的依赖与批次建议 (2026-11-15 立项; 批次号接 1.0.0 的批次 9; 插件仓库同一时间只放一个写代码的会话, 宿主改动在隔离克隆里做):
+
+```text
+P6.1 (宿主: 契约 2, AAR)  ----------------------------->  P6.3 / P6.4 / P6.5 / P6.6 / P6.8 的服务接线 (插件换入 AAR 之后)
+P6.2 (插件: payload, Canvas 印章, 夹具) + P6.7 (对象流写出器)  与 P6.1 并行: 都不依赖契约 2 的 AAR
+P6.1 -> P6.9 (宿主脚本模块; 单测用假插件, 不等插件)  -> P6.10 (Node / Bun 门面)
+P6.5 + P6.9 的 makeSearchable -> P6.11 (宿主文件管理器命令; AVD 验证要插件已有 addTextLayer)
+P6.3 / P6.4 / P6.6 / P6.8 -> P6.12 (工具箱与文件管理器工具) -> P6.13 (生成脚本代码)
+P6.9 / P6.10 定稿 -> P6.14 (文档, 声明, 样例)      全部 -> P6.15 (真机联调与回归) -> P6.16 (发布)
+```
+
+- 批次 10: P6.1 (宿主, 一张卡); P6.2 的后三行 + P6.7 (插件, 一张卡). 两张不同仓库, 可并行.
+- 批次 11: P6.2 第一行 (换入 AAR) + P6.3 + P6.6 + P6.8 (插件, 一张卡); P6.9 第一, 三行 (宿主, 除 makeSearchable 外的全部方法, 一张卡). 可并行.
+- 批次 12: P6.4 + P6.5 (插件, 一张卡); P6.9 第二行 + P6.11 宿主行 (宿主, 一张卡); P6.10 (Node / Bun, 一张卡, 依赖批次 11 的宿主方法表). 三张可并行.
+- 批次 13: P6.12 + P6.11 插件行 (插件, 一张卡); P6.14 文档与声明各行 (文档四仓库, 一张卡). 可并行.
+- 批次 14: P6.13 + P6.14 的插件行 (README, changelog, 样例) (插件, 一张卡).
+- 批次 15: P6.15 真机联调与回归 (一张卡, 手机上的对话框与 E4 手测由维护者操作).
+- 批次 16: P6.16 发布 (一张卡; 推送授权届时由调度会话请维护者决定, 1.0.0 的 Q171 只覆盖当时的发布卡).
+
 发布门禁 (每个阶段的 "(发布)" 条目都指向本清单):
 
 1. 插件 `./gradlew test connectedDebugAndroidTest` 通过 (API 33 AVD), 宿主涉及模块的单元测试通过.
@@ -243,6 +318,7 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 3. 10 种语言资源与文档只用半角标点 (`COMMON_AGENTS.md` 规则), `prepush_check.py` 通过, `THIRD_PARTY_NOTICES.md` 与依赖一致.
 4. 发布 APK 为 release 签名, 用宿主插件中心安装并跑 `samples/` 冒烟脚本; versionCode, 文件名 CRC32 与索引清单一致.
 5. changelog 10 种语言同时写 (`.claude/rules/all-languages.md`, 2026-11-05 起): 子会话以 zh-Hans 为源一次写全并翻译 10 种语言, 运行生成脚本与 `--check`, 不留给维护者; 维护者审阅时可修改任何语言.
+6. (1.1.0 起) 契约兼容: 含契约 2 的宿主配已发布的插件 1.0.0 (`v1.0.0` 的 release 包) 时版本 1 的操作全部通过, 版本 2 的方法以 `UNSUPPORTED` 加升级提示结束; 只含契约 1 的宿主构建 (P6.1 之前的提交) 配插件 1.1.0 时版本 1 的回归全部通过, 文件管理器目录正常 (P6.15).
 
 ---
 
@@ -456,29 +532,110 @@ P0 (骨架)                                  P1 (宿主) 与 P0 并行: 不同�
 
 ---
 
-## P6: 1.1.0 表单, 水印, 可搜索 PDF 与压缩 (D20)
+## P6: 1.1.0 表单, 水印, 可搜索 PDF, 压缩, 元数据与大纲, 生成脚本代码 (D20, D46 - D70)
 
-状态: 未开始. 开工前由维护者确认 1.1.0 范围不变.
+状态: 立项完成 (2026-11-15), 未开工. 范围已由维护者确认并扩为六项 (D46, 附录 D Q173 - Q184); 立项前的 5 行粗条目 (原 P6.1 - P6.5) 由本节的 P6.1 - P6.16 共 34 行取代. 设备: API 24 / 33 / 35 AVD, 附录 F 的五台真机 (OCR 相关的项要装有 OCR 引擎的设备). 依赖与批次建议见第 6 节; 脚本 API 草案见附录 B.6, 契约版本 2 草案见附录 C.4.
 
-### P6.1 表单
+spike 约定 (参照 1.0.0 的 Q4 / Q5): S1 (表单外观), S2 (Canvas 印章), S3 (无字形字体的文本层), S4 (对象流写出器) 各自在所属条目开头先做, 结论 (通过的设备, 数值, 偏离派生决策之处) 写回该条目与对应的 D 行; 结论推翻派生决策时登记附录 D.
 
-- [ ] (插件 / 宿主) `pdf.forms(path)` 读取 AcroForm 字段, `pdf.fillForm(src, out, values, { flatten })`, 契约版本 2 新增方法; 文档与 d.ts.
+### P6.1 契约版本 2 与宿主客户端 (D58, D59)
 
-### P6.2 水印, 页码, 页眉页脚
+- [ ] (宿主) `plugin-api/pdf-api`: `MAX_CONTRACT_VERSION` 2 (`MIN_CONTRACT_VERSION` 仍 1); `IPdfDocument` 末尾追加 `getFormFields(in Bundle request)`; `PdfOps` 加版本 2 的名称 (`formFields`, `fillForm`, `stamp`, `addTextLayer`, `compress`, `setInfo`, `setOutline`), 版本 2 的 run op 清单与 "某个 op 属于哪个版本" 的查询; `PdfContract` 加附录 C.4 的键, 完成键, 上限 (`MAX_PAYLOAD_BYTES` 等) 与压缩三档预设的数值; `getInfo` 应答的可选键 `formFieldCount`, `xfa`; `PdfAidlOrderTest` 与 `PdfContractTest` 同步; Maven 版本 1.1.0.
+- [ ] (宿主) `core/plugin/pdf`: `PdfPeer` 能回答 "协商版本是否支持某个 op"; 协商为 1 时版本 2 的调用不触达 Binder, 以 `UNSUPPORTED` 结束, 消息以本地化提示 "需要 3-Paper PDF 1.1.0 或更高版本" 开头 (`strings_runtime_pdf.xml`, 11 个 values 目录); `PdfClients` / `PdfPluginHost` 加 `getFormFields` 与 "带 payload 和附加输入的 run" 的调用入口.
+- [ ] (宿主) 协议文档 `docs/dev/pdf-plugin-protocol-v1.md` 加 "Version 2" 一节: 新方法与 run op 表, 各 op 的输入顺序, payload 的 JSON 形状, 完成键, 上限, 版本 1 / 2 插件与宿主四种组合的行为.
+- 验收: `./gradlew :plugin-api:pdf-api:assemble :plugin-api:pdf-api:test` 通过 (E1); 宿主单测 (E1): 协商 (声明 1 的插件得 1, 声明 1 加最大 2 的插件得 2), 版本 2 的调用在协商 1 时为 `UNSUPPORTED` 且假 Binder 没有收到请求, 版本 1 的现有 PDF 测试类全部通过; release AAR 的字节数与 sha256 写进本条, 文件放交接目录, 由 P6.2 换入. 不用设备.
 
-- [ ] (插件 / 宿主) `pdf.watermark(src, out, { text | image, opacity, rotation, position })`, `pdf.stamp(src, out, { pageNumbers, header, footer, font })`.
+### P6.2 插件基础: 契约 2 声明, payload, Canvas 印章管线, 夹具 (D58 - D60)
 
-### P6.3 可搜索 PDF
+- [ ] (插件) 换入 P6.1 的 `pdf-api.aar` (`libs/`, `locks/host-api-aars.lock`, `libs/README.md` 记宿主提交); `pdfMaxContractVersion` 声明 2, `pdfContractVersion` 仍 1; 版本 2 的 op 在各自条目落地前答 `NOT_IMPLEMENTED`; `IMPLEMENTED_OPS` 随条目追加.
+- [ ] (插件) payload 读取: run 操作第 2 个输入的 UTF-8 JSON, 超过 `MAX_PAYLOAD_BYTES` 为 `LIMIT_EXCEEDED`, 不是合法 JSON 或缺必需键为 `INVALID_ARGUMENT`; 在契约 AAR 换入之前上限先用本地常量, 换入后改指契约常量.
+- [ ] (插件) Canvas 印章管线 (D60, spike S2): 把一组文字印章 (可逐页不同) 画进临时 `PdfDocument`, 用 `LayerUtility` 导入并叠加到目标页; 支持显示方向摆放 (旋转 0 / 90 / 180 / 270 度, CropBox 偏移), 不透明度, 旋转, 上层 / 下层, 可选字体文件.
+- [ ] (插件) 夹具: `PdfFixtures` 加表单文档 (文本, 多行文本, 勾选, 单选组, 下拉, 列表, 只读, 必填, 带默认值), 多页扫描件 (整页 300 dpi JPEG), 用了对象流的文档, 带 XMP 的文档, 带签名字段标记与 XFA 标记的文档; `.python/generate_fixtures.py` 生成 `samples/fixtures/form.pdf` 与 `scanned-multi.pdf` 入库并登记 `fixtures.json`.
+- 验收: 现有 JVM 与 AVD_API_33 仪器测试全部通过 (版本 1 回归, E1 + E2). S2 在 API 24 AVD, API 33 AVD 与 G8441 (API 28) 各跑一次 (E2 / E3): 含中文与表情的文字印章叠加后, PDFBox 提取该页文本含印章原文, 系统 `PdfRenderer` 渲染的位图在印章区域有非白像素, 四种旋转页上印章锚点的位置误差不超过 1 pt; 结果写回 D60.
 
-- [ ] (宿主 / 插件) `pdf.makeSearchable(src, out, { ocrOptions })`: 宿主 OCR 结果 (文本与位置) 经契约写入不可见文本层 (PDFBox 渲染模式 3), 进度按页.
+### P6.3 水印, 页码, 页眉页脚 (D61)
 
-### P6.4 压缩
+- [ ] (插件) run op `stamp`: 输入为源 PDF, payload (`items`), 图片, 可选字体; 文字项与图片项, 九宫格与坐标位置, 偏移, 旋转, 不透明度, 平铺, 页范围, 占位符 `{page}` / `{total}` / `{date}` / `{name}`, 上层 / 下层; 图片的透明通道保留; 进度按页, 取消后不留输出; 加密输入照 Q30.
+- 验收 (E1 + E2): 100 页文档加页码后逐页提取的文本含各自的页码与总页数; 文字水印的不透明度, 旋转, 平铺用渲染位图的像素统计断言; PNG 图片水印的透明区域不遮挡原内容; 旋转页与页面尺寸不一的文档; 条目超过上限, 位置非法, 图片序号越界为 `INVALID_ARGUMENT`; 100 页 A4 加文字水印的耗时写进附录 F.
 
-- [ ] (插件 / 宿主) `pdf.compress(src, out, { imageDpi, imageQuality, removeMetadata })`: 图片重采样与重编码, 对象流, 去冗余; 返回前后体积.
+### P6.4 表单 (D56, D62)
 
-### P6.5 1.1.0 发布
+- [ ] (插件) `IPdfDocument.getFormFields` (`offset` / `limit` 分页, 应答 `items`, `hasMore`, `nextOffset`; 字段形状见 D62); `getInfo` 应答加 `formFieldCount` 与 `xfa`.
+- [ ] (插件) run op `fillForm` (spike S1): payload `values`, 选项 `flatten`, `flattenFields`, `ignoreMissing`; 各类型的取值校验; PDFBox 外观生成与 Canvas 外观回落; 静态 XFA 移除, 动态 XFA `UNSUPPORTED`; JavaScript 与签名的警告; 完成键 `filled`.
+- 验收 (E1 + E2): 填写后重新打开, `getFormFields` 取回的值与填入的相等 (文本含中文与表情, 勾选, 单选, 下拉, 多选列表, `null` 恢复默认值); 中文值所在控件区域在系统 `PdfRenderer` 的渲染里有非白像素 (API 24 AVD, API 33 AVD, G8441, 一台 API 35 设备); 扁平化后 `formFieldCount` 为 0, 控件区域的渲染与扁平化前的像素差在阈值内; 未知字段名的两种行为 (D56); 只读, 按钮, 签名字段与类型不符为 `INVALID_ARGUMENT`; 动态 XFA 标记的夹具为 `UNSUPPORTED`. S1 的结论写回 D62.
 
-- [ ] (发布) 发布门禁 1-5, 契约版本 2 的向后兼容测试 (1.0.0 宿主 + 1.1.0 插件, 反之亦然), 索引登记.
+### P6.5 文本层 (D54, D63)
+
+- [ ] (插件) 无字形字体与 run op `addTextLayer` (spike S3): payload `layers`; 已有文本层的页跳过, `force` 时照写; 旋转页与 CropBox; 完成键 `pages` (写入的页码) 与 `lines`.
+- 验收 (E1 + E2): 写入后 `getText` 取回每行文本 (中文, 拉丁, 混排, 表情), `search` 的命中矩形与该行行框的交并比不低于 0.5; 系统 `PdfRenderer` 对写入前后的渲染逐像素相同 (API 24 / 33 / 35); 每个文档的字体对象合计不超过 2 KiB; 行数或 payload 超上限为 `LIMIT_EXCEEDED`. S3 的结论 (字体程序自生成还是随包带现成文件, 后者要进 `THIRD_PARTY_NOTICES.md`) 写回 D63.
+
+### P6.6 压缩: 图片与清理 (D55, D57, D64)
+
+- [ ] (插件) run op `compress`: 图片按有效 dpi 降采样并重编码, 软蒙版同步缩小, 不处理的图片类别与计数, 未压缩的流补 Flate, `removeMetadata`; 接上 P6.7 的写出器 (`objectStreams` 缺省 true); 完成键 `sourceBytes`, `imagesTotal`, `imagesRecompressed`, `imagesSkipped`, `objectStreams`; 结果不变小时照样输出并给警告 (D57).
+- 验收 (E1 + E2): 多页扫描件夹具按默认参数压缩后不超过原体积的 50%, 页数与页尺寸不变, 每页渲染与原页的平均像素差在阈值内; 带透明的图片保持透明; 1 位图与解不了的图片原样保留并计入 `imagesSkipped`; 文字型夹具的输出允许比输入大且带警告; `imageDpi` / `imageQuality` 越界为 `INVALID_ARGUMENT`; 文字型多页, 扫描件, 图文混合三类样本的前后体积与耗时写进附录 F.
+
+### P6.7 对象流写出器 (D48, D65)
+
+- [ ] (插件) `write/` 包的对象流写出器 (spike S4), 回读校验与经典写法回落; 只被 `compress` 使用.
+- 验收: JVM (E1): `PdfFixtures` 的全部夹具与 `samples/fixtures` 写出后由 PDFBox 回读, 页数, 文本, 大纲, 表单字段, 文档信息与经典写法的结果一致; 故意写坏 (测试注入) 时触发回落且完成键 `objectStreams` 为 false; 文字型多页样本的体积不超过经典写法的 95%. 仪器 (E2): API 24 / 33 / 35 的系统 `PdfRenderer` 打开并渲染每一页, 与经典写法的渲染逐像素相同. 第三方解析器 (E1 的补充): 在 PC 上用 pypdf (有 qpdf 时加 `qpdf --check`) 读回同一批输出, 命令与结果写进本条. S4 的结论写回 D65.
+
+### P6.8 元数据与大纲 (D66)
+
+- [ ] (插件) run op `setInfo` (payload `info`) 与 `setOutline` (payload `items`); XMP 同步或删除; 上限与越界检查.
+- 验收 (E1 + E2): 设置后 `getInfo` / `getOutline` 取回相同内容; `null` 清除单个键, 未给出的键不变; 带 XMP 的夹具同步后经 XMP 回退路径读到的标题与文档信息一致; 10,000 条, 32 层的大纲写入并取回; 条目或深度超上限为 `LIMIT_EXCEEDED`, 页码越界为 `PAGE_OUT_OF_RANGE`; 空数组清除大纲.
+
+### P6.9 宿主脚本模块 (D54 - D66, D70)
+
+- [ ] (宿主) `PdfMethods` / `PdfScriptArguments` / `PdfService`: `pdf.forms`, `fillForm`, `watermark`, `stamp`, `addTextLayer`, `compress`, `setInfo`, `setOutline` 与 `PdfDocument` 对象层的同名方法 (附录 B.6); 同步与 Async 形态, 进度, 取消; 选项的未知键拒绝; `preset` 展开成数值 (D55); payload 与附加输入的临时文件随调用清理 (脚本停止时也清理); 句柄记住打开时的密码 (D70); `PdfScriptCapabilities` 登记新方法 (写输出的要 `files.write`).
+- [ ] (宿主) `pdf.makeSearchable` 管线 (D63): 选页 (没有文本层的页, 或 `force`), 经插件渲染, `OcrPluginHost.detect`, 汇总 payload, 调 `addTextLayer`; 能力另要 `ocr`; 取消在 OCR 阶段与写入阶段都生效; 复用 `PdfOcr` 的渲染与选引擎.
+- [ ] (宿主) changelog 10 种语言 (当前开发版本的 key, 通俗文案), api-coverage 基线登记新方法, `StaticReferenceGuardTest` 与翻译检查.
+- 验收 (E1, 假插件): 每个新方法的参数解析, payload 内容, 输入顺序, 能力声明, 对象层与便捷层结果一致; 协商 1 时每个新方法为 `UNSUPPORTED` 加提示; `makeSearchable` 的选页, 坐标传递, `OCR_UNAVAILABLE`, 两个阶段的取消; `:app:testAppDebugUnitTest` 的 PDF 选集通过; `check_translations.py` 与 `generate_markdown.py --check` 的结果写进本条. 真机联调在 P6.15.
+
+### P6.10 Node / Bun 门面与声明 (D58, D70)
+
+- [ ] (宿主) `engine/RuntimePdfBridge.kt` 的方法清单, 能力与结果编解码加入新方法; `RuntimePdfBridgeTest` 的 "操作表对照 Rhino 方法表" 覆盖新方法.
+- [ ] (Node) `AutoJs6-Plugin-NodeJs-Runtime`: 门面, `docs/nodejs/types/autojs6-node/pdf.d.ts`, `tools/nodejs/api/test-pdf.js` / `test-worker-pdf.js`, changelog 10 种语言 (当前未发版的版本).
+- [ ] (Bun) `AutoJs6-Plugin-Bun-Runtime`: `host-client.mjs` 的方法表与写操作集合, `BunHostBridgeDispatcher` (`pdf.control` 覆盖新方法, `makeSearchable` 另要 `ocr.control`, Q26), `tools/host-client/pdf.test.mjs`, changelog 10 种语言.
+- 验收 (E1): 两个仓库各自的门面测试与仓库检查通过; 宿主 `RuntimePdfBridgeTest` 通过; api-coverage 中 Node / Bun 的对应格转正. 不发版 (D70).
+
+### P6.11 宿主文件管理器 "生成可搜索 PDF" (D49, D67)
+
+- [ ] (宿主) `plugin-api/explorer-action-api`: `ExplorerActionHostEngineIds` 加 `pdf-make-searchable`; `ExplorerHostEngineActionPolicy` 认识该命令并只允许官方 3-Paper PDF 包声明它; 命令实现 (D67 的对话框, 逐页进度, 取消, 输出命名, 无引擎引导); 字符串 11 个 values 目录, changelog 10 种语言; 改协议常量前按 `docs/explorer/ROADMAP.md` 的规则判断是否要升协议版本, 并在该文件登记一行.
+- [ ] (插件) 换入新的 `explorer-action-api.aar`; `ExplorerCatalog` 声明该动作 (标签 11 个 values 目录); 不认识该命令的宿主上目录其余动作照常 (做不到时登记待决, 候选做法是提高 `REQUIRED_HOST_VERSION`).
+- 验收: 宿主单测 (E1): 只有官方 PDF 包可声明该命令, 其他包声明时被拒, 现有 AutoJs4 的两个命令不受影响. AVD_API_33 (E2, 宿主隔离克隆构建加插件调试包): 菜单组出现该项, 对多页扫描件夹具生成 `-searchable.pdf` 且 `pdf.text` 能取回文字 (AVD 上的 OCR 引擎按 P1.4 联调时的做法准备), 中途取消后目录里没有残留文件, 没有 OCR 引擎时出现引导. 真机一次在 P6.15.
+
+### P6.12 工具箱与文件管理器工具 (D47, D50, D52, D68)
+
+- [ ] (插件) 工具界面的 5 个新工具 (`watermark`, `page-numbers`, `compress`, `fill-form`, `properties`): 选项页, `PdfToolRunner` 分支, 结果页; 水印带单页预览; 表单字段按页分组可折叠, 必填与只读有标记; 文档属性页的文件信息是对齐的键值块; 字符串 11 个 values 目录.
+- [ ] (插件) 文件管理器: `ExplorerTool` 加 `compress` 与 `watermark` (溢出菜单, `ACCESS_CREATE_IN_PARENT`, 输出命名照 Q2 / Q74); 工具箱首页的工具清单与最近文件照常.
+- 验收 (E2): 每个新工具从选文件到结果页的 Compose 仪器测试 (AVD_API_33), 输出文件经引擎回读验证; 文件管理器两个新动作经宿主会话写到源文件同目录 (AVD, 宿主隔离克隆构建); `generate_markdown.py --check`, 字符串排序与标点检查通过. E4 手测清单 (水印预览, 表单列表, 属性页, 压缩三档) 写进交接说明, 在 P6.15 由维护者确认.
+
+### P6.13 生成脚本代码 (D51, D69)
+
+- [ ] (插件) `codegen/`: 13 个工具的请求转成 Rhino / Node.js / Bun 三种写法; 结果页的引擎切换, "复制脚本", "另存为 .js", "在 AutoJs6 中打开"; 密码处写占位符与注释; 字符串 11 个 values 目录.
+- 验收: JVM (E1): Rhino 写法用与宿主相同的 Rhino 解析, 以桩函数运行, 记录到的调用参数与工具请求逐项相等 (13 个工具, 全字段与仅必填字段各一遍; 字符串含引号, 反斜杠, 换行, U+2028 / U+2029, 中文, 表情); Node.js 与 Bun 写法经 `node --check` 通过 (本机与 CI); 任何写法的输出里都不出现输入的密码. 真机 (E3 / E4, P6.15): 三种写法各复制运行一次并得到与工具相同的输出, "在 AutoJs6 中打开" 走通一次.
+
+### P6.14 文档, 声明, 样例, README 与 changelog (D40, D46)
+
+- [ ] (文档) `AutoJs6-Documentation`: `pdf.md` 加表单, 水印与页码, 可搜索 PDF, 压缩, 文档属性各一节 (含 "需要 3-Paper PDF 1.1.0" 的标注, D57 / D61 / D63 要写明的限制), `pdfDocumentType.md` 加对象层方法, `runtimeApis` 的 Node / Bun 一节; changelog 10 种语言; 生成器与链接检查.
+- [ ] (文档) `AutoJs6-TypeScript-Declarations` 的 d.ts, `AutoJs6-Plugin-Ace-Editor` 的镜像与 `:app:generateAutoJs6LspDeclarations`, `AutoJs6-Plugin-Offline-Docs` 的同步.
+- [ ] (插件) README (`.readme/*.json`, 10 种语言), 1.1.0 的 changelog (`.changelog/*.json`, 10 种语言), 插件中心说明 `plugin_instruction`, `plugin_description` 是否随新功能改写 (改则 11 个 values 目录与 `.readme/common.json` 一起改), 兼容矩阵加 1.1.0 一列.
+- [ ] (插件 / 宿主) 样例: 插件 `samples/` 与宿主 `assets-app/sample/3-Paper PDF/` 各加表单, 水印与页码, 可搜索 PDF, 压缩, 文档属性 5 个 Rhino 样例; `samples/node/pdf-node` 与 `samples/pdf.bun.js` 补新方法; 文件头写明所需的宿主, 插件与运行时版本.
+- 验收: 四个文档仓库各自的生成与检查脚本通过; 插件 `generate_markdown.py --check`, `check_repository.py` 通过; 样例在 API 33 真机运行通过 (P6.15).
+
+### P6.15 真机联调, 回归与性能基线
+
+- [ ] (测试) `scripts/device-regression.js` 加 1.1.0 的检查 (每个新方法的便捷层, 对象层与 Async 形态各至少一项, `makeSearchable` 在有 OCR 引擎的设备上跑); 第 6 节门禁 2 的设备 (Sony API 28 / 31 / 33, Xiaomi Pad API 35, OnePlus API 35) 与 AVD_API_33 全部通过; 宿主样例与 Node / Bun 样例在 API 33 真机通过.
+- [ ] (测试) 打包应用: `.python/packaged_app_check.py` 加版本 2 的操作 (水印, 压缩, 填写表单各一项), AVD_API_33 与一台 API 33 真机.
+- [ ] (测试) 契约兼容 (门禁 6): 含契约 2 的宿主配 `v1.0.0` 的 release 包; 只含契约 1 的宿主构建配插件 1.1.0.
+- [ ] (测试) E4 手测 (维护者在手机上操作): P6.12 的清单, P6.11 的宿主对话框, P6.13 的三种写法与 "在 AutoJs6 中打开"; 性能基线 (加水印, 压缩三类样本, 逐页 OCR 加写文本层) 填进附录 F.
+- 验收: 上面四行的结果 (设备, 通过 / 失败数, 关键数值) 写进各行; 失败项要么修复后复跑, 要么登记待决.
+
+### P6.16 1.1.0 发布 (D41, D53, D70)
+
+- [ ] (发布) 第 6 节发布门禁 1 - 6; `VERSION_NAME` 1.1.0; 核对 D70 (宿主当前开发线, `REQUIRED_HOST_VERSION`, 文档与样例里的版本标注, 两个运行时的版本); tag `v1.1.0`, release 工作流产出 APK; (索引) 登记 `release-manifests/.../<versionCode>.json`; 本文件阶段总览与发布状态更新.
+- 前置: P6.1 - P6.15 全部行完成.
+- 验收: 插件中心从索引把 1.0.0 升级到 1.1.0 (一台真机), 升级后原有设置与最近文件保留, `samples/` 冒烟通过; release 包的签名, 文件名 CRC32, versionCode 与索引清单一致.
 
 ---
 
@@ -496,6 +653,8 @@ AutoJs6-Plugin-Three-Paper-PDF/
   samples/*.js  samples/fixtures/*.pdf  scripts/device-regression.js
   .github/workflows/{build,android-test,release}.yml
 ```
+
+1.1.0 (P6) 预计新增: 主源码下印章, 表单, 文本层, 压缩, 对象流写出 (`write/`) 与脚本生成 (`codegen/`) 各一个包 (包名由实现定), `samples/fixtures/form.pdf` 与 `scanned-multi.pdf`, `samples/` 的 5 个新样例.
 
 ## 附录 B. 脚本 API 草案
 
@@ -579,6 +738,45 @@ session.on('page', (e) => console.log('page', e.page));
 session.on('close', () => console.log('closed'));
 ```
 
+### B.6 1.1.0 新增 (草案, D46 - D66)
+
+2026-11-15 立项时的草案, 以 P6.9 落地后的宿主实现与文档站为准. 约定同 B 开头: 路径相对脚本工作目录, 输出参数可省略 (默认 `/sdcard/Documents/3-Paper PDF/<源名>-<操作>-<时间戳>.pdf`), 每个方法都有 `xxxAsync` 形态, Async 形态接受 `onProgress` 并返回可 `cancel()` 的 Promise. 新方法需要 3-Paper PDF 1.1.0 或更高版本, 旧插件上以 `UNSUPPORTED` 结束 (D58).
+
+| 方法 | 返回 | 说明 |
+| --- | --- | --- |
+| `pdf.forms(path, { password })` | `PdfFormField[]` | 表单字段 (D62); 没有表单时为空数组 |
+| `pdf.fillForm(path, output, values, { flatten, ignoreMissing, password })` | `PdfResult` 加 `filled` | `values` 以字段全限定名为键; `flatten` 取 `true` 或字段名数组; 未知字段名见 D56 |
+| `pdf.watermark(path, output, { text, image, pages, position, offsetX, offsetY, rotation, opacity, fontSize, color, fontPath, tile, layer, scale, password })` | `PdfResult` | `text` 与 `image` (图片路径) 二选一; 默认值见 D61 |
+| `pdf.stamp(path, output, { pageNumbers, header, footer, items, fontSize, color, fontPath, margin, pages, password })` | `PdfResult` | `pageNumbers` 取 `true` 或 `{ format, position, start }` (默认格式 `{page} / {total}`, 位置 `bottom-center`); `header` / `footer` 取字符串 (居中) 或 `{ left, center, right }`; `items` 是 D61 的通用条目 |
+| `pdf.makeSearchable(path, output, { pages, force, ocrDpi, ocrOptions, password })` | `PdfResult` 加 `ocrPages`, `lines` | 宿主 OCR 后写不可见文本层 (D63); 需要 OCR 引擎, 否则 `OCR_UNAVAILABLE` |
+| `pdf.addTextLayer(path, output, layers, { force, password })` | `PdfResult` 加 `pages`, `lines` | 脚本自带识别结果 (D54); `layers` 形状见 D63 |
+| `pdf.compress(path, output, { preset, imageDpi, imageQuality, removeMetadata, objectStreams, password })` | `PdfResult` 加 `sourceBytes`, `images`, `objectStreams` | 默认值与预设见 D55; 结果可能不比输入小 (D57); `images` 为 `{ total, recompressed, skipped }` |
+| `pdf.setInfo(path, output, info, { password })` | `PdfResult` | `info` 的键 `title`, `author`, `subject`, `keywords`, `creator`; `null` 清除 (D66) |
+| `pdf.setOutline(path, output, items, { password })` | `PdfResult` | `items` 是 `[{ title, page, children }]` 的树; `[]` 或 `null` 清除 (D66) |
+
+`PdfDocument` 对象层: `forms()`, `fillForm(output, values, options)`, `watermark(output, options)`, `stamp(output, options)`, `makeSearchable(output, options)`, `addTextLayer(output, layers, options)`, `compress(output, options)`, `setInfo(output, info)`, `setOutline(output, items)`; 不带 `password` 选项 (文档已打开, D70). `PdfInfo` 加 `formFieldCount` 与 `xfa` (`'static'` 或 `'dynamic'`, 没有 XFA 时不带该键).
+
+能力声明: `forms` 要 `files`; 其余八个写输出的方法要 `files` 与 `files.write`; `makeSearchable` 另要 `ocr`. Bun 的 `pdf.control` 覆盖这些方法, `makeSearchable` 另要 `ocr.control` (Q26).
+
+```javascript
+// 表单
+let fields = pdf.forms('./form.pdf');
+pdf.fillForm('./form.pdf', './form-filled.pdf', { name: '张三', agree: true, city: 'Shanghai' }, { flatten: true });
+
+// 水印, 页码
+pdf.watermark('./report.pdf', './report-wm.pdf', { text: 'DRAFT', opacity: 0.2 });
+pdf.stamp('./report.pdf', './report-numbered.pdf', { pageNumbers: true, header: { right: '{name}' } });
+
+// 可搜索 PDF 与压缩
+pdf.makeSearchable('./scan.pdf', './scan-searchable.pdf');
+let r = pdf.compress('./scan.pdf', './scan-small.pdf', { preset: 'low' });
+console.log(r.sourceBytes, '->', r.sizeBytes);
+
+// 元数据与大纲
+pdf.setInfo('./book.pdf', './book-info.pdf', { title: 'Guide', keywords: null });
+pdf.setOutline('./book.pdf', './book-outline.pdf', [{ title: 'Chapter 1', page: 1, children: [{ title: '1.1', page: 3 }] }]);
+```
+
 ## 附录 C. 契约 (P1.1 已发布的 v1)
 
 来源与优先级: 宿主 `plugin-api/pdf-api` (提交 c37a23258d, 即 `libs/pdf-api.aar`, 40,772 B, sha256 9d5714fe...35cc49; 2026-11-14 按 Q60 就地改 v1 为打包应用入口加入 `PdfActions` 的 3 个常量 (Q145 (b), D43), 替换 2026-11-13 的 465d7a141f / 0bb80366...ff169e94; 后者按 Q60 加入 `displayNames` 与 `javaScript`, 替换 P1.1 发布的 4e872a8741 / e6bdb589...e90bb) 与协议文档 `AutoJs6/docs/dev/pdf-plugin-protocol-v1.md` 为准, 本附录只摘录事实. 2026-11-12 由 paper-p2-core 按已发布契约同步, 替换立项时的草案 (草案与发布版的差异见协议文档末节 "Differences From The Roadmap Appendix C Draft": 去掉 `fontPath` / `html` 两个键, `limits.*` 改为独立能力键, `render.sharedMemory` 等改为 `pdfFeatures` 的取值, 新增应答键与上限). 契约 v1 在批次 2 冻结, 需要改契约时写进交接目录 `pdf-api-change-requests.md` 并登记待决. 2026-11-13 按 Q60 就地在 v1 加 `displayNames` (merge) 与 `javaScript` (fromHtml), 契约版本仍为 1: 宿主 465d7a141f, 新 AAR 40,670 B, sha256 0bb80366...ff169e94 (交接目录), 由 paper-p3-plugin 换入 `libs/`.
@@ -646,6 +844,39 @@ AIDL:
 ### C.3 错误码
 
 `PLUGIN_UNAVAILABLE`, `PLUGIN_DISABLED`, `PLUGIN_INCOMPATIBLE` (宿主侧), `INVALID_ARGUMENT`, `FILE_NOT_FOUND`, `INVALID_PDF`, `PASSWORD_REQUIRED`, `WRONG_PASSWORD`, `PERMISSION_DENIED` (文档权限位禁止的操作), `PAGE_OUT_OF_RANGE`, `LIMIT_EXCEEDED`, `SESSION_CLOSED`, `UI_REQUIRES_FOREGROUND`, `OCR_UNAVAILABLE`, `STORAGE_PERMISSION_DENIED` (仅独立界面), `CANCELLED`, `TIMEOUT`, `UNSUPPORTED`, `IO_ERROR`, `INTERNAL`.
+
+### C.4 契约版本 2 (1.1.0 草案, D58, D59)
+
+2026-11-15 立项时的草案; 常量名与取值由 P6.1 定稿, 定稿后本节照 C.1 的做法按已发布契约同步, 与草案的差异写进协议文档.
+
+```text
+PdfContract (版本 2 追加; MIN_CONTRACT_VERSION 1, MAX_CONTRACT_VERSION 2)
+  IPdfDocument     + getFormFields(request)   请求 offset, limit; 应答 items (字段形状见 D62), hasMore, nextOffset
+  getInfo 应答     + formFieldCount (Int), xfa ("static" / "dynamic", 没有 XFA 时不带)
+  PdfOps           + formFields (IPdfDocument.getFormFields)
+                   + run op: fillForm, stamp, addTextLayer, compress, setInfo, setOutline (都可取消)
+  run 的输入顺序   fillForm      [源 PDF, payload]                    payload { "values": { "<字段名>": 字符串 / 布尔 / 字符串数组 / null } }
+                   stamp         [源 PDF, payload, 图片 ..., 字体]     payload { "items": [ ... ] } (D61); 键 imageCount, hasFont 说明其后的输入
+                   addTextLayer  [源 PDF, payload]                    payload { "layers": [ { "page", "width", "height", "lines": [ { "text", "bounds" } ] } ] }
+                   compress      [源 PDF]
+                   setInfo       [源 PDF, payload]                    payload { "info": { "title", "author", "subject", "keywords", "creator" } } (值为 null 即清除)
+                   setOutline    [源 PDF, payload]                    payload { "items": [ { "title", "page", "children" } ] }
+  键               password (打开加密的源), flatten (Boolean), flattenFields (String[]), ignoreMissing, force,
+                   imageDpi, imageQuality, removeMetadata, objectStreams, imageCount, hasFont
+  完成键           版本 1 的 pageCount, sizeBytes, warnings, 另加: filled (fillForm); pages, lines (addTextLayer);
+                   sourceBytes, imagesTotal, imagesRecompressed, imagesSkipped, objectStreams (compress)
+  上限 (初值)      MAX_PAYLOAD_BYTES 16 MiB, MAX_STAMP_ITEMS 64, MAX_STAMP_IMAGES 16, 表单字段每次应答至多 500 项,
+                   MAX_TEXT_LAYER_LINES 200,000, MAX_OUTLINE_ITEMS 10,000, MAX_OUTLINE_DEPTH 32,
+                   imageDpi 36 - 1200, imageQuality 1 - 100
+  压缩预设         low (96, 60), medium (150, 75, 即缺省), high (220, 85) (D55)
+  阶段             STAGES 追加 verifying (对象流写出后的回读校验); ocr 仍是宿主侧阶段 (opId 0)
+```
+
+要点:
+
+- 兼容: 版本 2 不改版本 1 的任何方法, 键与取值. 协商为 1 的宿主永远不会发版本 2 的请求; 插件收到自己不认识的 op 照旧答 `UNSUPPORTED` (`NOT_IMPLEMENTED: <op>`).
+- payload 与附加输入的所有权同版本 1 的输入: 宿主持有并在调用返回后关闭, 插件在返回 opId 前 dup. 宿主的临时文件在操作结束 (完成, 失败, 取消) 后删除.
+- 写出规则不变: 这些操作的输出都不带加密, 加密的源须以所有者密码打开 (Q30); 失败或取消后宿主删除输出.
 
 ## 附录 D. 待决事项
 
@@ -739,6 +970,21 @@ AIDL:
 | Q160 | XQ-DQ72 (`QV770340J7`, API 33, 主力联调机) 在批次 8 中途离线 (2026-11-14 10:33, 维护者告知需要离线一段时间), 依赖它的三行未跑: P2.7 的第四台 Sony / Xiaomi 设备回归, P5.3 样例的 API 33 真机运行 (含 Node / Bun 样例与 timeoutMs), P5.5 (验证, 真机); P3.2 验收里的 "API 33 真机" 也在其中 (已由 API 28 / 31 / 35 / 35 四台真机覆盖) | (a) 等 XQ-DQ72 接回后补跑 (推荐): 保留所需 APK (宿主 6641 的 androidTest 包, 官方签名打包模板, Node 396, Bun 369), 接回后约 40 分钟跑完回归, 计时, 样例与打包检查再勾三行; 设备上已装宿主 6641, 插件 39 / Node 396 / Bun 369 要补装 / (b) 改用 Redmi 22120RN86C (API 33): 要覆盖它用于旧宿主隐藏验证的旧宿主, 跑完再装回 / (c) 接受现有证据: P5.3 以 XQ-AT72 (API 31) Rhino 样例 14 / 14 与 AVD 为准, P5.5 以 AVD_API_33 (E2) 为准, P2.7 以三台 Sony / Xiaomi 加 OnePlus 为准, 改写三行验收后勾选; Node / Bun 样例没有真机证据 | P5.4 发布之前 | 已决 (2026-11-14 13:0x, 维护者选 (a) "接回后续跑"; paper-device 当天在 XQ-DQ72 补跑, P2.7 / P5.3 / P5.5 真机三行已勾) |
 | Q170 | 3-Paper PDF 1.0.0 与 Node.js Runtime 2.2.0 / Bun Runtime 0.23.0 的发布先后 (Q50 的时点) | (a) 3-Paper 先发, 两个运行时不在发布卡里发, 赶在宿主 6.8.1 公开前发版 (推荐) / (b) 按 Q50 原样先发两个运行时 (Node 领先 v2.1.0 27 笔, Bun 领先 v0.22.0 24 笔, 连同 3-Prism camera / 3-Slate media studio / 3-Tally xlsx 门面一起公开) / (c) 等四个主题的门面定稿后一起发, 3-Paper 顺延 | P5.4 | 已决 (2026-11-14 14:38, 维护者选 (a) 3-Paper 先发; Q50 的先后随之调整, Q51 文档写的最低运行时版本不变, Release 说明注明两个运行时尚未发布; 改选 (b) 要另发两个运行时的发布卡) |
 | Q171 | 批次 9 发布卡的建仓与推送授权 | (a) 维护者建仓并配 secret, 发布卡推送插件仓库 (master, tag v1.0.0) 与官方索引登记 (推荐) / (b) 同 (a), 另授权发布卡用 gh 创建公开仓库并添加 remote, 4 个签名 secret 仍由维护者配 (凭据不经过会话) / (c) 发布卡只准备到可推送, 维护者自己推 | P5.4 | 已决 (2026-11-14 14:38, 维护者选 (b), 非推荐项; 授权只覆盖本插件仓库与官方索引, 宿主 / 文档站 / 运行时 / TypeScript-Declarations / Ace / 离线文档照旧只本地提交) |
+| Q172 | 1.0.0 发布后 P6 = 1.1.0 的安排与 1.0.0 调度会话的去留 | (a) 结束本期调度, 1.1.0 以后从 idea-projects 环境新建会话立项 (推荐) / (b) 当时就为 1.1.0 立项 / (c) 暂缓 | P5.4 之后 | 已决 (2026-11-14 16:20, 维护者选 (a); 由调度会话提问, 本行于 2026-11-15 立项时补记) |
+| Q173 | 1.1.0 范围: D20 四项之外还带上哪些 (多选) | 只做 D20 四项 (推荐) / 元数据与大纲编辑 (`pdf.setInfo`, `pdf.setOutline`, 工具箱 "文档属性", 约 +1 张卡) / 工具箱生成等价脚本代码 (附录 G 原列 "1.1.0 后再评估", 约 +1 张卡) | P6 立项 | 已决 (2026-11-15, 维护者三项全选: D20 四项加两个增项, 增项为非推荐项; D46) |
+| Q174 | 表单在插件界面里做到多深 | (a) 工具箱向导 "填写表单", 查看器保持只读 (推荐) / (b) 另加查看器内点按字段填写 (约 +1-2 张卡) / (c) 只做脚本 API | P6 立项 | 已决 (2026-11-15, 维护者选 (a); D47) |
+| Q175 | D20 的 "对象流": PDFBox-Android 2.0.27.0 没有对象流写出类 (单样本: 经典写法重存为原体积的 104.3%, 估算写对象流后为经典写法的 92.1%) | (a) 自写对象流写出器, 只给 `compress` 用, 回读校验, 失败回落 (推荐, 约 +1 张卡) / (b) 不做对象流 / (c) 1.1.0 先不做, 留到 1.2.0 | P6 立项 | 已决 (2026-11-15, 维护者选 (a); D48, D65) |
+| Q176 | 可搜索 PDF 的界面入口 (OCR 引擎由宿主管理) | (a) 只做脚本 API (推荐) / (b) 宿主文件管理器加 "生成可搜索 PDF" 动作, 宿主驱动 OCR (约 +1 张宿主卡) / (c) 插件直连 OCR 插件, 工具箱与文件管理器都有 (没有先例, 会绕过插件中心的启用与授权, 约 +1-2 张卡) | P6 立项 | 已决 (2026-11-15, 维护者选 (b), 非推荐项; D49, D67) |
+| Q177 | 文件管理器溢出菜单 (现有 5 项) 新增哪些工具 | (a) 只加压缩与水印, 5 -> 7 项 (推荐) / (b) 五个新工具全加, 5 -> 10 项 / (c) 都不加 | P6 立项 | 已决 (2026-11-15, 维护者选 (a); D50) |
+| Q178 | 工具箱生成脚本代码生成哪些引擎的写法 | (a) 只生成 Rhino (推荐) / (b) Rhino + Node.js (约 +0.5 张卡) / (c) Rhino + Node.js + Bun (约 +1 张卡) | P6 立项 | 已决 (2026-11-15, 维护者选 (c), 非推荐项; D51, D69) |
+| Q179 | 工具箱 "文档属性" 做到多深 | (a) 界面只编辑元数据, 大纲只读加一键清除 (推荐) / (b) 界面也做大纲编辑器 (约 +1 张卡) / (c) 只做脚本 API | P6 立项 | 已决 (2026-11-15, 维护者选 (a); D52) |
+| Q180 | 六项怎么发版 | (a) 一次发 1.1.0 (推荐) / (b) 分两次: 1.1.0 = 水印页码, 压缩, 元数据大纲; 1.2.0 = 表单, 可搜索 PDF, 生成脚本代码 | P6 立项 | 已决 (2026-11-15, 维护者选 (a); D53) |
+| Q181 | 是否开放低层的 `pdf.addTextLayer(path, output, layers)` | (a) 开放 (推荐) / (b) 不开放, 只有 `pdf.makeSearchable` | P6 立项 | 已决 (2026-11-15, 维护者选 (a); D54) |
+| Q182 | `pdf.compress` 的默认强度与预设 | (a) 默认 150 dpi / 75, 另给 `preset` low (96 / 60), medium, high (220 / 85) (推荐) / (b) 只有数值参数 / (c) 默认 220 dpi / 85 加预设 | P6 立项 | 已决 (2026-11-15, 维护者选 (a); D55) |
+| Q183 | `pdf.fillForm` 的 `values` 里有表单中不存在的字段名 | (a) 默认 `INVALID_ARGUMENT` 并列出未知名称, `ignoreMissing: true` 时跳过并警告 (推荐) / (b) 一律忽略并警告 / (c) 一律报错 | P6 立项 | 已决 (2026-11-15, 维护者选 (a); D56) |
+| Q184 | `pdf.compress` 的结果不比原文件小时 | (a) 输出原文件的字节副本, 结果带 `copied: true` 与警告 (推荐) / (b) 照样输出重写结果, 只在 `warnings` 说明 / (c) 报错不输出 | P6 立项 | 已决 (2026-11-15, 维护者选 (b), 非推荐项; D57) |
+
+P6 的子会话登记新待决时从 Q185 起, 调度会话给每张卡分一段编号 (批次 10: 宿主卡 Q185 - Q189, 插件卡 Q190 - Q199).
 
 ## 附录 E. 证据等级
 
@@ -751,6 +997,13 @@ AIDL:
 | E5 | 外部文档或源码阅读 (Android / PDFBox 文档, 宿主源码), 需注明出处 |
 
 ## 附录 F. 基线快照与设备矩阵
+
+基线 (2026-11-15, 1.1.0 立项):
+
+- 插件: `master` `b306406` (`v1.0.0` = `9f61b3e`, versionCode 41, `VERSION_BUILD` 42), 主源码 90 个文件 16,437 行; 契约 AAR 仍是宿主 `c37a23258d` 的版本 1.
+- 宿主 AutoJs6: `master` `6bc39c3e6` (2026-11-15 12:21), `VERSION_NAME` 6.8.1, `VERSION_BUILD` 6640, 最新 tag 仍是 `v6.8.0`, 6.8.1 尚未公开 (D70).
+- 关联仓库 (工作区都干净): Node.js Runtime `a0055437` (2.2.0 开发线), Bun Runtime `64d6889` (0.23.0 开发线), 文档站 `29b4162`, TypeScript-Declarations `b02bf4d` (4.88.0), Ace Editor `ddeea29` (2.50.0), Offline Docs `faf7a28`.
+- 1.1.0 的性能数值 (P6.3 的加水印, P6.6 的三类样本压缩前后体积与耗时, P6.15 的逐页 OCR 加写文本层) 由对应条目在本附录末尾追加一张表.
 
 基线 (2026-11-12, 进入 P0 时刷新):
 
@@ -817,5 +1070,12 @@ ColorOS 后台启动 (P3.2 验收, 2026-11-14 paper-device, `.python/device_view
 | 使用 API 35 `PdfRenderer` 文本 / 搜索 API | 版本覆盖不全 (需 S 扩展 13+ 或 API 35), 结果与 PDFBox 不一致; 统一走 PDFBox (D30) |
 | 远程 URL 转 PDF | 网络与安全边界扩大; 1.0.0 只收本地 HTML (D8) |
 | 注释, 数字签名, PDF/A, reflow | 不在 1.0.0 与 1.1.0 范围 (第 3 节) |
-| 工具箱生成脚本代码 | 3-Slate Studio D11 同款, 价值在但非本插件首要; 1.1.0 后再评估 |
+| 工具箱生成脚本代码 | 3-Slate Studio D11 同款, 价值在但非本插件首要; 1.1.0 后再评估. 2026-11-15 维护者选入 1.1.0 (Q173, D46), 三种引擎的写法都生成 (Q178, D51) |
+| 查看器内填写表单 | 查看器要从只读变成可编辑 (字段命中测试, 输入浮层, 保存副本), 约 1-2 张卡; 维护者选工具箱向导 (Q174, D47), 1.1.0 之后再评估 |
+| 插件直连 OCR 插件 (工具箱与文件管理器里的可搜索 PDF) | 同签名权限下技术上可行, 但没有先例, 会绕过插件中心对 OCR 插件的启用与授权, 引擎选择与唤醒要在插件里重做; 维护者选宿主文件管理器动作 (Q176, D49) |
+| 工具箱里的大纲编辑器 | 树形编辑界面约 1 张卡; 维护者选只读加一键清除, 增删改走脚本 API (Q179, D52) |
+| 升级引擎取得对象流写出 | PDFBox 3.0 才有对象流写出, Android 分支停在 2.0.27.0 (Q1); 改为自写写出器 (Q175, D48) |
+| 其他写出操作也用对象流写出器 | merge, save, encrypt 等在 1.1.0 仍用经典写法 (用了对象流的输入重存后会略大); 写出器先只服务 `compress`, 稳定后再评估 (D65) |
+| 压缩结果不变小时输出原文件副本 | 立项会话的推荐; 维护者选照样输出重写结果, 由脚本比较前后体积 (Q184, D57) |
+| 1.1.0 分两次发版 | 发布门禁与真机回归要走两遍, 契约版本 2 的键仍要一次定全; 维护者选一次发 (Q180, D53) |
 | 等宿主 6.8.0 公开再发 1.0.0 | 发布时点不可控; 照 Macaw 先例不等 (D41). 6.8.0 已于 2026-11-03 公开, 对 6.8.1 同样不等 (Q8 已决) |
