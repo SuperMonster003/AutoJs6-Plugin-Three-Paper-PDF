@@ -101,5 +101,54 @@
   "p_engine": "Les pages sont rendues avec le `PdfRenderer` d'Android; le texte, le plan, les images, les opérations sur les pages et le chiffrement utilisent [PDFBox-Android](https://github.com/TomRoush/PdfBox-Android) (Apache-2.0, pur Java), et le chiffrement s'appuie sur Bouncy Castle (licence de type MIT). Le traitement des PDF ne contient aucune bibliothèque native et n'utilise aucun moteur de rendu natif comme pdfium ou MuPDF.",
   "p_license": "Le code du projet est distribué sous [Mozilla Public License 2.0]({{ license_url }}). Les composants et données tiers sont répertoriés dans les mentions tierces.",
   "text_link_third_party": "Mentions tierces (THIRD_PARTY_NOTICES.md)",
-  "p_instruction_docs": "Consultez [Documentation d'AutoJs6 > PDF](https://docs.autojs6.com/#/pdf) pour l'utilisation dans les scripts et la [page du projet]({{ repo_url }}) pour l'avancement."
+  "instruction_p_what": "3-Paper PDF fournit le module `pdf` aux scripts AutoJs6 pour lire, rendre, fusionner, découper, générer et chiffrer des fichiers PDF. C'est aussi une visionneuse et une boîte à outils PDF utilisables seules, sans AutoJs6.",
+  "instruction_h3_start": "Prise en main",
+  "instruction_start_steps": [
+    "Utilisez directement le module global `pdf` dans les scripts AutoJs6; voir l'exemple ci-dessous.",
+    "Pour consulter ou traiter des PDF sur le téléphone, ouvrez 3-Paper PDF depuis le lanceur, accordez l'accès à tous les fichiers lorsqu'il est demandé, puis touchez \"Ouvrir un PDF\" ou choisissez le traitement voulu dans \"Outils\".",
+    "Toucher un fichier PDF dans le gestionnaire de fichiers d'AutoJs6 l'ouvre dans la visionneuse de 3-Paper PDF."
+  ],
+  "instruction_h3_features": "Fonctionnalités principales",
+  "instruction_features": [
+    "**Lecture**: nombre de pages, tailles des pages, métadonnées et état du chiffrement; texte et plan (signets) par page; recherche de texte; liste et export des images intégrées.",
+    "**Rendu**: pages en objets image ou en fichiers PNG / JPEG / WebP, dimensionnés selon une résolution en dpi, une échelle ou une largeur et une hauteur cibles.",
+    "**Opérations sur les pages**: fusionner (en conservant les signets), découper, extraire, supprimer, réordonner et faire pivoter des pages.",
+    "**Génération et chiffrement**: créer des PDF à partir d'images, de texte ou de HTML; définir un mot de passe et des autorisations sur un document, ou retirer le mot de passe.",
+    "**Reconnaissance des pages numérisées**: reconnaître le texte des pages numérisées sans couche de texte à l'aide d'un plugin OCR installé.",
+    "**Visionneuse**: défilement continu, zoom à deux doigts, miniatures, plan, surlignage des résultats de recherche, accès direct à une page et mode nuit. Les autres applications peuvent lui transmettre des PDF via \"Ouvrir avec\" ou le partage.",
+    "**Boîte à outils**: fusionner, découper, convertir en images, convertir des images en PDF, chiffrer, déchiffrer, extraire le texte et organiser les pages. Les tâches s'exécutent l'une après l'autre en arrière-plan, avec la progression affichée dans la notification.",
+    "**Gestionnaire de fichiers d'AutoJs6**: toucher un PDF l'ouvre dans la visionneuse, et les PDF contenus dans une archive s'ouvrent aussi directement; le menu des fichiers propose fusionner, découper, convertir en images, extraire le texte, chiffrer et retirer le mot de passe."
+  ],
+  "instruction_h3_script": "Utilisation dans les scripts",
+  "instruction_p_script": "Utilisez directement le module global `pdf` dans les scripts AutoJs6. Les numéros de page commencent à 1, et les plages s'écrivent `'1-3,5,8-'`:",
+  "instruction_script_notes": [
+    "Chaque méthode a une forme `Async` qui renvoie une Promise (par exemple `pdf.mergeAsync`). Les formes bloquantes ne peuvent pas être appelées sur le thread UI; utilisez les formes `Async` dans les scripts d'interface.",
+    "Passez `password` dans les options pour ouvrir un document chiffré. Les échecs lèvent une erreur avec un `code`, comme `PASSWORD_REQUIRED` ou `PAGE_OUT_OF_RANGE`.",
+    "Dans Node.js, chargez-le avec `require('autojs6:pdf')`; dans Bun, utilisez `host.pdf`. Les méthodes sont les mêmes et renvoient toutes des Promise."
+  ],
+  "instruction_h3_requirements": "Prérequis",
+  "instruction_requirements": [
+    "Android {{ min_android_version }} ou version ultérieure. La visionneuse et la boîte à outils s'utilisent seules, sans AutoJs6.",
+    "Le module `pdf` des scripts et les entrées du gestionnaire de fichiers nécessitent AutoJs6 {{ required_host_version_name }} ou version ultérieure. AutoJs6 ouvre les fichiers que les scripts lisent et écrivent; il a donc besoin de l'autorisation de stockage.",
+    "La boîte à outils et la visionneuse ouverte depuis le lanceur nécessitent l'accès à tous les fichiers; les scripts n'ont pas besoin de cette autorisation du plugin pour traiter des fichiers.",
+    "Les applications empaquetées par AutoJs6 peuvent aussi utiliser le module `pdf`: elles doivent être empaquetées par AutoJs6 {{ required_host_version_name }} ou version ultérieure, et ce plugin doit être installé sur l'appareil qui les exécute.",
+    "Les scripts Node.js nécessitent le plugin Node.js Runtime 2.2.0 ou version ultérieure et doivent déclarer `files` dans `node.permissions` de `project.json`; les scripts Bun nécessitent le plugin Bun Runtime 0.23.0 ou version ultérieure (Android 13 ou version ultérieure), avec `pdf.control` activé dans ses paramètres.",
+    "La reconnaissance du texte des pages numérisées nécessite un plugin OCR supplémentaire (ML Kit OCR, Paddle OCR ou Rapid OCR)."
+  ],
+  "instruction_h3_faq": "Questions fréquentes",
+  "instruction_faq": [
+    {
+      "q": "Utilisation sans AutoJs6",
+      "a": "La visionneuse et la boîte à outils s'utilisent seules; AutoJs6 n'est nécessaire que lorsque des scripts traitent des PDF."
+    },
+    {
+      "q": "Raisons pour lesquelles le centre des plugins affiche le plugin comme incompatible",
+      "a": "Le module de script et les entrées du gestionnaire de fichiers nécessitent AutoJs6 {{ required_host_version_name }} ou version ultérieure, et le plugin peut être activé après la mise à jour d'AutoJs6; en attendant, la visionneuse et la boîte à outils fonctionnent normalement."
+    },
+    {
+      "q": "Cas où un fichier des fichiers récents ne s'ouvre plus",
+      "a": "Lorsqu'un fichier a été supprimé ou déplacé, ou que son autorisation d'accès a été révoquée, toucher l'entrée affiche un message et la retire de la liste. Choisissez de nouveau le fichier via \"Ouvrir un PDF\"."
+    }
+  ],
+  "instruction_p_more": "La référence complète des scripts se trouve dans [Documentation AutoJs6 > PDF](https://docs.autojs6.com/#/pdf), et les autres informations sur la [page du projet]({{ repo_url }})."
 }

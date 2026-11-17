@@ -1,18 +1,65 @@
-3-Paper PDF est le plugin PDF d'AutoJs6, et aussi une boîte à outils et une visionneuse PDF qui fonctionnent seules, sans AutoJs6. Il lit les informations, le texte, le plan et les images intégrées d'un PDF et rend les pages en images; il fusionne, découpe, extrait, supprime, réordonne et fait pivoter les pages; il génère des PDF à partir d'images, de texte ou de HTML, et chiffre ou déchiffre les documents.
+3-Paper PDF fournit le module `pdf` aux scripts AutoJs6 pour lire, rendre, fusionner, découper, générer et chiffrer des fichiers PDF. C'est aussi une visionneuse et une boîte à outils PDF utilisables seules, sans AutoJs6.
 
-> Le module `pdf` des scripts AutoJs6 et les entrées du gestionnaire de fichiers nécessitent AutoJs6 6.8.1 (version interne 6641) ou ultérieur; les versions plus anciennes d'AutoJs6 affichent le plugin comme incompatible dans le centre des plugins. La boîte à outils et la visionneuse ne dépendent pas d'AutoJs6 et fonctionnent seules.
+### Prise en main
 
-### Points Forts
+1. Utilisez directement le module global `pdf` dans les scripts AutoJs6; voir l'exemple ci-dessous.
+2. Pour consulter ou traiter des PDF sur le téléphone, ouvrez 3-Paper PDF depuis le lanceur, accordez l'accès à tous les fichiers lorsqu'il est demandé, puis touchez "Ouvrir un PDF" ou choisissez le traitement voulu dans "Outils".
+3. Toucher un fichier PDF dans le gestionnaire de fichiers d'AutoJs6 l'ouvre dans la visionneuse de 3-Paper PDF.
 
-- Lecture: nombre de pages, tailles des pages, métadonnées, état du chiffrement et autorisations; texte et plan (signets) par page; recherche de texte avec numéros de page et positions; liste et export des images intégrées.
-- Rendu: pages en objets `Image` ou en fichiers PNG / JPEG / WebP, à 144 dpi par défaut, ou selon une résolution, une échelle ou une largeur et une hauteur cibles.
-- Opérations sur les pages: fusionner (en conservant les signets), découper, extraire, supprimer, réordonner et faire pivoter des pages; les numéros de page commencent à 1 et les plages s'écrivent `'1-3,5,8-'`.
-- Génération: images vers PDF (JPEG intégrés tels quels, sans réencodage), texte vers PDF (avec la police de votre choix) et HTML vers PDF (aucune URL distante n'est chargée).
-- Chiffrement: ouvrir des documents chiffrés avec un mot de passe, chiffrer en AES-256 et définir les autorisations, retirer le chiffrement.
-- Visionneuse: défilement continu, zoom à deux doigts, miniatures, plan, surlignage des résultats de recherche, accès direct à une page, saisie du mot de passe et mode nuit; d'autres applications peuvent lui confier des PDF via "Ouvrir avec" ou le partage; les scripts peuvent ouvrir la visionneuse et recevoir les événements de changement de page et de fermeture.
-- Boîte à outils: 8 outils pour fusionner, découper, convertir en images, convertir des images en PDF, chiffrer, déchiffrer, extraire le texte et organiser les pages; les tâches s'exécutent l'une après l'autre en arrière-plan, avec leur progression dans la notification; les fichiers récents retiennent aussi les fichiers ouverts avec le sélecteur de fichiers du système.
-- Gestionnaire de fichiers d'AutoJs6: toucher un PDF l'ouvre dans la visionneuse du plugin, et les PDF de 512 MiB au plus contenus dans une archive s'ouvrent aussi directement; le menu propose fusionner, découper, convertir en images, extraire le texte, chiffrer et supprimer le mot de passe.
-- OCR: `pdf.text(path, { ocr: true })` reconnaît les pages numérisées sans couche de texte à l'aide d'un plugin OCR installé (ML Kit OCR, Paddle OCR ou Rapid OCR).
-- Node.js et Bun: Node.js Runtime 2.2.0 et Bun Runtime 0.23.0 ou ultérieurs proposent le même module `pdf`; ses méthodes renvoient des Promises, et les appels peuvent être interrompus avec `signal` ou `timeoutMs`.
+### Fonctionnalités principales
 
-Consultez [Documentation d'AutoJs6 > PDF](https://docs.autojs6.com/#/pdf) pour l'utilisation dans les scripts et la [page du projet](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Paper-PDF) pour l'avancement.
+- **Lecture**: nombre de pages, tailles des pages, métadonnées et état du chiffrement; texte et plan (signets) par page; recherche de texte; liste et export des images intégrées.
+- **Rendu**: pages en objets image ou en fichiers PNG / JPEG / WebP, dimensionnés selon une résolution en dpi, une échelle ou une largeur et une hauteur cibles.
+- **Opérations sur les pages**: fusionner (en conservant les signets), découper, extraire, supprimer, réordonner et faire pivoter des pages.
+- **Génération et chiffrement**: créer des PDF à partir d'images, de texte ou de HTML; définir un mot de passe et des autorisations sur un document, ou retirer le mot de passe.
+- **Reconnaissance des pages numérisées**: reconnaître le texte des pages numérisées sans couche de texte à l'aide d'un plugin OCR installé.
+- **Visionneuse**: défilement continu, zoom à deux doigts, miniatures, plan, surlignage des résultats de recherche, accès direct à une page et mode nuit. Les autres applications peuvent lui transmettre des PDF via "Ouvrir avec" ou le partage.
+- **Boîte à outils**: fusionner, découper, convertir en images, convertir des images en PDF, chiffrer, déchiffrer, extraire le texte et organiser les pages. Les tâches s'exécutent l'une après l'autre en arrière-plan, avec la progression affichée dans la notification.
+- **Gestionnaire de fichiers d'AutoJs6**: toucher un PDF l'ouvre dans la visionneuse, et les PDF contenus dans une archive s'ouvrent aussi directement; le menu des fichiers propose fusionner, découper, convertir en images, extraire le texte, chiffrer et retirer le mot de passe.
+
+### Utilisation dans les scripts
+
+Utilisez directement le module global `pdf` dans les scripts AutoJs6. Les numéros de page commencent à 1, et les plages s'écrivent `'1-3,5,8-'`:
+
+```js
+let info = pdf.info("./book.pdf");
+console.log(info.pageCount, info.title);
+
+let texts = pdf.text("./book.pdf", { pages: "1-3" });
+console.log(texts[0]);
+
+let img = pdf.render("./book.pdf", 1, { dpi: 200 });
+images.save(img, "./page-1.png");
+img.recycle();
+
+pdf.merge(["./a.pdf", "./b.pdf"], "./ab.pdf");
+```
+
+- Chaque méthode a une forme `Async` qui renvoie une Promise (par exemple `pdf.mergeAsync`). Les formes bloquantes ne peuvent pas être appelées sur le thread UI; utilisez les formes `Async` dans les scripts d'interface.
+- Passez `password` dans les options pour ouvrir un document chiffré. Les échecs lèvent une erreur avec un `code`, comme `PASSWORD_REQUIRED` ou `PAGE_OUT_OF_RANGE`.
+- Dans Node.js, chargez-le avec `require('autojs6:pdf')`; dans Bun, utilisez `host.pdf`. Les méthodes sont les mêmes et renvoient toutes des Promise.
+
+### Prérequis
+
+- Android 7.0 ou version ultérieure. La visionneuse et la boîte à outils s'utilisent seules, sans AutoJs6.
+- Le module `pdf` des scripts et les entrées du gestionnaire de fichiers nécessitent AutoJs6 6.8.1 ou version ultérieure. AutoJs6 ouvre les fichiers que les scripts lisent et écrivent; il a donc besoin de l'autorisation de stockage.
+- La boîte à outils et la visionneuse ouverte depuis le lanceur nécessitent l'accès à tous les fichiers; les scripts n'ont pas besoin de cette autorisation du plugin pour traiter des fichiers.
+- Les applications empaquetées par AutoJs6 peuvent aussi utiliser le module `pdf`: elles doivent être empaquetées par AutoJs6 6.8.1 ou version ultérieure, et ce plugin doit être installé sur l'appareil qui les exécute.
+- Les scripts Node.js nécessitent le plugin Node.js Runtime 2.2.0 ou version ultérieure et doivent déclarer `files` dans `node.permissions` de `project.json`; les scripts Bun nécessitent le plugin Bun Runtime 0.23.0 ou version ultérieure (Android 13 ou version ultérieure), avec `pdf.control` activé dans ses paramètres.
+- La reconnaissance du texte des pages numérisées nécessite un plugin OCR supplémentaire (ML Kit OCR, Paddle OCR ou Rapid OCR).
+
+### Questions fréquentes
+
+**Utilisation sans AutoJs6**
+
+La visionneuse et la boîte à outils s'utilisent seules; AutoJs6 n'est nécessaire que lorsque des scripts traitent des PDF.
+
+**Raisons pour lesquelles le centre des plugins affiche le plugin comme incompatible**
+
+Le module de script et les entrées du gestionnaire de fichiers nécessitent AutoJs6 6.8.1 ou version ultérieure, et le plugin peut être activé après la mise à jour d'AutoJs6; en attendant, la visionneuse et la boîte à outils fonctionnent normalement.
+
+**Cas où un fichier des fichiers récents ne s'ouvre plus**
+
+Lorsqu'un fichier a été supprimé ou déplacé, ou que son autorisation d'accès a été révoquée, toucher l'entrée affiche un message et la retire de la liste. Choisissez de nouveau le fichier via "Ouvrir un PDF".
+
+La référence complète des scripts se trouve dans [Documentation AutoJs6 > PDF](https://docs.autojs6.com/#/pdf), et les autres informations sur la [page du projet](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Paper-PDF).

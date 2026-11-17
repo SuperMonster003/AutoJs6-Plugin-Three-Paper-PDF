@@ -101,5 +101,54 @@
   "p_engine": "頁面算繪使用 Android 系統的 `PdfRenderer`; 文字, 大綱, 圖片, 頁面操作與加密使用 [PDFBox-Android](https://github.com/TomRoush/PdfBox-Android) (Apache-2.0, 純 Java), 加密相依於 Bouncy Castle (MIT 式授權). PDF 處理不包含原生程式庫, 不使用 pdfium 或 MuPDF 等原生算繪程式庫.",
   "p_license": "專案程式碼採用 [Mozilla Public License 2.0]({{ license_url }}). 第三方元件與資料的授權見第三方聲明.",
   "text_link_third_party": "第三方聲明 (THIRD_PARTY_NOTICES.md)",
-  "p_instruction_docs": "指令碼用法見 [AutoJs6 文件 > PDF](https://docs.autojs6.com/#/pdf), 開發進度見 [專案首頁]({{ repo_url }})."
+  "instruction_p_what": "3-Paper PDF 為 AutoJs6 指令碼提供 `pdf` 模組, 用於讀取, 算繪, 合併, 分割, 產生與加密 PDF 檔案. 它同時是可以單獨使用的 PDF 檢視器與工具箱, 無需安裝 AutoJs6.",
+  "instruction_h3_start": "開始使用",
+  "instruction_start_steps": [
+    "在 AutoJs6 指令碼中直接使用全域模組 `pdf`, 範例見下文.",
+    "如需在手機上檢視或處理 PDF, 從啟動器開啟 3-Paper PDF, 依提示授予所有檔案存取權限, 然後輕觸 \"開啟 PDF\", 或在 \"工具\" 中選擇所需的處理.",
+    "在 AutoJs6 的檔案管理員中輕觸 PDF 檔案, 即在 3-Paper PDF 的檢視器中開啟."
+  ],
+  "instruction_h3_features": "主要功能",
+  "instruction_features": [
+    "**讀取**: 頁數, 頁面尺寸, 中繼資料與加密狀態; 依頁擷取文字與大綱 (書籤); 搜尋文字; 列出並匯出內嵌圖片.",
+    "**算繪**: 將頁面算繪為圖像物件或 PNG / JPEG / WebP 檔案, 可以依 dpi, 縮放比例或目標寬高指定尺寸.",
+    "**頁面操作**: 合併 (保留書籤), 分割, 擷取, 刪除, 重排與旋轉頁面.",
+    "**產生與加密**: 將圖片, 文字或 HTML 產生為 PDF; 為文件設定密碼與權限, 或移除密碼.",
+    "**掃描頁辨識**: 藉助已安裝的 OCR 外掛辨識沒有文字層的掃描頁.",
+    "**檢視器**: 連續捲動, 雙指縮放, 縮圖, 大綱, 搜尋醒目提示, 跳頁與夜間模式. 其他應用程式可以透過 \"開啟方式\" 或分享將 PDF 交給它.",
+    "**工具箱**: 合併, 分割, 轉圖片, 圖片轉 PDF, 加密, 解密, 擷取文字與頁面整理. 工作在背景依序執行, 通知欄顯示進度.",
+    "**AutoJs6 檔案管理員**: 輕觸 PDF 即用檢視器開啟, 壓縮檔內的 PDF 也可直接開啟; 檔案選單提供合併, 分割, 轉圖片, 擷取文字, 加密與移除密碼."
+  ],
+  "instruction_h3_script": "在指令碼中使用",
+  "instruction_p_script": "在 AutoJs6 指令碼中直接使用全域模組 `pdf`. 頁碼從 1 開始, 頁碼範圍寫作 `'1-3,5,8-'`:",
+  "instruction_script_notes": [
+    "每個方法都有傳回 Promise 的 `Async` 形式 (例如 `pdf.mergeAsync`). 同步形式不能在 UI 執行緒呼叫, 介面指令碼請使用 `Async` 形式.",
+    "開啟加密文件時在選項中傳入 `password`. 出錯時擲回帶有 `code` 的錯誤, 例如 `PASSWORD_REQUIRED` 或 `PAGE_OUT_OF_RANGE`.",
+    "Node.js 中使用 `require('autojs6:pdf')` 載入, Bun 中透過 `host.pdf` 使用, 方法相同, 均傳回 Promise."
+  ],
+  "instruction_h3_requirements": "執行需求",
+  "instruction_requirements": [
+    "Android {{ min_android_version }} 或更高版本. 檢視器與工具箱可以單獨使用, 無需 AutoJs6.",
+    "指令碼中的 `pdf` 模組與檔案管理員入口需要 AutoJs6 {{ required_host_version_name }} 或更高版本. 指令碼讀寫的檔案由 AutoJs6 開啟, 因此 AutoJs6 需要儲存空間權限.",
+    "工具箱與從啟動器開啟的檢視器需要所有檔案存取權限, 指令碼處理檔案不需要外掛的這項權限.",
+    "AutoJs6 打包的應用程式同樣可以使用 `pdf` 模組: 需由 AutoJs6 {{ required_host_version_name }} 或更高版本打包, 執行的裝置上需安裝本外掛.",
+    "Node.js 指令碼需要 Node.js Runtime 外掛 2.2.0 或更高版本, 並在 `project.json` 的 `node.permissions` 中宣告 `files`; Bun 指令碼需要 Bun Runtime 外掛 0.23.0 或更高版本 (Android 13 或以上), 並在其設定頁開啟 `pdf.control`.",
+    "辨識掃描頁的文字需要另行安裝 OCR 外掛 (ML Kit OCR, Paddle OCR 或 Rapid OCR)."
+  ],
+  "instruction_h3_faq": "常見問題",
+  "instruction_faq": [
+    {
+      "q": "未安裝 AutoJs6 時是否可用",
+      "a": "可以. 檢視器與工具箱均可單獨使用, 僅在指令碼中處理 PDF 時需要 AutoJs6."
+    },
+    {
+      "q": "外掛中心顯示本外掛不相容的原因",
+      "a": "指令碼模組與檔案管理員入口需要 AutoJs6 {{ required_host_version_name }} 或更高版本, 升級 AutoJs6 後即可啟用; 在此之前檢視器與工具箱照常可用."
+    },
+    {
+      "q": "最近的檔案中的檔案無法開啟時的處理",
+      "a": "檔案遭刪除, 移動或存取授權遭撤銷後, 輕觸該項目會顯示提示並將其從清單中移除. 請透過 \"開啟 PDF\" 重新選擇."
+    }
+  ],
+  "instruction_p_more": "完整的指令碼說明見 [AutoJs6 文件 > PDF](https://docs.autojs6.com/#/pdf), 其他資訊見 [專案主頁]({{ repo_url }})."
 }
