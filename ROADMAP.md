@@ -586,10 +586,10 @@ spike 约定 (参照 1.0.0 的 Q4 / Q5): S1 (表单外观), S2 (Canvas 印章), 
 
 ### P6.9 宿主脚本模块 (D54 - D66, D70)
 
-- [ ] (宿主) `PdfMethods` / `PdfScriptArguments` / `PdfService`: `pdf.forms`, `fillForm`, `watermark`, `stamp`, `addTextLayer`, `compress`, `setInfo`, `setOutline` 与 `PdfDocument` 对象层的同名方法 (附录 B.6); 同步与 Async 形态, 进度, 取消; 选项的未知键拒绝; `preset` 展开成数值 (D55); payload 与附加输入的临时文件随调用清理 (脚本停止时也清理); 句柄记住打开时的密码 (D70); `PdfScriptCapabilities` 登记新方法 (写输出的要 `files.write`).
+- [x] (宿主) `PdfMethods` / `PdfScriptArguments` / `PdfService`: `pdf.forms`, `fillForm`, `watermark`, `stamp`, `addTextLayer`, `compress`, `setInfo`, `setOutline` 与 `PdfDocument` 对象层的同名方法 (附录 B.6); 同步与 Async 形态, 进度, 取消; 选项的未知键拒绝; `preset` 展开成数值 (D55); payload 与附加输入的临时文件随调用清理 (脚本停止时也清理); 句柄记住打开时的密码 (D70); `PdfScriptCapabilities` 登记新方法 (写输出的要 `files.write`). 完成 (paper-p6-host-api, 宿主 f76b04ad8 / 431c1d79d): 参数规整在新文件 `PdfEditArguments.kt` (payload 按契约 JSON 构造, 超过契约上限的数量为 `LIMIT_EXCEEDED`, Q185), `PdfService.edit` 经测试缝 `PdfRunner` 调 `PdfPluginHost.startRun` / `startPayloadRun`, payload 写到 `cache/pdf-input` 的临时文件, 调用结束 (含失败, 取消) 即删, `close()` (脚本停止) 删残留; `PdfDocumentHandle` 记住打开时的密码, 对象层以句柄的文件重新走 run 管线; `PdfScriptCapabilities.VERSION_2_METHODS`; Rhino `Pdf.kt` / `PdfModule.kt` / `PdfDocumentNativeObject.kt` 各加 16 个函数. 定稿方法表见附录 B.6, 与草案的差别见 B.6 末尾.
 - [ ] (宿主) `pdf.makeSearchable` 管线 (D63): 选页 (没有文本层的页, 或 `force`), 经插件渲染, `OcrPluginHost.detect`, 汇总 payload, 调 `addTextLayer`; 能力另要 `ocr`; 取消在 OCR 阶段与写入阶段都生效; 复用 `PdfOcr` 的渲染与选引擎.
-- [ ] (宿主) changelog 10 种语言 (当前开发版本的 key, 通俗文案), api-coverage 基线登记新方法, `StaticReferenceGuardTest` 与翻译检查.
-- 验收 (E1, 假插件): 每个新方法的参数解析, payload 内容, 输入顺序, 能力声明, 对象层与便捷层结果一致; 协商 1 时每个新方法为 `UNSUPPORTED` 加提示; `makeSearchable` 的选页, 坐标传递, `OCR_UNAVAILABLE`, 两个阶段的取消; `:app:testAppDebugUnitTest` 的 PDF 选集通过; `check_translations.py` 与 `generate_markdown.py --check` 的结果写进本条. 真机联调在 P6.15.
+- [x] (宿主) changelog 10 种语言 (当前开发版本的 key, 通俗文案), api-coverage 基线登记新方法, `StaticReferenceGuardTest` 与翻译检查. 完成 (宿主 f76b04ad8 / 431c1d79d): v6.8.1 feature 紧跟 `$pdf` 条目加一条 (10 种语言, 不含 makeSearchable, 第 2 行另加); api-coverage: `policy.json` `deferredNameGate` 加 `pdf` (文档 / d.ts / Ace 由 P6.14 补, 届时删除), pending 基线登记 Node main / Worker / Bun 各 32 格 (16 个 `pdf.*` 与 16 个 `PdfDocument#` 成员, 共 96 格, 决定 "3-Paper PDF D46 / P6.10", 由 P6.10 转正), MATRIX.md 重写; augment 表面基线 (`surface-jvm.txt` +64 行, `script-modules-surface.txt` +16 行) 与 `ScriptModuleArityTest` 计数 (411, 429 + 77) 同步.
+- 验收 (E1, 假插件): 每个新方法的参数解析, payload 内容, 输入顺序, 能力声明, 对象层与便捷层结果一致; 协商 1 时每个新方法为 `UNSUPPORTED` 加提示; `makeSearchable` 的选页, 坐标传递, `OCR_UNAVAILABLE`, 两个阶段的取消; `:app:testAppDebugUnitTest` 的 PDF 选集通过; `check_translations.py` 与 `generate_markdown.py --check` 的结果写进本条. 真机联调在 P6.15. 结果 (第 1, 3 行, 2026-11-19): 克隆里 `:app:testAppDebugUnitTest` 选集 (`*Pdf*`, StaticReferenceGuardTest, ScriptSurfaceGateTest, ScriptModuleArityTest, PickResultTypeInitOrderTest) 29 类 203 项, 2 项失败, 均为此前积压: `ScriptModuleArityTest.checksInTheSourceAgreeWithTheDeclaredCounts` 列出 camera.isAvailable / capabilities / requestPermission / list 没有参数检查 (3-Prism 11-06 至 11-13 的提交), `PickResultTypeInitOrderTest` 是它的连带失败; 24 个 PDF 测试类 (含新增 PdfEditArgumentsTest, PdfEditServiceTest, PdfVersion2ValuesTest 与版本 1 的全部测试类), StaticReferenceGuardTest 与 ScriptSurfaceGateTest 全部通过; `check_translations.py` 通过 (CHANGELOG_TRANSLATIONS_OK languages=10); `generate_markdown.py --check` 通过 (MARKDOWN_OK languages=10 artifacts=22); api-coverage `check.py` 本卡的 pdf 名称缺口记入 deferredNameGate, 仍有失败的是 `PdfDocument#` 的 16 个返回对象成员 (deferredNameGate 不覆盖返回对象, 由 P6.14 补文档 / d.ts / Ace 后消失) 与此前积压 (camera 的 deferredNameGate 条目已过时, console.copyEntries / restoredEntryCount / shareEntries 缺文档与 Node / Bun 支持). `makeSearchable` 的三项验收随第 2 行.
 
 ### P6.10 Node / Bun 门面与声明 (D58, D70)
 
@@ -738,43 +738,52 @@ session.on('page', (e) => console.log('page', e.page));
 session.on('close', () => console.log('closed'));
 ```
 
-### B.6 1.1.0 新增 (草案, D46 - D66)
+### B.6 1.1.0 新增 (P6.9 定稿, D46 - D66)
 
-2026-11-15 立项时的草案, 以 P6.9 落地后的宿主实现与文档站为准. 约定同 B 开头: 路径相对脚本工作目录, 输出参数可省略 (默认 `/sdcard/Documents/3-Paper PDF/<源名>-<操作>-<时间戳>.pdf`), 每个方法都有 `xxxAsync` 形态, Async 形态接受 `onProgress` 并返回可 `cancel()` 的 Promise. 新方法需要 3-Paper PDF 1.1.0 或更高版本, 旧插件上以 `UNSUPPORTED` 结束 (D58).
+P6.9 第 1 行落地后的宿主实现 (宿主 f76b04ad8 / 431c1d79d, paper-p6-host-api), 取代 2026-11-15 立项时的草案; `makeSearchable` 一行仍是草案, 由 P6.9 第 2 行定稿. 约定同 B 开头: 路径相对脚本工作目录; 输出参数可省略 (下一个参数不是字符串时视为省略, 默认 `/sdcard/Documents/3-Paper PDF/<源名>-<方法名>-<时间戳>.pdf`); 每个方法都有 `xxxAsync` 形态, Async 形态接受 `onProgress` 并返回可 `cancel()` 的 Promise; 选项的未知键按名拒绝 (`INVALID_ARGUMENT`), 检查在调用时进行, 先于任何工作; 数据条目 (表单值, 文本层的行, 大纲条目) 忽略不认识的键, 因此 `pdf.outline` 或 OCR 引擎的结果可以直接传回. 新方法需要 3-Paper PDF 1.1.0 或更高版本, 协商版本为 1 时以 `UNSUPPORTED` 结束, 消息带 "Requires 3-Paper PDF 1.1.0 or later" (D58).
 
 | 方法 | 返回 | 说明 |
 | --- | --- | --- |
-| `pdf.forms(path, { password })` | `PdfFormField[]` | 表单字段 (D62); 没有表单时为空数组 |
-| `pdf.fillForm(path, output, values, { flatten, ignoreMissing, password })` | `PdfResult` 加 `filled` | `values` 以字段全限定名为键; `flatten` 取 `true` 或字段名数组; 未知字段名见 D56 |
-| `pdf.watermark(path, output, { text, image, pages, position, offsetX, offsetY, rotation, opacity, fontSize, color, fontPath, tile, layer, scale, password })` | `PdfResult` | `text` 与 `image` (图片路径) 二选一; 默认值见 D61 |
-| `pdf.stamp(path, output, { pageNumbers, header, footer, items, fontSize, color, fontPath, margin, pages, password })` | `PdfResult` | `pageNumbers` 取 `true` 或 `{ format, position, start }` (默认格式 `{page} / {total}`, 位置 `bottom-center`); `header` / `footer` 取字符串 (居中) 或 `{ left, center, right }`; `items` 是 D61 的通用条目 |
-| `pdf.makeSearchable(path, output, { pages, force, ocrDpi, ocrOptions, password })` | `PdfResult` 加 `ocrPages`, `lines` | 宿主 OCR 后写不可见文本层 (D63); 需要 OCR 引擎, 否则 `OCR_UNAVAILABLE` |
-| `pdf.addTextLayer(path, output, layers, { force, password })` | `PdfResult` 加 `pages`, `lines` | 脚本自带识别结果 (D54); `layers` 形状见 D63 |
-| `pdf.compress(path, output, { preset, imageDpi, imageQuality, removeMetadata, objectStreams, password })` | `PdfResult` 加 `sourceBytes`, `images`, `objectStreams` | 默认值与预设见 D55; 结果可能不比输入小 (D57); `images` 为 `{ total, recompressed, skipped }` |
-| `pdf.setInfo(path, output, info, { password })` | `PdfResult` | `info` 的键 `title`, `author`, `subject`, `keywords`, `creator`; `null` 清除 (D66) |
-| `pdf.setOutline(path, output, items, { password })` | `PdfResult` | `items` 是 `[{ title, page, children }]` 的树; `[]` 或 `null` 清除 (D66) |
+| `pdf.forms(path, { password }?)` | `PdfFormField[]` | 表单字段 (D62), 宿主分页读到末尾; 没有表单时为空数组 |
+| `pdf.fillForm(path, output?, values, { flatten, ignoreMissing, password }?)` | `PdfResult` 加 `filled` | `values` 以字段全限定名为键, 值为字符串, 布尔, 字符串数组或 `null` (恢复默认值), 有限数按其文本; `flatten` 取 `true`, `false` 或字段名数组; 未知字段名见 D56 |
+| `pdf.watermark(path, output?, options)` | `PdfResult` | `text` 与 `image` (图片路径) 二选一; 共有键 `pages`, `position` (位置名或 `[x, y]`), `offsetX`, `offsetY`, `rotation`, `opacity`, `tile`, `gapX`, `gapY`, `layer`, `margin`, `password`; 文字另有 `fontSize`, `color`, `bold`, `italic`, `fontPath`, 图片另有 `width`, `height`, `scale`, 另一类型的键被拒绝; 缺省见 D61, 图片的缺省旋转为 0 (Q210) |
+| `pdf.stamp(path, output?, { pageNumbers, header, footer, items, fontSize, color, fontPath, margin, pages, password })` | `PdfResult` | `pageNumbers` 取 `true`, `false` 或 `{ format, position, ... }` (默认格式 `{page} / {total}`, 位置 `bottom-center`; 没有 `start`, Q211); `header` / `footer` 取字符串 (居中) 或 `{ left, center, right, ... }`; 这三者的对象可带样式键 `pages`, `fontSize`, `color`, `opacity`, `bold`, `italic`, `offsetX`, `offsetY`, `margin`, `layer`; 顶层 `fontSize` (缺省 10), `color`, `margin`, `pages` 是这三者的缺省值, 不作用于 `items`; `items` 是 D61 的完整条目 (`type` 必填, 图片为路径, 相同路径共用一个图片输入); 文字可用 `{page}`, `{total}`, `{date}`, `{name}`; 条目超过 64 或图片超过 16 为 `LIMIT_EXCEEDED` (Q185) |
+| `pdf.makeSearchable(path, output, { pages, force, ocrDpi, ocrOptions, password })` | `PdfResult` 加 `ocrPages`, `lines` | (草案, P6.9 第 2 行) 宿主 OCR 后写不可见文本层 (D63); 需要 OCR 引擎, 否则 `OCR_UNAVAILABLE` |
+| `pdf.addTextLayer(path, output?, layers, { force, password }?)` | `PdfResult` 加 `layerPages`, `skippedPages`, `lines` | 脚本自带识别结果 (D54); `layers` 为 `[{ page, width, height, lines: [{ text, bounds }] }]`, `bounds` 为 `[l, t, r, b]` 或 `{ left, top, right, bottom }`, 单位是 `width` x `height` 图像的像素 (D63); 同一页两次为 `INVALID_ARGUMENT`, 行数合计超过 `MAX_TEXT_LAYER_LINES` 为 `LIMIT_EXCEEDED` |
+| `pdf.compress(path, output?, { preset, imageDpi, imageQuality, removeMetadata, objectStreams, password }?)` | `PdfResult` 加 `sourceBytes`, `images`, `objectStreams` | `preset` (缺省 `medium`) 由宿主展开成 `imageDpi` / `imageQuality`, 显式数值优先 (D55); 结果可能不比输入小 (D57); `images` 为 `{ total, recompressed, skipped }` |
+| `pdf.setInfo(path, output?, info, { password }?)` | `PdfResult` | `info` 只收 `title`, `author`, `subject`, `keywords`, `creator`; `null` 清除, 不给的保持; 其他键 (含 `producer` 与日期) 被拒绝 (D66) |
+| `pdf.setOutline(path, output?, items, { password }?)` | `PdfResult` | `items` 是 `[{ title, page, children }]` 的树, `pdf.outline` 的结果可直接传回 (`level` 忽略, `page` 为 `null` 或 0 的条目没有目标); `[]` 或 `null` 清除 (D66), `setOutline(path, null)` 的 `null` 视为 `items`; 条目超过 `MAX_OUTLINE_ITEMS` 或深度超过 `MAX_OUTLINE_DEPTH` 为 `LIMIT_EXCEEDED` |
 
-`PdfDocument` 对象层: `forms()`, `fillForm(output, values, options)`, `watermark(output, options)`, `stamp(output, options)`, `makeSearchable(output, options)`, `addTextLayer(output, layers, options)`, `compress(output, options)`, `setInfo(output, info)`, `setOutline(output, items)`; 不带 `password` 选项 (文档已打开, D70). `PdfInfo` 加 `formFieldCount` 与 `xfa` (`'static'` 或 `'dynamic'`, 没有 XFA 时不带该键).
+`PdfDocument` 对象层: `forms()`, `fillForm(output?, values, options?)`, `watermark(output?, options)`, `stamp(output?, options)`, `makeSearchable(output?, options?)` (第 2 行), `addTextLayer(output?, layers, options?)`, `compress(output?, options?)`, `setInfo(output?, info)`, `setOutline(output?, items)`, 各带 `xxxAsync`; 以句柄的文件与打开时的密码重新走 run 管线, 选项里写 `password` 为 `INVALID_ARGUMENT` (D70); 默认输出名用文档的文件名. `PdfInfo` 加 `formFieldCount` (插件应答时才有) 与 `xfa` (`'static'` 或 `'dynamic'`, 没有 XFA 时不带该键).
 
-能力声明: `forms` 要 `files`; 其余八个写输出的方法要 `files` 与 `files.write`; `makeSearchable` 另要 `ocr`. Bun 的 `pdf.control` 覆盖这些方法, `makeSearchable` 另要 `ocr.control` (Q26).
+`PdfFormField`: `{ name, type, value, defaultValue, label, readOnly, required, page, rect, widgets }`, 另有 `options` (radio, combo, list; 条目缺显示文本时与值相同), `multiline`, `password`, `maxLength` (text), `multiSelect` (list), `signed` (signature); 字段在页面上没有控件时 `page` 与 `rect` 为 `null`; `widgets` 为 `[{ page, rect }]`, 矩形是显示页面上以点为单位的 `[left, top, right, bottom]`.
+
+能力声明: `forms` 要 `files`; 七个写输出的方法要 `files` 与 `files.write` (`PdfScriptCapabilities.VERSION_2_METHODS`); `makeSearchable` 另要 `ocr` (第 2 行). Bun 的 `pdf.control` 覆盖这些方法, `makeSearchable` 另要 `ocr.control` (Q26, P6.10).
+
+与草案的差别: `addTextLayer` 的结果按契约完成键为 `layerPages`, `skippedPages`, `lines` (草案 `pages`, `lines`); `pageNumbers` 没有 `start` (契约版本 2 无法表达, Q211); 图片水印的缺省旋转为 0 (Q210); `watermark` 另收 `bold`, `italic`, `width`, `height`, `gapX`, `gapY`, `margin`; `pageNumbers` / `header` / `footer` 的对象可带样式键, 顶层样式键不作用于 `items`; 表单值的数值按文本; `setOutline(path, null)` 的 `null` 是 `items`.
 
 ```javascript
 // 表单
 let fields = pdf.forms('./form.pdf');
 pdf.fillForm('./form.pdf', './form-filled.pdf', { name: '张三', agree: true, city: 'Shanghai' }, { flatten: true });
 
-// 水印, 页码
+// 水印, 页码, 页眉
 pdf.watermark('./report.pdf', './report-wm.pdf', { text: 'DRAFT', opacity: 0.2 });
 pdf.stamp('./report.pdf', './report-numbered.pdf', { pageNumbers: true, header: { right: '{name}' } });
 
-// 可搜索 PDF 与压缩
-pdf.makeSearchable('./scan.pdf', './scan-searchable.pdf');
+// 自带识别结果的文本层与压缩
+pdf.addTextLayer('./scan.pdf', './scan-text.pdf', [{ page: 1, width: 2480, height: 3508, lines: [{ text: 'Hello', bounds: [200, 300, 900, 380] }] }]);
 let r = pdf.compress('./scan.pdf', './scan-small.pdf', { preset: 'low' });
-console.log(r.sourceBytes, '->', r.sizeBytes);
+console.log(r.sourceBytes, '->', r.sizeBytes, r.images.recompressed);
 
 // 元数据与大纲
 pdf.setInfo('./book.pdf', './book-info.pdf', { title: 'Guide', keywords: null });
 pdf.setOutline('./book.pdf', './book-outline.pdf', [{ title: 'Chapter 1', page: 1, children: [{ title: '1.1', page: 3 }] }]);
+
+// 对象层: 以打开时的密码执行
+let doc = pdf.open('./locked.pdf', { password: '1234' });
+doc.stamp('./locked-numbered.pdf', { pageNumbers: { format: '- {page} -' } });
+doc.close();
 ```
 
 ## 附录 C. 契约 (P1.1 已发布的 v1)
@@ -998,6 +1007,8 @@ payload            fillForm { values: { 名: 字符串 / 布尔 / 字符串数�
 | Q190 | 旧 Skia (API 24 / 28) 整个嵌入 NotoColorEmoji (印章文档 3.4 / 7.3 MB), 且表情的 ToUnicode 错 (提取为 λ / ο 等), API 24 上根本不显示; 文字印章里的表情怎么画 | (a) 探测到整字体嵌入时表情画成位图 (`EmojiBitmaps`): 可见, 印章文档不再含整个表情字体 (API 24 的 7 页印章输出 55,060 B), 但不可提取 (推荐, 已先行) / (b) 照系统画法: 3.4 - 7.3 MB 的印章文档, 表情在 API 24 不可见, 提取得错字 / (c) 去掉表情并给警告 | P6.3 开工前 | 已决 (2026-11-18 20:38, 维护者选 (a) 保持现状, 表情在旧 Skia 上画成位图; paper-p6-base 登记; S2 验收 "提取含印章原文" 在 API 24 / 28 上对表情不成立, 中文部分成立; API 33 / 35 表情可提取; 影响 P6.3 (stamp 文字项), P6.4 外观回落; 改选 (b) 的返工: 删 `EmojiBitmaps` 的接入 3 处与 2 项设备断言, 约 20 分钟; (c) 约 30 分钟 (警告与测试)) |
 | Q191 | API 33 起 Skia 把 RobotoStatic 整个嵌入印章文档 (解码 305 KB), 每次印章输出多约 200 - 240 KB | (a) 1.1.0 保持现状, 在 D60 记录体积 (推荐, 已先行 = 未做) / (b) P6.3 用 fontbox `TTFSubsetter` 对导入的 TrueType 字体重新子集化 (约 0.5 张卡, 需处理 CIDToGIDMap 与 ToUnicode) | P6.3 开工前 | 已决 (2026-11-18 20:38, 维护者选 (b), 非推荐项, 不要建议改回: 在 P6.3 用 `TTFSubsetter` 重新子集化 Skia 整个嵌入的字体, 由 paper-p6-stamp 实施, 结果见 D60; paper-p6-base 登记; 影响 P6.3 / P6.6 的输出体积, `compress` 不受影响 (不用印章); 改选 (b) 的返工: 新增子集化步骤与 3 台设备复测, 约 0.5 张卡) |
 | Q192 | API 35 的 Skia 把全部字体写成 Type 3 (系统字体是可变字体, 没有字体边界), 只含空白字形的字体段被当作越界丢掉: 跟在中日韩文字, 表情或阿拉伯文之后的空格单独成段时丢失, 提取得 "页,共" | (a) 空格排成不换行空格 (`StampFonts.noBreakSpaces`), 留在前一字体段里, 由 `ToUnicodeRepair` 经 NFKC 映射回空格; 两个数字之间的空格不换 (双向算法 W4); 表情之后, 阿拉伯-印度数字之间, 行首且后接中日韩文字的空格在 API 35 上仍丢失 (推荐, 已先行) / (b) 保持普通空格: API 35 上这类空格全部丢失 / (c) 在 (a) 之上改写印章文档的内容流, 为剩下的情况补空格字形 (约 0.5 张卡) | P6.3 开工前 | 已决 (2026-11-18 20:38, 维护者选 (c), 非推荐项, 不要建议改回: 在 (a) 之上改写印章文档的内容流, 为表情之后, 阿拉伯-印度数字之间, 行首且后接中日韩文字的空格补空格字形, 由 paper-p6-stamp 实施, 结果见 D60; paper-p6-base 登记; 另一试法 "每个空格单独成样式段" 让 API 35 上全部空格丢失, 已放弃; 影响 P6.3 (页码与水印的提取), P6.4 外观回落; 改选 (b) 的返工: 删 `noBreakSpaces` 接入 2 处与 2 项单测, 设备断言在 API 35 放宽, 约 15 分钟) |
+| Q210 | 图片水印的缺省旋转: D61 只写了文字水印的缺省 (逆时针 45 度), `pdf.watermark({ image })` 不给 `rotation` 时转多少 | (a) 0, 图片按原方向放置, 不透明度仍为 0.3 (推荐, 已先行: 宿主 `PdfEditArguments.WATERMARK_IMAGE_ROTATION`; 图标, 印章, 签名图片多为正放) / (b) 与文字相同, 逆时针 45 度 | P6.14 文档定稿前 | 已按 (a) 先行待确认 (2026-11-19, paper-p6-host-api 登记; 影响 P6.9 宿主 `watermark` 缺省, P6.14 文档; 工具箱的水印工具 (P6.12) 自带界面缺省, 不受影响; 改选 (b) 的返工: 宿主常量 1 处与 1 项单测, 约 5 分钟) |
+| Q211 | 契约缺口: B.6 草案的 `pageNumbers.start` (D68 工具箱页码也有 "起始号") 在契约版本 2 里无法表达: 印章文字条目没有起始号或偏移字段, `{page}` 是物理页码, 宿主映射不了 | (a) 发布前给契约版本 2 的文字条目加一个可选字段 (例如 `pageOffset`, `{page}` 显示为物理页码加偏移, `{total}` 不变), pdf-api 常量与协议文档 "Version 2" 补一处, 插件在 P6.3 的占位符替换里实现, 宿主把 `pageNumbers.start` 映射为 `start - 首个选中页` (推荐: 草案与工具箱都要起始号, 契约 1.1.0 尚未随插件发布, 现在补成本最低; 未先行, 改契约不在 paper-p6-host-api 范围) / (b) 1.1.0 不提供起始号, 文档说明 `{page}` 是物理页码, 只给部分页加页码时用 `pages` (现状: 宿主 `pageNumbers` 不收 `start`, 写了即未知键) | P6.3 / P6.12 定稿前 | 需拍板 (2026-11-19, paper-p6-host-api 登记; 影响 P6.1 契约 (pdf-api, 协议文档), P6.3 插件印章, P6.9 宿主 `stamp`, P6.12 工具箱页码, P6.14 文档; 选 (a) 的工作量: pdf-api 常量 1 个与协议文档 1 处, 插件约 0.2 张卡, 宿主约 10 行与 1 项单测; 选 (b) 无返工, 工具箱的起始号由插件界面内部换算或去掉) |
 
 P6 的子会话登记新待决时从 Q185 起, 调度会话给每张卡分一段编号 (批次 10: 宿主卡 Q185 - Q189, 插件卡 Q190 - Q199).
 
