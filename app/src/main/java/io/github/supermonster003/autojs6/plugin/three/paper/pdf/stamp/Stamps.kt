@@ -8,7 +8,9 @@ import android.text.Layout
 import android.text.StaticLayout
 import android.text.TextPaint
 import kotlin.math.ceil
+import kotlin.math.cos
 import kotlin.math.roundToInt
+import kotlin.math.sin
 
 /** Above or below the page content (roadmap D61 `layer`). zh-CN: 在页面内容之上或之下 (路线图 D61 的 `layer`). */
 internal enum class StampLayer { OVER, UNDER }
@@ -53,6 +55,13 @@ internal class StampFonts(private val custom: Typeface? = null, emojiAsBitmaps: 
      * 区分两者.
      */
     var spacesAsNoBreak: Boolean = true
+
+    /**
+     * Where text stamps report the spaces they lay out while drawing ([TextStamp.spaces]); [CanvasStamps] sets it per
+     * stamp page for [SpaceRepair], null otherwise.
+     * zh-CN: 文字印章在绘制时报告其排版空格之处 ([TextStamp.spaces]); [CanvasStamps] 为 [SpaceRepair] 逐张印章页设置, 其他时候为 null.
+     */
+    var spaceSink: MutableList<LaidSpace>? = null
 
     /**
      * The text to lay out for [text]: spaces as no-break spaces ([spacesAsNoBreak]), emoji replaced by bitmap spans
@@ -102,13 +111,13 @@ internal class StampFonts(private val custom: Typeface? = null, emojiAsBitmaps: 
          * it back to the space that was drawn (NFKC). A space between two digits stays a space, since as a common
          * separator a no-break space would join the numbers in right-to-left text (bidi rule W4); between ASCII digits it
          * shares their run anyway. A space right after an emoji, between two Arabic-Indic digits or at the start of a
-         * line before CJK text is still lost on API 35.
+         * line before CJK text still leaves no glyph on API 35; [SpaceRepair] adds an invisible one there (roadmap Q192 (c)).
          * zh-CN: 把 [text] 中的空格换成不换行空格, 两个数字之间的空格除外. Android 的字体分段会让跟在其他字体文字 (中日韩文字, 表情,
          * 阿拉伯文) 之后的空格单独成为一个字体段, 而字体没有字体边界时 (API 35 的可变系统字体, Skia 写成 Type 3 字体), Skia 会把只含
          * 空白字形的段当作越界丢掉, 文本提取随之丢失该空格 ("页, 共" 变成 "页,共"). 只要前面文字的字体含不换行空格, 它就留在该字体段
          * 里, 再由 `ToUnicodeRepair` 映射回实际绘制的空格 (NFKC). 两个数字之间的空格保持为空格, 因为不换行空格属于公共分隔符, 在
          * 从右到左的文字中会把两个数字连成一个 (双向算法规则 W4); ASCII 数字之间的空格本来就与数字同段. 表情之后, 两个阿拉伯-印度数字
-         * 之间, 以及行首且后接中日韩文字的空格在 API 35 上仍会丢失.
+         * 之间, 以及行首且后接中日韩文字的空格在 API 35 上仍然没有字形, 由 [SpaceRepair] 在该处补一个不可见字形 (路线图 Q192 (c)).
          */
         fun noBreakSpaces(text: String): String {
             if (text.indexOf(' ') < 0) return text
@@ -197,7 +206,8 @@ internal data class TextStamp(
     }
 
     override fun draw(canvas: Canvas, fonts: StampFonts) {
-        val layout = layout(paint(fonts), fonts)
+        val paint = paint(fonts)
+        val layout = layout(paint, fonts)
         canvas.save()
         try {
             canvas.translate(x.toFloat(), y.toFloat())
@@ -209,6 +219,42 @@ internal data class TextStamp(
         } finally {
             canvas.restore()
         }
+        fonts.spaceSink?.addAll(spaces(layout, paint, fonts))
+    }
+
+    /**
+     * The spaces of [layout] that some visible character follows on their line, in canvas coordinates ([LaidSpace]):
+     * a space starts at its primary horizontal (its right edge in a right-to-left run) and is as wide as the paint
+     * measures it, which is the width of the run of its own that loses it on API 35 (roadmap Q192 (c)).
+     * zh-CN: [layout] 中同一行后面还有可见字符的空格, 以画布坐标表示 ([LaidSpace]): 空格从其主水平位置开始 (从右到左的段中为其右缘),
+     * 宽度为画笔量得的宽度, 即在 API 35 上丢失它的那个单独字体段的宽度 (路线图 Q192 (c)).
+     */
+    fun spaces(layout: Layout, paint: TextPaint, fonts: StampFonts): List<LaidSpace> {
+        val source = layout.text
+        var found: ArrayList<LaidSpace>? = null
+        val radians = Math.toRadians(-rotation)
+        val cos = cos(radians)
+        val sin = sin(radians)
+        val shiftX = -anchorX * layout.width
+        val shiftY = -anchorY * layout.height
+        for (index in source.indices) {
+            val character = source[index]
+            if (character != ' ' && character != StampFonts.NO_BREAK_SPACE) continue
+            val line = layout.getLineForOffset(index)
+            val end = layout.getLineEnd(line)
+            if ((index + 1 until end).none { val next = source[it]; !Character.isWhitespace(next) && next != StampFonts.NO_BREAK_SPACE }) continue
+            val width = paint.measureText(source, index, index + 1).toDouble()
+            val start = layout.getPrimaryHorizontal(index).toDouble()
+            val left = if (layout.isRtlCharAt(index)) start - width else start
+            val baseline = layout.getLineBaseline(line).toDouble()
+            fun canvasX(u: Double, v: Double) = x + cos * (u + shiftX) - sin * (v + shiftY)
+            fun canvasY(u: Double, v: Double) = y + sin * (u + shiftX) + cos * (v + shiftY)
+            val drawn = if (character == StampFonts.NO_BREAK_SPACE && fonts.spacesAsNoBreak) ' ' else character
+            (found ?: ArrayList<LaidSpace>().also { found = it }) += LaidSpace(
+                canvasX(left, baseline), canvasY(left, baseline), canvasX(left + width, baseline), canvasY(left + width, baseline), fontSize, drawn,
+            )
+        }
+        return found.orEmpty()
     }
 
     companion object {

@@ -42,6 +42,8 @@ internal class CanvasStamps(
     private val fonts: StampFonts = StampFonts(),
     /** Subsets the fonts Skia embeds whole ([FontSubsetting], roadmap Q191 (b)); off only in comparisons. zh-CN: 子集化 Skia 整个嵌入的字体 ([FontSubsetting], 路线图 Q191 (b)); 只在对比测试中关闭. */
     private val subsetFonts: Boolean = true,
+    /** Adds the spaces Skia drops ([SpaceRepair], roadmap Q192 (c)); off only in comparisons. zh-CN: 补上 Skia 丢掉的空格 ([SpaceRepair], 路线图 Q192 (c)); 只在对比测试中关闭. */
+    private val repairSpaces: Boolean = true,
 ) {
 
     /** The stamps of one page (0-based [pageIndex]). zh-CN: 一页 (从 0 计的 [pageIndex]) 的印章. */
@@ -50,9 +52,9 @@ internal class CanvasStamps(
     /**
      * What [apply] did: pages stamped, form XObjects made, bytes of the temporary stamp document, `/ToUnicode` entries
      * repaired ([ToUnicodeRepair]), unused Type 3 glyph procedures dropped ([Type3Pruning]), fonts subset
-     * ([FontSubsetting]).
+     * ([FontSubsetting]), dropped spaces added back ([SpaceRepair]).
      * zh-CN: [apply] 的结果: 加了印章的页数, 生成的表单 XObject 数, 临时印章文档的字节数, 修复的 `/ToUnicode` 条目数 ([ToUnicodeRepair]),
-     * 去掉的未用 Type 3 字形过程数 ([Type3Pruning]), 字体子集化的结果 ([FontSubsetting]).
+     * 去掉的未用 Type 3 字形过程数 ([Type3Pruning]), 字体子集化的结果 ([FontSubsetting]), 补回的空格数 ([SpaceRepair]).
      */
     data class Summary(
         val pages: Int,
@@ -61,6 +63,7 @@ internal class CanvasStamps(
         val repairedMappings: Int,
         val prunedGlyphs: Int,
         val fonts: FontSubsetting.Result = FontSubsetting.Result.NONE,
+        val addedSpaces: Int = 0,
     )
 
     /** A distinct stamp page: its canvas size and its stamps. zh-CN: 一张不同的印章页: 画布尺寸与印章. */
@@ -93,12 +96,13 @@ internal class CanvasStamps(
         if (placements.isEmpty()) return Summary(0, 0, 0, 0, 0)
         val file = File.createTempFile("stamps-", ".pdf", directory)
         try {
-            draw(sheets.keys, file, stop)
+            val spaces = draw(sheets.keys, file, stop)
             val stampBytes = file.length()
             progress(0, placements.size)
             PDDocument.load(file, MemoryUsageSetting.setupMixed(PdfLoader.DEFAULT_MAIN_MEMORY_BYTES).setTempDir(directory)).use { source ->
                 val repaired = repairText(source, sheets.keys)
                 val pruned = Type3Pruning.prune(source)
+                val added = if (repairSpaces) SpaceRepair.repair(source, spaces) else 0
                 val subset = if (subsetFonts) FontSubsetting.subset(source) else FontSubsetting.Result.NONE
                 val layers = LayerUtility(document)
                 val forms = HashMap<Int, PDFormXObject>()
@@ -110,7 +114,7 @@ internal class CanvasStamps(
                     place(document, placement, form)
                     progress(index + 1, placements.size)
                 }
-                return Summary(owned.size, forms.size, stampBytes, repaired, pruned, subset)
+                return Summary(owned.size, forms.size, stampBytes, repaired, pruned, subset, added)
             }
         } catch (e: IOException) {
             throw PdfFailure(PdfErrorCodes.IO_ERROR, "cannot stamp the pages: ${e.message}")
@@ -129,24 +133,35 @@ internal class CanvasStamps(
         return GlyphComparer(faces).use { ToUnicodeRepair.repair(source, drawn, it) }
     }
 
-    private fun draw(sheets: Collection<Sheet>, target: File, stop: StopSignal) {
+    /**
+     * Draws [sheets] into [target], one page each; answers the spaces the text stamps laid out, by page index
+     * ([SpaceRepair]).
+     * zh-CN: 把 [sheets] 画进 [target], 每张一页; 返回各页文字印章排版的空格, 以页序号为键 ([SpaceRepair]).
+     */
+    private fun draw(sheets: Collection<Sheet>, target: File, stop: StopSignal): Map<Int, List<LaidSpace>> {
         fonts.spacesAsNoBreak = sheets.none { sheet -> sheet.stamps.any { it is TextStamp && StampFonts.NO_BREAK_SPACE in it.text } }
+        val spaces = HashMap<Int, List<LaidSpace>>()
         val pdf = PdfDocument()
         try {
             sheets.forEachIndexed { index, sheet ->
                 stop.checkStop()
                 val page = pdf.startPage(PdfDocument.PageInfo.Builder(sheet.width, sheet.height, index + 1).create())
+                val laid = ArrayList<LaidSpace>()
+                fonts.spaceSink = if (repairSpaces) laid else null
                 try {
                     sheet.stamps.forEach { it.draw(page.canvas, fonts) }
                 } finally {
+                    fonts.spaceSink = null
                     pdf.finishPage(page)
                 }
+                if (laid.isNotEmpty()) spaces[index] = laid
             }
             FileOutputStream(target).use { pdf.writeTo(it) }
         } finally {
             pdf.close()
             fonts.releaseBitmaps()
         }
+        return spaces
     }
 
     private fun place(document: PDDocument, placement: Placement, form: PDFormXObject) {
