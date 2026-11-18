@@ -116,6 +116,7 @@ internal class CanvasStamps(private val directory: File, private val fonts: Stam
     }
 
     private fun draw(sheets: Collection<Sheet>, target: File, stop: StopSignal) {
+        fonts.spacesAsNoBreak = sheets.none { sheet -> sheet.stamps.any { it is TextStamp && StampFonts.NO_BREAK_SPACE in it.text } }
         val pdf = PdfDocument()
         try {
             sheets.forEachIndexed { index, sheet ->

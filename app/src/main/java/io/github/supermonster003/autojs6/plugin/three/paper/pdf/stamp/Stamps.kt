@@ -46,10 +46,23 @@ internal class StampFonts(private val custom: Typeface? = null, emojiAsBitmaps: 
 
     private var emoji: EmojiBitmaps? = null
 
-    /** The text to lay out for [text]: emoji replaced by bitmap spans where needed. zh-CN: 供排版的文本: 需要时表情替换为位图跨度. */
+    /**
+     * Whether [text] lays spaces out as no-break spaces (see [noBreakSpaces]); [CanvasStamps] turns it off when a text
+     * stamp holds a no-break space of its own, so that the text mapping keeps the two apart.
+     * zh-CN: [text] 是否把空格排成不换行空格 (见 [noBreakSpaces]); 有文字印章自带不换行空格时由 [CanvasStamps] 关闭, 使文本映射能
+     * 区分两者.
+     */
+    var spacesAsNoBreak: Boolean = true
+
+    /**
+     * The text to lay out for [text]: spaces as no-break spaces ([spacesAsNoBreak]), emoji replaced by bitmap spans
+     * where needed.
+     * zh-CN: 供排版的文本: 空格排成不换行空格 ([spacesAsNoBreak]), 需要时表情替换为位图跨度.
+     */
     fun text(text: String): CharSequence {
-        if (EmojiBitmaps.clusters(text).isEmpty() || !emojiAsBitmaps) return text
-        return (emoji ?: EmojiBitmaps().also { emoji = it }).spanned(text)
+        val laid = if (spacesAsNoBreak) noBreakSpaces(text) else text
+        if (EmojiBitmaps.clusters(laid).isEmpty() || !emojiAsBitmaps) return laid
+        return (emoji ?: EmojiBitmaps().also { emoji = it }).spanned(laid)
     }
 
     /**
@@ -73,6 +86,41 @@ internal class StampFonts(private val custom: Typeface? = null, emojiAsBitmaps: 
             else -> Typeface.NORMAL
         }
         if (style == Typeface.NORMAL) base else Typeface.create(base, style)
+    }
+
+    companion object {
+
+        /** U+00A0 NO-BREAK SPACE. zh-CN: U+00A0 不换行空格. */
+        val NO_BREAK_SPACE = Char(0x00A0)
+
+        /**
+         * [text] with its spaces as no-break spaces, except a space between two digits. The font itemization of
+         * Android gives a space that follows text of another font (CJK, emoji, Arabic) a font run of its own, and where
+         * the typeface has no font bounds (the variable system fonts of API 35, which Skia writes as Type 3 fonts) Skia
+         * drops a run of blank glyphs as out of bounds, so text extraction loses that space ("页,共" for "页, 共"). A
+         * no-break space stays in the run of the text before it whenever that font has one, and `ToUnicodeRepair` maps
+         * it back to the space that was drawn (NFKC). A space between two digits stays a space, since as a common
+         * separator a no-break space would join the numbers in right-to-left text (bidi rule W4); between ASCII digits it
+         * shares their run anyway. A space right after an emoji, between two Arabic-Indic digits or at the start of a
+         * line before CJK text is still lost on API 35.
+         * zh-CN: 把 [text] 中的空格换成不换行空格, 两个数字之间的空格除外. Android 的字体分段会让跟在其他字体文字 (中日韩文字, 表情,
+         * 阿拉伯文) 之后的空格单独成为一个字体段, 而字体没有字体边界时 (API 35 的可变系统字体, Skia 写成 Type 3 字体), Skia 会把只含
+         * 空白字形的段当作越界丢掉, 文本提取随之丢失该空格 ("页, 共" 变成 "页,共"). 只要前面文字的字体含不换行空格, 它就留在该字体段
+         * 里, 再由 `ToUnicodeRepair` 映射回实际绘制的空格 (NFKC). 两个数字之间的空格保持为空格, 因为不换行空格属于公共分隔符, 在
+         * 从右到左的文字中会把两个数字连成一个 (双向算法规则 W4); ASCII 数字之间的空格本来就与数字同段. 表情之后, 两个阿拉伯-印度数字
+         * 之间, 以及行首且后接中日韩文字的空格在 API 35 上仍会丢失.
+         */
+        fun noBreakSpaces(text: String): String {
+            if (text.indexOf(' ') < 0) return text
+            val chars = text.toCharArray()
+            for (index in chars.indices) {
+                if (chars[index] != ' ') continue
+                if (index > 0 && index + 1 < chars.size && Character.isDigit(chars[index - 1]) && Character.isDigit(chars[index + 1])) continue
+                chars[index] = NO_BREAK_SPACE
+            }
+            return String(chars)
+        }
+
     }
 
 }

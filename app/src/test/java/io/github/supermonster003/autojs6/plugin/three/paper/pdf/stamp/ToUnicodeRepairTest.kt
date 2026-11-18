@@ -43,6 +43,22 @@ class ToUnicodeRepairTest {
     }
 
     @Test
+    fun `no-break spaces laid out for spaces map back to the space unless one was drawn`() {
+        val noBreak = StampFonts.NO_BREAK_SPACE.toString()
+        val mappings = mapOf(0xD1 to noBreak, 0x05 to " ", 0x16 to "1")
+        assertEquals(mapOf(0xD1 to " "), ToUnicodeRepair.plan(mappings, points("$ordinal 1 $page"), points(" 1$noBreak"), { _, _ -> false }))
+        assertEquals(emptyMap<Int, String>(), ToUnicodeRepair.plan(mappings, points("$ordinal 1${noBreak}2"), points(" 1$noBreak"), { _, _ -> false }))
+    }
+
+    @Test
+    fun `spaces are laid out as no-break spaces except between two digits`() {
+        val noBreak = StampFonts.NO_BREAK_SPACE
+        assertEquals("$ordinal${noBreak}1${noBreak}$page,${noBreak}12 34${noBreak}A", StampFonts.noBreakSpaces("$ordinal 1 $page, 12 34 A"))
+        assertEquals("${noBreak}x$noBreak", StampFonts.noBreakSpaces(" x "))
+        assertEquals("plain", StampFonts.noBreakSpaces("plain"))
+    }
+
+    @Test
     fun `entries that were drawn, that match several candidates or none stay`() {
         val drawn = points("$page$script")
         assertEquals(emptyMap<Int, String>(), ToUnicodeRepair.plan(mapOf(1 to page), drawn, points(page), { _, _ -> true }))

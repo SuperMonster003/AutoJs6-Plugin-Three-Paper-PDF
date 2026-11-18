@@ -207,7 +207,8 @@ class CanvasStampsDeviceTest {
             val bitmap = render(output, index, scale)
             assertEquals("$label: displayed width", 595 * scale, bitmap.width)
             assertEquals("$label: displayed height", 842 * scale, bitmap.height)
-            val red = bounds(bitmap, 0, 0, bitmap.width, 500 * scale, ::isRed)
+            // Above the text stamp (y 400): an emoji drawn as a bitmap may hold red pixels. zh-CN: 在文字印章 (y 400) 之上: 画成位图的表情可能含红色像素.
+            val red = bounds(bitmap, 0, 0, bitmap.width, 380 * scale, ::isRed)
             assertTrue("$label: the anchor probe is not drawn", red != null)
             val errors = expectedRed.indices.map { abs(red!![it] - expectedRed[it]) / scale.toDouble() }
             log("$label: anchor probe ${red!!.joinToString()} px, error ${errors.max()} pt")
@@ -275,8 +276,13 @@ class CanvasStampsDeviceTest {
             val extracted = text(document, 1)
             assertTrue("'$extracted' lacks the custom font text", extracted.contains("Custom font"))
             val fonts = fontNames(document.getPage(0).resources)
-            log("font input ${system?.name ?: "none"}: fonts $fonts")
-            if (custom != null) assertTrue("no Roboto / Droid font among $fonts", fonts.any { it.contains("Roboto") || it.contains("Droid") })
+            val types = fontObjects(document.getPage(0).resources).map { it.getNameAsString(COSName.SUBTYPE) }
+            log("font input ${system?.name ?: "none"}: fonts $fonts, subtypes $types")
+            // Skia draws a variable font (the system fonts of API 35) as an unnamed Type 3 font of glyph outlines.
+            // zh-CN: Skia 把可变字体 (API 35 的系统字体) 画成没有名称的 Type 3 字形轮廓字体.
+            if (custom != null && types.any { it != "Type3" }) {
+                assertTrue("no Roboto / Droid font among $fonts", fonts.any { it.contains("Roboto") || it.contains("Droid") })
+            }
         }
     }
 
@@ -297,7 +303,9 @@ class CanvasStampsDeviceTest {
         assertEquals(count, summary.forms)
         PDDocument.load(output).use { document ->
             for (number in listOf(1, 25, count)) {
-                assertTrue("page $number lacks its number", text(document, number).contains("第 $number 页, 共 $count 页"))
+                val extracted = text(document, number)
+                if (number == 1) log("page numbers: page 1 extracted ${extracted.trim().replace('\n', '|')}")
+                assertTrue("page $number lacks its number: '$extracted'", extracted.contains("第 $number 页, 共 $count 页"))
             }
             // The fonts of the temporary document are cloned once and serve every page.
             // zh-CN: 临时文档的字体只克隆一次, 服务所有页面.
