@@ -245,11 +245,17 @@ class SpaceRepairDeviceTest {
             log("spaces $label with repair: ${texts1[index].replace("\n", " | ")}")
         }
         val (sorted, raw, rotated) = texts1
+        // Old Skia (API 24 / 28): the emoji is a bitmap (roadmap Q190 (a)), and PDFTextStripper puts a word space of its
+        // own into the gap it leaves, before the real space. zh-CN: 旧 Skia (API 24 / 28): 表情是位图 (路线图 Q190 (a)),
+        // PDFTextStripper 在它留下的空隙里自己加一个词间空格, 位于真实空格之前.
+        val bitmapEmoji = StampFonts().emojiAsBitmaps
+        log("spaces: emoji as bitmaps $bitmapEmoji")
         for ((label, text) in listOf("sorted" to sorted, "content order" to raw)) {
             assertTrue("$label: no space before 文字 in '$text'", text.contains(" 文字"))
             assertTrue("$label: no space at the start of 第一行 in '$text'", text.lines().any { it.startsWith(" 第一行") })
             assertTrue("$label: no space between the Arabic-Indic digits in '$text'", Regex("[\\u0660-\\u0669]+ [\\u0660-\\u0669]+").containsMatchIn(text))
-            assertFalse("$label: a doubled space in '$text'", text.contains("  "))
+            val checked = if (bitmapEmoji) text.replace("印章  文字", "印章 文字") else text
+            assertFalse("$label: a doubled space in '$text'", checked.contains("  "))
         }
         assertTrue("rotated: no space before 文字 in '$rotated'", rotated.contains(" 文字"))
         if (Build.VERSION.SDK_INT < 35) assertEquals("spaces added below API 35", 0, added)
