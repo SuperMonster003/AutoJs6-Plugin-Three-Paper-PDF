@@ -14,7 +14,7 @@ process and needs the AIDL stubs and constants at run time.
 | --- | --- | --- | --- |
 | `common-plugin-api.aar` | `plugin-api/common-plugin-api` | `PluginInfo`, `IPluginInfoProvider`, `PluginActions`, `PluginCapabilityKeys`, `AutoJs6HostSettingsContract`, `PluginSettingsTransferProvider` | `9849b15091dcb255cd1c47140790081eebc074aec2e3e9b28c18f12bf9ef4a6a` |
 | `explorer-action-api.aar` | `plugin-api/explorer-action-api` | `IExplorerActionPlugin` and the archive session interfaces, `ExplorerActionProtocol` (version 28), the catalog, target, session and output keys | `d387e72888214898dde23105fa0ae86d723a77dffe739ac5925c744268d87b87` |
-| `pdf-api.aar` | `plugin-api/pdf-api` | `IPdfPlugin`, `IPdfDocument`, `IPdfViewerSession`, `IPdfProgressCallback`, `IPdfViewerCallback`, `PdfActions`, `PdfIds`, `PdfContract`, `PdfCapabilityKeys`, `PdfErrorCodes`, `PdfOps` | `9d5714febc489ac6f5be26045a64c776be451d22285e810b891acaceaf35cc49` |
+| `pdf-api.aar` | `plugin-api/pdf-api` | `IPdfPlugin`, `IPdfDocument`, `IPdfViewerSession`, `IPdfProgressCallback`, `IPdfViewerCallback`, `PdfActions`, `PdfIds`, `PdfContract`, `PdfCapabilityKeys`, `PdfErrorCodes`, `PdfOps` (contract version 2) | `a463870d94ef7fade52bb424d50c8fae7128c519923e2ebdd3fc4ae9d9c04fdd` |
 
 Provenance (2026-11-12, roadmap P0.1):
 
@@ -23,16 +23,20 @@ Provenance (2026-11-12, roadmap P0.1):
   `AutoJs6CreateScriptContract` the plugin does not use.
 - `explorer-action-api.aar` (67,325 B) is the release build of the module at host commit `e0eda70330`, the last
   commit that touched it (protocol version 28), byte-identical to the copy AutoJs4 Runtime 1.1.0 stages.
-- `pdf-api.aar` (40,772 B) is the 1.0.0 release build (`:plugin-api:pdf-api:assembleRelease`, unsigned) of host
-  commit `c37a23258d` (contract version 1, protocol `docs/dev/pdf-plugin-protocol-v1.md`). It depends on
-  `common-plugin-api` and does not embed its classes. Re-staged on 2026-11-14: the contract version stays 1 and the
-  AIDL is unchanged; `PdfActions` adds `PACKAGED_SERVICE_ACTION`, `PACKAGED_PERMISSION` and
-  `PACKAGED_VIEWER_ACTIVITY_ACTION` for the packaged-app entry (roadmap Q145 (b), D43). It replaced the 2026-11-13
-  release of host commit `465d7a141f` (40,670 B, sha256 `0bb80366...ff169e94`), in which `PdfContract` added
-  `KEY_DISPLAY_NAMES` (merge), `KEY_JAVA_SCRIPT` and `DEFAULT_JAVA_SCRIPT` (fromHtml), roadmap appendix D Q31, Q35,
-  Q60 and Q61; that one replaced the P1.1 release of host commit `4e872a8741`
-  (40,584 B, sha256 `e6bdb589...e90bb`), which had replaced the temporary stand-in the skeleton was first built with
-  (37,380 B, assembled from the roadmap appendix C draft).
+- `pdf-api.aar` (48,160 B) is the 1.1.0 release build (`:plugin-api:pdf-api:assembleRelease`, unsigned) of host
+  commit `0f679d6b1` (contract version 2, roadmap P6.1 / P6.2 row 1, D58, staged on 2026-11-18; protocol
+  `docs/dev/pdf-plugin-protocol-v1.md`, section "Version 2"). It depends on `common-plugin-api` and does not embed
+  its classes. The baseline `PdfContract.CONTRACT_VERSION` stays 1 (the plugin declares it as `pdfContractVersion`)
+  and `CONTRACT_VERSION_2` is the plugin's `pdfMaxContractVersion`; `IPdfDocument` appends `getFormFields`,
+  `PdfOps` adds `formFields` and the six version-2 run operations, `PdfContract` the payload input, the keys,
+  completion keys, ceilings and value sets of version 2. It replaced the 1.0.0 release of host commit `c37a23258d`
+  (40,772 B, sha256 `9d5714fe...af35cc49`, contract version 1), re-staged on 2026-11-14 for the packaged-app entry
+  (`PdfActions` adds `PACKAGED_SERVICE_ACTION`, `PACKAGED_PERMISSION` and `PACKAGED_VIEWER_ACTIVITY_ACTION`, roadmap
+  Q145 (b), D43), which replaced the 2026-11-13 release of host commit `465d7a141f` (40,670 B, sha256
+  `0bb80366...ff169e94`), in which `PdfContract` added `KEY_DISPLAY_NAMES` (merge), `KEY_JAVA_SCRIPT` and
+  `DEFAULT_JAVA_SCRIPT` (fromHtml), roadmap appendix D Q31, Q35, Q60 and Q61; that one replaced the P1.1 release of
+  host commit `4e872a8741` (40,584 B, sha256 `e6bdb589...e90bb`), which had replaced the temporary stand-in the
+  skeleton was first built with (37,380 B, assembled from the roadmap appendix C draft).
 
 Do not commit locally assembled debug AARs or rename debug outputs to bypass this policy.
 

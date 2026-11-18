@@ -170,15 +170,36 @@ class ThreePaperPdfContractTest {
                     assertEquals(op, PdfErrorCodes.UNSUPPORTED, answer.getString(PdfContract.KEY_ERROR_CODE))
                     assertEquals(op, "${ThreePaperPdfContract.NOT_IMPLEMENTED}: $op", answer.getString(PdfContract.KEY_ERROR_MESSAGE))
                 }
+                // getFormFields belongs to contract version 2: a version-1 request is refused whatever is implemented.
+                // zh-CN: getFormFields 属于契约版本 2: 版本 1 的请求无论是否已实现都被拒绝.
+                val refused = document.getFormFields(request)
+                assertEquals(PdfErrorCodes.UNSUPPORTED, refused.getString(PdfContract.KEY_ERROR_CODE))
+                assertEquals(needsVersion2(PdfOps.FORM_FIELDS), refused.getString(PdfContract.KEY_ERROR_MESSAGE))
+                if (PdfOps.FORM_FIELDS !in ThreePaperPdfContract.IMPLEMENTED_OPS) {
+                    val answer = document.getFormFields(Bundle().apply { putInt(PdfContract.KEY_CONTRACT_VERSION, PdfContract.CONTRACT_VERSION_2) })
+                    assertEquals(PdfContract.CONTRACT_VERSION_2, answer.getInt(PdfContract.KEY_CONTRACT_VERSION))
+                    assertEquals(PdfErrorCodes.UNSUPPORTED, answer.getString(PdfContract.KEY_ERROR_CODE))
+                    assertEquals("${ThreePaperPdfContract.NOT_IMPLEMENTED}: ${PdfOps.FORM_FIELDS}", answer.getString(PdfContract.KEY_ERROR_MESSAGE))
+                }
             } finally {
                 document.close()
             }
             (PdfOps.RUN_OPS - ThreePaperPdfContract.IMPLEMENTED_OPS.toSet()).forEach { op ->
                 val request = Bundle().apply {
-                    putInt(PdfContract.KEY_CONTRACT_VERSION, PdfContract.CONTRACT_VERSION)
+                    putInt(PdfContract.KEY_CONTRACT_VERSION, PdfOps.versionOf(op))
                     putString(PdfContract.KEY_OP, op)
                 }
                 assertNotImplemented(op) { sampleDescriptor().use { plugin.run(request, arrayOf(it), null, null) } }
+            }
+            // A version-2 operation in a version-1 request is UNSUPPORTED before anything else (protocol "Version 2").
+            // zh-CN: 版本 1 请求里的版本 2 操作先于其他检查以 UNSUPPORTED 结束 (协议 "Version 2" 一节).
+            PdfOps.RUN_OPS_V2.forEach { op ->
+                val request = Bundle().apply {
+                    putInt(PdfContract.KEY_CONTRACT_VERSION, PdfContract.CONTRACT_VERSION_1)
+                    putString(PdfContract.KEY_OP, op)
+                }
+                val error = assertThrows(IllegalStateException::class.java) { sampleDescriptor().use { plugin.run(request, arrayOf(it), null, null) } }
+                assertEquals(op, PdfErrorCodes.UNSUPPORTED to needsVersion2(op), PdfErrorCodes.decode(error.message))
             }
             // Nothing runs yet, so every operation id is unknown. zh-CN: 尚无任务运行, 因此任何操作 id 都是未知的.
             assertFalse(plugin.cancel(1))
@@ -246,6 +267,8 @@ class ThreePaperPdfContractTest {
         }
     }
 
+    private fun needsVersion2(op: String) = "$op needs PDF contract version 2, the request carries version 1"
+
     private fun assertNotImplemented(op: String, call: () -> Unit) {
         val error = assertThrows(IllegalStateException::class.java) { call() }
         assertEquals(PdfErrorCodes.UNSUPPORTED to "${ThreePaperPdfContract.NOT_IMPLEMENTED}: $op", PdfErrorCodes.decode(error.message))
@@ -275,6 +298,7 @@ class ThreePaperPdfContractTest {
         assertTrue(capabilities.keySet().containsAll(STATIC_CAPABILITY_KEYS))
         assertEquals(ThreePaperPdfContract.REQUIRED_HOST_VERSION, capabilities.getLong(PdfCapabilityKeys.REQUIRES_HOST_VERSION))
         assertEquals(ThreePaperPdfContract.CONTRACT_VERSION, capabilities.getInt(PdfCapabilityKeys.CONTRACT_VERSION))
+        assertEquals(ThreePaperPdfContract.MAX_CONTRACT_VERSION, capabilities.getInt(PdfCapabilityKeys.MAX_CONTRACT_VERSION))
         assertArrayEquals(ThreePaperPdfContract.FEATURES.toTypedArray(), capabilities.getStringArray(PdfCapabilityKeys.FEATURES))
         assertEquals(ThreePaperPdfContract.MAX_OPEN_DOCUMENTS, capabilities.getInt(PdfCapabilityKeys.MAX_OPEN_DOCUMENTS))
         assertEquals(ThreePaperPdfContract.MAX_RENDER_PIXELS, capabilities.getLong(PdfCapabilityKeys.MAX_RENDER_PIXELS))
@@ -378,6 +402,7 @@ class ThreePaperPdfContractTest {
         val STATIC_CAPABILITY_KEYS = setOf(
             PdfCapabilityKeys.REQUIRES_HOST_VERSION,
             PdfCapabilityKeys.CONTRACT_VERSION,
+            PdfCapabilityKeys.MAX_CONTRACT_VERSION,
             PdfCapabilityKeys.FEATURES,
             PdfCapabilityKeys.MAX_OPEN_DOCUMENTS,
             PdfCapabilityKeys.MAX_RENDER_PIXELS,

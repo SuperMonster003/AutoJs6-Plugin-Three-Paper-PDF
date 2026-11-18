@@ -5,6 +5,7 @@ import io.github.supermonster003.autojs6.plugin.three.paper.pdf.generate.InputBy
 import java.nio.ByteBuffer
 import java.nio.charset.CharacterCodingException
 import java.nio.charset.CodingErrorAction
+import org.autojs.plugin.pdf.api.PdfContract
 
 /**
  * The JSON payload of the version 2 `run` operations (roadmap D59, P6.2; protocol "Version 2", "Payload"): the input
@@ -25,11 +26,11 @@ import java.nio.charset.CodingErrorAction
  */
 internal object PdfPayload {
 
-    /** TODO(P6.2 row 1): `PdfContract.PAYLOAD_INPUT_INDEX` once the contract version 2 AAR is staged. zh-CN: 换入契约版本 2 的 AAR 后改指契约常量. */
-    const val PAYLOAD_INPUT_INDEX = 1
+    /** The input that carries the payload (contract version 2). zh-CN: 承载 payload 的输入 (契约版本 2). */
+    const val PAYLOAD_INPUT_INDEX = PdfContract.PAYLOAD_INPUT_INDEX
 
-    /** TODO(P6.2 row 1): `PdfContract.MAX_PAYLOAD_BYTES` once the contract version 2 AAR is staged. zh-CN: 换入契约版本 2 的 AAR 后改指契约常量. */
-    const val MAX_PAYLOAD_BYTES = 16L * 1024 * 1024
+    /** The largest payload (contract version 2). zh-CN: payload 的上限 (契约版本 2). */
+    const val MAX_PAYLOAD_BYTES = PdfContract.MAX_PAYLOAD_BYTES
 
     /**
      * Deepest nesting of arrays and objects, above the 32 outline levels of `setOutline` (two per level).

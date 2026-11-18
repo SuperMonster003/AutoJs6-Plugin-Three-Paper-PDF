@@ -57,6 +57,13 @@ internal class PdfDocumentStub(private val session: PdfSession, private val engi
         PageRendering.renderToFile(call, engine.renderPool, options, output)
     }
 
+    /**
+     * Form fields (contract version 2, roadmap P6.4): `NOT_IMPLEMENTED` until P6.4 lands; a version-1 request is
+     * `UNSUPPORTED`.
+     * zh-CN: 表单字段 (契约版本 2, 路线图 P6.4): P6.4 落地前为 `NOT_IMPLEMENTED`; 版本 1 的请求为 `UNSUPPORTED`.
+     */
+    override fun getFormFields(request: Bundle?): Bundle = answer(PdfOps.FORM_FIELDS, request) { _, _ -> throw notImplemented(PdfOps.FORM_FIELDS) }
+
     override fun planImages(request: Bundle?): Bundle = answer(PdfOps.PLAN_IMAGES, request) { options, call -> PageImages.plan(call.pdf, options, call.stop) }
 
     override fun extractImage(request: Bundle?, output: ParcelFileDescriptor?): Bundle =
@@ -151,6 +158,7 @@ internal class PdfDocumentStub(private val session: PdfSession, private val engi
                     PdfBundles.checkRequestSize(request)
                     version = options.contractVersion()
                 }
+                checkAvailable(op, version)
                 val results = session.call { block(options, it) }
                 PdfBundles.toBundle(PdfAnswers.success(version, results, requestId))
             } catch (e: Throwable) {
@@ -209,6 +217,18 @@ internal class PdfDocumentStub(private val session: PdfSession, private val engi
 
         /** What to close once the reply of this thread's transaction is written. zh-CN: 本线程的事务回复写出后要关闭的对象. */
         private val afterReply = ThreadLocal<MutableList<AutoCloseable>?>()
+
+        /**
+         * Refuses [op] with `UNSUPPORTED` when it belongs to a contract version above the request's [version] (protocol
+         * "Version 2": a host never sends such a request, roadmap D58).
+         * zh-CN: [op] 属于高于请求版本 [version] 的契约版本时以 `UNSUPPORTED` 拒绝 (协议 "Version 2" 一节: 宿主不会发这样的请求,
+         * 路线图 D58).
+         */
+        fun checkAvailable(op: String, version: Int) {
+            if (!PdfOps.isAvailable(op, version)) {
+                throw PdfFailure.unsupported("$op needs PDF contract version ${PdfOps.versionOf(op)}, the request carries version $version")
+            }
+        }
 
         /** `UNSUPPORTED` with the detail `NOT_IMPLEMENTED: <op>`. zh-CN: 详情为 `NOT_IMPLEMENTED: <op>` 的 `UNSUPPORTED`. */
         fun notImplemented(op: String) = PdfFailure.unsupported("${ThreePaperPdfContract.NOT_IMPLEMENTED}: $op")

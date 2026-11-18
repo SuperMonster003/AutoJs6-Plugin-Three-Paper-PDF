@@ -47,8 +47,22 @@ object ThreePaperPdfContract {
      */
     const val REQUIRED_HOST_VERSION = 6641L
 
-    /** PDF contract version (roadmap D27). zh-CN: PDF 契约版本 (路线图 D27). */
+    /**
+     * The baseline PDF contract version, declared as `pdfContractVersion` (roadmap D27). It stays 1 in 1.1.0: a host of
+     * contract version 1 (6.8.0, 6.8.1 builds before P6.1) refuses a plugin whose baseline is above its own (roadmap D58).
+     * zh-CN: 基线 PDF 契约版本, 声明为 `pdfContractVersion` (路线图 D27). 1.1.0 仍为 1: 契约版本 1 的宿主 (6.8.0, P6.1 之前的
+     * 6.8.1 构建) 会拒绝基线高于自身的插件 (路线图 D58).
+     */
     const val CONTRACT_VERSION = PdfContract.CONTRACT_VERSION
+
+    /**
+     * The newest PDF contract version the plugin implements, declared as `pdfMaxContractVersion` (roadmap D58, P6.2 row
+     * 1); the host negotiates the smaller of it and its own maximum. Version-2 operations answer `NOT_IMPLEMENTED: <op>`
+     * until their roadmap items land ([IMPLEMENTED_OPS]).
+     * zh-CN: 插件实现的最新 PDF 契约版本, 声明为 `pdfMaxContractVersion` (路线图 D58, P6.2 第 1 行); 宿主取它与自身最大版本中较小的
+     * 一个协商. 版本 2 的操作在各自路线图条目落地前返回 `NOT_IMPLEMENTED: <op>` ([IMPLEMENTED_OPS]).
+     */
+    const val MAX_CONTRACT_VERSION = PdfContract.CONTRACT_VERSION_2
 
     /**
      * Operations the plugin implements end to end; every other operation answers `UNSUPPORTED` with the detail

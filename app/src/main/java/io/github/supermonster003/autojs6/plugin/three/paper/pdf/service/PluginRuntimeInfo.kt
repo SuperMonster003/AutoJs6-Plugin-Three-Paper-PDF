@@ -34,6 +34,8 @@ internal data class PluginRuntimeFields(
     val requiredHostVersion: Long,
     /** PDF contract version (roadmap D27). zh-CN: PDF 契约版本 (路线图 D27). */
     val contractVersion: Int,
+    /** `pdfMaxContractVersion`: newest contract version (roadmap D58). zh-CN: `pdfMaxContractVersion`: 最新契约版本 (路线图 D58). */
+    val maxContractVersion: Int,
     /** The `pdfFeatures` capability values. zh-CN: 能力 `pdfFeatures` 的取值. */
     val features: List<String>,
     /** `pdfMaxOpenDocuments`: documents per host process. zh-CN: `pdfMaxOpenDocuments`: 每个宿主进程的文档数. */
@@ -75,6 +77,7 @@ internal fun pluginRuntimeFields(
     supportedAbis = emptyList(),
     requiredHostVersion = ThreePaperPdfContract.REQUIRED_HOST_VERSION,
     contractVersion = ThreePaperPdfContract.CONTRACT_VERSION,
+    maxContractVersion = ThreePaperPdfContract.MAX_CONTRACT_VERSION,
     features = ThreePaperPdfContract.FEATURES,
     maxOpenDocuments = ThreePaperPdfContract.MAX_OPEN_DOCUMENTS,
     maxRenderPixels = ThreePaperPdfContract.MAX_RENDER_PIXELS,
@@ -94,6 +97,7 @@ internal fun pluginRuntimeFields(
 internal fun PluginRuntimeFields.capabilities(): Bundle = Bundle().apply {
     putLong(PdfCapabilityKeys.REQUIRES_HOST_VERSION, requiredHostVersion)
     putInt(PdfCapabilityKeys.CONTRACT_VERSION, contractVersion)
+    putInt(PdfCapabilityKeys.MAX_CONTRACT_VERSION, maxContractVersion)
     putStringArray(PdfCapabilityKeys.FEATURES, features.toTypedArray())
     putInt(PdfCapabilityKeys.MAX_OPEN_DOCUMENTS, maxOpenDocuments)
     putLong(PdfCapabilityKeys.MAX_RENDER_PIXELS, maxRenderPixels)

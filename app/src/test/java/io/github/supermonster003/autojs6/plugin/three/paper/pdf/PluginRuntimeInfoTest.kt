@@ -50,6 +50,7 @@ class PluginRuntimeInfoTest {
         assertEquals(6641L, fields.requiredHostVersion)
         assertEquals(ThreePaperPdfContract.REQUIRED_HOST_VERSION, fields.requiredHostVersion)
         assertEquals(1, fields.contractVersion)
+        assertEquals("pdfMaxContractVersion is contract version 2 (roadmap D58)", 2, fields.maxContractVersion)
         // Roadmap P2.1: the ceilings of contract version 1 and the PDFBox version of the catalog (Q1).
         assertEquals(32, fields.maxOpenDocuments)
         assertEquals(PdfContract.MAX_DOCUMENTS_PER_HOST, fields.maxOpenDocuments)
@@ -74,6 +75,8 @@ class PluginRuntimeInfoTest {
         assertEquals(ExplorerActionProtocol.VERSION, ThreePaperPdfContract.EXPLORER_PROTOCOL_VERSION)
         assertEquals(1, ThreePaperPdfContract.CONTRACT_VERSION)
         assertEquals(PdfContract.CONTRACT_VERSION, ThreePaperPdfContract.CONTRACT_VERSION)
+        assertEquals("the baseline stays 1, the maximum is version 2 (roadmap D58, P6.2 row 1)", PdfContract.CONTRACT_VERSION_2, ThreePaperPdfContract.MAX_CONTRACT_VERSION)
+        assertEquals(PdfContract.MAX_CONTRACT_VERSION, ThreePaperPdfContract.MAX_CONTRACT_VERSION)
         assertTrue(PdfOps.ALL.containsAll(ThreePaperPdfContract.IMPLEMENTED_OPS))
         assertEquals(
             "roadmap P2.2 implements reading, P2.3 rendering, P2.4 page operations, P2.5 generation and images, P2.6 encryption, P3.2 viewer sessions",

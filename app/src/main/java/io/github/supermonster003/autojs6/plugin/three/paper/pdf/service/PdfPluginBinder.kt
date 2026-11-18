@@ -87,6 +87,7 @@ internal class PdfPluginBinder(
             val version = options.contractVersion()
             val op = options.string(PdfContract.KEY_OP) ?: throw PdfFailure.invalid("request carries no ${PdfContract.KEY_OP}")
             if (op !in PdfOps.RUN_OPS) throw PdfFailure.invalid("${PdfContract.KEY_OP} \"$op\" is not one of ${PdfOps.RUN_OPS.joinToString(", ")}")
+            PdfDocumentStub.checkAvailable(op, version)
             return runs.start(HostKey.calling(packaged), version, op, options, inputs, output, callback)
         } catch (e: Throwable) {
             throw PdfAnswers.failureOf(e).toBinderException()

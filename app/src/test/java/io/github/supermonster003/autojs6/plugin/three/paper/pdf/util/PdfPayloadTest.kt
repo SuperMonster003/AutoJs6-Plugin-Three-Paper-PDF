@@ -1,5 +1,6 @@
 package io.github.supermonster003.autojs6.plugin.three.paper.pdf.util
 
+import org.autojs.plugin.pdf.api.PdfContract
 import org.autojs.plugin.pdf.api.PdfErrorCodes
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -26,9 +27,9 @@ class PdfPayloadTest {
     private fun invalid(text: String): String = failure(PdfErrorCodes.INVALID_ARGUMENT) { parse(text) }
 
     @Test
-    fun `the local constants match contract version 2`() {
-        // TODO(P6.2 row 1): compare with PdfContract once the contract version 2 AAR is staged.
-        // zh-CN: 换入契约版本 2 的 AAR 后改为与 PdfContract 比较.
+    fun `the constants are those of contract version 2`() {
+        assertEquals(PdfContract.PAYLOAD_INPUT_INDEX, PdfPayload.PAYLOAD_INPUT_INDEX)
+        assertEquals(PdfContract.MAX_PAYLOAD_BYTES, PdfPayload.MAX_PAYLOAD_BYTES)
         assertEquals(1, PdfPayload.PAYLOAD_INPUT_INDEX)
         assertEquals(16L * 1024 * 1024, PdfPayload.MAX_PAYLOAD_BYTES)
     }
