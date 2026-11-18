@@ -540,10 +540,10 @@ spike 约定 (参照 1.0.0 的 Q4 / Q5): S1 (表单外观), S2 (Canvas 印章), 
 
 ### P6.1 契约版本 2 与宿主客户端 (D58, D59)
 
-- [ ] (宿主) `plugin-api/pdf-api`: `MAX_CONTRACT_VERSION` 2 (`MIN_CONTRACT_VERSION` 仍 1); `IPdfDocument` 末尾追加 `getFormFields(in Bundle request)`; `PdfOps` 加版本 2 的名称 (`formFields`, `fillForm`, `stamp`, `addTextLayer`, `compress`, `setInfo`, `setOutline`), 版本 2 的 run op 清单与 "某个 op 属于哪个版本" 的查询; `PdfContract` 加附录 C.4 的键, 完成键, 上限 (`MAX_PAYLOAD_BYTES` 等) 与压缩三档预设的数值; `getInfo` 应答的可选键 `formFieldCount`, `xfa`; `PdfAidlOrderTest` 与 `PdfContractTest` 同步; Maven 版本 1.1.0.
-- [ ] (宿主) `core/plugin/pdf`: `PdfPeer` 能回答 "协商版本是否支持某个 op"; 协商为 1 时版本 2 的调用不触达 Binder, 以 `UNSUPPORTED` 结束, 消息以本地化提示 "需要 3-Paper PDF 1.1.0 或更高版本" 开头 (`strings_runtime_pdf.xml`, 11 个 values 目录); `PdfClients` / `PdfPluginHost` 加 `getFormFields` 与 "带 payload 和附加输入的 run" 的调用入口.
-- [ ] (宿主) 协议文档 `docs/dev/pdf-plugin-protocol-v1.md` 加 "Version 2" 一节: 新方法与 run op 表, 各 op 的输入顺序, payload 的 JSON 形状, 完成键, 上限, 版本 1 / 2 插件与宿主四种组合的行为.
-- 验收: `./gradlew :plugin-api:pdf-api:assemble :plugin-api:pdf-api:test` 通过 (E1); 宿主单测 (E1): 协商 (声明 1 的插件得 1, 声明 1 加最大 2 的插件得 2), 版本 2 的调用在协商 1 时为 `UNSUPPORTED` 且假 Binder 没有收到请求, 版本 1 的现有 PDF 测试类全部通过; release AAR 的字节数与 sha256 写进本条, 文件放交接目录, 由 P6.2 换入. 不用设备.
+- [x] (宿主) `plugin-api/pdf-api`: `MAX_CONTRACT_VERSION` 2 (`MIN_CONTRACT_VERSION` 仍 1); `IPdfDocument` 末尾追加 `getFormFields(in Bundle request)`; `PdfOps` 加版本 2 的名称 (`formFields`, `fillForm`, `stamp`, `addTextLayer`, `compress`, `setInfo`, `setOutline`), 版本 2 的 run op 清单与 "某个 op 属于哪个版本" 的查询; `PdfContract` 加附录 C.4 的键, 完成键, 上限 (`MAX_PAYLOAD_BYTES` 等) 与压缩三档预设的数值; `getInfo` 应答的可选键 `formFieldCount`, `xfa`; `PdfAidlOrderTest` 与 `PdfContractTest` 同步; Maven 版本 1.1.0. 结果 (2026-11-18, paper-v2-contract): 宿主 `0f679d6b1`; 定稿清单见附录 C.4 与协议文档 "Version 2"; `CONTRACT_VERSION` 保持 1 作基线 (插件的 `pdfContractVersion` 取它), 新增 `CONTRACT_VERSION_1` / `CONTRACT_VERSION_2`.
+- [x] (宿主) `core/plugin/pdf`: `PdfPeer` 能回答 "协商版本是否支持某个 op"; 协商为 1 时版本 2 的调用不触达 Binder, 以 `UNSUPPORTED` 结束, 消息以本地化提示 "需要 3-Paper PDF 1.1.0 或更高版本" 开头 (`strings_runtime_pdf.xml`, 11 个 values 目录); `PdfClients` / `PdfPluginHost` 加 `getFormFields` 与 "带 payload 和附加输入的 run" 的调用入口. 结果: `PdfPeer.supports` / `refusal` / `requireSupported` / `pluginVersionFor`, `PdfDocumentClient.formFields`, `PdfPluginHost.startPayloadRun` (输入按协议顺序, stamp 自动写 `imageCount` / `hasFont`, payload 超 16 MiB 为 `LIMIT_EXCEEDED`), `startRun` 先过版本门, 可测部分在新文件 `PdfRuns.kt`; 提示 `error_pdf_plugin_version_required` (`%1$s` 为版本号) 11 个目录.
+- [x] (宿主) 协议文档 `docs/dev/pdf-plugin-protocol-v1.md` 加 "Version 2" 一节: 新方法与 run op 表, 各 op 的输入顺序, payload 的 JSON 形状, 完成键, 上限, 版本 1 / 2 插件与宿主四种组合的行为. 结果: "Version 2" 一节 (含 "Stamp items", "Version 2 ceilings", "Differences From The Roadmap Appendix C.4 Draft"), Versioning / Host Client / Error Codes 同步.
+- 验收: `./gradlew :plugin-api:pdf-api:assemble :plugin-api:pdf-api:test` 通过 (E1); 宿主单测 (E1): 协商 (声明 1 的插件得 1, 声明 1 加最大 2 的插件得 2), 版本 2 的调用在协商 1 时为 `UNSUPPORTED` 且假 Binder 没有收到请求, 版本 1 的现有 PDF 测试类全部通过; release AAR 的字节数与 sha256 写进本条, 文件放交接目录, 由 P6.2 换入. 不用设备. 结果 (2026-11-18, paper-v2-contract): pdf-api 单测 13 项与宿主 22 个 PDF 测试类 161 项 0 失败 (最终源码上另跑含 StaticReferenceGuardTest 共 23 类 170 项 0 失败), check_translations 与 generate_markdown --check 通过; release AAR `pdf-api.aar` 48,160 B, sha256 `a463870d94ef7fade52bb424d50c8fae7128c519923e2ebdd3fc4ae9d9c04fdd` (交接目录 `D:/idea-projects/.claude/boards/notes/3-paper/handoff/`, 附 `pdf-api-v2-handoff.md`).
 
 ### P6.2 插件基础: 契约 2 声明, payload, Canvas 印章管线, 夹具 (D58 - D60)
 
@@ -845,38 +845,49 @@ AIDL:
 
 `PLUGIN_UNAVAILABLE`, `PLUGIN_DISABLED`, `PLUGIN_INCOMPATIBLE` (宿主侧), `INVALID_ARGUMENT`, `FILE_NOT_FOUND`, `INVALID_PDF`, `PASSWORD_REQUIRED`, `WRONG_PASSWORD`, `PERMISSION_DENIED` (文档权限位禁止的操作), `PAGE_OUT_OF_RANGE`, `LIMIT_EXCEEDED`, `SESSION_CLOSED`, `UI_REQUIRES_FOREGROUND`, `OCR_UNAVAILABLE`, `STORAGE_PERMISSION_DENIED` (仅独立界面), `CANCELLED`, `TIMEOUT`, `UNSUPPORTED`, `IO_ERROR`, `INTERNAL`.
 
-### C.4 契约版本 2 (1.1.0 草案, D58, D59)
+### C.4 契约版本 2 (P6.1 已发布, D58, D59)
 
-2026-11-15 立项时的草案; 常量名与取值由 P6.1 定稿, 定稿后本节照 C.1 的做法按已发布契约同步, 与草案的差异写进协议文档.
+来源与优先级: 宿主 `plugin-api/pdf-api` (提交 0f679d6b1, Maven `autojs6-pdf-api` 1.1.0, release AAR 48,160 B, sha256 `a463870d94ef7fade52bb424d50c8fae7128c519923e2ebdd3fc4ae9d9c04fdd`, 交接目录 `D:/idea-projects/.claude/boards/notes/3-paper/handoff/pdf-api.aar` 与 `pdf-api-v2-handoff.md`) 与协议文档 `AutoJs6/docs/dev/pdf-plugin-protocol-v1.md` 的 "Version 2" 一节为准, 本节只摘录事实. 2026-11-18 由 paper-v2-contract 按已发布契约同步, 替换立项时的草案; 与草案的差异见协议文档 "Differences From The Roadmap Appendix C.4 Draft": `CONTRACT_VERSION` 保持 1 作基线 (插件的 `pdfContractVersion` 取它, 改成 2 会让契约 1 的宿主拒绝插件), `fillForm` 的 `flatten` / `flattenFields` 两个 Bundle 键改为 payload 字段 `flatten` (P6.4 条目以此为准), `addTextLayer` 完成键 `pages` 改为 `layerPages` 并加 `skippedPages` (P6.5 条目以此为准), 新增印章字段 `margin` 等常量. 换入 AAR 是 P6.2 第 1 行.
 
 ```text
-PdfContract (版本 2 追加; MIN_CONTRACT_VERSION 1, MAX_CONTRACT_VERSION 2)
-  IPdfDocument     + getFormFields(request)   请求 offset, limit; 应答 items (字段形状见 D62), hasMore, nextOffset
-  getInfo 应答     + formFieldCount (Int), xfa ("static" / "dynamic", 没有 XFA 时不带)
-  PdfOps           + formFields (IPdfDocument.getFormFields)
-                   + run op: fillForm, stamp, addTextLayer, compress, setInfo, setOutline (都可取消)
-  run 的输入顺序   fillForm      [源 PDF, payload]                    payload { "values": { "<字段名>": 字符串 / 布尔 / 字符串数组 / null } }
-                   stamp         [源 PDF, payload, 图片 ..., 字体]     payload { "items": [ ... ] } (D61); 键 imageCount, hasFont 说明其后的输入
-                   addTextLayer  [源 PDF, payload]                    payload { "layers": [ { "page", "width", "height", "lines": [ { "text", "bounds" } ] } ] }
-                   compress      [源 PDF]
-                   setInfo       [源 PDF, payload]                    payload { "info": { "title", "author", "subject", "keywords", "creator" } } (值为 null 即清除)
-                   setOutline    [源 PDF, payload]                    payload { "items": [ { "title", "page", "children" } ] }
-  键               password (打开加密的源), flatten (Boolean), flattenFields (String[]), ignoreMissing, force,
-                   imageDpi, imageQuality, removeMetadata, objectStreams, imageCount, hasFont
-  完成键           版本 1 的 pageCount, sizeBytes, warnings, 另加: filled (fillForm); pages, lines (addTextLayer);
-                   sourceBytes, imagesTotal, imagesRecompressed, imagesSkipped, objectStreams (compress)
-  上限 (初值)      MAX_PAYLOAD_BYTES 16 MiB, MAX_STAMP_ITEMS 64, MAX_STAMP_IMAGES 16, 表单字段每次应答至多 500 项,
-                   MAX_TEXT_LAYER_LINES 200,000, MAX_OUTLINE_ITEMS 10,000, MAX_OUTLINE_DEPTH 32,
-                   imageDpi 36 - 1200, imageQuality 1 - 100
-  压缩预设         low (96, 60), medium (150, 75, 即缺省), high (220, 85) (D55)
-  阶段             STAGES 追加 verifying (对象流写出后的回读校验); ocr 仍是宿主侧阶段 (opId 0)
+PdfContract (版本 2 追加)
+  版本             CONTRACT_VERSION 1 (基线, 即 pdfContractVersion), CONTRACT_VERSION_1 1, CONTRACT_VERSION_2 2 (即 1.1.0 的 pdfMaxContractVersion),
+                   MIN_CONTRACT_VERSION 1, MAX_CONTRACT_VERSION 2
+PdfOps             V1 (同 C.2 的 18 个), V2: formFields, fillForm, stamp, addTextLayer, compress, setInfo, setOutline; ALL = V1 + V2;
+                   RUN_OPS_V1 (同 C.2), RUN_OPS_V2 = V2 去掉 formFields, RUN_OPS = 两者; PAYLOAD_OPS = RUN_OPS_V2 去掉 compress;
+                   CANCELLABLE = RUN_OPS + split, save; versionOf(op) 1 / 2 / 未知 0, isAvailable(op, version), availableIn(version), isPayloadOp(op)
+IPdfDocument       + Bundle getFormFields(in Bundle request) (close() 之后): 请求 offset, limit (0 或缺省 500, 至多 500); 应答 items, hasMore, nextOffset
+  字段条目         name, type, value, defaultValue, options [{ value, label }], label, readOnly, required, multiline / password (只 text), maxLength,
+                   multiSelect (只 list), page, rect, widgets [{ page, rect }], signed (只 signature)
+getInfo 应答       + formFieldCount (Int), xfa (static / dynamic, 没有 XFA 时不带); 只在版本 2 请求打开的文档上写
+run 的输入顺序     fillForm [源, payload]; stamp [源, payload, 图片 x imageCount, 字体 (hasFont 时)]; addTextLayer [源, payload]; compress [源];
+                   setInfo [源, payload]; setOutline [源, payload]; payload 在 PAYLOAD_INPUT_INDEX 1
+payload            fillForm { values: { 名: 字符串 / 布尔 / 字符串数组 / null }, flatten: true / false / [名] }; stamp { items: [...] };
+                   addTextLayer { layers: [ { page, width, height, lines: [ { text, bounds } ] } ] };
+                   setInfo { info: { title, author, subject, keywords, creator } } (null 清除, 不给保持); setOutline { items: [ { title, page, children } ] }
+印章条目           type, text, image, pages, position, offsetX, offsetY, rotation, opacity, fontSize, color, bold, italic, tile, gapX, gapY, layer,
+                   width, height, scale, margin
+键                 ignoreMissing (fillForm), force (addTextLayer), imageDpi, imageQuality, removeMetadata, objectStreams (compress), imageCount, hasFont (stamp);
+                   displayName 在 stamp 里供 {name}; 打开加密源的 password 等沿用版本 1 的键
+完成键             版本 1 的 pageCount, sizeBytes, warnings, 另加: filled (fillForm); layerPages, skippedPages, lines (addTextLayer, 均 Int);
+                   sourceBytes (Long), imagesTotal, imagesRecompressed, imagesSkipped, objectStreams (Boolean) (compress)
+取值集合           FORM_FIELD_TYPES text / checkbox / radio / combo / list / button / signature (FILLABLE_FORM_FIELD_TYPES 去掉后两个); XFA_KINDS static / dynamic;
+                   STAMP_TYPES text / image; LAYERS over (缺省) / under; POSITIONS 九宫格 9 个; PLACEHOLDERS {page} {total} {date} {name};
+                   STAGES 追加 verifying (compress 回读校验); ocr 仍是宿主侧阶段, 不进契约
+压缩预设           COMPRESS_PRESETS: low (96, 60), medium (150, 75, DEFAULT_COMPRESS_PRESET, 即 DEFAULT_IMAGE_DPI / DEFAULT_IMAGE_QUALITY), high (220, 85);
+                   compressPreset(name); 契约只带数值, 显式数值覆盖预设 (D55)
+上限               MAX_PAYLOAD_BYTES 16 MiB, DEFAULT_FORM_FIELD_LIMIT 500, MAX_FORM_FIELD_ITEMS 500, MAX_LISTED_UNKNOWN_FIELDS 5, MAX_STAMP_ITEMS 64,
+                   MAX_STAMP_IMAGES 16, MAX_STAMP_TEXT_LENGTH 4096, DEFAULT_STAMP_MARGIN 36 pt, DEFAULT_STAMP_TILE_GAP 72 pt, MAX_TEXT_LAYER_LINES 200,000,
+                   MAX_OUTLINE_ITEMS 10,000, MAX_OUTLINE_DEPTH 32 (顶层为 1), MAX_INFO_VALUE_LENGTH 32,767, imageDpi MIN_IMAGE_DPI 36 - MAX_IMAGE_DPI 1200,
+                   imageQuality 1 - 100, DEFAULT_OBJECT_STREAMS true
+错误码             不新增; 数量上限为 LIMIT_EXCEEDED (stamp 条目 / 图片见 Q185), 取值非法为 INVALID_ARGUMENT, 动态 XFA 为 UNSUPPORTED
 ```
 
-要点:
+要点 (细节见协议文档 "Version 2" 各小节):
 
-- 兼容: 版本 2 不改版本 1 的任何方法, 键与取值. 协商为 1 的宿主永远不会发版本 2 的请求; 插件收到自己不认识的 op 照旧答 `UNSUPPORTED` (`NOT_IMPLEMENTED: <op>`).
-- payload 与附加输入的所有权同版本 1 的输入: 宿主持有并在调用返回后关闭, 插件在返回 opId 前 dup. 宿主的临时文件在操作结束 (完成, 失败, 取消) 后删除.
-- 写出规则不变: 这些操作的输出都不带加密, 加密的源须以所有者密码打开 (Q30); 失败或取消后宿主删除输出.
+- 四种组合: 插件 1.0.0 (只声明 1) 与任何宿主都协商为 1; 插件 1.1.0 (声明 1 加最大 2) 与契约 1 的宿主协商为 1, 行为同 1.0.0, 工具箱与文件管理器工具不依赖宿主 (D70), 与含 P6.1 的宿主协商为 2. 协商为 1 时宿主的版本 2 调用不触达 Binder (`getFormFields` 不调用, `run` 不绑定), 以 `UNSUPPORTED` 结束, 消息以本地化提示 `error_pdf_plugin_version_required` ("需要 3-Paper PDF 1.1.0 或更高版本. 请在插件中心更新后重试.", 11 个目录) 开头; 插件收到所带版本低于 op 所属版本的请求时答 `UNSUPPORTED`.
+- payload: UTF-8 JSON 对象, 无 BOM; 宿主写进私有临时文件, 发送前检查大小, 以只读描述符传入, 操作结束 (完成, 失败, 取消) 后删除; 插件在返回 opId 前 dup, 读取时再查大小; 不是 JSON, 顶层不是对象, 缺必需字段或类型不符为 `INVALID_ARGUMENT`, 不认识的字段忽略. Bundle 只放标量选项 (D59).
+- 写出规则不变: 6 个 run op 的输出都不带加密, 加密源须以所有者密码打开 (Q30), 都可取消, 失败或取消后宿主删除输出.
 
 ## 附录 D. 待决事项
 
@@ -983,6 +994,7 @@ PdfContract (版本 2 追加; MIN_CONTRACT_VERSION 1, MAX_CONTRACT_VERSION 2)
 | Q182 | `pdf.compress` 的默认强度与预设 | (a) 默认 150 dpi / 75, 另给 `preset` low (96 / 60), medium, high (220 / 85) (推荐) / (b) 只有数值参数 / (c) 默认 220 dpi / 85 加预设 | P6 立项 | 已决 (2026-11-15, 维护者选 (a); D55) |
 | Q183 | `pdf.fillForm` 的 `values` 里有表单中不存在的字段名 | (a) 默认 `INVALID_ARGUMENT` 并列出未知名称, `ignoreMissing: true` 时跳过并警告 (推荐) / (b) 一律忽略并警告 / (c) 一律报错 | P6 立项 | 已决 (2026-11-15, 维护者选 (a); D56) |
 | Q184 | `pdf.compress` 的结果不比原文件小时 | (a) 输出原文件的字节副本, 结果带 `copied: true` 与警告 (推荐) / (b) 照样输出重写结果, 只在 `warnings` 说明 / (c) 报错不输出 | P6 立项 | 已决 (2026-11-15, 维护者选 (b), 非推荐项; D57) |
+| Q185 | `stamp` 的条目数或图片数超过上限 (`MAX_STAMP_ITEMS` 64, `MAX_STAMP_IMAGES` 16) 时的错误码: P6.3 验收行写 `INVALID_ARGUMENT`, 而版本 1 的数量上限 (`MAX_SPLIT_OUTPUTS`, `MAX_OPTIONS_BYTES` 等) 与 P6.5 (文本层行数), P6.8 (大纲条目与深度) 都是 `LIMIT_EXCEEDED` | (a) `LIMIT_EXCEEDED`, 与其他数量上限一致 (推荐, 已先行: 协议文档 "Version 2", 宿主 `PdfRuns.arrange` 对超过 16 张图片报 `LIMIT_EXCEEDED`) / (b) `INVALID_ARGUMENT`, 照 P6.3 验收行原文 | P6.3 开工前 | 已按推荐先行待确认 (2026-11-18 paper-v2-contract 登记; 位置非法, 图片序号越界, 空 items 等取值错误两种选项下都是 `INVALID_ARGUMENT`; 影响 P6.3 验收行, P6.9 宿主预检; 改选 (b) 的返工: 协议文档 2 处, 宿主 `PdfRuns.arrange` 1 处与 1 项单测, 插件按 (b) 实现, 约 15 分钟) |
 
 P6 的子会话登记新待决时从 Q185 起, 调度会话给每张卡分一段编号 (批次 10: 宿主卡 Q185 - Q189, 插件卡 Q190 - Q199).
 
