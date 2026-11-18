@@ -334,6 +334,338 @@
         ]
       ],
       "marker": "A 144 x 36 pt black bar 36 pt from the left and top edges of the unrotated page."
+    },
+    "form.pdf": {
+      "bytes": 8209,
+      "sha256": "bec832680785b2192a0df79491dda441bf10f2491918d0c1ccc6ea63eff0247b",
+      "title": "Form sample",
+      "pages": 2,
+      "pageSize": [
+        595,
+        842
+      ],
+      "text": [
+        [
+          "Name",
+          "Notes",
+          "Agree",
+          "Size",
+          "Country",
+          "ID",
+          "Email",
+          "PIN"
+        ],
+        [
+          "Colors",
+          "City",
+          "Submit"
+        ]
+      ],
+      "fields": [
+        {
+          "name": "name",
+          "type": "text",
+          "page": 1,
+          "rect": [
+            200,
+            68,
+            300,
+            20
+          ],
+          "value": "Ada Lovelace",
+          "defaultValue": "Ada",
+          "label": "Full name",
+          "readOnly": false,
+          "required": false,
+          "multiline": false,
+          "password": false
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "page": 1,
+          "rect": [
+            200,
+            120,
+            300,
+            40
+          ],
+          "value": "Line 1\nLine 2",
+          "defaultValue": null,
+          "label": null,
+          "readOnly": false,
+          "required": false,
+          "multiline": true,
+          "password": false
+        },
+        {
+          "name": "agree",
+          "type": "checkbox",
+          "page": 1,
+          "rect": [
+            200,
+            176,
+            14,
+            14
+          ],
+          "value": true,
+          "defaultValue": false,
+          "exportValue": "Yes"
+        },
+        {
+          "name": "size",
+          "type": "radio",
+          "page": 1,
+          "widgets": [
+            [
+              200,
+              228,
+              14,
+              14
+            ],
+            [
+              260,
+              228,
+              14,
+              14
+            ],
+            [
+              320,
+              228,
+              14,
+              14
+            ]
+          ],
+          "value": "medium",
+          "defaultValue": "small",
+          "options": [
+            {
+              "value": "small",
+              "label": "small"
+            },
+            {
+              "value": "medium",
+              "label": "medium"
+            },
+            {
+              "value": "large",
+              "label": "large"
+            }
+          ]
+        },
+        {
+          "name": "country",
+          "type": "combo",
+          "page": 1,
+          "rect": [
+            200,
+            276,
+            300,
+            20
+          ],
+          "value": "France",
+          "defaultValue": "China",
+          "options": [
+            {
+              "value": "China",
+              "label": "China"
+            },
+            {
+              "value": "France",
+              "label": "France"
+            },
+            {
+              "value": "Japan",
+              "label": "Japan"
+            }
+          ],
+          "multiSelect": false
+        },
+        {
+          "name": "id",
+          "type": "text",
+          "page": 1,
+          "rect": [
+            200,
+            328,
+            300,
+            20
+          ],
+          "value": "P-001",
+          "defaultValue": null,
+          "label": null,
+          "readOnly": true,
+          "required": false,
+          "multiline": false,
+          "password": false
+        },
+        {
+          "name": "email",
+          "type": "text",
+          "page": 1,
+          "rect": [
+            200,
+            380,
+            300,
+            20
+          ],
+          "value": null,
+          "defaultValue": null,
+          "label": "Email address",
+          "readOnly": false,
+          "required": true,
+          "multiline": false,
+          "password": false
+        },
+        {
+          "name": "pin",
+          "type": "text",
+          "page": 1,
+          "rect": [
+            200,
+            432,
+            300,
+            20
+          ],
+          "value": "1234",
+          "defaultValue": null,
+          "label": null,
+          "readOnly": false,
+          "required": false,
+          "multiline": false,
+          "password": true
+        },
+        {
+          "name": "colors",
+          "type": "list",
+          "page": 2,
+          "rect": [
+            200,
+            68,
+            300,
+            54
+          ],
+          "value": [
+            "r",
+            "b"
+          ],
+          "defaultValue": "g",
+          "options": [
+            {
+              "value": "r",
+              "label": "Red"
+            },
+            {
+              "value": "g",
+              "label": "Green"
+            },
+            {
+              "value": "b",
+              "label": "Blue"
+            }
+          ],
+          "multiSelect": true
+        },
+        {
+          "name": "address.city",
+          "type": "text",
+          "page": 2,
+          "rect": [
+            200,
+            172,
+            300,
+            20
+          ],
+          "value": "Paris",
+          "defaultValue": null,
+          "label": null,
+          "readOnly": false,
+          "required": false,
+          "multiline": false,
+          "password": false
+        },
+        {
+          "name": "submit",
+          "type": "button",
+          "page": 2,
+          "rect": [
+            200,
+            224,
+            80,
+            20
+          ],
+          "value": null
+        }
+      ],
+      "notes": "AcroForm fields with appearance streams in Helvetica (WinAnsiEncoding, not embedded): text, multiline, check box, radio group, combo box, multi-select list box with export values, read-only, required, password, push button and a field under the non-terminal field address; NeedAppearances is false. Rectangles are left, top, width, height in points from the top left corner (roadmap D62)."
+    },
+    "scanned-multi.pdf": {
+      "bytes": 162119,
+      "sha256": "7398ea0ea8f03c99a59ef67d9fe0c5369baa7c829f54fa474970857fb820efae",
+      "title": "Multi-page scan sample",
+      "pages": 3,
+      "pageSize": [
+        420,
+        595
+      ],
+      "text": [
+        [],
+        [],
+        []
+      ],
+      "image": {
+        "name": "Im1",
+        "width": 1750,
+        "height": 2480,
+        "dpi": 300,
+        "colorSpace": "DeviceGray",
+        "bitsPerComponent": 8,
+        "filter": "DCTDecode",
+        "paper": 248,
+        "ink": 24,
+        "pages": [
+          {
+            "bytes": 53377,
+            "sha256": "dc3f87ffad207ac25af95e8fddb7c46d9f2fcbda031281465d34f1f1a75e5568"
+          },
+          {
+            "bytes": 53384,
+            "sha256": "9c3780dd54f8da8521cd986aa7abbeb7c6760fd918311ebb184045befb184753"
+          },
+          {
+            "bytes": 53377,
+            "sha256": "26bfa2b00e0ca39acc6eb929532a07d98fd069d3557ca9e35ca618c36da67a22"
+          }
+        ]
+      },
+      "ocrText": [
+        [
+          "PAGE 1 OF 3",
+          "SCANNED PAPER",
+          "HELLO WORLD"
+        ],
+        [
+          "PAGE 2 OF 3",
+          "SCANNED PAPER",
+          "HELLO WORLD"
+        ],
+        [
+          "PAGE 3 OF 3",
+          "SCANNED PAPER",
+          "HELLO WORLD"
+        ]
+      ],
+      "glyphs": {
+        "dot": 16,
+        "origin": [
+          160,
+          320
+        ],
+        "advanceDots": 6,
+        "lineDots": 11,
+        "font": "5 x 7 block capitals"
+      },
+      "notes": "Three A5 pages, each one full-page grey baseline JPEG at 300 dpi and no text layer, for the searchable PDF and compression items of 1.1.0 (roadmap P6.5, P6.6)."
     }
   }
 }

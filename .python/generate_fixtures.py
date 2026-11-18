@@ -1,17 +1,20 @@
 """Generates the minimal PDF samples of samples/fixtures (roadmap P0.3, D39).
 
 The samples are written by hand from the PDF 1.7 syntax with the standard library only: uncompressed text in the
-standard Helvetica fonts, a small Deflate encoder, a baseline JPEG encoder, the RC4 standard security handler (revision
-3) and a 5 x 7 block font for the scanned page. Every computation is integer arithmetic and every object, date and file
-identifier is fixed, so each run writes the same bytes on every platform; `--check` compares the committed files with a
-fresh run. fixtures.json lists what each sample contains, for the device tests and later roadmap items (P1.4 recognizes
-the text of scanned.pdf). JVM tests build their own documents with PDFBox at run time (PdfFixtures).
+standard Helvetica fonts, a small Deflate encoder, baseline JPEG encoders (colour and grey), the RC4 standard security
+handler (revision 3) and a 5 x 7 block font for the scanned pages. Every computation is integer arithmetic and every
+object, date and file identifier is fixed, so each run writes the same bytes on every platform; `--check` compares the
+committed files with a fresh run. fixtures.json lists what each sample contains, for the device tests and later roadmap
+items (P1.4 recognizes the text of scanned.pdf; for 1.1.0, P6.2, form.pdf lists its AcroForm fields and
+scanned-multi.pdf is three pages of 300 dpi scans). JVM tests build their own documents with PDFBox at run time
+(PdfFixtures).
 
 zh-CN: 生成 samples/fixtures 的最小 PDF 样例 (路线图 P0.3, D39). 样例按 PDF 1.7 语法手写, 只用标准库: 标准 Helvetica 字体的
-未压缩文本, 一个小型 Deflate 编码器, 一个基线 JPEG 编码器, RC4 标准安全处理器 (修订版 3), 以及扫描页使用的 5 x 7 点阵字体.
-全部计算都是整数运算, 所有对象, 日期与文件标识都是固定值, 因此在任何平台上每次运行都写出相同的字节; `--check` 用新生成的
-结果比对已提交的文件. fixtures.json 列出每个样例的内容, 供设备测试与后续路线图条目使用 (P1.4 识别 scanned.pdf 的文字).
-JVM 测试在运行时用 PDFBox 自行构建文档 (PdfFixtures).
+未压缩文本, 一个小型 Deflate 编码器, 基线 JPEG 编码器 (彩色与灰度), RC4 标准安全处理器 (修订版 3), 以及扫描页使用的 5 x 7
+点阵字体. 全部计算都是整数运算, 所有对象, 日期与文件标识都是固定值, 因此在任何平台上每次运行都写出相同的字节; `--check`
+用新生成的结果比对已提交的文件. fixtures.json 列出每个样例的内容, 供设备测试与后续路线图条目使用 (P1.4 识别 scanned.pdf 的
+文字; 1.1.0 的 P6.2 起, form.pdf 列出其 AcroForm 字段, scanned-multi.pdf 为三页 300 dpi 扫描件). JVM 测试在运行时用 PDFBox
+自行构建文档 (PdfFixtures).
 
 Usage: py .python/generate_fixtures.py [--check]
 """
@@ -427,6 +430,90 @@ def jpeg(width: int, height: int, pixels: list[tuple[int, int, int]], quality: i
     out += bytes([0xFF, 0xD9])
     return bytes(out)
 
+
+def _block_coefficients(samples: list[int], quantizer: list[int]) -> list[int]:
+    """Quantized DCT coefficients of one 8 x 8 block in natural order, as `jpeg` computes them.
+    zh-CN: 一个 8 x 8 块的量化 DCT 系数 (自然顺序), 算法与 `jpeg` 相同."""
+    rows = [[sum(samples[y * 8 + x] * DCT_BASIS[u][x] for x in range(8)) for u in range(8)] for y in range(8)]
+    coefficients = [0] * 64
+    for v in range(8):
+        for u in range(8):
+            total = sum(rows[y][u] * DCT_BASIS[v][y] for y in range(8))
+            coefficients[v * 8 + u] = _round_divide(total, 4 * 4096 * 4096 * quantizer[v * 8 + u])
+    return coefficients
+
+
+def _uniform_coefficients(sample: int, quantizer: list[int]) -> list[int]:
+    """The coefficients of a block whose 64 samples all equal `sample`: the AC terms of the integer basis cancel
+    exactly (its rows are symmetric or antisymmetric), so only the DC term remains.
+    zh-CN: 64 个样本都等于 `sample` 的块的系数: 整数基的各行对称或反对称, AC 项精确抵消, 只剩 DC 项."""
+    total = 64 * DCT_BASIS[0][0] * DCT_BASIS[0][0] * sample
+    return [_round_divide(total, 4 * 4096 * 4096 * quantizer[0])] + [0] * 63
+
+
+# The fast path must agree with the general one. zh-CN: 快速路径必须与一般算法一致.
+for _sample in (-128, -104, 0, 120, 127):
+    if _uniform_coefficients(_sample, _scaled(LUMA_QUANT, 85)) != _block_coefficients([_sample] * 64, _scaled(LUMA_QUANT, 85)):
+        raise AssertionError('uniform block fast path differs')
+
+
+def gray_jpeg(width: int, height: int, pixels: bytes, quality: int = 85) -> bytes:
+    """A baseline JFIF file with one grey component and the standard luminance tables; uniform blocks (all of a page
+    drawn on the 8 pixel grid) take the exact fast path.
+    zh-CN: 单个灰度分量, 使用标准亮度表的基线 JFIF 文件; 均匀的块 (按 8 像素网格绘制的页面全部如此) 走精确的快速路径."""
+    quantizer = _scaled(LUMA_QUANT, quality)
+    dc_codes = _huffman_codes(DC_LUMA)
+    ac_codes = _huffman_codes(AC_LUMA)
+    bits = JpegBits()
+    prediction = 0
+
+    def amplitude(value: int) -> tuple[int, int]:
+        size = abs(value).bit_length()
+        return (value if value >= 0 else value + (1 << size) - 1), size
+
+    for block_y in range(0, height, 8):
+        rows = [min(block_y + y, height - 1) * width for y in range(8)]
+        for block_x in range(0, width, 8):
+            if block_x + 8 <= width:
+                lines = [pixels[row + block_x:row + block_x + 8] for row in rows]
+            else:
+                lines = [bytes(pixels[row + min(block_x + x, width - 1)] for x in range(8)) for row in rows]
+            first = lines[0]
+            if first.count(first[0]) == 8 and all(line == first for line in lines):
+                coefficients = _uniform_coefficients(first[0] - 128, quantizer)
+            else:
+                coefficients = _block_coefficients([value - 128 for line in lines for value in line], quantizer)
+            ordered = [coefficients[index] for index in ZIGZAG]
+            value, size = amplitude(ordered[0] - prediction)
+            prediction = ordered[0]
+            bits.write(*dc_codes[size])
+            bits.write(value, size)
+            run = 0
+            for coefficient in ordered[1:]:
+                if coefficient == 0:
+                    run += 1
+                    continue
+                while run > 15:
+                    bits.write(*ac_codes[0xF0])
+                    run -= 16
+                value, size = amplitude(coefficient)
+                bits.write(*ac_codes[(run << 4) | size])
+                bits.write(value, size)
+                run = 0
+            if run:
+                bits.write(*ac_codes[0x00])
+
+    out = bytearray([0xFF, 0xD8])
+    out += _segment(0xE0, b'JFIF' + bytes([0, 1, 1, 0, 0, 1, 0, 1, 0, 0]))
+    out += _segment(0xDB, bytes([0]) + bytes(quantizer[z] for z in ZIGZAG))
+    out += _segment(0xC0, bytes([8]) + struct.pack('>HH', height, width) + bytes([1, 1, 0x11, 0]))
+    for table_class, table in ((0x00, DC_LUMA), (0x10, AC_LUMA)):
+        out += _segment(0xC4, bytes([table_class]) + bytes(table[0]) + bytes(table[1]))
+    out += _segment(0xDA, bytes([1, 1, 0x00, 0, 63, 0]))
+    out += bits.finish()
+    out += bytes([0xFF, 0xD9])
+    return bytes(out)
+
 # endregion
 
 # region Standard security handler (RC4, revision 3)
@@ -496,7 +583,9 @@ class Security:
 GLYPHS = {
     ' ': ('.....',) * 7,
     '0': ('.###.', '#...#', '#...#', '#...#', '#...#', '#...#', '.###.'),
+    '1': ('..#..', '.##..', '..#..', '..#..', '..#..', '..#..', '.###.'),
     '2': ('.###.', '#...#', '....#', '...#.', '..#..', '.#...', '#####'),
+    '3': ('####.', '....#', '....#', '.###.', '....#', '....#', '####.'),
     '6': ('..##.', '.#...', '#....', '####.', '#...#', '#...#', '.###.'),
     'A': ('.###.', '#...#', '#...#', '#####', '#...#', '#...#', '#...#'),
     'C': ('.###.', '#...#', '#....', '#....', '#....', '#...#', '.###.'),
@@ -574,13 +663,16 @@ class Pages:
         self.ref = document.reserve()
         self.kids: list[Ref] = []
 
-    def add(self, content: bytes, resources: dict, size=A4, rotate: int = 0, compress: bool = False) -> Ref:
+    def add(self, content: bytes, resources: dict, size=A4, rotate: int = 0, compress: bool = False,
+            annotations: list[Ref] | None = None) -> Ref:
         dictionary = {'Filter': Name('FlateDecode')} if compress else {}
         stream = self.document.add(Stream(dictionary, deflate(content) if compress else content))
         page = {'Type': Name('Page'), 'Parent': self.ref, 'MediaBox': [0, 0, size[0], size[1]], 'Resources': resources,
                 'Contents': stream}
         if rotate:
             page['Rotate'] = rotate
+        if annotations:
+            page['Annots'] = list(annotations)
         self.kids.append(self.document.add(page))
         return self.kids[-1]
 
@@ -809,6 +901,275 @@ def rotated_sample() -> tuple[bytes, dict]:
     }
 
 
+MULTI_SCAN_PAGE = (420, 595)  # A5 in points. zh-CN: A5, 单位为点.
+MULTI_SCAN_SIZE = (1750, 2480)  # A5 at 300 dpi. zh-CN: A5, 300 dpi.
+MULTI_SCAN_DOT = 16
+MULTI_SCAN_ORIGIN = (160, 320)
+MULTI_SCAN_PAGES = 3
+
+
+def multi_scan_lines(number: int) -> list[str]:
+    return [f'PAGE {number} OF {MULTI_SCAN_PAGES}', 'SCANNED PAPER', 'HELLO WORLD']
+
+
+def multi_scan_pixels(lines: list[str]) -> bytes:
+    """Block capitals drawn with 16 pixel dots on the 16 pixel grid, so every 8 x 8 JPEG block is uniform.
+    zh-CN: 用 16 像素的点在 16 像素网格上绘制的方块大写字母, 使每个 8 x 8 JPEG 块都是均匀的."""
+    width, height = MULTI_SCAN_SIZE
+    dot = MULTI_SCAN_DOT
+    pixels = bytearray([SCAN_PAPER]) * (width * height)
+    ink_row = bytes([SCAN_INK]) * dot
+    for line_index, line in enumerate(lines):
+        top = MULTI_SCAN_ORIGIN[1] + line_index * SCAN_LINE_DOTS * dot
+        for char_index, char in enumerate(line):
+            left = MULTI_SCAN_ORIGIN[0] + char_index * 6 * dot
+            for row, pattern in enumerate(GLYPHS[char]):
+                for column, cell in enumerate(pattern):
+                    if cell != '#':
+                        continue
+                    for y in range(top + row * dot, top + (row + 1) * dot):
+                        start = y * width + left + column * dot
+                        pixels[start:start + dot] = ink_row
+    return bytes(pixels)
+
+
+def scanned_multi_sample() -> tuple[bytes, dict]:
+    document = Document('scanned-multi.pdf')
+    info = _information(document, 'Multi-page scan sample')
+    width, height = MULTI_SCAN_SIZE
+    pages = Pages(document)
+    images = []
+    for number in range(1, MULTI_SCAN_PAGES + 1):
+        lines = multi_scan_lines(number)
+        photo = gray_jpeg(width, height, multi_scan_pixels(lines))
+        image = document.add(Stream({
+            'Type': Name('XObject'), 'Subtype': Name('Image'), 'Width': width, 'Height': height,
+            'ColorSpace': Name('DeviceGray'), 'BitsPerComponent': 8, 'Filter': Name('DCTDecode'),
+        }, photo))
+        content = f'q {MULTI_SCAN_PAGE[0]} 0 0 {MULTI_SCAN_PAGE[1]} 0 0 cm /Im1 Do Q'.encode('ascii') + NEWLINE
+        pages.add(content, {'XObject': {'Im1': image}}, size=MULTI_SCAN_PAGE)
+        images.append({'bytes': len(photo), 'sha256': hashlib.sha256(photo).hexdigest()})
+    return document.build(_catalog(document, pages), info), {
+        'title': 'Multi-page scan sample', 'pages': MULTI_SCAN_PAGES, 'pageSize': list(MULTI_SCAN_PAGE),
+        'text': [[] for _ in range(MULTI_SCAN_PAGES)],
+        'image': {'name': 'Im1', 'width': width, 'height': height, 'dpi': 300, 'colorSpace': 'DeviceGray',
+                  'bitsPerComponent': 8, 'filter': 'DCTDecode', 'paper': SCAN_PAPER, 'ink': SCAN_INK, 'pages': images},
+        'ocrText': [multi_scan_lines(number) for number in range(1, MULTI_SCAN_PAGES + 1)],
+        'glyphs': {'dot': MULTI_SCAN_DOT, 'origin': list(MULTI_SCAN_ORIGIN), 'advanceDots': 6, 'lineDots': SCAN_LINE_DOTS,
+                   'font': '5 x 7 block capitals'},
+        'notes': 'Three A5 pages, each one full-page grey baseline JPEG at 300 dpi and no text layer, for the '
+                 'searchable PDF and compression items of 1.1.0 (roadmap P6.5, P6.6).',
+    }
+
+
+FORM_LABEL_TOP = 760
+FORM_ROW = 52
+FORM_FIELD_X = 200
+FORM_FIELD_WIDTH = 300
+# Field flags, ISO 32000-1 tables 221, 226, 228 and 230. zh-CN: 字段标志, ISO 32000-1 表 221, 226, 228 与 230.
+FLAG_READ_ONLY = 1
+FLAG_REQUIRED = 1 << 1
+FLAG_MULTILINE = 1 << 12
+FLAG_PASSWORD = 1 << 13
+FLAG_NO_TOGGLE_TO_OFF = 1 << 14
+FLAG_RADIO = 1 << 15
+FLAG_PUSH_BUTTON = 1 << 16
+FLAG_COMBO = 1 << 17
+FLAG_MULTI_SELECT = 1 << 21
+BOX = b'0 g 1 w 0.5 0.5 13 13 re S' + NEWLINE
+CHECK = b'3 7 m 6 3 l 11 11 l S' + NEWLINE
+DOT = b'4 4 6 6 re f' + NEWLINE
+
+
+def _row_y(index: int) -> int:
+    return FORM_LABEL_TOP - index * FORM_ROW
+
+
+class FormBuilder:
+    """Widgets merged with their terminal fields, appearance streams included, and the manifest entry of each field.
+    zh-CN: 与终端字段合并的控件 (含外观流), 以及每个字段的清单条目."""
+
+    def __init__(self, document: Document, helv: Ref):
+        self.document = document
+        self.resources = {'Font': {'Helv': helv}}
+        self.fields: list[Ref] = []
+        self.manifest: list[dict] = []
+        self.annotations: dict[int, list[Ref]] = {1: [], 2: []}
+        self.pending: list[tuple[Ref, int, dict]] = []
+
+    def _appearance(self, width: int, height: int, content: bytes, resources: dict | None = None) -> Ref:
+        dictionary = {'Type': Name('XObject'), 'Subtype': Name('Form'), 'BBox': [0, 0, width, height]}
+        if resources:
+            dictionary['Resources'] = resources
+        return self.document.add(Stream(dictionary, content))
+
+    def _widget(self, page: int, rect: tuple[int, int, int, int], normal, state: str | None = None, **entries) -> Ref:
+        x, y, width, height = rect
+        widget = {'Type': Name('Annot'), 'Subtype': Name('Widget'), 'Rect': [x, y, x + width, y + height], 'F': 4,
+                  'AP': {'N': normal}}
+        if state:
+            widget['AS'] = Name(state)
+        widget.update(entries)
+        ref = self.document.reserve()
+        self.annotations[page].append(ref)
+        self.pending.append((ref, page, widget))
+        return ref
+
+    @staticmethod
+    def _shown_rect(rect: tuple[int, int, int, int]) -> list[int]:
+        """Left, top, width, height with the origin at the top left of the A4 page (roadmap D62).
+        zh-CN: 左, 上, 宽, 高, 原点在 A4 页的左上角 (路线图 D62)."""
+        x, y, width, height = rect
+        return [x, A4[1] - y - height, width, height]
+
+    def _text_content(self, lines: list[str], height: int) -> bytes:
+        parts = [f'/Tx BMC q BT /Helv 10 Tf 0 g 12 TL 2 {height - 13} Td'.encode('ascii')]
+        parts += [literal(line) + b' Tj T*' for line in lines]
+        parts.append(b'ET Q EMC')
+        return NEWLINE.join(parts) + NEWLINE
+
+    def text(self, page: int, name: str, rect, value: str | None, flags: int = 0, default: str | None = None,
+             label: str | None = None, parent: Ref | None = None, qualified: str | None = None) -> Ref:
+        shown = [] if value is None else ['*' * len(value)] if flags & FLAG_PASSWORD else value.split('\n')
+        entries = {'FT': Name('Tx'), 'T': name, 'DA': '/Helv 10 Tf 0 g'}
+        if flags:
+            entries['Ff'] = flags
+        if value is not None:
+            entries['V'] = value
+        if default is not None:
+            entries['DV'] = default
+        if label:
+            entries['TU'] = label
+        if parent:
+            entries['Parent'] = parent
+        ref = self._widget(page, rect, self._appearance(rect[2], rect[3], self._text_content(shown, rect[3]), self.resources), **entries)
+        self.manifest.append({
+            'name': qualified or name, 'type': 'text', 'page': page, 'rect': self._shown_rect(rect), 'value': value,
+            'defaultValue': default, 'label': label, 'readOnly': bool(flags & FLAG_READ_ONLY),
+            'required': bool(flags & FLAG_REQUIRED), 'multiline': bool(flags & FLAG_MULTILINE),
+            'password': bool(flags & FLAG_PASSWORD),
+        })
+        return ref
+
+    def check_box(self, page: int, name: str, rect, checked: bool) -> Ref:
+        states = {'Yes': self._appearance(14, 14, BOX + CHECK), 'Off': self._appearance(14, 14, BOX)}
+        state = 'Yes' if checked else 'Off'
+        ref = self._widget(page, rect, states, state, FT=Name('Btn'), T=name, V=Name(state), DV=Name('Off'))
+        self.manifest.append({'name': name, 'type': 'checkbox', 'page': page, 'rect': self._shown_rect(rect), 'value': checked,
+                              'defaultValue': False, 'exportValue': 'Yes'})
+        return ref
+
+    def radio(self, page: int, name: str, y: int, options: list[str], selected: str, default: str) -> Ref:
+        group = self.document.reserve()
+        kids = []
+        rects = []
+        for index, option in enumerate(options):
+            rect = (FORM_FIELD_X + index * 60, y, 14, 14)
+            states = {option: self._appearance(14, 14, BOX + DOT), 'Off': self._appearance(14, 14, BOX)}
+            kids.append(self._widget(page, rect, states, option if option == selected else 'Off', Parent=group))
+            rects.append(self._shown_rect(rect))
+        self.document.put(group, {'FT': Name('Btn'), 'T': name, 'Ff': FLAG_RADIO | FLAG_NO_TOGGLE_TO_OFF, 'V': Name(selected),
+                                  'DV': Name(default), 'Kids': kids})
+        self.manifest.append({'name': name, 'type': 'radio', 'page': page, 'widgets': rects, 'value': selected,
+                              'defaultValue': default, 'options': [{'value': option, 'label': option} for option in options]})
+        return group
+
+    def choice(self, page: int, name: str, rect, flags: int, options: list[tuple[str, str]], values: list[str],
+               default: str | None) -> Ref:
+        x, y, width, height = rect
+        if flags & FLAG_COMBO:
+            label = dict(options)[values[0]]
+            content = b'/Tx BMC q BT /Helv 10 Tf 0 g 2 ' + str(height - 13).encode('ascii') + b' Td ' + literal(label) + b' Tj ET Q EMC' + NEWLINE
+            opt = [label for _, label in options]
+        else:
+            parts = [b'/Tx BMC q']
+            for index, (export, _) in enumerate(options):
+                if export in values:
+                    parts.append(f'0.6 0.75 0.9 rg 0 {height - (index + 1) * 16} {width} 16 re f'.encode('ascii'))
+            parts.append(f'BT /Helv 10 Tf 0 g 16 TL 2 {height - 12} Td'.encode('ascii'))
+            parts += [literal(label) + b' Tj T*' for _, label in options]
+            parts.append(b'ET Q EMC')
+            content = NEWLINE.join(parts) + NEWLINE
+            opt = [[export, label] for export, label in options]
+        entries = {'FT': Name('Ch'), 'T': name, 'DA': '/Helv 10 Tf 0 g', 'Ff': flags, 'Opt': opt,
+                   'V': values[0] if len(values) == 1 else list(values)}
+        if not flags & FLAG_COMBO:
+            entries['I'] = [index for index, (export, _) in enumerate(options) if export in values]
+        if default is not None:
+            entries['DV'] = default
+        ref = self._widget(page, rect, self._appearance(width, height, content, self.resources), **entries)
+        self.manifest.append({
+            'name': name, 'type': 'combo' if flags & FLAG_COMBO else 'list', 'page': page, 'rect': self._shown_rect(rect),
+            'value': values[0] if flags & FLAG_COMBO else values, 'defaultValue': default,
+            'options': [{'value': export, 'label': label} for export, label in options],
+            'multiSelect': bool(flags & FLAG_MULTI_SELECT),
+        })
+        return ref
+
+    def push_button(self, page: int, name: str, rect, caption: str) -> Ref:
+        x, y, width, height = rect
+        content = f'q 0.85 g 0 0 {width} {height} re f Q BT /Helv 10 Tf 0 g 18 6 Td '.encode('ascii') + literal(caption) + b' Tj ET' + NEWLINE
+        ref = self._widget(page, rect, self._appearance(width, height, content, self.resources), FT=Name('Btn'), T=name,
+                           DA='/Helv 10 Tf 0 g', Ff=FLAG_PUSH_BUTTON, MK={'CA': caption})
+        self.manifest.append({'name': name, 'type': 'button', 'page': page, 'rect': self._shown_rect(rect), 'value': None})
+        return ref
+
+    def finish(self, pages: list[Ref]) -> None:
+        for ref, page, widget in self.pending:
+            self.document.put(ref, {**widget, 'P': pages[page - 1]})
+
+
+FORM_LABELS = [['Name', 'Notes', 'Agree', 'Size', 'Country', 'ID', 'Email', 'PIN'], ['Colors', '', 'City', 'Submit']]
+
+
+def form_sample() -> tuple[bytes, dict]:
+    document = Document('form.pdf')
+    info = _information(document, 'Form sample')
+    helv = document.add({'Type': Name('Font'), 'Subtype': Name('Type1'), 'BaseFont': Name('Helvetica'),
+                         'Encoding': Name('WinAnsiEncoding')})
+    zadb = document.add({'Type': Name('Font'), 'Subtype': Name('Type1'), 'BaseFont': Name('ZapfDingbats')})
+    form = FormBuilder(document, helv)
+
+    def row(index: int, height: int = 20) -> tuple[int, int, int, int]:
+        return FORM_FIELD_X, _row_y(index) - 6, FORM_FIELD_WIDTH, height
+
+    form.fields.append(form.text(1, 'name', row(0), 'Ada Lovelace', default='Ada', label='Full name'))
+    form.fields.append(form.text(1, 'notes', (FORM_FIELD_X, _row_y(1) - 26, FORM_FIELD_WIDTH, 40), 'Line 1\nLine 2',
+                                 flags=FLAG_MULTILINE))
+    form.fields.append(form.check_box(1, 'agree', (FORM_FIELD_X, _row_y(2) - 4, 14, 14), checked=True))
+    form.fields.append(form.radio(1, 'size', _row_y(3) - 4, ['small', 'medium', 'large'], selected='medium', default='small'))
+    form.fields.append(form.choice(1, 'country', row(4), FLAG_COMBO, [('China', 'China'), ('France', 'France'), ('Japan', 'Japan')],
+                                   ['France'], default='China'))
+    form.fields.append(form.text(1, 'id', row(5), 'P-001', flags=FLAG_READ_ONLY))
+    form.fields.append(form.text(1, 'email', row(6), None, flags=FLAG_REQUIRED, label='Email address'))
+    form.fields.append(form.text(1, 'pin', row(7), '1234', flags=FLAG_PASSWORD))
+    form.fields.append(form.choice(2, 'colors', (FORM_FIELD_X, _row_y(0) + 14 - 54, FORM_FIELD_WIDTH, 54), FLAG_MULTI_SELECT,
+                                   [('r', 'Red'), ('g', 'Green'), ('b', 'Blue')], ['r', 'b'], default='g'))
+    address = document.reserve()
+    city = form.text(2, 'city', row(2), 'Paris', parent=address, qualified='address.city')
+    document.put(address, {'T': 'address', 'Kids': [city]})
+    form.fields.append(address)
+    form.fields.append(form.push_button(2, 'submit', (FORM_FIELD_X, _row_y(3) - 6, 80, 20), 'Submit'))
+
+    pages = Pages(document)
+    text = []
+    for number, labels in enumerate(FORM_LABELS, 1):
+        parts = [f'BT /F1 11 Tf 72 {_row_y(index)} Td '.encode('ascii') + literal(label) + b' Tj ET'
+                 for index, label in enumerate(labels) if label]
+        pages.add(NEWLINE.join(parts) + NEWLINE, {'Font': {'F1': helv}}, annotations=form.annotations[number])
+        text.append([label for label in labels if label])
+    form.finish(pages.kids)
+    acro_form = document.add({'Fields': form.fields, 'DA': '/Helv 0 Tf 0 g', 'DR': {'Font': {'Helv': helv, 'ZaDb': zadb}},
+                              'NeedAppearances': False})
+    return document.build(_catalog(document, pages, AcroForm=acro_form), info), {
+        'title': 'Form sample', 'pages': len(FORM_LABELS), 'pageSize': list(A4), 'text': text, 'fields': form.manifest,
+        'notes': 'AcroForm fields with appearance streams in Helvetica (WinAnsiEncoding, not embedded): text, multiline, '
+                 'check box, radio group, combo box, multi-select list box with export values, read-only, required, '
+                 'password, push button and a field under the non-terminal field address; NeedAppearances is false. '
+                 'Rectangles are left, top, width, height in points from the top left corner (roadmap D62).',
+    }
+
+
 SAMPLES = {
     'text.pdf': text_sample,
     'outline.pdf': outline_sample,
@@ -816,6 +1177,8 @@ SAMPLES = {
     'scanned.pdf': scanned_sample,
     'images.pdf': images_sample,
     'rotated.pdf': rotated_sample,
+    'form.pdf': form_sample,
+    'scanned-multi.pdf': scanned_multi_sample,
 }
 
 # endregion

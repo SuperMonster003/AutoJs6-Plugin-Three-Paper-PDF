@@ -9,6 +9,13 @@ import com.tom_roush.pdfbox.pdmodel.PDDocument
 import com.tom_roush.pdfbox.pdmodel.encryption.InvalidPasswordException
 import com.tom_roush.pdfbox.pdmodel.graphics.image.PDImageXObject
 import com.tom_roush.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlineNode
+import com.tom_roush.pdfbox.pdmodel.interactive.form.PDCheckBox
+import com.tom_roush.pdfbox.pdmodel.interactive.form.PDComboBox
+import com.tom_roush.pdfbox.pdmodel.interactive.form.PDListBox
+import com.tom_roush.pdfbox.pdmodel.interactive.form.PDPushButton
+import com.tom_roush.pdfbox.pdmodel.interactive.form.PDRadioButton
+import com.tom_roush.pdfbox.pdmodel.interactive.form.PDTerminalField
+import com.tom_roush.pdfbox.pdmodel.interactive.form.PDTextField
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assert.assertArrayEquals
@@ -77,7 +84,7 @@ class SampleFixturesTest {
     fun `the directory holds the manifest and the listed samples, with their size and digest`() {
         assertEquals(1, manifest.getInt("format"))
         val names = fixtures.keys().asSequence().toSet()
-        assertEquals(setOf("text.pdf", "outline.pdf", "encrypted.pdf", "scanned.pdf", "images.pdf", "rotated.pdf"), names)
+        assertEquals(setOf("text.pdf", "outline.pdf", "encrypted.pdf", "scanned.pdf", "images.pdf", "rotated.pdf", "form.pdf", "scanned-multi.pdf"), names)
         assertEquals(names + "fixtures.json", directory.list()!!.toSet())
         names.forEach { name ->
             val bytes = bytesOf(name)
@@ -246,6 +253,98 @@ class SampleFixturesTest {
         val expected = fixture("rotated.pdf")
         open("rotated.pdf") { document ->
             assertArrayEquals(expected.getJSONArray("rotations").ints(), IntArray(document.numberOfPages) { document.getPage(it).rotation })
+        }
+    }
+
+    @Test
+    fun `form sample has the listed fields with appearances`() {
+        val expected = fixture("form.pdf").getJSONArray("fields")
+        open("form.pdf") { document ->
+            val form = document.documentCatalog.getAcroForm(null)
+            assertFalse(form.hasXFA())
+            val terminal = form.fieldTree.filterIsInstance<PDTerminalField>().associateBy { it.fullyQualifiedName }
+            assertEquals(List(expected.length()) { expected.getJSONObject(it).getString("name") }.toSet(), terminal.keys)
+            for (index in 0 until expected.length()) {
+                val entry = expected.getJSONObject(index)
+                val name = entry.getString("name")
+                val field = terminal.getValue(name)
+                val type = when (field) {
+                    is PDTextField -> "text"
+                    is PDCheckBox -> "checkbox"
+                    is PDRadioButton -> "radio"
+                    is PDComboBox -> "combo"
+                    is PDListBox -> "list"
+                    is PDPushButton -> "button"
+                    else -> field.javaClass.simpleName
+                }
+                assertEquals(name, entry.getString("type"), type)
+                val value: Any? = when (field) {
+                    is PDTextField -> field.cosObject.getDictionaryObject(COSName.V)?.let { field.value }
+                    is PDCheckBox -> field.isChecked
+                    is PDRadioButton -> field.value
+                    is PDComboBox -> field.value.single()
+                    is PDListBox -> JSONArray(field.value)
+                    else -> null
+                }
+                assertEquals(name, entry.opt("value").let { if (it == JSONObject.NULL) null else it }.toString(), value.toString())
+                val pages = field.widgets.map { document.pages.indexOf(it.page) + 1 }.toSet()
+                assertEquals(name, setOf(entry.getInt("page")), pages)
+                field.widgets.forEach { assertNotNull("$name has an appearance", it.appearance?.normalAppearance) }
+                val rects = entry.optJSONArray("widgets")?.let { widgets -> List(widgets.length()) { widgets.getJSONArray(it) } } ?: listOf(entry.getJSONArray("rect"))
+                field.widgets.zip(rects).forEach { (widget, rect) ->
+                    val box = widget.rectangle
+                    val top = document.getPage(entry.getInt("page") - 1).mediaBox.height - box.upperRightY
+                    assertArrayEquals(name, rect.ints(), intArrayOf(box.lowerLeftX.toInt(), top.toInt(), box.width.toInt(), box.height.toInt()))
+                }
+                if (field is PDTextField) {
+                    assertEquals(name, entry.getBoolean("readOnly"), field.isReadOnly)
+                    assertEquals(name, entry.getBoolean("required"), field.isRequired)
+                    assertEquals(name, entry.getBoolean("multiline"), field.isMultiline)
+                    assertEquals(name, entry.getBoolean("password"), field.isPassword)
+                    assertEquals(name, entry.optString("label").ifEmpty { null }, field.alternateFieldName)
+                }
+                if (field is PDListBox) assertEquals(name, entry.getBoolean("multiSelect"), field.isMultiSelect)
+                entry.optJSONArray("options")?.let { options ->
+                    val values = List(options.length()) { options.getJSONObject(it).getString("value") }
+                    when (field) {
+                        is PDListBox -> assertEquals(name, values, field.optionsExportValues)
+                        is PDComboBox -> assertEquals(name, values, field.optionsExportValues)
+                        is PDRadioButton -> assertEquals(name, values.toSet(), field.onValues)
+                        else -> Unit
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `multi-page scan holds one 300 dpi grey JPEG per page`() {
+        val expected = fixture("scanned-multi.pdf")
+        val image = expected.getJSONObject("image")
+        val stored = image.getJSONArray("pages")
+        open("scanned-multi.pdf") { document ->
+            assertEquals(expected.getInt("pages"), stored.length())
+            for (index in 0 until document.numberOfPages) {
+                val resources = document.getPage(index).resources
+                assertNull(resources.cosObject.getDictionaryObject(COSName.FONT))
+                val picture = resources.getXObject(COSName.getPDFName(image.getString("name"))) as PDImageXObject
+                assertEquals(COSName.DCT_DECODE, picture.cosObject.getCOSName(COSName.FILTER))
+                assertEquals(COSName.DEVICEGRAY, picture.cosObject.getCOSName(COSName.COLORSPACE))
+                val bytes = picture.cosObject.createRawInputStream().use { it.readBytes() }
+                assertEquals(stored.getJSONObject(index).getInt("bytes"), bytes.size)
+                assertEquals(stored.getJSONObject(index).getString("sha256"), sha256(bytes))
+                val decoded = ImageIO.read(ByteArrayInputStream(bytes))
+                assertEquals(image.getInt("width") to image.getInt("height"), decoded.width to decoded.height)
+                assertEquals(image.getInt("dpi").toFloat(), decoded.width / (document.getPage(index).mediaBox.width / 72f), 1f)
+                // Paper and the first ink dot decode to their grey levels. zh-CN: 纸面与第一个墨点解码为各自的灰度.
+                val origin = expected.getJSONObject("glyphs").getJSONArray("origin").ints()
+                val dot = expected.getJSONObject("glyphs").getInt("dot")
+                val paper = decoded.raster.getSample(8, 8, 0)
+                // "P" starts with a dot in its top left cell. zh-CN: "P" 的左上格是一个点.
+                val ink = decoded.raster.getSample(origin[0] + dot / 2, origin[1] + dot / 2, 0)
+                assertTrue("paper $paper", abs(paper - image.getInt("paper")) <= 2)
+                assertTrue("ink $ink", abs(ink - image.getInt("ink")) <= 2)
+            }
         }
     }
 

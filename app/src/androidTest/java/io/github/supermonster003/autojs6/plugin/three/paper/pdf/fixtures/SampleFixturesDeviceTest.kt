@@ -136,6 +136,32 @@ class SampleFixturesDeviceTest {
     }
 
     @Test
+    fun greyScanJpegsDecodeWithTheSystemCodec() {
+        val expected = fixtures.getJSONObject("scanned-multi.pdf")
+        val image = expected.getJSONObject("image")
+        val glyphs = expected.getJSONObject("glyphs")
+        val origin = glyphs.getJSONArray("origin")
+        val dot = glyphs.getInt("dot")
+        open("scanned-multi.pdf") { document ->
+            for (index in 0 until document.numberOfPages) {
+                val resources = document.getPage(index).resources
+                val picture = resources.getXObject(COSName.getPDFName(image.getString("name"))) as PDImageXObject
+                val stored = picture.cosObject.createRawInputStream().use { it.readBytes() }
+                val bitmap = requireNotNull(BitmapFactory.decodeByteArray(stored, 0, stored.size)) { "page ${index + 1}" }
+                try {
+                    assertEquals(image.getInt("width") to image.getInt("height"), bitmap.width to bitmap.height)
+                    val paper = image.getInt("paper")
+                    val ink = image.getInt("ink")
+                    assertColour("paper on page ${index + 1}", intArrayOf(paper, paper, paper), bitmap.getPixel(8, 8), 3)
+                    assertColour("ink on page ${index + 1}", intArrayOf(ink, ink, ink), bitmap.getPixel(origin.getInt(0) + dot / 2, origin.getInt(1) + dot / 2), 3)
+                } finally {
+                    bitmap.recycle()
+                }
+            }
+        }
+    }
+
+    @Test
     fun pdfRendererOpensEveryUnencryptedSampleWithItsDisplayedPageSizes() {
         names().filter { !fixtures.getJSONObject(it).has("userPassword") }.forEach { name ->
             val expected = fixtures.getJSONObject(name)

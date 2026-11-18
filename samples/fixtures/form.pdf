@@ -1,0 +1,287 @@
+%PDF-1.7
+%‚„œ”
+1 0 obj
+<< /Title (Form sample) /Author (AutoJs6) /Subject (3-Paper PDF test fixture) /Keywords (autojs6, pdf, fixture) /Creator (.python/generate_fixtures.py) /Producer (3-Paper PDF fixtures) /CreationDate (D:20261112080000Z) /ModDate (D:20261112080000Z) >>
+endobj
+2 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /ZapfDingbats >>
+endobj
+4 0 obj
+<< /Type /XObject /Subtype /Form /BBox [0 0 300 20] /Resources << /Font << /Helv 2 0 R >> >> /Length 72 >>
+stream
+/Tx BMC q BT /Helv 10 Tf 0 g 12 TL 2 7 Td
+(Ada Lovelace) Tj T*
+ET Q EMC
+
+endstream
+endobj
+5 0 obj
+<< /Type /Annot /Subtype /Widget /Rect [200 754 500 774] /F 4 /AP << /N 4 0 R >> /FT /Tx /T (name) /DA (/Helv 10 Tf 0 g) /V (Ada Lovelace) /DV (Ada) /TU (Full name) /P 38 0 R >>
+endobj
+6 0 obj
+<< /Type /XObject /Subtype /Form /BBox [0 0 300 40] /Resources << /Font << /Helv 2 0 R >> >> /Length 82 >>
+stream
+/Tx BMC q BT /Helv 10 Tf 0 g 12 TL 2 27 Td
+(Line 1) Tj T*
+(Line 2) Tj T*
+ET Q EMC
+
+endstream
+endobj
+7 0 obj
+<< /Type /Annot /Subtype /Widget /Rect [200 682 500 722] /F 4 /AP << /N 6 0 R >> /FT /Tx /T (notes) /DA (/Helv 10 Tf 0 g) /Ff 4096 /V (Line 1
+Line 2) /P 38 0 R >>
+endobj
+8 0 obj
+<< /Type /XObject /Subtype /Form /BBox [0 0 14 14] /Length 49 >>
+stream
+0 g 1 w 0.5 0.5 13 13 re S
+3 7 m 6 3 l 11 11 l S
+
+endstream
+endobj
+9 0 obj
+<< /Type /XObject /Subtype /Form /BBox [0 0 14 14] /Length 27 >>
+stream
+0 g 1 w 0.5 0.5 13 13 re S
+
+endstream
+endobj
+10 0 obj
+<< /Type /Annot /Subtype /Widget /Rect [200 652 214 666] /F 4 /AP << /N << /Yes 8 0 R /Off 9 0 R >> >> /AS /Yes /FT /Btn /T (agree) /V /Yes /DV /Off /P 38 0 R >>
+endobj
+11 0 obj
+<< /FT /Btn /T (size) /Ff 49152 /V /medium /DV /small /Kids [14 0 R 17 0 R 20 0 R] >>
+endobj
+12 0 obj
+<< /Type /XObject /Subtype /Form /BBox [0 0 14 14] /Length 40 >>
+stream
+0 g 1 w 0.5 0.5 13 13 re S
+4 4 6 6 re f
+
+endstream
+endobj
+13 0 obj
+<< /Type /XObject /Subtype /Form /BBox [0 0 14 14] /Length 27 >>
+stream
+0 g 1 w 0.5 0.5 13 13 re S
+
+endstream
+endobj
+14 0 obj
+<< /Type /Annot /Subtype /Widget /Rect [200 600 214 614] /F 4 /AP << /N << /small 12 0 R /Off 13 0 R >> >> /AS /Off /Parent 11 0 R /P 38 0 R >>
+endobj
+15 0 obj
+<< /Type /XObject /Subtype /Form /BBox [0 0 14 14] /Length 40 >>
+stream
+0 g 1 w 0.5 0.5 13 13 re S
+4 4 6 6 re f
+
+endstream
+endobj
+16 0 obj
+<< /Type /XObject /Subtype /Form /BBox [0 0 14 14] /Length 27 >>
+stream
+0 g 1 w 0.5 0.5 13 13 re S
+
+endstream
+endobj
+17 0 obj
+<< /Type /Annot /Subtype /Widget /Rect [260 600 274 614] /F 4 /AP << /N << /medium 15 0 R /Off 16 0 R >> >> /AS /medium /Parent 11 0 R /P 38 0 R >>
+endobj
+18 0 obj
+<< /Type /XObject /Subtype /Form /BBox [0 0 14 14] /Length 40 >>
+stream
+0 g 1 w 0.5 0.5 13 13 re S
+4 4 6 6 re f
+
+endstream
+endobj
+19 0 obj
+<< /Type /XObject /Subtype /Form /BBox [0 0 14 14] /Length 27 >>
+stream
+0 g 1 w 0.5 0.5 13 13 re S
+
+endstream
+endobj
+20 0 obj
+<< /Type /Annot /Subtype /Widget /Rect [320 600 334 614] /F 4 /AP << /N << /large 18 0 R /Off 19 0 R >> >> /AS /Off /Parent 11 0 R /P 38 0 R >>
+endobj
+21 0 obj
+<< /Type /XObject /Subtype /Form /BBox [0 0 300 20] /Resources << /Font << /Helv 2 0 R >> >> /Length 57 >>
+stream
+/Tx BMC q BT /Helv 10 Tf 0 g 2 7 Td (France) Tj ET Q EMC
+
+endstream
+endobj
+22 0 obj
+<< /Type /Annot /Subtype /Widget /Rect [200 546 500 566] /F 4 /AP << /N 21 0 R >> /FT /Ch /T (country) /DA (/Helv 10 Tf 0 g) /Ff 131072 /Opt [(China) (France) (Japan)] /V (France) /DV (China) /P 38 0 R >>
+endobj
+23 0 obj
+<< /Type /XObject /Subtype /Form /BBox [0 0 300 20] /Resources << /Font << /Helv 2 0 R >> >> /Length 65 >>
+stream
+/Tx BMC q BT /Helv 10 Tf 0 g 12 TL 2 7 Td
+(P-001) Tj T*
+ET Q EMC
+
+endstream
+endobj
+24 0 obj
+<< /Type /Annot /Subtype /Widget /Rect [200 494 500 514] /F 4 /AP << /N 23 0 R >> /FT /Tx /T (id) /DA (/Helv 10 Tf 0 g) /Ff 1 /V (P-001) /P 38 0 R >>
+endobj
+25 0 obj
+<< /Type /XObject /Subtype /Form /BBox [0 0 300 20] /Resources << /Font << /Helv 2 0 R >> >> /Length 51 >>
+stream
+/Tx BMC q BT /Helv 10 Tf 0 g 12 TL 2 7 Td
+ET Q EMC
+
+endstream
+endobj
+26 0 obj
+<< /Type /Annot /Subtype /Widget /Rect [200 442 500 462] /F 4 /AP << /N 25 0 R >> /FT /Tx /T (email) /DA (/Helv 10 Tf 0 g) /Ff 2 /TU (Email address) /P 38 0 R >>
+endobj
+27 0 obj
+<< /Type /XObject /Subtype /Form /BBox [0 0 300 20] /Resources << /Font << /Helv 2 0 R >> >> /Length 64 >>
+stream
+/Tx BMC q BT /Helv 10 Tf 0 g 12 TL 2 7 Td
+(****) Tj T*
+ET Q EMC
+
+endstream
+endobj
+28 0 obj
+<< /Type /Annot /Subtype /Widget /Rect [200 390 500 410] /F 4 /AP << /N 27 0 R >> /FT /Tx /T (pin) /DA (/Helv 10 Tf 0 g) /Ff 8192 /V (1234) /P 38 0 R >>
+endobj
+29 0 obj
+<< /Type /XObject /Subtype /Form /BBox [0 0 300 54] /Resources << /Font << /Helv 2 0 R >> >> /Length 156 >>
+stream
+/Tx BMC q
+0.6 0.75 0.9 rg 0 38 300 16 re f
+0.6 0.75 0.9 rg 0 6 300 16 re f
+BT /Helv 10 Tf 0 g 16 TL 2 42 Td
+(Red) Tj T*
+(Green) Tj T*
+(Blue) Tj T*
+ET Q EMC
+
+endstream
+endobj
+30 0 obj
+<< /Type /Annot /Subtype /Widget /Rect [200 720 500 774] /F 4 /AP << /N 29 0 R >> /FT /Ch /T (colors) /DA (/Helv 10 Tf 0 g) /Ff 2097152 /Opt [[(r) (Red)] [(g) (Green)] [(b) (Blue)]] /V [(r) (b)] /I [0 2] /DV (g) /P 40 0 R >>
+endobj
+31 0 obj
+<< /T (address) /Kids [33 0 R] >>
+endobj
+32 0 obj
+<< /Type /XObject /Subtype /Form /BBox [0 0 300 20] /Resources << /Font << /Helv 2 0 R >> >> /Length 65 >>
+stream
+/Tx BMC q BT /Helv 10 Tf 0 g 12 TL 2 7 Td
+(Paris) Tj T*
+ET Q EMC
+
+endstream
+endobj
+33 0 obj
+<< /Type /Annot /Subtype /Widget /Rect [200 650 500 670] /F 4 /AP << /N 32 0 R >> /FT /Tx /T (city) /DA (/Helv 10 Tf 0 g) /V (Paris) /Parent 31 0 R /P 40 0 R >>
+endobj
+34 0 obj
+<< /Type /XObject /Subtype /Form /BBox [0 0 80 20] /Resources << /Font << /Helv 2 0 R >> >> /Length 68 >>
+stream
+q 0.85 g 0 0 80 20 re f Q BT /Helv 10 Tf 0 g 18 6 Td (Submit) Tj ET
+
+endstream
+endobj
+35 0 obj
+<< /Type /Annot /Subtype /Widget /Rect [200 598 280 618] /F 4 /AP << /N 34 0 R >> /FT /Btn /T (submit) /DA (/Helv 10 Tf 0 g) /Ff 65536 /MK << /CA (Submit) >> /P 40 0 R >>
+endobj
+36 0 obj
+<< /Type /Pages /Kids [38 0 R 40 0 R] /Count 2 >>
+endobj
+37 0 obj
+<< /Length 291 >>
+stream
+BT /F1 11 Tf 72 760 Td (Name) Tj ET
+BT /F1 11 Tf 72 708 Td (Notes) Tj ET
+BT /F1 11 Tf 72 656 Td (Agree) Tj ET
+BT /F1 11 Tf 72 604 Td (Size) Tj ET
+BT /F1 11 Tf 72 552 Td (Country) Tj ET
+BT /F1 11 Tf 72 500 Td (ID) Tj ET
+BT /F1 11 Tf 72 448 Td (Email) Tj ET
+BT /F1 11 Tf 72 396 Td (PIN) Tj ET
+
+endstream
+endobj
+38 0 obj
+<< /Type /Page /Parent 36 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 2 0 R >> >> /Contents 37 0 R /Annots [5 0 R 7 0 R 10 0 R 14 0 R 17 0 R 20 0 R 22 0 R 24 0 R 26 0 R 28 0 R] >>
+endobj
+39 0 obj
+<< /Length 112 >>
+stream
+BT /F1 11 Tf 72 760 Td (Colors) Tj ET
+BT /F1 11 Tf 72 656 Td (City) Tj ET
+BT /F1 11 Tf 72 604 Td (Submit) Tj ET
+
+endstream
+endobj
+40 0 obj
+<< /Type /Page /Parent 36 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 2 0 R >> >> /Contents 39 0 R /Annots [30 0 R 33 0 R 35 0 R] >>
+endobj
+41 0 obj
+<< /Fields [5 0 R 7 0 R 10 0 R 11 0 R 22 0 R 24 0 R 26 0 R 28 0 R 30 0 R 31 0 R 35 0 R] /DA (/Helv 0 Tf 0 g) /DR << /Font << /Helv 2 0 R /ZaDb 3 0 R >> >> /NeedAppearances false >>
+endobj
+42 0 obj
+<< /Type /Catalog /Pages 36 0 R /AcroForm 41 0 R >>
+endobj
+xref
+0 43
+0000000000 65535 f 
+0000000015 00000 n 
+0000000281 00000 n 
+0000000378 00000 n 
+0000000451 00000 n 
+0000000663 00000 n 
+0000000856 00000 n 
+0000001078 00000 n 
+0000001256 00000 n 
+0000001403 00000 n 
+0000001528 00000 n 
+0000001706 00000 n 
+0000001808 00000 n 
+0000001947 00000 n 
+0000002073 00000 n 
+0000002233 00000 n 
+0000002372 00000 n 
+0000002498 00000 n 
+0000002662 00000 n 
+0000002801 00000 n 
+0000002927 00000 n 
+0000003087 00000 n 
+0000003285 00000 n 
+0000003506 00000 n 
+0000003712 00000 n 
+0000003878 00000 n 
+0000004070 00000 n 
+0000004248 00000 n 
+0000004453 00000 n 
+0000004622 00000 n 
+0000004920 00000 n 
+0000005161 00000 n 
+0000005211 00000 n 
+0000005417 00000 n 
+0000005594 00000 n 
+0000005802 00000 n 
+0000005989 00000 n 
+0000006055 00000 n 
+0000006398 00000 n 
+0000006605 00000 n 
+0000006769 00000 n 
+0000006929 00000 n 
+0000007126 00000 n 
+trailer
+<< /Size 43 /Root 42 0 R /Info 1 0 R /ID [<5422A485AD6AE1A4BD24F79230A36365> <5422A485AD6AE1A4BD24F79230A36365>] >>
+startxref
+7194
+%%EOF
