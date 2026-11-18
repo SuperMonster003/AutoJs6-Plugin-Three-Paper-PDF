@@ -128,11 +128,12 @@ internal object TextToPdf {
 
     /**
      * Loads the font input: copied to [directory], checked by its magic number (`00 01 00 00`, `true`, `OTTO`, `ttcf`),
-     * then `Typeface.createFromFile`; `INVALID_ARGUMENT` when it is not a font the system loads.
+     * then `Typeface.createFromFile`; `INVALID_ARGUMENT` when it is not a font the system loads. The Canvas stamp
+     * pipeline (roadmap D60) loads its font input the same way.
      * zh-CN: 载入字体输入: 复制到 [directory], 按魔数 (`00 01 00 00`, `true`, `OTTO`, `ttcf`) 检查, 再经 `Typeface.createFromFile`
-     * 载入; 不是系统能载入的字体时报 `INVALID_ARGUMENT`.
+     * 载入; 不是系统能载入的字体时报 `INVALID_ARGUMENT`. Canvas 印章管线 (路线图 D60) 以同样方式载入其字体输入.
      */
-    private fun font(input: ParcelFileDescriptor, directory: File): Typeface {
+    internal fun font(input: ParcelFileDescriptor, directory: File): Typeface {
         val bytes = InputBytes.read(input, PdfContract.MAX_TEXT_INPUT_BYTES, "the font")
         if (!isFont(bytes)) throw PdfFailure.invalid("the font input is not a TrueType or OpenType font")
         val file = File(directory, "font")
