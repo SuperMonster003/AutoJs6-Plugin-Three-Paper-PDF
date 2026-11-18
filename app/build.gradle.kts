@@ -135,7 +135,15 @@ android {
         unitTests.isReturnDefaultValues = true
         // JVM tests read the committed samples of .python/generate_fixtures.py (roadmap P0.3, D39).
         // zh-CN: JVM 测试读取 .python/generate_fixtures.py 生成并已提交的样例 (路线图 P0.3, D39).
-        unitTests.all { it.systemProperty("paper.samples", rootProject.file("samples/fixtures").path) }
+        unitTests.all { test ->
+            test.systemProperty("paper.samples", rootProject.file("samples/fixtures").path)
+            // The object stream tests (roadmap P6.7) leave their outputs here for .python/check_object_streams.py; with
+            // -Dpaper.extraPdfs=<file;file> they also measure other PDFs (spike S4).
+            // zh-CN: 对象流测试 (路线图 P6.7) 把输出留在这里, 供 .python/check_object_streams.py 读取; 给出
+            // -Dpaper.extraPdfs=<文件;文件> 时还测量其他 PDF (spike S4).
+            test.systemProperty("paper.objectStreamsOutput", layout.buildDirectory.dir("objstm").get().asFile.path)
+            System.getProperty("paper.extraPdfs")?.let { test.systemProperty("paper.extraPdfs", it) }
+        }
     }
 
     // Device tests open the same samples as androidTest assets. zh-CN: 设备测试把同一批样例作为 androidTest 资产打开.
