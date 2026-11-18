@@ -10,6 +10,7 @@ import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.PdfEngine
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.generate.HtmlToPdf
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.generate.ImagesToPdf
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.generate.TextToPdf
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.stamp.StampOperation
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfFailure
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfOptions
 import org.autojs.plugin.pdf.api.IPdfProgressCallback
@@ -91,6 +92,10 @@ internal class RunOperations(private val engine: PdfEngine, context: Context) {
         PdfOps.DECRYPT -> {
             val request = PdfEncryption.decryptRequest(options, inputCount)
             Work { operation, inputs, directory -> PdfEncryption.decrypt(request, inputs.single(), directory, operation) }
+        }
+        PdfOps.STAMP -> {
+            val request = StampOperation.request(options, inputCount)
+            Work { operation, inputs, directory -> StampOperation.write(request, inputs, directory, operation) }
         }
         else -> throw PdfDocumentStub.notImplemented(op)
     }

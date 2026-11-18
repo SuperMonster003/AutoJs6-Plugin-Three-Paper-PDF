@@ -140,11 +140,12 @@ internal class StampFonts(private val custom: Typeface? = null, emojiAsBitmaps: 
  * ([x], [y]), then turned counterclockwise by [rotation] degrees around that point. [opacity] multiplies the alpha of
  * [color] (ARGB) and is drawn by the canvas paint, so it holds inside the imported form whatever graphics state the
  * page content leaves. Bold and italic come from the typeface when it has them, else they are synthesized (fake bold,
- * a skew of 0.25).
+ * a skew of 0.25). [copies] are further display points the same box is anchored at (a tiled item, roadmap P6.3), laid
+ * out once.
  * zh-CN: 文字印章 (路线图 D60, D61): [text] (按 `\n` 分行) 放在与最宽一行同宽的方框中, 使方框上的点 ([anchorX], [anchorY]) (比例: 0
  * 为左 / 上, 0.5 为中, 1 为右 / 下) 落在显示坐标 ([x], [y]), 再绕该点逆时针旋转 [rotation] 度. [opacity] 与 [color] (ARGB) 的
  * alpha 相乘并由画布的画笔绘制, 因此无论页面内容留下怎样的图形状态, 在导入的表单内都成立. 字体有粗体与斜体时直接使用, 否则合成
- * (伪粗体, 0.25 的倾斜).
+ * (伪粗体, 0.25 的倾斜). [copies] 是同一方框另外锚定的显示坐标点 (平铺条目, 路线图 P6.3), 只排版一次.
  */
 internal data class TextStamp(
     val text: String,
@@ -161,6 +162,7 @@ internal data class TextStamp(
     val align: StampAlign = StampAlign.START,
     val customFont: Boolean = false,
     override val layer: StampLayer = StampLayer.OVER,
+    val copies: List<Pair<Double, Double>> = emptyList(),
 ) : Stamp {
 
     init {
@@ -184,13 +186,7 @@ internal data class TextStamp(
     /** The laid out text; its width is the box width. zh-CN: 排好版的文字; 其宽度就是方框宽度. */
     fun layout(paint: TextPaint, fonts: StampFonts): StaticLayout {
         val source = fonts.text(text)
-        var widest = 0f
-        var start = 0
-        while (start <= source.length) {
-            val end = source.indexOf('\n', start).let { if (it < 0) source.length else it }
-            widest = maxOf(widest, Layout.getDesiredWidth(source, start, end, paint))
-            start = end + 1
-        }
+        val widest = widest(source, paint)
         // One extra point keeps StaticLayout from breaking the widest line on a rounding difference.
         // zh-CN: 多留一点, 避免 StaticLayout 因舍入差异把最宽的一行折开.
         val width = (ceil(widest).toInt() + 1).coerceAtLeast(1)
@@ -205,21 +201,46 @@ internal data class TextStamp(
             .build()
     }
 
+    private fun widest(source: CharSequence, paint: TextPaint): Float {
+        var widest = 0f
+        var start = 0
+        while (start <= source.length) {
+            val end = source.indexOf('\n', start).let { if (it < 0) source.length else it }
+            widest = maxOf(widest, Layout.getDesiredWidth(source, start, end, paint))
+            start = end + 1
+        }
+        return widest
+    }
+
+    /**
+     * The box of this stamp, the width and height of its laid out text in points; [widestLine] is the desired width of
+     * its widest line (the fitted font size of `stamp` is worked out from it).
+     * zh-CN: 本印章的方框, 即排好版的文字以点计的宽与高; [widestLine] 是其最宽一行的期望宽度 (`stamp` 的自适应字号由它算出).
+     */
+    fun box(fonts: StampFonts): Pair<Double, Double> {
+        val layout = layout(paint(fonts), fonts)
+        return layout.width.toDouble() to layout.height.toDouble()
+    }
+
+    fun widestLine(fonts: StampFonts): Double = widest(fonts.text(text), paint(fonts)).toDouble()
+
     override fun draw(canvas: Canvas, fonts: StampFonts) {
         val paint = paint(fonts)
         val layout = layout(paint, fonts)
-        canvas.save()
-        try {
-            canvas.translate(x.toFloat(), y.toFloat())
-            // Canvas angles turn clockwise on screen (y down); D61 angles turn counterclockwise.
-            // zh-CN: 画布角度在屏幕上 (y 向下) 顺时针旋转; D61 的角度逆时针旋转.
-            canvas.rotate(-rotation.toFloat())
-            canvas.translate((-anchorX * layout.width).toFloat(), (-anchorY * layout.height).toFloat())
-            layout.draw(canvas)
-        } finally {
-            canvas.restore()
+        for ((atX, atY) in listOf(x to y) + copies) {
+            canvas.save()
+            try {
+                canvas.translate(atX.toFloat(), atY.toFloat())
+                // Canvas angles turn clockwise on screen (y down); D61 angles turn counterclockwise.
+                // zh-CN: 画布角度在屏幕上 (y 向下) 顺时针旋转; D61 的角度逆时针旋转.
+                canvas.rotate(-rotation.toFloat())
+                canvas.translate((-anchorX * layout.width).toFloat(), (-anchorY * layout.height).toFloat())
+                layout.draw(canvas)
+            } finally {
+                canvas.restore()
+            }
+            fonts.spaceSink?.addAll(spaces(layout, paint, fonts, atX, atY))
         }
-        fonts.spaceSink?.addAll(spaces(layout, paint, fonts))
     }
 
     /**
@@ -229,7 +250,7 @@ internal data class TextStamp(
      * zh-CN: [layout] 中同一行后面还有可见字符的空格, 以画布坐标表示 ([LaidSpace]): 空格从其主水平位置开始 (从右到左的段中为其右缘),
      * 宽度为画笔量得的宽度, 即在 API 35 上丢失它的那个单独字体段的宽度 (路线图 Q192 (c)).
      */
-    fun spaces(layout: Layout, paint: TextPaint, fonts: StampFonts): List<LaidSpace> {
+    fun spaces(layout: Layout, paint: TextPaint, fonts: StampFonts, atX: Double = x, atY: Double = y): List<LaidSpace> {
         val source = layout.text
         var found: ArrayList<LaidSpace>? = null
         val radians = Math.toRadians(-rotation)
@@ -247,8 +268,8 @@ internal data class TextStamp(
             val start = layout.getPrimaryHorizontal(index).toDouble()
             val left = if (layout.isRtlCharAt(index)) start - width else start
             val baseline = layout.getLineBaseline(line).toDouble()
-            fun canvasX(u: Double, v: Double) = x + cos * (u + shiftX) - sin * (v + shiftY)
-            fun canvasY(u: Double, v: Double) = y + sin * (u + shiftX) + cos * (v + shiftY)
+            fun canvasX(u: Double, v: Double) = atX + cos * (u + shiftX) - sin * (v + shiftY)
+            fun canvasY(u: Double, v: Double) = atY + sin * (u + shiftX) + cos * (v + shiftY)
             val drawn = if (character == StampFonts.NO_BREAK_SPACE && fonts.spacesAsNoBreak) ' ' else character
             (found ?: ArrayList<LaidSpace>().also { found = it }) += LaidSpace(
                 canvasX(left, baseline), canvasY(left, baseline), canvasX(left + width, baseline), canvasY(left + width, baseline), fontSize, drawn,

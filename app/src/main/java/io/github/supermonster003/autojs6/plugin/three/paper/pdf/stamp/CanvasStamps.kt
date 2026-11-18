@@ -44,6 +44,8 @@ internal class CanvasStamps(
     private val subsetFonts: Boolean = true,
     /** Adds the spaces Skia drops ([SpaceRepair], roadmap Q192 (c)); off only in comparisons. zh-CN: 补上 Skia 丢掉的空格 ([SpaceRepair], 路线图 Q192 (c)); 只在对比测试中关闭. */
     private val repairSpaces: Boolean = true,
+    /** Puts JPEG inputs back in place of Skia's lossless copies ([JpegPassThrough], roadmap Q201 (a)); off only in comparisons. zh-CN: 用 JPEG 输入取代 Skia 的无损副本 ([JpegPassThrough], 路线图 Q201 (a)); 只在对比测试中关闭. */
+    private val passJpegs: Boolean = true,
 ) {
 
     /** The stamps of one page (0-based [pageIndex]). zh-CN: 一页 (从 0 计的 [pageIndex]) 的印章. */
@@ -52,9 +54,10 @@ internal class CanvasStamps(
     /**
      * What [apply] did: pages stamped, form XObjects made, bytes of the temporary stamp document, `/ToUnicode` entries
      * repaired ([ToUnicodeRepair]), unused Type 3 glyph procedures dropped ([Type3Pruning]), fonts subset
-     * ([FontSubsetting]), dropped spaces added back ([SpaceRepair]).
+     * ([FontSubsetting]), dropped spaces added back ([SpaceRepair]), image streams replaced by their JPEG input
+     * ([JpegPassThrough]).
      * zh-CN: [apply] 的结果: 加了印章的页数, 生成的表单 XObject 数, 临时印章文档的字节数, 修复的 `/ToUnicode` 条目数 ([ToUnicodeRepair]),
-     * 去掉的未用 Type 3 字形过程数 ([Type3Pruning]), 字体子集化的结果 ([FontSubsetting]), 补回的空格数 ([SpaceRepair]).
+     * 去掉的未用 Type 3 字形过程数 ([Type3Pruning]), 字体子集化的结果 ([FontSubsetting]), 补回的空格数 ([SpaceRepair]), 换成 JPEG 输入的图片流数 ([JpegPassThrough]).
      */
     data class Summary(
         val pages: Int,
@@ -64,12 +67,14 @@ internal class CanvasStamps(
         val prunedGlyphs: Int,
         val fonts: FontSubsetting.Result = FontSubsetting.Result.NONE,
         val addedSpaces: Int = 0,
+        val jpegImages: Int = 0,
     )
 
     /** A distinct stamp page: its canvas size and its stamps. zh-CN: 一张不同的印章页: 画布尺寸与印章. */
     private data class Sheet(val width: Int, val height: Int, val stamps: List<Stamp>)
 
-    private class Placement(val page: PDPage, val frame: StampFrame, val sheet: Int, val layer: StampLayer)
+    /** One (page, layer) to place; [lastOfPage] marks the last placement of its page (progress). zh-CN: 一个待放置的 (页, 层); [lastOfPage] 标出该页的最后一次放置 (用于进度). */
+    private class Placement(val page: PDPage, val frame: StampFrame, val sheet: Int, val layer: StampLayer, var lastOfPage: Boolean = false)
 
     /**
      * Stamps [document] as [plan] says; [progress] gets (pages placed, pages to place) after drawing and per page.
@@ -98,12 +103,16 @@ internal class CanvasStamps(
         try {
             val spaces = draw(sheets.keys, file, stop)
             val stampBytes = file.length()
-            progress(0, placements.size)
+            placements.forEachIndexed { index, placement -> placement.lastOfPage = placements.getOrNull(index + 1)?.page !== placement.page }
+            val pageTotal = placements.count { it.lastOfPage }
+            var pagesPlaced = 0
+            progress(0, pageTotal)
             PDDocument.load(file, MemoryUsageSetting.setupMixed(PdfLoader.DEFAULT_MAIN_MEMORY_BYTES).setTempDir(directory)).use { source ->
                 val repaired = repairText(source, sheets.keys)
                 val pruned = Type3Pruning.prune(source)
                 val added = if (repairSpaces) SpaceRepair.repair(source, spaces) else 0
                 val subset = if (subsetFonts) FontSubsetting.subset(source) else FontSubsetting.Result.NONE
+                val jpegs = if (passJpegs) JpegPassThrough.apply(source, sheets.keys.map { it.stamps }) else 0
                 val layers = LayerUtility(document)
                 val forms = HashMap<Int, PDFormXObject>()
                 val owned = Collections.newSetFromMap(IdentityHashMap<PDPage, Boolean>())
@@ -112,9 +121,9 @@ internal class CanvasStamps(
                     val form = forms.getOrPut(placement.sheet) { layers.importPageAsForm(source, placement.sheet) }
                     if (owned.add(placement.page)) ownResources(placement.page)
                     place(document, placement, form)
-                    progress(index + 1, placements.size)
+                    if (placement.lastOfPage) progress(++pagesPlaced, pageTotal)
                 }
-                return Summary(owned.size, forms.size, stampBytes, repaired, pruned, subset, added)
+                return Summary(owned.size, forms.size, stampBytes, repaired, pruned, subset, added, jpegs)
             }
         } catch (e: IOException) {
             throw PdfFailure(PdfErrorCodes.IO_ERROR, "cannot stamp the pages: ${e.message}")
