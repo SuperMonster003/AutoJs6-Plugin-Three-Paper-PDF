@@ -1,19 +1,11 @@
 package io.github.supermonster003.autojs6.plugin.three.paper.pdf.stamp
 
-import com.tom_roush.pdfbox.contentstream.PDContentStream
-import com.tom_roush.pdfbox.contentstream.operator.Operator
 import com.tom_roush.pdfbox.cos.COSArray
 import com.tom_roush.pdfbox.cos.COSBase
 import com.tom_roush.pdfbox.cos.COSDictionary
 import com.tom_roush.pdfbox.cos.COSName
 import com.tom_roush.pdfbox.cos.COSNumber
-import com.tom_roush.pdfbox.cos.COSObject
-import com.tom_roush.pdfbox.cos.COSString
-import com.tom_roush.pdfbox.pdfparser.PDFStreamParser
 import com.tom_roush.pdfbox.pdmodel.PDDocument
-import com.tom_roush.pdfbox.pdmodel.PDResources
-import com.tom_roush.pdfbox.pdmodel.graphics.form.PDFormXObject
-import java.util.IdentityHashMap
 
 /**
  * Drops the glyph procedures that no text uses from the Type 3 fonts of the temporary stamp document (spike S2): the
@@ -29,42 +21,16 @@ internal object Type3Pruning {
 
     /** Prunes [document]; answers the number of glyph procedures removed. zh-CN: 精简 [document]; 返回去掉的字形过程数. */
     fun prune(document: PDDocument): Int {
-        val used = IdentityHashMap<COSDictionary, MutableSet<Int>>()
-        for (page in document.pages) scan(page, page.resources, used, 0)
         var removed = 0
-        for ((font, codes) in used) removed += prune(font, codes)
+        for ((font, strings) in ShownStrings.collect(document)) {
+            val codes = HashSet<Int>()
+            strings.forEach { bytes -> bytes.forEach { codes += it.toInt() and 0xFF } }
+            removed += prune(font, codes)
+        }
         return removed
     }
 
-    private fun scan(stream: PDContentStream, resources: PDResources?, used: MutableMap<COSDictionary, MutableSet<Int>>, depth: Int) {
-        if (depth > 8) return
-        val tokens = PDFStreamParser(stream).apply { parse() }.tokens
-        val operands = ArrayList<Any>()
-        var font: COSDictionary? = null
-        fun shown(base: Any?) {
-            val target = font ?: return
-            if (base is COSString) base.bytes.forEach { used.getOrPut(target) { HashSet() } += it.toInt() and 0xFF }
-        }
-        for (token in tokens) {
-            if (token !is Operator) {
-                operands += token
-                continue
-            }
-            when (token.name) {
-                "Tf" -> font = (operands.firstOrNull() as? COSName)?.let { name -> resolve(fonts(resources)?.getDictionaryObject(name)) as? COSDictionary }
-                "Tj", "'", "\"" -> shown(operands.lastOrNull())
-                "TJ" -> (operands.lastOrNull() as? COSArray)?.forEach { shown(it) }
-                "Do" -> (operands.firstOrNull() as? COSName)?.let { name ->
-                    (resources?.getXObject(name) as? PDFormXObject)?.let { scan(it, it.resources, used, depth + 1) }
-                }
-            }
-            operands.clear()
-        }
-    }
-
-    private fun fonts(resources: PDResources?): COSDictionary? = resolve(resources?.cosObject?.getDictionaryObject(COSName.FONT)) as? COSDictionary
-
-    private fun resolve(base: COSBase?): COSBase? = if (base is COSObject) base.getObject() else base
+    private fun resolve(base: COSBase?): COSBase? = ShownStrings.resolve(base)
 
     private fun prune(font: COSDictionary, codes: Set<Int>): Int {
         if (COSName.TYPE3 != font.getCOSName(COSName.SUBTYPE)) return 0

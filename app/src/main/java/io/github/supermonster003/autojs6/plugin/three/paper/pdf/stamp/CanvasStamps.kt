@@ -37,18 +37,31 @@ import java.util.IdentityHashMap
  * 相同且印章列表相等的页面共用一个表单. 每个加了印章的页面得到自己的资源字典 (及其 `/XObject` 字典) 副本, 与其他页共用或从页面树
  * 继承的资源保持不动.
  */
-internal class CanvasStamps(private val directory: File, private val fonts: StampFonts = StampFonts()) {
+internal class CanvasStamps(
+    private val directory: File,
+    private val fonts: StampFonts = StampFonts(),
+    /** Subsets the fonts Skia embeds whole ([FontSubsetting], roadmap Q191 (b)); off only in comparisons. zh-CN: 子集化 Skia 整个嵌入的字体 ([FontSubsetting], 路线图 Q191 (b)); 只在对比测试中关闭. */
+    private val subsetFonts: Boolean = true,
+) {
 
     /** The stamps of one page (0-based [pageIndex]). zh-CN: 一页 (从 0 计的 [pageIndex]) 的印章. */
     data class PageStamps(val pageIndex: Int, val stamps: List<Stamp>)
 
     /**
      * What [apply] did: pages stamped, form XObjects made, bytes of the temporary stamp document, `/ToUnicode` entries
-     * repaired ([ToUnicodeRepair]), unused Type 3 glyph procedures dropped ([Type3Pruning]).
+     * repaired ([ToUnicodeRepair]), unused Type 3 glyph procedures dropped ([Type3Pruning]), fonts subset
+     * ([FontSubsetting]).
      * zh-CN: [apply] 的结果: 加了印章的页数, 生成的表单 XObject 数, 临时印章文档的字节数, 修复的 `/ToUnicode` 条目数 ([ToUnicodeRepair]),
-     * 去掉的未用 Type 3 字形过程数 ([Type3Pruning]).
+     * 去掉的未用 Type 3 字形过程数 ([Type3Pruning]), 字体子集化的结果 ([FontSubsetting]).
      */
-    data class Summary(val pages: Int, val forms: Int, val stampBytes: Long, val repairedMappings: Int, val prunedGlyphs: Int)
+    data class Summary(
+        val pages: Int,
+        val forms: Int,
+        val stampBytes: Long,
+        val repairedMappings: Int,
+        val prunedGlyphs: Int,
+        val fonts: FontSubsetting.Result = FontSubsetting.Result.NONE,
+    )
 
     /** A distinct stamp page: its canvas size and its stamps. zh-CN: 一张不同的印章页: 画布尺寸与印章. */
     private data class Sheet(val width: Int, val height: Int, val stamps: List<Stamp>)
@@ -86,6 +99,7 @@ internal class CanvasStamps(private val directory: File, private val fonts: Stam
             PDDocument.load(file, MemoryUsageSetting.setupMixed(PdfLoader.DEFAULT_MAIN_MEMORY_BYTES).setTempDir(directory)).use { source ->
                 val repaired = repairText(source, sheets.keys)
                 val pruned = Type3Pruning.prune(source)
+                val subset = if (subsetFonts) FontSubsetting.subset(source) else FontSubsetting.Result.NONE
                 val layers = LayerUtility(document)
                 val forms = HashMap<Int, PDFormXObject>()
                 val owned = Collections.newSetFromMap(IdentityHashMap<PDPage, Boolean>())
@@ -96,7 +110,7 @@ internal class CanvasStamps(private val directory: File, private val fonts: Stam
                     place(document, placement, form)
                     progress(index + 1, placements.size)
                 }
-                return Summary(owned.size, forms.size, stampBytes, repaired, pruned)
+                return Summary(owned.size, forms.size, stampBytes, repaired, pruned, subset)
             }
         } catch (e: IOException) {
             throw PdfFailure(PdfErrorCodes.IO_ERROR, "cannot stamp the pages: ${e.message}")

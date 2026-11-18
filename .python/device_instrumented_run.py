@@ -4,9 +4,9 @@
 The script installs the debug plugin and its test package (`assembleDebug` + `assembleDebugAndroidTest` first), runs
 `am instrument -r` for the given classes or methods, prints one `PASS` / `FAIL` / `SKIP` line per test, then the logcat
 lines of the timing and probe tags (`PaperRenderPerf`, `PaperMergePerf`, `PaperImagesPerf`, `PaperHtmlSpike`,
-`PaperCryptoSpike`, `PaperViewerPerf`, `PaperStampSpike`, `PaperObjectStreams`). At the end the test package is
-uninstalled; the plugin is uninstalled too unless it was installed before, in which case the original APK (pulled
-first) is installed back with `install -r -d`.
+`PaperCryptoSpike`, `PaperViewerPerf`, `PaperStampSpike`, `PaperObjectStreams`, `PaperFontSubset`). At the end the test
+package is uninstalled; the plugin is uninstalled too unless it was installed before, in which case the original APK
+(pulled first) is installed back with `install -r -d`.
 With `--installed` the plugin already on the device is used as it is (it must be a debuggable build): only the test
 package is installed and uninstalled, so a device that asks to confirm every installation (MIUI / HyperOS, ColorOS)
 asks once per run. The script never taps the screen; an installation that waits for a confirmation on the device
@@ -39,7 +39,7 @@ TEST_PACKAGE = PLUGIN_PACKAGE + ".test"
 TEST_PREFIX = PLUGIN_PACKAGE + "."
 RUNNER = TEST_PACKAGE + "/androidx.test.runner.AndroidJUnitRunner"
 TAGS = ("PaperRenderPerf", "PaperMergePerf", "PaperImagesPerf", "PaperHtmlSpike", "PaperCryptoSpike", "PaperViewerPerf", "PaperStampSpike",
-        "PaperObjectStreams")
+        "PaperObjectStreams", "PaperFontSubset")
 ROOT = Path(__file__).resolve().parent.parent
 PLUGIN_APK = ROOT / "app/build/outputs/apk/debug/autojs6-plugin-three-paper-pdf-v1.0.0.apk"
 TEST_APK = ROOT / "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk"
