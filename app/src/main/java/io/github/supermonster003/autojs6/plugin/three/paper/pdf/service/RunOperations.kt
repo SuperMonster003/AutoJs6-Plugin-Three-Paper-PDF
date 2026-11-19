@@ -14,6 +14,7 @@ import io.github.supermonster003.autojs6.plugin.three.paper.pdf.generate.TextToP
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.metadata.InfoChanges
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.metadata.OutlineChanges
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.stamp.StampOperation
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.textlayer.TextLayers
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfFailure
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfOptions
 import org.autojs.plugin.pdf.api.IPdfProgressCallback
@@ -111,6 +112,10 @@ internal class RunOperations(private val engine: PdfEngine, context: Context) {
         PdfOps.SET_OUTLINE -> {
             val request = InfoChanges.request(op, options, inputCount)
             Work { operation, inputs, directory -> OutlineChanges.write(request, inputs, directory, operation) }
+        }
+        PdfOps.ADD_TEXT_LAYER -> {
+            val request = TextLayers.request(options, inputCount)
+            Work { operation, inputs, directory -> TextLayers.write(request, inputs, directory, operation) }
         }
         else -> throw PdfDocumentStub.notImplemented(op)
     }

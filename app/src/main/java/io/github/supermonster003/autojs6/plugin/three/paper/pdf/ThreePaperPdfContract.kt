@@ -67,10 +67,10 @@ object ThreePaperPdfContract {
     /**
      * Operations the plugin implements end to end; every other operation answers `UNSUPPORTED` with the detail
      * `NOT_IMPLEMENTED: <op>` until its roadmap item lands (P2.2: reading, P2.3: rendering, P2.4: page operations, P2.5:
-     * generation and images, P2.6: encryption, P3.2: viewer sessions; version 2: P6.3 `stamp`, P6.6 `compress`, P6.8 `setInfo` and `setOutline`). `fromHtml` is listed on every device; where
+     * generation and images, P2.6: encryption, P3.2: viewer sessions; version 2: P6.3 `stamp`, P6.5 `addTextLayer`, P6.6 `compress`, P6.8 `setInfo` and `setOutline`). `fromHtml` is listed on every device; where
      * `generate.html` is not declared it answers `UNSUPPORTED` (protocol "Run operations").
      * zh-CN: 插件端到端实现的操作; 其他操作在对应的路线图条目落地之前返回详情为 `NOT_IMPLEMENTED: <op>` 的 `UNSUPPORTED`
-     * (P2.2: 读取, P2.3: 渲染, P2.4: 页面操作, P2.5: 生成与图片, P2.6: 加密, P3.2: 查看器会话; 版本 2: P6.3 `stamp`, P6.6 `compress`, P6.8 `setInfo` 与 `setOutline`). `fromHtml` 在所有设备上都列出;
+     * (P2.2: 读取, P2.3: 渲染, P2.4: 页面操作, P2.5: 生成与图片, P2.6: 加密, P3.2: 查看器会话; 版本 2: P6.3 `stamp`, P6.5 `addTextLayer`, P6.6 `compress`, P6.8 `setInfo` 与 `setOutline`). `fromHtml` 在所有设备上都列出;
      * 未声明 `generate.html` 的设备上它返回 `UNSUPPORTED` (协议 "Run operations" 一节).
      */
     val IMPLEMENTED_OPS: List<String> = listOf(
@@ -78,7 +78,7 @@ object ThreePaperPdfContract {
         PdfOps.MERGE, PdfOps.PLAN_SPLIT, PdfOps.SPLIT, PdfOps.SAVE,
         PdfOps.FROM_IMAGES, PdfOps.FROM_TEXT, PdfOps.FROM_HTML, PdfOps.PLAN_IMAGES, PdfOps.EXTRACT_IMAGE,
         PdfOps.ENCRYPT, PdfOps.DECRYPT, PdfOps.OPEN_VIEWER,
-        PdfOps.STAMP, PdfOps.COMPRESS, PdfOps.SET_INFO, PdfOps.SET_OUTLINE,
+        PdfOps.STAMP, PdfOps.ADD_TEXT_LAYER, PdfOps.COMPRESS, PdfOps.SET_INFO, PdfOps.SET_OUTLINE,
     )
 
     /**

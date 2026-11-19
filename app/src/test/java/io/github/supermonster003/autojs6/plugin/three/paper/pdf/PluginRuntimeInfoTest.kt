@@ -79,13 +79,13 @@ class PluginRuntimeInfoTest {
         assertEquals(PdfContract.MAX_CONTRACT_VERSION, ThreePaperPdfContract.MAX_CONTRACT_VERSION)
         assertTrue(PdfOps.ALL.containsAll(ThreePaperPdfContract.IMPLEMENTED_OPS))
         assertEquals(
-            "roadmap P2.2 implements reading, P2.3 rendering, P2.4 page operations, P2.5 generation and images, P2.6 encryption, P3.2 viewer sessions, P6.3 stamp, P6.6 compress, P6.8 setInfo and setOutline",
+            "roadmap P2.2 implements reading, P2.3 rendering, P2.4 page operations, P2.5 generation and images, P2.6 encryption, P3.2 viewer sessions, P6.3 stamp, P6.5 addTextLayer, P6.6 compress, P6.8 setInfo and setOutline",
             listOf(
                 PdfOps.INFO, PdfOps.OUTLINE, PdfOps.TEXT, PdfOps.SEARCH, PdfOps.RENDER, PdfOps.RENDER_TO_FILE,
                 PdfOps.MERGE, PdfOps.PLAN_SPLIT, PdfOps.SPLIT, PdfOps.SAVE,
                 PdfOps.FROM_IMAGES, PdfOps.FROM_TEXT, PdfOps.FROM_HTML, PdfOps.PLAN_IMAGES, PdfOps.EXTRACT_IMAGE,
                 PdfOps.ENCRYPT, PdfOps.DECRYPT, PdfOps.OPEN_VIEWER,
-                PdfOps.STAMP, PdfOps.COMPRESS, PdfOps.SET_INFO, PdfOps.SET_OUTLINE,
+                PdfOps.STAMP, PdfOps.ADD_TEXT_LAYER, PdfOps.COMPRESS, PdfOps.SET_INFO, PdfOps.SET_OUTLINE,
             ),
             ThreePaperPdfContract.IMPLEMENTED_OPS,
         )
