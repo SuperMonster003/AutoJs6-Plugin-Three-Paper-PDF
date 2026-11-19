@@ -40,14 +40,16 @@ internal sealed interface StampPosition {
 
 /**
  * One checked item of a `stamp` payload (roadmap D61, protocol "Stamp items"). [text] holds the placeholders still;
- * [fontSize] null fits the text to half the displayed page width; [image] is an index of the image inputs. Sizes and
- * positions are points of the displayed page.
- * zh-CN: `stamp` payload 中一个已检查的条目 (路线图 D61, 协议 "Stamp items" 一节). [text] 仍含占位符; [fontSize] 为 null 时按显示
- * 页宽的一半适配; [image] 是图片输入的序号. 尺寸与位置都以显示页面的点计.
+ * [pageOffset] is added to the physical page number `{page}` shows (roadmap Q211 (a)); [fontSize] null fits the text to
+ * half the displayed page width; [image] is an index of the image inputs. Sizes and positions are points of the
+ * displayed page.
+ * zh-CN: `stamp` payload 中一个已检查的条目 (路线图 D61, 协议 "Stamp items" 一节). [text] 仍含占位符; [pageOffset] 加到 `{page}`
+ * 显示的物理页码上 (路线图 Q211 (a)); [fontSize] 为 null 时按显示页宽的一半适配; [image] 是图片输入的序号. 尺寸与位置都以显示页面的点计.
  */
 internal data class StampItem(
     val isText: Boolean,
     val text: String,
+    val pageOffset: Long,
     val image: Int,
     val pages: String?,
     val position: StampPosition,
@@ -84,11 +86,12 @@ internal data class StampItem(
  * (more is `LIMIT_EXCEEDED`, roadmap Q185 (a)); an unknown `type`, `layer` or position name, a missing `text` or
  * `image`, an `image` outside `0..imageCount-1`, a text longer than `MAX_STAMP_TEXT_LENGTH` (as the host checks it, and
  * as `setInfo` treats `MAX_INFO_VALUE_LENGTH`), a colour that is not `#RRGGBB` / `#AARRGGBB` and a number out of range
- * are `INVALID_ARGUMENT` naming the field path. Fields the reader does not know are ignored.
+ * (`pageOffset` too, checked on image items as well) are `INVALID_ARGUMENT` naming the field path. Fields the reader
+ * does not know are ignored.
  * zh-CN: 读取 `stamp` payload 的 `items` (协议 "Stamp items" 与 "Version 2 ceilings" 两节): 1 至 `MAX_STAMP_ITEMS` 个条目 (超过为
  * `LIMIT_EXCEEDED`, 路线图 Q185 (a)); 不认识的 `type`, `layer` 或位置名称, 缺少 `text` 或 `image`, `image` 不在 `0..imageCount-1`,
  * 文字超过 `MAX_STAMP_TEXT_LENGTH` (与宿主的检查相同, 也与 `setInfo` 对 `MAX_INFO_VALUE_LENGTH` 的处理一致), 颜色不是 `#RRGGBB` /
- * `#AARRGGBB`, 以及数值越界, 都是带字段路径的 `INVALID_ARGUMENT`. 不认识的字段忽略.
+ * `#AARRGGBB`, 以及数值越界 (`pageOffset` 也是, 图片条目同样检查), 都是带字段路径的 `INVALID_ARGUMENT`. 不认识的字段忽略.
  */
 internal object StampItems {
 
@@ -129,9 +132,11 @@ internal object StampItems {
         }
         val length = 0.0..MAX_LENGTH
         val signed = -MAX_LENGTH..MAX_LENGTH
+        val offsets = -PdfContract.MAX_PAGE_OFFSET.toLong()..PdfContract.MAX_PAGE_OFFSET.toLong()
         return StampItem(
             isText = isText,
             text = text,
+            pageOffset = item.optLong(PdfContract.FIELD_PAGE_OFFSET, offsets) ?: 0L,
             image = image,
             pages = item.optString(PdfContract.FIELD_PAGES),
             position = position(item),
@@ -200,16 +205,18 @@ internal object StampItems {
 
     /**
      * [text] with the placeholders replaced in a single pass (a replacement is not expanded again; other braces stay):
-     * `{page}`, `{total}`, `{date}` and `{name}`.
-     * zh-CN: 单遍替换 [text] 中的占位符 (替换结果不再展开; 其他花括号保持原样): `{page}`, `{total}`, `{date}` 与 `{name}`.
+     * `{page}` (the physical [page] plus [pageOffset], shown as it is below 1, roadmap Q211 (a)), `{total}` (the page
+     * count, no offset), `{date}` and `{name}`.
+     * zh-CN: 单遍替换 [text] 中的占位符 (替换结果不再展开; 其他花括号保持原样): `{page}` (物理页码 [page] 加 [pageOffset], 小于 1 时照样
+     * 显示, 路线图 Q211 (a)), `{total}` (总页数, 不加偏移), `{date}` 与 `{name}`.
      */
-    fun expand(text: String, page: Int, total: Int, date: String, name: String): String {
+    fun expand(text: String, page: Int, total: Int, date: String, name: String, pageOffset: Long = 0L): String {
         if (text.indexOf('{') < 0) return text
         val out = StringBuilder(text.length + 8)
         var index = 0
         while (index < text.length) {
             val replacement = when {
-                text.startsWith(PdfContract.PLACEHOLDER_PAGE, index) -> PdfContract.PLACEHOLDER_PAGE to page.toString()
+                text.startsWith(PdfContract.PLACEHOLDER_PAGE, index) -> PdfContract.PLACEHOLDER_PAGE to (page + pageOffset).toString()
                 text.startsWith(PdfContract.PLACEHOLDER_TOTAL, index) -> PdfContract.PLACEHOLDER_TOTAL to total.toString()
                 text.startsWith(PdfContract.PLACEHOLDER_DATE, index) -> PdfContract.PLACEHOLDER_DATE to date
                 text.startsWith(PdfContract.PLACEHOLDER_NAME, index) -> PdfContract.PLACEHOLDER_NAME to name

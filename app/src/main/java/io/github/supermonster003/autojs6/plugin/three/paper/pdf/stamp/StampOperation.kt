@@ -165,7 +165,7 @@ internal object StampOperation {
                 if (!ranges[itemIndex][number]) return@forEachIndexed
                 val label = "payload.items[$itemIndex]"
                 val stamp = if (item.isText) {
-                    val text = StampItems.expand(item.text, number, pageCount, date, name)
+                    val text = StampItems.expand(item.text, number, pageCount, date, name, item.pageOffset)
                     cache.getOrPut(listOf(itemIndex, text, width, height)) { textStamp(item, text, fonts, request.hasFont, width, height, label) }
                 } else {
                     cache.getOrPut(listOf(itemIndex, width, height)) { imageStamp(item, images.get(item.image), images.jpeg(item.image), width, height, label) }

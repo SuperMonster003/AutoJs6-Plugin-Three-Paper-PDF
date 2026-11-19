@@ -32,6 +32,7 @@ class StampItemsTest {
         val item = items("""{ "items": [ { "type": "text", "text": "Draft" } ] }""").single()
         assertTrue(item.isText)
         assertEquals("Draft", item.text)
+        assertEquals("absent pageOffset (Q211 (a))", 0L, item.pageOffset)
         assertNull(item.pages)
         assertEquals(StampPosition.Named(1, 1), item.position)
         assertEquals(0.0, item.offsetX, 0.0)
@@ -102,6 +103,31 @@ class StampItemsTest {
         failure(PdfErrorCodes.INVALID_ARGUMENT, """{ "items": [ { "type": "text", "text": "$long" } ] }""").let { assertTrue(it, it.contains("at most ${PdfContract.MAX_STAMP_TEXT_LENGTH}")) }
         assertEquals(1, items("""{ "items": [ { "type": "text", "text": "${"x".repeat(PdfContract.MAX_STAMP_TEXT_LENGTH)}" } ] }""").size)
         assertEquals(PdfContract.MAX_STAMP_ITEMS, items("""{ "items": [ ${(1..PdfContract.MAX_STAMP_ITEMS).joinToString(",") { """{ "type": "text", "text": "t" }""" }} ] }""").size)
+    }
+
+    @Test
+    fun `a page offset shifts only the page number (Q211 (a))`() {
+        val max = PdfContract.MAX_PAGE_OFFSET
+        val (shifted, image, low, high) = items(
+            """{ "items": [
+              { "type": "text", "text": "{page}", "pageOffset": -2 },
+              { "type": "image", "image": 0, "pageOffset": 5 },
+              { "type": "text", "text": "{page}", "pageOffset": -$max },
+              { "type": "text", "text": "{page}", "pageOffset": $max.0 }
+            ] }""",
+        )
+        assertEquals(-2L, shifted.pageOffset)
+        assertEquals("image items take the field without effect", 5L, image.pageOffset)
+        assertEquals(-max.toLong(), low.pageOffset)
+        assertEquals(max.toLong(), high.pageOffset)
+        assertEquals("1 / 10", StampItems.expand("{page} / {total}", 3, 10, "d", "n", -2))
+        assertEquals("sums below 1 are shown as they are", "0 -1", StampItems.expand("{page}", 1, 3, "d", "n", -1) + " " + StampItems.expand("{page}", 1, 3, "d", "n", -2))
+        assertEquals("1000005 of 5", StampItems.expand("{page} of {total}", 5, 5, "d", "n", max.toLong()))
+        assertEquals("{date} and {name} stay as they are", "d n 3", StampItems.expand("{date} {name} {page}", 3, 3, "d", "n", 0))
+        for (bad in listOf("1.5", "\"2\"", "true", "${max + 1}", "-${max + 1}", "1e7")) {
+            failure(PdfErrorCodes.INVALID_ARGUMENT, """{ "items": [ { "type": "text", "text": "a", "pageOffset": $bad } ] }""").let { assertTrue("$bad: $it", it.contains("payload.items[0].pageOffset")) }
+        }
+        failure(PdfErrorCodes.INVALID_ARGUMENT, """{ "items": [ { "type": "text", "text": "a" }, { "type": "image", "image": 0, "pageOffset": 0.5 } ] }""").let { assertTrue(it, it.contains("payload.items[1].pageOffset")) }
     }
 
     @Test

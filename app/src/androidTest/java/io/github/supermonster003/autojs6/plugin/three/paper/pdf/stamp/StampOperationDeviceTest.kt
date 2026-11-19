@@ -44,12 +44,12 @@ import java.util.concurrent.TimeUnit
  * of the system `PdfRenderer`, the transparent area of a PNG watermark leaves the content visible, rotated pages and
  * pages of different sizes take the named positions as displayed, progress counts pages, a cancelled run leaves no
  * output, and the request and payload checks give `LIMIT_EXCEEDED` (roadmap Q185 (a)), `INVALID_ARGUMENT`,
- * `PAGE_OUT_OF_RANGE` and `PERMISSION_DENIED` (Q30). The time of a text watermark on 100 A4 pages goes to logcat under
+ * `PAGE_OUT_OF_RANGE` and `PERMISSION_DENIED` (Q30); `pageOffset` shifts `{page}` only (Q211 (a)). The time of a text watermark on 100 A4 pages goes to logcat under
  * `PaperStampSpike` (appendix F).
  * zh-CN: 经 Binder 验证 `run` 操作 `stamp` (路线图 P6.3, E1 + E2): 100 页文档加页码后逐页提取含各自页码与总页数, 文字水印的不透明度,
  * 旋转与平铺用系统 `PdfRenderer` 渲染的像素统计断言, PNG 水印的透明区域不遮挡内容, 旋转页与尺寸不一的页面按显示方向取命名位置,
  * 进度按页计数, 取消后不留输出, 请求与 payload 的检查给出 `LIMIT_EXCEEDED` (路线图 Q185 (a)), `INVALID_ARGUMENT`, `PAGE_OUT_OF_RANGE`
- * 与 `PERMISSION_DENIED` (Q30). 100 页 A4 加文字水印的耗时以 `PaperStampSpike` 写入 logcat (附录 F).
+ * 与 `PERMISSION_DENIED` (Q30); `pageOffset` 只改变 `{page}` (Q211 (a)). 100 页 A4 加文字水印的耗时以 `PaperStampSpike` 写入 logcat (附录 F).
  */
 @RunWith(AndroidJUnit4::class)
 class StampOperationDeviceTest {
@@ -266,6 +266,40 @@ class StampOperationDeviceTest {
         assertTrue("progress counts the 100 pages", processing.all { it.getInt(PdfContract.KEY_TOTAL) == 100 })
         val stages = recorder.progress.map { it.getString(PdfContract.KEY_STAGE) }.distinct()
         assertTrue("stages $stages", stages.containsAll(listOf(PdfContract.STAGE_OPENING, PdfContract.STAGE_PROCESSING)))
+    }
+
+    /**
+     * Roadmap Q211 (a): `pageOffset` shifts what `{page}` shows (from page 3 on, -2 numbers it as 1), `{total}` stays the
+     * page count, a sum below 1 is shown as it is, and an absent field or 0 extracts as before.
+     * zh-CN: 路线图 Q211 (a): `pageOffset` 改变 `{page}` 显示的页码 (从第 3 页起, -2 使其编号为 1), `{total}` 仍是总页数, 小于 1 的和照样显示,
+     * 缺省或 0 时提取结果与以前相同.
+     */
+    @Test
+    fun aPageOffsetShiftsThePageNumber(): Unit = withPdfPlugin { plugin ->
+        val source = blank("offset.pdf", 5)
+        fun stamped(name: String, offset: String): File {
+            val target = file(name)
+            val item = """{ "type": "text", "text": "P{page}/{total}", "pages": "3-", "position": "bottom-center", "fontSize": 10$offset }"""
+            plugin.stamp(source, """{ "items": [ $item ] }""", target).completed()
+            return target
+        }
+        val shifted = stamped("offset-shifted.pdf", """, "pageOffset": -2""")
+        for ((number, shown) in listOf(3 to 1, 4 to 2, 5 to 3)) {
+            val extracted = text(shifted, number)
+            assertTrue("page $number: '$extracted'", extracted.contains("P$shown/5"))
+        }
+        for (number in 1..2) assertTrue("page $number has no stamp", !text(shifted, number).contains("P"))
+        assertTrue("a sum below 1 is shown", text(stamped("offset-negative.pdf", """, "pageOffset": -4"""), 3).contains("P-1/5"))
+        val absent = stamped("offset-absent.pdf", "")
+        val zero = stamped("offset-zero.pdf", """, "pageOffset": 0""")
+        for (number in 1..5) {
+            val before = text(absent, number)
+            assertEquals("page $number with pageOffset 0", before, text(zero, number))
+            if (number >= 3) assertTrue("page $number without pageOffset: '$before'", before.contains("P$number/5"))
+        }
+        val limit = PdfContract.MAX_PAGE_OFFSET + 1
+        assertEquals(PdfErrorCodes.INVALID_ARGUMENT, plugin.stamp(source, """{ "items": [ { "type": "text", "text": "{page}", "pageOffset": $limit } ] }""", file("offset-limit.pdf")).failedWith())
+        assertEquals(PdfErrorCodes.INVALID_ARGUMENT, plugin.stamp(source, """{ "items": [ { "type": "text", "text": "{page}", "pageOffset": 1.5 } ] }""", file("offset-fraction.pdf")).failedWith())
     }
 
     @Test
