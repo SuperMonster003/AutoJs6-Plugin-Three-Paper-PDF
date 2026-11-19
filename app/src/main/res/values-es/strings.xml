@@ -14,6 +14,7 @@
     <string name="explorer_action_decrypt">Quitar la contraseña del PDF</string>
     <string name="explorer_action_encrypt">Cifrar PDF</string>
     <string name="explorer_action_extract_text">Extraer texto del PDF</string>
+    <string name="explorer_action_make_searchable">Crear PDF con búsqueda de texto</string>
     <string name="explorer_action_merge">Combinar archivos PDF</string>
     <string name="explorer_action_open">Ver PDF</string>
     <string name="explorer_action_split">Dividir PDF</string>

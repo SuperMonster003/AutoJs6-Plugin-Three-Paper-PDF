@@ -17,6 +17,7 @@ import android.os.Parcelable
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.explorer.ExplorerCatalog
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.explorer.ExplorerHostCommand
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.explorer.ExplorerTool
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.service.ThreePaperPdfInfoService
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.service.ThreePaperPdfService
@@ -235,19 +236,38 @@ class ThreePaperPdfContractTest {
     }
 
     /**
-     * The seven file manager tools (roadmap D36, P3.3): every action names a label in the plugin's resources and an
-     * exported Activity guarded by the plugin permission, targets PDF files and writes nothing through the host's
-     * sibling output.
-     * zh-CN: 七个文件管理器工具 (路线图 D36, P3.3): 每个动作都指向插件资源中的标签以及受插件权限保护的导出 Activity, 目标为 PDF 文件,
-     * 不经宿主的同级输出写入.
+     * The file manager tools (roadmap D36, P3.3) and the host commands (D67, P6.11): every action names a label in the
+     * plugin's resources, targets PDF files and writes nothing through the host's sibling output; a tool names an
+     * exported Activity guarded by the plugin permission, a host command no Activity and the read-only overflow shape
+     * the host accepts for `hostEngine`.
+     * zh-CN: 文件管理器工具 (路线图 D36, P3.3) 与宿主命令 (D67, P6.11): 每个动作都指向插件资源中的标签, 目标为 PDF 文件, 不经宿主的同级输出写入;
+     * 工具指向受插件权限保护的导出 Activity, 宿主命令不指向 Activity, 且为宿主对 `hostEngine` 接受的只读溢出菜单形态.
      */
     private fun assertToolCatalog(catalog: Bundle) {
         assertEquals(ThreePaperPdfContract.EXPLORER_PROTOCOL_VERSION, catalog.getInt(ExplorerActionCatalogKeys.PROTOCOL_VERSION))
         assertEquals("app_name", catalog.getString(ExplorerActionCatalogKeys.MENU_GROUP_LABEL_RESOURCE_NAME))
         @Suppress("DEPRECATION")
         val actions = catalog.getParcelableArrayList<Bundle>(ExplorerActionCatalogKeys.ACTIONS).orEmpty()
-        assertEquals(ExplorerTool.entries.map { it.id }, actions.map { it.getString(ExplorerActionCatalogKeys.ID) })
-        actions.forEachIndexed { index, action ->
+        assertEquals(
+            ExplorerTool.entries.map { it.id } + ExplorerHostCommand.entries.map { it.id },
+            actions.map { it.getString(ExplorerActionCatalogKeys.ID) },
+        )
+        actions.drop(ExplorerTool.entries.size).forEachIndexed { index, action ->
+            val command = ExplorerHostCommand.entries[index]
+            val label = action.getString(ExplorerActionCatalogKeys.LABEL_RESOURCE_NAME)
+            assertTrue("$label is a string resource", context.resources.getIdentifier(label, "string", context.packageName) != 0)
+            assertEquals(command.labelFallback, action.getString(ExplorerActionCatalogKeys.LABEL_FALLBACK))
+            assertNull(command.id, action.getString(ExplorerActionCatalogKeys.ACTIVITY_CLASS_NAME))
+            assertEquals(ExplorerActionValues.PRESENTATION_HOST_ENGINE, action.getInt(ExplorerActionCatalogKeys.PRESENTATION))
+            assertEquals(ExplorerActionValues.TARGET_FILE, action.getInt(ExplorerActionCatalogKeys.TARGET_KIND))
+            assertEquals(ExplorerActionValues.PLACEMENT_OVERFLOW, action.getInt(ExplorerActionCatalogKeys.PLACEMENT))
+            assertEquals(ExplorerActionValues.CARDINALITY_SINGLE, action.getInt(ExplorerActionCatalogKeys.CARDINALITY))
+            assertEquals(ExplorerActionValues.ACCESS_READ_ONLY, action.getInt(ExplorerActionCatalogKeys.ACCESS_MODE))
+            assertEquals(listOf(ThreePaperPdfContract.PDF_MIME_TYPE), action.getStringArrayList(ExplorerActionCatalogKeys.MIME_TYPES))
+            assertEquals(listOf("pdf"), action.getStringArrayList(ExplorerActionCatalogKeys.EXTENSIONS))
+            assertEquals(ExplorerActionValues.OUTPUT_NONE, action.getInt(ExplorerActionCatalogKeys.OUTPUT_MODE))
+        }
+        actions.take(ExplorerTool.entries.size).forEachIndexed { index, action ->
             val tool = ExplorerTool.entries[index]
             val label = action.getString(ExplorerActionCatalogKeys.LABEL_RESOURCE_NAME)
             assertTrue("$label is a string resource", context.resources.getIdentifier(label, "string", context.packageName) != 0)

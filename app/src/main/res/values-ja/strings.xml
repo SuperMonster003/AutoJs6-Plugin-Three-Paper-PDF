@@ -14,6 +14,7 @@
     <string name="explorer_action_decrypt">PDF のパスワードを解除</string>
     <string name="explorer_action_encrypt">PDF を暗号化</string>
     <string name="explorer_action_extract_text">PDF からテキストを抽出</string>
+    <string name="explorer_action_make_searchable">検索可能な PDF を作成</string>
     <string name="explorer_action_merge">PDF ファイルを結合</string>
     <string name="explorer_action_open">PDF を表示</string>
     <string name="explorer_action_split">PDF を分割</string>

@@ -14,6 +14,7 @@
     <string name="explorer_action_decrypt">إزالة كلمة مرور PDF</string>
     <string name="explorer_action_encrypt">تشفير PDF</string>
     <string name="explorer_action_extract_text">استخراج النص من PDF</string>
+    <string name="explorer_action_make_searchable">إنشاء PDF قابل للبحث</string>
     <string name="explorer_action_merge">دمج ملفات PDF</string>
     <string name="explorer_action_open">عرض PDF</string>
     <string name="explorer_action_split">تقسيم PDF</string>

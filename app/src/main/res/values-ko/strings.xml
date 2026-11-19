@@ -14,6 +14,7 @@
     <string name="explorer_action_decrypt">PDF 비밀번호 제거</string>
     <string name="explorer_action_encrypt">PDF 암호화</string>
     <string name="explorer_action_extract_text">PDF에서 텍스트 추출</string>
+    <string name="explorer_action_make_searchable">검색 가능한 PDF 만들기</string>
     <string name="explorer_action_merge">PDF 파일 병합</string>
     <string name="explorer_action_open">PDF 보기</string>
     <string name="explorer_action_split">PDF 분할</string>

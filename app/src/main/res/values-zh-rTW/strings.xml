@@ -14,6 +14,7 @@
     <string name="explorer_action_decrypt">移除 PDF 密碼</string>
     <string name="explorer_action_encrypt">加密 PDF</string>
     <string name="explorer_action_extract_text">擷取 PDF 文字</string>
+    <string name="explorer_action_make_searchable">產生可搜尋 PDF</string>
     <string name="explorer_action_merge">合併 PDF 檔案</string>
     <string name="explorer_action_open">檢視 PDF</string>
     <string name="explorer_action_split">分割 PDF</string>

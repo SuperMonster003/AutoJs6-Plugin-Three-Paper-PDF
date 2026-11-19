@@ -14,6 +14,7 @@
     <string name="explorer_action_decrypt">Снять пароль с PDF</string>
     <string name="explorer_action_encrypt">Зашифровать PDF</string>
     <string name="explorer_action_extract_text">Извлечь текст из PDF</string>
+    <string name="explorer_action_make_searchable">Создать PDF с поиском</string>
     <string name="explorer_action_merge">Объединить PDF-файлы</string>
     <string name="explorer_action_open">Просмотреть PDF</string>
     <string name="explorer_action_split">Разделить PDF</string>

@@ -1,6 +1,7 @@
 package io.github.supermonster003.autojs6.plugin.three.paper.pdf.explorer
 
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.RepositoryFiles
+import org.autojs.plugin.explorer.api.ExplorerActionHostEngineIds
 import org.autojs.plugin.explorer.api.ExplorerActionProtocol
 import org.autojs.plugin.explorer.api.ExplorerActionValues
 import org.junit.Assert.assertEquals
@@ -24,7 +25,7 @@ class ExplorerToolTest {
             listOf("open", "merge", "split", "to-images", "extract-text", "encrypt", "decrypt"),
             ExplorerTool.entries.map { it.id },
         )
-        assertTrue(ExplorerTool.entries.size <= ExplorerActionProtocol.MAX_ACTIONS_PER_PLUGIN)
+        assertTrue(ExplorerTool.entries.size + ExplorerHostCommand.entries.size <= ExplorerActionProtocol.MAX_ACTIONS_PER_PLUGIN)
         ExplorerTool.entries.forEach { tool ->
             assertTrue(tool.id, ID_PATTERN.matches(tool.id))
             assertSame(tool, ExplorerTool.of(tool.id))
@@ -61,16 +62,26 @@ class ExplorerToolTest {
     }
 
     @Test
+    fun `the host runs making a PDF searchable under the command id it knows`() {
+        // Roadmap D67 / P6.11: the host accepts the id only from the official package. zh-CN: 宿主只接受官方包声明的该 id.
+        assertEquals(listOf(ExplorerActionHostEngineIds.PDF_MAKE_SEARCHABLE), ExplorerHostCommand.entries.map { it.id })
+        assertEquals("pdf-make-searchable", ExplorerHostCommand.MAKE_SEARCHABLE.id)
+        assertSame(ExplorerHostCommand.MAKE_SEARCHABLE, ExplorerHostCommand.of("pdf-make-searchable"))
+        assertNull(ExplorerHostCommand.of("open"))
+        val ids = ExplorerTool.entries.map { it.id } + ExplorerHostCommand.entries.map { it.id }
+        assertEquals("action ids are unique", ids.distinct(), ids)
+        ExplorerHostCommand.entries.forEach { command -> assertTrue(command.id, ID_PATTERN.matches(command.id)) }
+    }
+
+    @Test
     fun `every label exists in every language and the fallback is the English text`() {
+        val labels = ExplorerTool.entries.map { Triple(it.id, it.labelResourceName, it.labelFallback) } +
+            ExplorerHostCommand.entries.map { Triple(it.id, it.labelResourceName, it.labelFallback) }
         val english = RepositoryFiles.strings("values")
-        ExplorerTool.entries.forEach { tool ->
-            assertEquals(tool.id, english[tool.labelResourceName], tool.labelFallback)
-        }
+        labels.forEach { (id, name, fallback) -> assertEquals(id, english[name], fallback) }
         LANGUAGE_DIRECTORIES.forEach { directory ->
             val strings = RepositoryFiles.strings(directory)
-            ExplorerTool.entries.forEach { tool ->
-                assertTrue("$directory ${tool.labelResourceName}", !strings[tool.labelResourceName].isNullOrBlank())
-            }
+            labels.forEach { (_, name, _) -> assertTrue("$directory $name", !strings[name].isNullOrBlank()) }
         }
     }
 
