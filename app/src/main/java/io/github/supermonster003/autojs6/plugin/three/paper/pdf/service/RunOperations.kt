@@ -8,6 +8,7 @@ import io.github.supermonster003.autojs6.plugin.three.paper.pdf.edit.PdfEncrypti
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.HostKey
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.Operations
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.PdfEngine
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.forms.FormFill
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.generate.HtmlToPdf
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.generate.ImagesToPdf
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.generate.TextToPdf
@@ -116,6 +117,10 @@ internal class RunOperations(private val engine: PdfEngine, context: Context) {
         PdfOps.ADD_TEXT_LAYER -> {
             val request = TextLayers.request(options, inputCount)
             Work { operation, inputs, directory -> TextLayers.write(request, inputs, directory, operation) }
+        }
+        PdfOps.FILL_FORM -> {
+            val request = FormFill.request(options, inputCount)
+            Work { operation, inputs, directory -> FormFill.write(request, inputs, directory, operation) }
         }
         else -> throw PdfDocumentStub.notImplemented(op)
     }

@@ -3,6 +3,7 @@ package io.github.supermonster003.autojs6.plugin.three.paper.pdf.read
 import com.tom_roush.pdfbox.pdmodel.PDDocument
 import com.tom_roush.pdfbox.pdmodel.encryption.AccessPermission
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.StopSignal
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.forms.FormFields
 import org.autojs.plugin.pdf.api.PdfContract
 import java.util.Calendar
 import java.util.Locale
@@ -11,9 +12,11 @@ import java.util.Locale
  * The `getInfo` answer (protocol "Methods", roadmap P2.2, D31): page count, crop box size and rotation of every page,
  * the document information with the XMP `dc:title` as the fallback title, the PDF version, encryption with the
  * permissions the password used grants, and the size of the source. Metadata keys are absent when the document has
- * none; dates are ISO 8601 with a numeric offset.
+ * none; dates are ISO 8601 with a numeric offset. Sessions of contract version 2 also get `formFieldCount` (terminal
+ * AcroForm fields) and `xfa` (`static` / `dynamic`, absent without XFA; roadmap P6.4, D56).
  * zh-CN: `getInfo` 的应答 (协议 "Methods" 一节, 路线图 P2.2, D31): 页数, 每页裁剪框的尺寸与旋转, 文档信息 (标题缺失时取 XMP 的
  * `dc:title`), PDF 版本, 是否加密及所用密码授予的权限, 以及源的大小. 文档没有的元数据不带对应的键; 日期为带数字时区偏移的 ISO 8601.
+ * 契约版本 2 的会话还有 `formFieldCount` (AcroForm 终端字段数) 与 `xfa` (`static` / `dynamic`, 没有 XFA 时缺省; 路线图 P6.4, D56).
  */
 internal object DocumentInfoReader {
 
@@ -24,7 +27,7 @@ internal object DocumentInfoReader {
 
     private val XMP_ENTITY = Regex("&(#x[0-9a-fA-F]+|#[0-9]+|lt|gt|amp|quot|apos);")
 
-    fun read(document: PDDocument, sizeBytes: Long, stop: StopSignal): Map<String, Any?> {
+    fun read(document: PDDocument, sizeBytes: Long, stop: StopSignal, contractVersion: Int = PdfContract.CONTRACT_VERSION): Map<String, Any?> {
         val count = document.numberOfPages
         val widths = FloatArray(count)
         val heights = FloatArray(count)
@@ -58,6 +61,12 @@ internal object DocumentInfoReader {
             PdfContract.KEY_PERMISSIONS to permissions(document.currentAccessPermission),
             PdfContract.KEY_SIZE_BYTES to sizeBytes,
         )
+        if (contractVersion >= PdfContract.CONTRACT_VERSION_2) {
+            val form = FormFields.acroForm(document)
+            val fieldCount = FormFields.terminals(form, stop).size
+            answer[PdfContract.KEY_FORM_FIELD_COUNT] = fieldCount
+            answer[PdfContract.KEY_XFA] = FormFields.xfa(document, form, fieldCount)
+        }
         return answer.filterValues { it != null }
     }
 

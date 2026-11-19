@@ -11,6 +11,7 @@ import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.Operation
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.PdfEngine
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.PdfSession
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.StopSignal
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.forms.FormFields
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.read.DocumentInfoReader
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.read.OutlineReader
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.read.PageImages
@@ -41,7 +42,7 @@ import org.autojs.plugin.pdf.api.PdfOps
  */
 internal class PdfDocumentStub(private val session: PdfSession, private val engine: PdfEngine) : IPdfDocument.Stub() {
 
-    override fun getInfo(): Bundle = answer(PdfOps.INFO, request = null) { _, call -> DocumentInfoReader.read(call.pdf, session.sizeBytes, call.stop) }
+    override fun getInfo(): Bundle = answer(PdfOps.INFO, request = null) { _, call -> DocumentInfoReader.read(call.pdf, session.sizeBytes, call.stop, session.contractVersion) }
 
     override fun getOutline(): Bundle = answer(PdfOps.OUTLINE, request = null) { _, call -> OutlineReader.read(call.pdf, call.stop) }
 
@@ -58,11 +59,10 @@ internal class PdfDocumentStub(private val session: PdfSession, private val engi
     }
 
     /**
-     * Form fields (contract version 2, roadmap P6.4): `NOT_IMPLEMENTED` until P6.4 lands; a version-1 request is
-     * `UNSUPPORTED`.
-     * zh-CN: 表单字段 (契约版本 2, 路线图 P6.4): P6.4 落地前为 `NOT_IMPLEMENTED`; 版本 1 的请求为 `UNSUPPORTED`.
+     * Form fields (contract version 2, roadmap P6.4, [FormFields]); a version-1 request is `UNSUPPORTED`.
+     * zh-CN: 表单字段 (契约版本 2, 路线图 P6.4, [FormFields]); 版本 1 的请求为 `UNSUPPORTED`.
      */
-    override fun getFormFields(request: Bundle?): Bundle = answer(PdfOps.FORM_FIELDS, request) { _, _ -> throw notImplemented(PdfOps.FORM_FIELDS) }
+    override fun getFormFields(request: Bundle?): Bundle = answer(PdfOps.FORM_FIELDS, request) { options, call -> FormFields.read(call.pdf, options, call.stop) }
 
     override fun planImages(request: Bundle?): Bundle = answer(PdfOps.PLAN_IMAGES, request) { options, call -> PageImages.plan(call.pdf, options, call.stop) }
 

@@ -5,7 +5,7 @@ The script installs the debug plugin and its test package (`assembleDebug` + `as
 `am instrument -r` for the given classes or methods, prints one `PASS` / `FAIL` / `SKIP` line per test, then the logcat
 lines of the timing and probe tags (`PaperRenderPerf`, `PaperMergePerf`, `PaperImagesPerf`, `PaperHtmlSpike`,
 `PaperCryptoSpike`, `PaperViewerPerf`, `PaperStampSpike`, `PaperObjectStreams`, `PaperFontSubset`, `PaperCompress`, `PaperMetadata`,
-`PaperTextLayer`). At the end the test
+`PaperTextLayer`, `PaperForms`). At the end the test
 package is uninstalled; the plugin is uninstalled too unless it was installed before, in which case the original APK
 (pulled first) is installed back with `install -r -d`.
 With `--installed` the plugin already on the device is used as it is (it must be a debuggable build): only the test
@@ -40,7 +40,7 @@ TEST_PACKAGE = PLUGIN_PACKAGE + ".test"
 TEST_PREFIX = PLUGIN_PACKAGE + "."
 RUNNER = TEST_PACKAGE + "/androidx.test.runner.AndroidJUnitRunner"
 TAGS = ("PaperRenderPerf", "PaperMergePerf", "PaperImagesPerf", "PaperHtmlSpike", "PaperCryptoSpike", "PaperViewerPerf", "PaperStampSpike",
-        "PaperObjectStreams", "PaperFontSubset", "PaperCompress", "PaperMetadata", "PaperTextLayer")
+        "PaperObjectStreams", "PaperFontSubset", "PaperCompress", "PaperMetadata", "PaperTextLayer", "PaperForms")
 ROOT = Path(__file__).resolve().parent.parent
 PLUGIN_APK = ROOT / "app/build/outputs/apk/debug/autojs6-plugin-three-paper-pdf-v1.0.0.apk"
 TEST_APK = ROOT / "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk"
