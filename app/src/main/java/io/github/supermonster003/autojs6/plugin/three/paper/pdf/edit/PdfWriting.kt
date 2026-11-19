@@ -1,6 +1,7 @@
 package io.github.supermonster003.autojs6.plugin.three.paper.pdf.edit
 
 import com.tom_roush.pdfbox.pdmodel.PDDocument
+import com.tom_roush.pdfbox.pdmodel.PDDocumentInformation
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ThreePaperPdfContract
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.StopSignal
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.render.CountingOutputStream
@@ -30,22 +31,28 @@ object PdfWriting {
         }
     }
 
-    /** Sets `producer` and `modificationDate`, keeping the rest. zh-CN: 设置 `producer` 与 `modificationDate`, 其余保持不变. */
-    fun stamp(document: PDDocument) {
-        val information = document.documentInformation
+    /**
+     * Sets `producer` and `modificationDate`, keeping the rest; with [onlyProducer] (`compress` with `removeMetadata`,
+     * roadmap D64) the document information is replaced by one holding `producer` alone.
+     * zh-CN: 设置 `producer` 与 `modificationDate`, 其余保持不变; [onlyProducer] 为 true 时 (`compress` 的 `removeMetadata`, 路线图
+     * D64) 文档信息换成只含 `producer` 的新字典.
+     */
+    fun stamp(document: PDDocument, onlyProducer: Boolean = false) {
+        val information = if (onlyProducer) PDDocumentInformation() else document.documentInformation
         information.producer = ThreePaperPdfContract.PRODUCER
-        information.modificationDate = Calendar.getInstance()
+        if (!onlyProducer) information.modificationDate = Calendar.getInstance()
         document.documentInformation = information
     }
 
     /**
      * Writes [document] to [output] without closing it and answers the bytes written; [stop] is checked on every write.
-     * zh-CN: 把 [document] 写入 [output] (不关闭它) 并返回写出的字节数; 每次写入都检查 [stop].
+     * [onlyProducer] is that of [stamp].
+     * zh-CN: 把 [document] 写入 [output] (不关闭它) 并返回写出的字节数; 每次写入都检查 [stop]. [onlyProducer] 同 [stamp].
      */
-    fun write(document: PDDocument, output: OutputStream, stop: StopSignal): Long {
+    fun write(document: PDDocument, output: OutputStream, stop: StopSignal, onlyProducer: Boolean = false): Long {
         checkWritable(document)
         if (document.isEncrypted) document.isAllSecurityToBeRemoved = true
-        return save(document, output, stop)
+        return save(document, output, stop, onlyProducer)
     }
 
     /**
@@ -58,8 +65,8 @@ object PdfWriting {
         return save(document, output, stop)
     }
 
-    private fun save(document: PDDocument, output: OutputStream, stop: StopSignal): Long {
-        stamp(document)
+    private fun save(document: PDDocument, output: OutputStream, stop: StopSignal, onlyProducer: Boolean = false): Long {
+        stamp(document, onlyProducer)
         // PDDocument.save closes the stream it is given; CountingOutputStream ignores close, so the output stays open.
         // zh-CN: PDDocument.save 会关闭传入的流; CountingOutputStream 忽略 close, 因此输出保持打开.
         val counting = CountingOutputStream(output, Long.MAX_VALUE, stop)

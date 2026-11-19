@@ -75,11 +75,13 @@ internal object PdfRendererCheck : RenderCheck {
  * or checking fails, or [objectStreams] is false, the document is written by `PDDocument.save` (classic
  * cross-reference table) and, after a failure, a warning says why. The output is never encrypted (`PdfWriting`, Q30).
  * Cancellation ([stop]) is not a failure: it ends the call. [onVerifying] tells the caller the check starts (the
- * `verifying` stage of contract version 2); [damage] is a test hook that may change the written file before the check.
+ * `verifying` stage of contract version 2); [onlyProducer] keeps `producer` alone in the document information
+ * (`removeMetadata`, `PdfWriting.stamp`); [damage] is a test hook that may change the written file before the check.
  * zh-CN: `compress` 的写出 (路线图 D48, D65, P6.7; 由 P6.6 接线): [write] 先用 [ObjectStreamWriter] 写到 [directory] 的临时文件,
  * 校验 ([ReadBackCheck], 再 [render]) 后复制到输出; 写出或校验失败, 或 [objectStreams] 为 false 时改用 `PDDocument.save` (经典交叉
  * 引用表) 写出, 失败时另给一条说明原因的警告. 输出从不加密 (`PdfWriting`, Q30). 取消 ([stop]) 不算失败, 它直接结束调用.
- * [onVerifying] 通知调用方开始校验 (契约版本 2 的 `verifying` 阶段); [damage] 是测试钩子, 可在校验前改动写出的文件.
+ * [onVerifying] 通知调用方开始校验 (契约版本 2 的 `verifying` 阶段); [onlyProducer] 使文档信息只保留 `producer` (`removeMetadata`,
+ * `PdfWriting.stamp`); [damage] 是测试钩子, 可在校验前改动写出的文件.
  */
 internal object CompactWriting {
 
@@ -94,12 +96,13 @@ internal object CompactWriting {
         objectStreams: Boolean = true,
         render: RenderCheck = PdfRendererCheck,
         onVerifying: () -> Unit = {},
+        onlyProducer: Boolean = false,
         damage: ((File) -> Unit)? = null,
     ): Result {
         PdfWriting.checkWritable(document)
-        if (!objectStreams) return Result(PdfWriting.write(document, output, stop), false, emptyList())
+        if (!objectStreams) return Result(PdfWriting.write(document, output, stop, onlyProducer), false, emptyList())
         if (document.isEncrypted) document.isAllSecurityToBeRemoved = true
-        PdfWriting.stamp(document)
+        PdfWriting.stamp(document, onlyProducer)
         val file = File.createTempFile("objstm-", ".pdf", directory)
         try {
             val reason = try {
@@ -116,7 +119,7 @@ internal object CompactWriting {
             }
             if (reason == null) return Result(copy(file, output, stop), true, emptyList())
             val warning = "object streams were not used because $reason; the output has a classic cross-reference table"
-            return Result(PdfWriting.write(document, output, stop), false, listOf(warning))
+            return Result(PdfWriting.write(document, output, stop, onlyProducer), false, listOf(warning))
         } finally {
             file.delete()
         }

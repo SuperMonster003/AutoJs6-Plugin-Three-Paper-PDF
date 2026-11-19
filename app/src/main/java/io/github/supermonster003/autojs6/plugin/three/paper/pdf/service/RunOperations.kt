@@ -2,6 +2,7 @@ package io.github.supermonster003.autojs6.plugin.three.paper.pdf.service
 
 import android.content.Context
 import android.os.ParcelFileDescriptor
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.compress.CompressOperation
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.edit.PageOperations
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.edit.PdfEncryption
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.HostKey
@@ -96,6 +97,10 @@ internal class RunOperations(private val engine: PdfEngine, context: Context) {
         PdfOps.STAMP -> {
             val request = StampOperation.request(options, inputCount)
             Work { operation, inputs, directory -> StampOperation.write(request, inputs, directory, operation) }
+        }
+        PdfOps.COMPRESS -> {
+            val request = CompressOperation.request(options, inputCount)
+            Work { operation, inputs, directory -> CompressOperation.write(request, inputs.single(), directory, operation) }
         }
         else -> throw PdfDocumentStub.notImplemented(op)
     }
