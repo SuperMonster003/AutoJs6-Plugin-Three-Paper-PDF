@@ -187,7 +187,7 @@ internal fun SettingsScreen(
                     summary = stringResource(R.string.settings_version_value, BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE, stringResource(R.string.plugin_version_date)),
                     icon = R.drawable.ic_info_24, showChevron = false, modifier = Modifier.testTag("paper.settings.version"))
                 Hairline()
-                SettingsRow(stringResource(R.string.release_history_title), summary = stringResource(R.string.settings_release_history_summary), icon = R.drawable.ic_history_24,
+                SettingsRow(stringResource(R.string.release_history), summary = stringResource(R.string.settings_release_history_summary), icon = R.drawable.ic_history_24,
                     onClick = onReleaseHistory, modifier = Modifier.testTag("paper.settings.releaseHistory"))
                 Hairline()
                 SettingsRow(stringResource(R.string.update_check), summary = stringResource(R.string.settings_update_summary), icon = R.drawable.ic_update_24,

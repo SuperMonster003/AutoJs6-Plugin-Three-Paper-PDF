@@ -71,8 +71,8 @@ import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.components.To
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.files.BrowseMode
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.files.FileBrowser
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.release.ReleaseHistoryAssets
-import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.release.ReleaseHistoryParser
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.release.ReleaseHistoryScreen
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.release.loadReleaseHistory
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.settings.SettingsScreen
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.OpenPersistableDocument
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.RecentEntry
@@ -173,9 +173,9 @@ class HomeActivity : StandaloneActivity() {
         )
     }
 
-    private fun releaseHistory() = runCatching {
-        assets.open(ReleaseHistoryAssets.assetFor(resources.configuration.locales[0])).use { it.readBytes().toString(Charsets.UTF_8) }
-    }.getOrNull()?.let(ReleaseHistoryParser::parse).orEmpty()
+    private fun releaseHistory() = loadReleaseHistory(ReleaseHistoryAssets.candidatesFor(resources.configuration.locales[0])) { path ->
+        assets.open(path).use { it.readBytes().toString(Charsets.UTF_8) }
+    }
 
     private fun NavHostController.openOnce(route: String) {
         if (currentBackStackEntry?.destination?.route != route) navigate(route) { launchSingleTop = true }

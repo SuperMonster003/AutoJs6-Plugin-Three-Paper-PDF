@@ -50,7 +50,11 @@
     <string name="notification_tasks_queued">في الانتظار: %1$d</string>
     <string name="notification_tasks_title">جارٍ معالجة ملفات PDF</string>
     <string name="plugin_description">قراءة ملفات PDF وعرضها ودمجها وتقسيمها وإنشاؤها وتشفيرها, مع عارض مدمج ومداخل في مدير الملفات</string>
-    <string name="release_history_title">سجل الإصدارات</string>
+    <string name="release_history">سجل الإصدارات</string>
+    <string name="release_history_collapse_all">طيّ الكل</string>
+    <string name="release_history_collapsed">مطوي</string>
+    <string name="release_history_expand_all">توسيع الكل</string>
+    <string name="release_history_expanded">موسَّع</string>
     <string name="release_history_unavailable">تعذر تحميل سجل الإصدارات</string>
     <string name="settings_about">حول</string>
     <string name="settings_appearance">المظهر</string>
@@ -89,7 +93,7 @@
     <string name="settings_output_folder_reset">المجلد الافتراضي</string>
     <string name="settings_permission_granted">ممنوح</string>
     <string name="settings_permissions">الأذونات</string>
-    <string name="settings_release_history_summary">قراءة سجل الإصدارات المضمن في الإضافة</string>
+    <string name="settings_release_history_summary">عرض سجل الإصدارات المضمن في التطبيق</string>
     <string name="settings_save_failed">تعذر حفظ الإعداد</string>
     <string name="settings_storage_missing">غير ممنوح: لا يستطيع صندوق الأدوات تصفح التخزين المشترك أو الكتابة فيه. انقر للمنح</string>
     <string name="settings_storage_permission">الوصول إلى جميع الملفات</string>
