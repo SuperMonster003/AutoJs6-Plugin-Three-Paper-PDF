@@ -54,7 +54,9 @@ internal val ExplorerTool.kind: ToolKind?
         ExplorerTool.OPEN -> null
         ExplorerTool.MERGE -> ToolKind.MERGE
         ExplorerTool.SPLIT -> ToolKind.SPLIT
+        ExplorerTool.COMPRESS -> ToolKind.COMPRESS
         ExplorerTool.TO_IMAGES -> ToolKind.TO_IMAGES
+        ExplorerTool.WATERMARK -> ToolKind.WATERMARK
         ExplorerTool.EXTRACT_TEXT -> ToolKind.EXTRACT_TEXT
         ExplorerTool.ENCRYPT -> ToolKind.ENCRYPT
         ExplorerTool.DECRYPT -> ToolKind.DECRYPT

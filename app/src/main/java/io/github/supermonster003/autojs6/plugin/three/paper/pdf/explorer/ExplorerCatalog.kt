@@ -7,10 +7,11 @@ import org.autojs.plugin.explorer.api.ExplorerActionHostEngineIds
 import org.autojs.plugin.explorer.api.ExplorerActionValues
 
 /**
- * The file manager tools (roadmap D36, P3.3, appendix D Q70 / Q74 / Q75): the id, the label, where the host shows the
- * entry and what it may do. Tools needing a password or options open [PdfToolActivity], which shows progress itself.
- * zh-CN: 文件管理器工具 (路线图 D36, P3.3, 附录 D Q70 / Q74 / Q75): id, 标签, 宿主在何处显示入口以及允许它做什么. 需要密码或
- * 选项的工具打开 [PdfToolActivity], 由它自己显示进度.
+ * The file manager tools (roadmap D36, P3.3, appendix D Q70 / Q74 / Q75; compress and watermark since P6.12): the id,
+ * the label, where the host shows the entry and what it may do. Tools needing a password or options open
+ * [PdfToolActivity], which shows progress itself. The overflow entries are ordered by descending [priority].
+ * zh-CN: 文件管理器工具 (路线图 D36, P3.3, 附录 D Q70 / Q74 / Q75; 压缩与加水印自 P6.12 起): id, 标签, 宿主在何处显示入口以及允许它做什么.
+ * 需要密码或选项的工具打开 [PdfToolActivity], 由它自己显示进度. 溢出菜单的入口按 [priority] 降序排列.
  */
 internal enum class ExplorerTool(
     val id: String,
@@ -42,9 +43,24 @@ internal enum class ExplorerTool(
         ExplorerActionValues.PLACEMENT_OVERFLOW, ExplorerActionValues.CARDINALITY_SINGLE, ExplorerActionValues.ACCESS_CREATE_IN_PARENT, 90,
     ),
 
+    /** Compresses the PDF, writing `<name>_compressed.pdf` next to it (P6.12, Q261). zh-CN: 压缩 PDF, 在旁边写出 `<名称>_compressed.pdf` (P6.12, Q261). */
+    COMPRESS(
+        "compress", "explorer_action_compress", "Compress PDF",
+        ExplorerActionValues.PLACEMENT_OVERFLOW, ExplorerActionValues.CARDINALITY_SINGLE, ExplorerActionValues.ACCESS_CREATE_IN_PARENT, 85,
+    ),
+
     TO_IMAGES(
         "to-images", "explorer_action_to_images", "Convert PDF to images",
         ExplorerActionValues.PLACEMENT_OVERFLOW, ExplorerActionValues.CARDINALITY_SINGLE, ExplorerActionValues.ACCESS_CREATE_IN_PARENT, 80,
+    ),
+
+    /**
+     * Stamps a text or image watermark, writing `<name>_watermarked.pdf` next to the PDF (P6.12, Q261).
+     * zh-CN: 加文字或图片水印, 在 PDF 旁边写出 `<名称>_watermarked.pdf` (P6.12, Q261).
+     */
+    WATERMARK(
+        "watermark", "explorer_action_watermark", "Add watermark to PDF",
+        ExplorerActionValues.PLACEMENT_OVERFLOW, ExplorerActionValues.CARDINALITY_SINGLE, ExplorerActionValues.ACCESS_CREATE_IN_PARENT, 75,
     ),
 
     EXTRACT_TEXT(

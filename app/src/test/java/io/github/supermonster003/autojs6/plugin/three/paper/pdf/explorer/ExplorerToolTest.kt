@@ -20,9 +20,10 @@ import org.junit.Test
 class ExplorerToolTest {
 
     @Test
-    fun `seven tools with stable ids the host accepts`() {
+    fun `nine tools with stable ids the host accepts`() {
+        // Compress and watermark joined in P6.12. zh-CN: 压缩与加水印自 P6.12 加入.
         assertEquals(
-            listOf("open", "merge", "split", "to-images", "extract-text", "encrypt", "decrypt"),
+            listOf("open", "merge", "split", "compress", "to-images", "watermark", "extract-text", "encrypt", "decrypt"),
             ExplorerTool.entries.map { it.id },
         )
         assertTrue(ExplorerTool.entries.size + ExplorerHostCommand.entries.size <= ExplorerActionProtocol.MAX_ACTIONS_PER_PLUGIN)
@@ -59,6 +60,10 @@ class ExplorerToolTest {
             assertEquals(tool.id, PdfToolActivity::class.java.name, tool.activityClass.name)
         }
         assertEquals("the overflow menu keeps a stable order", others.sortedByDescending { it.priority }, others)
+        val priorities = others.map { it.priority } + ExplorerHostCommand.entries.map { it.priority }
+        assertEquals("no two overflow entries share a priority", priorities.distinct(), priorities)
+        // Every tool but opening runs the toolbox tool of the same id. zh-CN: 除打开外每个工具都运行同 id 的工具箱工具.
+        (others + merge).forEach { tool -> assertEquals(tool.id, tool.id, tool.kind?.id) }
     }
 
     @Test
