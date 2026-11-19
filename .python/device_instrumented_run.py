@@ -111,6 +111,10 @@ def instrument(device: Device, tests: list[str], timeout: int) -> list[tuple[str
 
 
 def main() -> int:
+    # Logcat lines may hold characters the console code page lacks (an emoji under GBK); escape them instead of failing.
+    # zh-CN: logcat 行可能含控制台代码页没有的字符 (GBK 下的表情), 转义输出而不是报错.
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(errors="backslashreplace")
     parser = argparse.ArgumentParser(description=__doc__.split("\n", 1)[0])
     parser.add_argument("--serial", required=True)
     parser.add_argument("--tests", required=True, help="comma-separated classes or Class#method (package optional), or all")
