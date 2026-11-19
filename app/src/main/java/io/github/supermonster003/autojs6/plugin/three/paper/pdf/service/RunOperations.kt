@@ -11,6 +11,8 @@ import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.PdfEngine
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.generate.HtmlToPdf
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.generate.ImagesToPdf
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.generate.TextToPdf
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.metadata.InfoChanges
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.metadata.OutlineChanges
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.stamp.StampOperation
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfFailure
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfOptions
@@ -101,6 +103,14 @@ internal class RunOperations(private val engine: PdfEngine, context: Context) {
         PdfOps.COMPRESS -> {
             val request = CompressOperation.request(options, inputCount)
             Work { operation, inputs, directory -> CompressOperation.write(request, inputs.single(), directory, operation) }
+        }
+        PdfOps.SET_INFO -> {
+            val request = InfoChanges.request(op, options, inputCount)
+            Work { operation, inputs, directory -> InfoChanges.write(request, inputs, directory, operation) }
+        }
+        PdfOps.SET_OUTLINE -> {
+            val request = InfoChanges.request(op, options, inputCount)
+            Work { operation, inputs, directory -> OutlineChanges.write(request, inputs, directory, operation) }
         }
         else -> throw PdfDocumentStub.notImplemented(op)
     }
