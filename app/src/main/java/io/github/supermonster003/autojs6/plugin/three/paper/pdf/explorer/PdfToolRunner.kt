@@ -14,6 +14,7 @@ import org.autojs.plugin.pdf.api.PdfContract
 import org.autojs.plugin.pdf.api.PdfErrorCodes
 import org.autojs.plugin.pdf.api.PdfOps
 import org.json.JSONArray
+import org.json.JSONObject
 import java.io.File
 import java.io.FileNotFoundException
 import java.util.concurrent.CountDownLatch
@@ -62,6 +63,93 @@ internal sealed interface ToolOptions {
     /** The pages to keep, in their new order, each turned clockwise as given (roadmap P4.2). zh-CN: 要保留的页, 按新顺序排列, 各自按给定角度顺时针旋转 (路线图 P4.2). */
     data class Organize(val pages: List<OrganizedPage>) : ToolOptions
 
+    /**
+     * A text or image watermark through `stamp` (roadmap P6.12, D68), with the keys of a stamp item: [type] is
+     * `text` or `image` ([image] then names the picture), [position] one of the nine positions, [rotation] counterclockwise
+     * degrees, [opacity] 0 to 1, [tile] repeats it over the page, [color] (`#RRGGBB`) and [fontSize] (null fits half the
+     * page width) are for text, [width] (points, null for the natural size) for an image, [layer] `over` or `under` the
+     * content, [pages] a page range or null for every page.
+     * zh-CN: 经 `stamp` 添加文字或图片水印 (路线图 P6.12, D68), 字段与盖章条目的键相同: [type] 为 `text` 或 `image` (此时 [image]
+     * 指图片), [position] 为九个位置之一, [rotation] 为逆时针角度, [opacity] 为 0 到 1, [tile] 在整页平铺, [color] (`#RRGGBB`) 与
+     * [fontSize] (null 时适应半个页宽) 用于文字, [width] (点, null 为原始尺寸) 用于图片, [layer] 为内容之上 `over` 或之下 `under`,
+     * [pages] 为页码范围, null 表示全部页.
+     */
+    data class Watermark(
+        val type: String,
+        val text: String,
+        val image: ToolTarget?,
+        val position: String,
+        val rotation: Float,
+        val opacity: Float,
+        val tile: Boolean,
+        val color: String?,
+        val fontSize: Float?,
+        val width: Float?,
+        val layer: String,
+        val pages: String?,
+    ) : ToolOptions
+
+    /**
+     * Page numbers, headers and footers through `stamp` (roadmap P6.12, D68): [format] (null for no page number) at
+     * [position], the first page of [pages] numbered [start] (appendix D Q211), [header] and [footer] texts at the left,
+     * center and right of the top and bottom edges, all in [fontSize] points.
+     * zh-CN: 经 `stamp` 添加页码, 页眉与页脚 (路线图 P6.12, D68): [format] (null 表示不加页码) 位于 [position], [pages] 的第一页编为
+     * [start] (附录 D Q211); [header] 与 [footer] 是上下边缘左, 中, 右的文字; 字号都为 [fontSize] 点.
+     */
+    data class PageNumbers(
+        val format: String?,
+        val position: String,
+        val start: Int,
+        val header: Slots,
+        val footer: Slots,
+        val fontSize: Float,
+        val pages: String?,
+    ) : ToolOptions
+
+    /** The left, center and right texts of an edge; blank for none. zh-CN: 一条边缘左, 中, 右的文字; 空白表示没有. */
+    data class Slots(val left: String = "", val center: String = "", val right: String = "") {
+        val blank get() = left.isBlank() && center.isBlank() && right.isBlank()
+    }
+
+    /**
+     * `compress` with the numbers of [preset] (D55) unless changed under "Advanced": [imageDpi] and [imageQuality] of
+     * the recompressed images, [removeMetadata], [objectStreams].
+     * zh-CN: 以 [preset] (D55) 的数值执行 `compress`, "高级" 中可以修改: 重新压缩图片的 [imageDpi] 与 [imageQuality], [removeMetadata],
+     * [objectStreams].
+     */
+    data class Compress(val preset: String, val imageDpi: Int, val imageQuality: Int, val removeMetadata: Boolean, val objectStreams: Boolean) : ToolOptions
+
+    /**
+     * `fillForm` (D47) with the changed [values] (by full field name: a string, a boolean, a list of strings, or null for
+     * the default value) and [flatten] for every field.
+     * zh-CN: 以修改过的 [values] (按字段全名: 字符串, 布尔值, 字符串列表, 或 null 表示默认值) 执行 `fillForm` (D47), [flatten] 扁平化全部字段.
+     */
+    data class FillForm(val values: Map<String, Any?>, val flatten: Boolean) : ToolOptions
+
+    /**
+     * The document properties (D52): `setInfo` with the changed [info] keys (null removes one), then `setOutline` with
+     * no items when [clearOutline].
+     * zh-CN: 文档属性 (D52): 以修改过的 [info] 键执行 `setInfo` (null 删除该键), [clearOutline] 时再以空条目执行 `setOutline`.
+     */
+    data class Properties(val info: Map<String, String?>, val clearOutline: Boolean) : ToolOptions
+
+}
+
+/**
+ * What a tool reports beyond its warnings, for its result page.
+ * zh-CN: 工具在警告之外报告的内容, 供结果页显示.
+ */
+internal sealed interface ToolSummary {
+
+    /** [sourceBytes] became [sizeBytes]; [imagesRecompressed] of [imagesTotal] images were recompressed. zh-CN: [sourceBytes] 变为 [sizeBytes]; [imagesTotal] 张图片中重新压缩了 [imagesRecompressed] 张. */
+    data class Compressed(val sourceBytes: Long, val sizeBytes: Long, val imagesRecompressed: Int, val imagesTotal: Int) : ToolSummary
+
+    /** [filled] values were written, and every field was [flattened] or not. zh-CN: 写入了 [filled] 个值, 以及是否 [flattened] 扁平化了全部字段. */
+    data class Filled(val filled: Int, val flattened: Boolean) : ToolSummary
+
+    /** [infoChanged] properties were changed and the outline [outlineCleared] or not. zh-CN: 修改了 [infoChanged] 项属性, 以及是否 [outlineCleared] 清除了书签. */
+    data class PropertiesSaved(val infoChanged: Int, val outlineCleared: Boolean) : ToolSummary
+
 }
 
 /** A page of the source ([page] from 1) and the clockwise turn added to it (0, 90, 180 or 270). zh-CN: 源文档的一页 ([page] 从 1 起) 及为它追加的顺时针旋转 (0, 90, 180 或 270). */
@@ -70,18 +158,26 @@ internal data class OrganizedPage(val page: Int, val rotation: Int)
 /** A selected file and the password it opens with, if any. zh-CN: 选中的文件及打开它所用的密码 (如有). */
 internal class ToolInput(val target: ToolTarget, val password: String?)
 
-/** The published result: the path the file manager shows, the files written and the engine's warnings. zh-CN: 已发布的结果: 文件管理器显示的路径, 写入的文件数与引擎的警告. */
-internal class ToolResult(val displayPath: String, val files: Int, val warnings: List<String>)
+/**
+ * The published result: the path the file manager shows, the files written, the engine's warnings and what the tool
+ * reports beyond them.
+ * zh-CN: 已发布的结果: 文件管理器显示的路径, 写入的文件数, 引擎的警告, 以及工具在警告之外报告的内容.
+ */
+internal class ToolResult(val displayPath: String, val files: Int, val warnings: List<String>, val summary: ToolSummary? = null)
 
 /**
  * Runs one file manager tool (roadmap P3.3) through the in-process PDF plugin ([ToolEngine]), the same requests a
  * script sends: `merge`, `encrypt` and `decrypt` as `run`, `split` through `planSplit` and `split` in batches of
- * [SPLIT_BATCH] parts, to images through `renderToFile` page by page and extract text through paged `getText`. The
- * result is written into a [ToolOutput] and published only when complete; a failure or [cancel] removes it. Blocking:
- * call [run] off the main thread.
+ * [SPLIT_BATCH] parts, to images through `renderToFile` page by page and extract text through paged `getText`; the
+ * tools of 1.1.0 (roadmap P6.12) run `stamp`, `compress`, `fillForm`, `setInfo` and `setOutline` with contract version 2
+ * and their JSON payload ([ToolPayloads]) in a temporary file of the work folder. The result is written into a
+ * [ToolOutput] and published only when complete; a failure or [cancel] removes it. Blocking: call [run] off the main
+ * thread.
  * zh-CN: 经进程内的 PDF 插件 ([ToolEngine]) 执行一个文件管理器工具 (路线图 P3.3), 发送与脚本相同的请求: `merge`, `encrypt` 与
  * `decrypt` 走 `run`, 拆分经 `planSplit` 与按每批 [SPLIT_BATCH] 部分执行的 `split`, 转图片逐页经 `renderToFile`, 提取文本经分页的
- * `getText`. 结果写入 [ToolOutput], 完成后才发布; 失败或 [cancel] 时删除. 会阻塞: 在主线程以外调用 [run].
+ * `getText`; 1.1.0 的工具 (路线图 P6.12) 以契约版本 2 执行 `stamp`, `compress`, `fillForm`, `setInfo` 与 `setOutline`, 其 JSON
+ * payload ([ToolPayloads]) 放在工作目录的临时文件中. 结果写入 [ToolOutput], 完成后才发布; 失败或 [cancel] 时删除. 会阻塞: 在主线程
+ * 以外调用 [run].
  */
 internal class PdfToolRunner(
     private val plugin: IPdfPlugin,
@@ -114,6 +210,116 @@ internal class PdfToolRunner(
             is ToolOptions.ExtractText -> extractText(inputs.first(), options)
             is ToolOptions.Encrypt -> encrypt(inputs.first(), options)
             ToolOptions.Decrypt -> decrypt(inputs.first())
+            is ToolOptions.Watermark -> {
+                val input = inputs.first()
+                stamp(input, listOf(ToolPayloads.watermarkItem(options)), listOfNotNull(options.image), OutputNames.watermarked(input.target.displayName))
+            }
+            is ToolOptions.PageNumbers -> {
+                val input = inputs.first()
+                stamp(input, ToolPayloads.pageNumberItems(options), emptyList(), OutputNames.numbered(input.target.displayName))
+            }
+            is ToolOptions.Compress -> compress(inputs.first(), options)
+            is ToolOptions.FillForm -> fillForm(inputs.first(), options)
+            is ToolOptions.Properties -> properties(inputs.first(), options)
+        }
+    }
+
+    /**
+     * `stamp` of [items] (roadmap P6.12): the inputs are the source, the payload and [images] (named by their index in
+     * the items), the request names the source for `{name}`.
+     * zh-CN: 以 [items] 执行 `stamp` (路线图 P6.12): 输入依次为源文档, payload 与 [images] (条目按序号引用), 请求为 `{name}` 提供源文件名.
+     */
+    private fun stamp(input: ToolInput, items: List<JSONObject>, images: List<ToolTarget>, name: String): ToolResult {
+        if (items.isEmpty()) throw ToolFailure(PdfErrorCodes.INVALID_ARGUMENT, "nothing to add")
+        val request = request(PdfOps.STAMP, PdfContract.CONTRACT_VERSION_2) {
+            input.password?.let { putString(PdfContract.KEY_PASSWORD, it) }
+            putString(PdfContract.KEY_DISPLAY_NAME, input.target.displayName)
+            if (images.isNotEmpty()) putInt(PdfContract.KEY_IMAGE_COUNT, images.size)
+        }
+        return file(name, MIME_PDF) { descriptor ->
+            withPayload(ToolPayloads.stamp(items), descriptor) { payload ->
+                runSources(request, listOf({ openSource(input.target) }, payload) + images.map { { openSource(it) } }, descriptor)
+            }
+        }
+    }
+
+    private fun compress(input: ToolInput, options: ToolOptions.Compress): ToolResult {
+        val request = request(PdfOps.COMPRESS, PdfContract.CONTRACT_VERSION_2) {
+            input.password?.let { putString(PdfContract.KEY_PASSWORD, it) }
+            putInt(PdfContract.KEY_IMAGE_DPI, options.imageDpi)
+            putInt(PdfContract.KEY_IMAGE_QUALITY, options.imageQuality)
+            putBoolean(PdfContract.KEY_REMOVE_METADATA, options.removeMetadata)
+            putBoolean(PdfContract.KEY_OBJECT_STREAMS, options.objectStreams)
+        }
+        return file(OutputNames.compressed(input.target.displayName), MIME_PDF, { answer ->
+            ToolSummary.Compressed(
+                sourceBytes = number(answer, PdfContract.KEY_SOURCE_BYTES).toLong(),
+                sizeBytes = number(answer, PdfContract.KEY_SIZE_BYTES).toLong(),
+                imagesRecompressed = number(answer, PdfContract.KEY_IMAGES_RECOMPRESSED).toInt(),
+                imagesTotal = number(answer, PdfContract.KEY_IMAGES_TOTAL).toInt(),
+            )
+        }) { descriptor -> runSources(request, listOf { openSource(input.target) }, descriptor) }
+    }
+
+    private fun fillForm(input: ToolInput, options: ToolOptions.FillForm): ToolResult {
+        val request = request(PdfOps.FILL_FORM, PdfContract.CONTRACT_VERSION_2) {
+            input.password?.let { putString(PdfContract.KEY_PASSWORD, it) }
+        }
+        return file(OutputNames.filled(input.target.displayName), MIME_PDF, { answer ->
+            ToolSummary.Filled(number(answer, PdfContract.KEY_FILLED).toInt(), options.flatten)
+        }) { descriptor ->
+            withPayload(ToolPayloads.fill(options), descriptor) { payload ->
+                runSources(request, listOf({ openSource(input.target) }, payload), descriptor)
+            }
+        }
+    }
+
+    /**
+     * `setInfo` and then `setOutline` (D52); when both run, the first writes a temporary file in [workDir] that the second
+     * reads (it is no longer encrypted, as every written output).
+     * zh-CN: 依次执行 `setInfo` 与 `setOutline` (D52); 两者都执行时, 前者写入 [workDir] 中的临时文件供后者读取 (与所有写出的结果一样,
+     * 它已不再加密).
+     */
+    private fun properties(input: ToolInput, options: ToolOptions.Properties): ToolResult {
+        val steps = buildList {
+            if (options.info.isNotEmpty()) add(PdfOps.SET_INFO to ToolPayloads.info(options.info))
+            if (options.clearOutline) add(PdfOps.SET_OUTLINE to ToolPayloads.clearedOutline())
+        }
+        if (steps.isEmpty()) throw ToolFailure(PdfErrorCodes.INVALID_ARGUMENT, "nothing to change")
+        return file(OutputNames.properties(input.target.displayName), MIME_PDF, { ToolSummary.PropertiesSaved(options.info.size, options.clearOutline) }) { descriptor ->
+            val directory = workDir
+            if (steps.size > 1 && directory == null) throw ToolFailure(PdfErrorCodes.INTERNAL, "no work folder for the intermediate files")
+            var temp: File? = null
+            try {
+                var answer: Bundle? = null
+                steps.forEachIndexed { index, (op, payload) ->
+                    checkCancelled()
+                    val last = index == steps.lastIndex
+                    val source = temp
+                    val target = if (last) {
+                        descriptor
+                    } else {
+                        directory!!.mkdirs()
+                        val created = File.createTempFile("properties-", ".pdf", directory).also { temp = it }
+                        ParcelFileDescriptor.open(created, ParcelFileDescriptor.MODE_WRITE_ONLY or ParcelFileDescriptor.MODE_TRUNCATE)
+                    }
+                    val request = request(op, PdfContract.CONTRACT_VERSION_2) {
+                        if (source == null) input.password?.let { putString(PdfContract.KEY_PASSWORD, it) }
+                    }
+                    val opener: () -> ParcelFileDescriptor = if (source == null) {
+                        { openSource(input.target) }
+                    } else {
+                        { ParcelFileDescriptor.open(source, ParcelFileDescriptor.MODE_READ_ONLY) }
+                    }
+                    val step = steps.size
+                    answer = withPayload(payload, target) { data ->
+                        runSources(request, listOf(opener, data), target) { (index + it) / step }
+                    }
+                }
+                answer
+            } finally {
+                temp?.delete()
+            }
         }
     }
 
@@ -311,33 +517,65 @@ internal class PdfToolRunner(
     // Steps. zh-CN: 步骤.
 
     /** Runs [request] on [inputs] into [descriptor] (consumed) and waits for it. zh-CN: 对 [inputs] 执行 [request], 写入 [descriptor] (被接管) 并等待完成. */
-    private fun runOperation(request: Bundle, inputs: List<ToolInput>, descriptor: ParcelFileDescriptor): Bundle {
-        val sources = ArrayList<ParcelFileDescriptor>(inputs.size)
+    private fun runOperation(request: Bundle, inputs: List<ToolInput>, descriptor: ParcelFileDescriptor): Bundle =
+        runSources(request, inputs.map { input -> { openSource(input.target) } }, descriptor)
+
+    /**
+     * Runs [request] on the inputs [openers] open, in order, into [descriptor] (consumed) and waits for it, reporting its
+     * progress mapped by [overall]; when one cannot be opened, the opened ones and [descriptor] are closed.
+     * zh-CN: 对 [openers] 依次打开的输入执行 [request], 写入 [descriptor] (被接管) 并等待完成, 进度经 [overall] 换算后报告; 某个输入无法
+     * 打开时, 关闭已打开的输入与 [descriptor].
+     */
+    private fun runSources(request: Bundle, openers: List<() -> ParcelFileDescriptor>, descriptor: ParcelFileDescriptor, overall: (Float) -> Float = { it }): Bundle {
+        val sources = ArrayList<ParcelFileDescriptor>(openers.size)
         try {
-            inputs.forEach { sources += openSource(it.target) }
+            openers.forEach { sources += it() }
         } catch (e: Throwable) {
             sources.forEach { runCatching { it.close() } }
             runCatching { descriptor.close() }
             throw e
         }
         // run() closes the inputs and the output it was given. zh-CN: run() 会关闭传入的输入与输出.
-        return await({ callback -> plugin.run(request, sources.toTypedArray(), descriptor, callback) }) { it }
+        return await({ callback -> plugin.run(request, sources.toTypedArray(), descriptor, callback) }, overall)
+    }
+
+    /**
+     * Writes [payload] to a temporary file in [workDir] and gives [use] an opener of it, deleting the file afterwards; when
+     * it cannot be written, [descriptor] (the output [use] would consume) is closed.
+     * zh-CN: 把 [payload] 写入 [workDir] 中的临时文件, 把打开它的函数交给 [use], 之后删除该文件; 无法写入时关闭 [descriptor] (本应由
+     * [use] 接管的输出).
+     */
+    private fun <T> withPayload(payload: JSONObject, descriptor: ParcelFileDescriptor, use: (() -> ParcelFileDescriptor) -> T): T {
+        val file = try {
+            val directory = workDir ?: throw ToolFailure(PdfErrorCodes.INTERNAL, "no work folder for the payload")
+            directory.mkdirs()
+            File.createTempFile("payload-", ".json", directory).apply { writeText(payload.toString(), Charsets.UTF_8) }
+        } catch (e: Throwable) {
+            runCatching { descriptor.close() }
+            throw e as? ToolFailure ?: ToolFailure(PdfErrorCodes.IO_ERROR, e.message)
+        }
+        try {
+            return use { ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY) }
+        } finally {
+            file.delete()
+        }
     }
 
     /**
      * Writes one file: [write] gets the descriptor (and closes it, or hands it to a call that does) and answers the
-     * engine result, whose warnings are kept; the file is published when it returns and removed when it throws.
-     * zh-CN: 写入一个文件: [write] 获得描述符 (由它关闭, 或交给会关闭它的调用) 并返回引擎结果, 其中的警告被保留; [write] 返回时发布
-     * 文件, 抛出异常时删除.
+     * engine result, whose warnings are kept and which [summarize] reads; the file is published when it returns and
+     * removed when it throws.
+     * zh-CN: 写入一个文件: [write] 获得描述符 (由它关闭, 或交给会关闭它的调用) 并返回引擎结果, 其中的警告被保留, 并由 [summarize] 读取;
+     * [write] 返回时发布文件, 抛出异常时删除.
      */
-    private fun file(name: String, mimeType: String, write: (ParcelFileDescriptor) -> Bundle?): ToolResult {
+    private fun file(name: String, mimeType: String, summarize: (Bundle) -> ToolSummary? = { null }, write: (ParcelFileDescriptor) -> Bundle?): ToolResult {
         checkCancelled()
         val pending = hostCall { output.createFile(name, mimeType) }
         try {
             val answer = write(pending.descriptor)
             checkCancelled()
             val path = hostCall { pending.commit() }
-            return ToolResult(path, 1, answer?.getStringArray(PdfContract.KEY_WARNINGS)?.filterNotNull().orEmpty())
+            return ToolResult(path, 1, answer?.getStringArray(PdfContract.KEY_WARNINGS)?.filterNotNull().orEmpty(), summarize(answer ?: Bundle()))
         } catch (e: Throwable) {
             runCatching { pending.descriptor.close() }
             pending.abort()
@@ -465,11 +703,20 @@ internal class PdfToolRunner(
         throw ToolFailure(ToolFailure.OUTPUT_FAILED, e.message ?: e.javaClass.simpleName)
     }
 
-    private fun request(op: String? = null, fill: Bundle.() -> Unit = {}): Bundle = Bundle().apply {
-        putInt(PdfContract.KEY_CONTRACT_VERSION, ThreePaperPdfContract.CONTRACT_VERSION)
+    /**
+     * A request of [version]: the operations added in 1.1.0 (`stamp`, `compress`, `fillForm`, `setInfo`, `setOutline`)
+     * need `CONTRACT_VERSION_2`.
+     * zh-CN: [version] 版本的请求: 1.1.0 新增的操作 (`stamp`, `compress`, `fillForm`, `setInfo`, `setOutline`) 需要 `CONTRACT_VERSION_2`.
+     */
+    private fun request(op: String? = null, version: Int = ThreePaperPdfContract.CONTRACT_VERSION, fill: Bundle.() -> Unit = {}): Bundle = Bundle().apply {
+        putInt(PdfContract.KEY_CONTRACT_VERSION, version)
         op?.let { putString(PdfContract.KEY_OP, it) }
         fill()
     }
+
+    /** A number of an engine answer, 0 when absent. zh-CN: 引擎应答中的数值, 缺少时为 0. */
+    @Suppress("DEPRECATION")
+    private fun number(answer: Bundle, key: String): Number = answer.get(key) as? Number ?: 0
 
     companion object {
 

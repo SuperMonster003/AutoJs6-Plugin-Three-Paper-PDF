@@ -169,6 +169,24 @@ internal class PdfToolViewModel(application: Application) : AndroidViewModel(app
     var thumbnails by mutableStateOf<PageThumbnails?>(null)
         private set
 
+    /** The options of the tools added in 1.1.0 (roadmap P6.12). zh-CN: 1.1.0 新增工具的选项 (路线图 P6.12). */
+    val watermark = WatermarkState()
+    val pageNumbers = PageNumbersState()
+    val compress = CompressState()
+
+    /** The form fields of the fill-form tool, read when its input opens. zh-CN: 表单填写工具的字段, 在其输入打开时读取. */
+    val fillForm = FillFormState()
+
+    /** The facts, metadata and outline of the properties tool, read when its input opens. zh-CN: 文档属性工具的文件信息, 元数据与书签, 在其输入打开时读取. */
+    val properties = PropertiesState()
+
+    /** The watermark preview, while the watermark tool's input is open. zh-CN: 水印预览, 在水印工具的输入打开期间存在. */
+    var preview by mutableStateOf<WatermarkPreview?>(null)
+        private set
+
+    /** The newest reading of form fields or properties (main thread). zh-CN: 最新一次读取表单字段或文档属性 (主线程). */
+    private var detailsGeneration = 0
+
     /**
      * Starts the tool of the file manager [request] once; a recreated Activity calls it again and keeps the state.
      * Without a usable request the screen fails with [NO_FILES].
@@ -232,6 +250,7 @@ internal class PdfToolViewModel(application: Application) : AndroidViewModel(app
         if (!toolbox || phase != Phase.Ready || targets.isEmpty()) return
         val fresh = if (tool.inputs == ToolKind.Inputs.ONE_PDF) {
             closeThumbnails()
+            closeDetails()
             organized.clear()
             inputs.clear()
             pages = ""
@@ -263,6 +282,7 @@ internal class PdfToolViewModel(application: Application) : AndroidViewModel(app
         inputs.removeAt(index)
         if (inputs.isEmpty()) {
             closeThumbnails()
+            closeDetails()
             organized.clear()
         }
     }
@@ -340,8 +360,23 @@ internal class PdfToolViewModel(application: Application) : AndroidViewModel(app
             ToolKind.ENCRYPT -> ToolOptions.Encrypt(newPassword).takeIf { encryptPasswordProblem() == null }
             ToolKind.DECRYPT -> ToolOptions.Decrypt.takeIf { first.encrypted }
             ToolKind.ORGANIZE -> ToolOptions.Organize(organized.map { OrganizedPage(it.page, it.rotation) }).takeIf { organized.isNotEmpty() && pagesChanged() }
+            ToolKind.WATERMARK -> pagesOrAll(first.pageCount)?.let { watermark.options(it.value) }
+            ToolKind.PAGE_NUMBERS -> pagesOrAll(first.pageCount)?.let { pageNumbers.options(it.value) }
+            ToolKind.COMPRESS -> compress.options()
+            ToolKind.FILL_FORM -> fillForm.options()
+            ToolKind.PROPERTIES -> properties.options()
             null -> null
         }
+    }
+
+    /**
+     * The page the watermark preview shows: the first page of the typed range, or page 1.
+     * zh-CN: 水印预览显示的页: 输入的页码范围中的第一页, 否则为第 1 页.
+     */
+    fun previewPage(): Int {
+        val count = inputs.firstOrNull()?.pageCount ?: 0
+        val spec = pagesOrAll(count)?.value
+        return ToolPayloads.firstPage(spec).coerceIn(1, maxOf(1, count))
     }
 
     /** The page range typed for the images and text tools is not valid. zh-CN: 为图片与文本工具输入的页码范围无效. */
@@ -445,6 +480,7 @@ internal class PdfToolViewModel(application: Application) : AndroidViewModel(app
         runner?.cancel()
         runner = null
         closeThumbnails()
+        closeDetails()
         if (acquired) {
             // After a running tool stops: close the host session, then give the engine back. A toolbox task holds the
             // engine on its own and keeps running. zh-CN: 等运行中的工具停止后关闭宿主会话, 再归还引擎. 工具箱任务自行持有引擎, 继续运行.
@@ -466,7 +502,14 @@ internal class PdfToolViewModel(application: Application) : AndroidViewModel(app
                 input.wrongPassword = false
                 input.error = null
                 if (kind == ToolKind.DECRYPT && password != null && decryptPassword.isEmpty()) decryptPassword = password
-                if (kind == ToolKind.ORGANIZE && inputs.firstOrNull() === input) openPages(input)
+                if (inputs.firstOrNull() === input) {
+                    when (kind) {
+                        ToolKind.ORGANIZE -> openPages(input)
+                        ToolKind.WATERMARK -> openPreview(input)
+                        ToolKind.FILL_FORM, ToolKind.PROPERTIES -> loadDetails(input)
+                        else -> Unit
+                    }
+                }
             }
             is Inspection.Locked -> {
                 input.encrypted = true
@@ -488,6 +531,117 @@ internal class PdfToolViewModel(application: Application) : AndroidViewModel(app
         thumbnails?.close()
         thumbnails = null
     }
+
+    private fun openPreview(input: Input) {
+        val engine = plugin ?: return
+        preview?.close()
+        preview = WatermarkPreview(getApplication(), engine, input.target, input.password, input.pageCount)
+    }
+
+    /** Closes the preview and forgets what was read of the input. zh-CN: 关闭预览并丢弃从输入读取的内容. */
+    private fun closeDetails() {
+        preview?.close()
+        preview = null
+        detailsGeneration++
+        fillForm.reset()
+        properties.reset()
+    }
+
+    /**
+     * Reads the form fields (fill form) or the facts and outline (properties) of [input] on the worker; a newer input
+     * makes the answer stale.
+     * zh-CN: 在工作线程上读取 [input] 的表单字段 (表单填写) 或文件信息与书签 (文档属性); 有更新的输入时应答作废.
+     */
+    private fun loadDetails(input: Input) {
+        val engine = plugin ?: return
+        val tool = kind ?: return
+        val ticket = ++detailsGeneration
+        fillForm.reset()
+        properties.reset()
+        if (tool == ToolKind.FILL_FORM) fillForm.loading = true else properties.loading = true
+        val target = input.target
+        val password = input.password
+        worker.execute {
+            val outcome: Any = try {
+                readDetails(engine, tool, target, password)
+            } catch (e: ToolFailure) {
+                e.code
+            } catch (e: RuntimeException) {
+                PdfErrorCodes.decode(e.message)?.first ?: PdfErrorCodes.INTERNAL
+            } catch (e: Exception) {
+                PdfErrorCodes.IO_ERROR
+            }
+            main.post {
+                if (ticket != detailsGeneration) return@post
+                when (outcome) {
+                    is Details -> if (tool == ToolKind.FILL_FORM) {
+                        fillForm.show(outcome.fields, outcome.fieldsMore, outcome.facts[PdfContract.KEY_XFA] as? String)
+                    } else {
+                        properties.show(outcome.facts, outcome.outline, outcome.outlineMore)
+                    }
+                    else -> if (tool == ToolKind.FILL_FORM) {
+                        fillForm.loading = false
+                        fillForm.error = outcome as String
+                    } else {
+                        properties.loading = false
+                        properties.error = outcome as String
+                    }
+                }
+            }
+        }
+    }
+
+    private fun readDetails(engine: IPdfPlugin, tool: ToolKind, target: ToolTarget, password: String?): Details {
+        val options = Bundle().apply {
+            putInt(PdfContract.KEY_CONTRACT_VERSION, PdfContract.CONTRACT_VERSION_2)
+            password?.let { putString(PdfContract.KEY_PASSWORD, it) }
+            putString(PdfContract.KEY_DISPLAY_NAME, target.displayName)
+        }
+        // open() closes the source. zh-CN: open() 会关闭源.
+        val document = engine.open(open(target.uri), options)
+        try {
+            val info = checked(document.info)
+            val facts = LinkedHashMap<String, Any?>()
+            facts[PdfContract.KEY_DISPLAY_NAME] = target.displayName
+            FACT_KEYS.forEach { key -> valueOf(info, key)?.let { facts[key] = it } }
+            if (tool == ToolKind.FILL_FORM) {
+                val fields = ArrayList<FormFieldItem>()
+                var offset = 0
+                var more = true
+                while (more && fields.size < FillFormState.MAX_FIELDS) {
+                    val request = Bundle().apply {
+                        putInt(PdfContract.KEY_CONTRACT_VERSION, PdfContract.CONTRACT_VERSION_2)
+                        putInt(PdfContract.KEY_OFFSET, offset)
+                        putInt(PdfContract.KEY_LIMIT, PdfContract.MAX_FORM_FIELD_ITEMS)
+                    }
+                    val page = checked(document.getFormFields(request))
+                    val found = FormFieldItem.parse(page.getString(PdfContract.KEY_ITEMS) ?: "[]")
+                    fields += found
+                    more = page.getBoolean(PdfContract.KEY_HAS_MORE)
+                    val next = page.getInt(PdfContract.KEY_NEXT_OFFSET, offset + found.size)
+                    if (more && (found.isEmpty() || next <= offset)) break
+                    offset = next
+                }
+                val truncated = more || fields.size > FillFormState.MAX_FIELDS
+                return Details(facts, fields.take(FillFormState.MAX_FIELDS), truncated, emptyList(), false)
+            }
+            val outline = checked(document.outline)
+            val entries = OutlineItem.parse(outline.getString(PdfContract.KEY_ITEMS) ?: "[]")
+            val more = outline.getBoolean(PdfContract.KEY_HAS_MORE) || entries.size > PropertiesState.MAX_OUTLINE_SHOWN
+            return Details(facts, emptyList(), false, entries.take(PropertiesState.MAX_OUTLINE_SHOWN), more)
+        } finally {
+            runCatching { document.close() }
+        }
+    }
+
+    private fun checked(answer: Bundle?): Bundle {
+        val result = answer ?: throw ToolFailure(PdfErrorCodes.INTERNAL, "no answer")
+        result.getString(PdfContract.KEY_ERROR_CODE)?.let { throw ToolFailure(it, result.getString(PdfContract.KEY_ERROR_MESSAGE)) }
+        return result
+    }
+
+    @Suppress("DEPRECATION")
+    private fun valueOf(bundle: Bundle, key: String): Any? = bundle.get(key)
 
     private fun inspect(engine: IPdfPlugin, target: ToolTarget, password: String?): Inspection {
         val source = try {
@@ -562,6 +716,15 @@ internal class PdfToolViewModel(application: Application) : AndroidViewModel(app
         class Unreadable(val code: String) : Inspection
     }
 
+    /** What the fill-form or properties tool read. zh-CN: 表单填写或文档属性工具读取到的内容. */
+    private class Details(
+        val facts: Map<String, Any?>,
+        val fields: List<FormFieldItem>,
+        val fieldsMore: Boolean,
+        val outline: List<OutlineItem>,
+        val outlineMore: Boolean,
+    )
+
     companion object {
 
         /** No usable file arrived with the request. zh-CN: 请求没有带来可用的文件. */
@@ -577,6 +740,17 @@ internal class PdfToolViewModel(application: Application) : AndroidViewModel(app
 
         /** Page margins of images to PDF in points: none, narrow (1/4 inch), wide (1/2 inch). zh-CN: 图片转 PDF 的页边距 (点): 无, 窄 (1/4 英寸), 宽 (1/2 英寸). */
         val MARGIN_CHOICES = listOf(0, 18, 36)
+
+        /**
+         * The `getInfo` keys the properties tool shows or edits (with [PdfContract.KEY_DISPLAY_NAME] added first).
+         * zh-CN: 文档属性工具显示或编辑的 `getInfo` 键 (另在最前面加上 [PdfContract.KEY_DISPLAY_NAME]).
+         */
+        val FACT_KEYS = listOf(
+            PdfContract.KEY_SIZE_BYTES, PdfContract.KEY_PAGE_COUNT, PdfContract.KEY_PDF_VERSION, PdfContract.KEY_ENCRYPTED,
+            PdfContract.KEY_FORM_FIELD_COUNT, PdfContract.KEY_PRODUCER, PdfContract.KEY_CREATOR,
+            PdfContract.KEY_CREATION_DATE, PdfContract.KEY_MODIFICATION_DATE, PdfContract.KEY_XFA,
+            PdfContract.KEY_TITLE, PdfContract.KEY_AUTHOR, PdfContract.KEY_SUBJECT, PdfContract.KEY_KEYWORDS,
+        )
 
         private const val QUARTER = 90
 

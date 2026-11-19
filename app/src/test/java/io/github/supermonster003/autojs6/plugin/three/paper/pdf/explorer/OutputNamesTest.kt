@@ -58,6 +58,15 @@ class OutputNamesTest {
     }
 
     @Test
+    fun `the editing tools of P6_12 each carry their own suffix`() {
+        assertEquals("Report_watermarked.pdf", OutputNames.watermarked("Report.pdf"))
+        assertEquals("Report_numbered.pdf", OutputNames.numbered("Report.pdf"))
+        assertEquals("Report_compressed.pdf", OutputNames.compressed("Report.PDF"))
+        assertEquals("Report_filled.pdf", OutputNames.filled("Report.pdf"))
+        assertEquals("Report_properties.pdf", OutputNames.properties("Report.pdf"))
+    }
+
+    @Test
     fun `numbers are padded to the widest with at least two digits`() {
         assertEquals("Report-03.pdf", OutputNames.splitPart("Report.pdf", 3, 9))
         assertEquals("Report-12.pdf", OutputNames.splitPart("Report.pdf", 12, 12))
@@ -80,6 +89,11 @@ class OutputNamesTest {
             OutputNames.imagePage(source, 100_000, 100_000, "jpg"),
             OutputNames.imagesPdf("$source.jpeg"),
             OutputNames.edited(source),
+            OutputNames.watermarked(source),
+            OutputNames.numbered(source),
+            OutputNames.compressed(source),
+            OutputNames.filled(source),
+            OutputNames.properties(source),
         ).forEach { name ->
             assertTrue(name, name.toByteArray(Charsets.UTF_8).size <= MAX_FILE_NAME_BYTES)
         }

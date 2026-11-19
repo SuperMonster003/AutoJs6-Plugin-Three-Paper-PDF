@@ -2,13 +2,15 @@ package io.github.supermonster003.autojs6.plugin.three.paper.pdf.explorer
 
 /**
  * Names of the tool results (appendix D Q74): one file next to the source named `<name>_merged.pdf`,
- * `<name>_encrypted.pdf`, `<name>_decrypted.pdf` or `<name>_text.txt`, and one folder for tools giving many files,
+ * `<name>_encrypted.pdf`, `<name>_decrypted.pdf` or `<name>_text.txt` (the toolbox adds `_edited`, `_watermarked`,
+ * `_numbered`, `_compressed`, `_filled` and `_properties`, appendix D Q101 and Q261), and one folder for tools giving many files,
  * `<name>_split/` with `<name>-01.pdf` ... and `<name>_images/` with `<name>-p01.png` ... (numbers padded to the
  * widest). `<name>` is the source name without `.pdf`, with characters the file manager refuses replaced and cut to
  * [MAX_STEM_BYTES] bytes of UTF-8, so every name stays below the 255 bytes of a file name. The host adds ` (1)` and so
  * on when the name is taken.
  * zh-CN: 工具结果的名称 (附录 D Q74): 在源文件旁生成一个文件, 名为 `<名称>_merged.pdf`, `<名称>_encrypted.pdf`,
- * `<名称>_decrypted.pdf` 或 `<名称>_text.txt`; 生成多个文件的工具生成一个文件夹, 即 `<名称>_split/` 内含 `<名称>-01.pdf` ...,
+ * `<名称>_decrypted.pdf` 或 `<名称>_text.txt` (工具箱另有 `_edited`, `_watermarked`, `_numbered`, `_compressed`, `_filled` 与
+ * `_properties`, 附录 D Q101 与 Q261); 生成多个文件的工具生成一个文件夹, 即 `<名称>_split/` 内含 `<名称>-01.pdf` ...,
  * 以及 `<名称>_images/` 内含 `<名称>-p01.png` ... (序号按最大值补零). `<名称>` 是去掉 `.pdf` 的源文件名, 文件管理器拒绝的字符被
  * 替换, 并截断到 [MAX_STEM_BYTES] 字节的 UTF-8, 因此每个名称都短于文件名的 255 字节. 名称已被占用时由宿主追加 ` (1)` 等.
  */
@@ -40,6 +42,21 @@ internal object OutputNames {
 
     /** Organized pages (roadmap P4.2, appendix D Q101). zh-CN: 整理后的页面 (路线图 P4.2, 附录 D Q101). */
     fun edited(name: String) = "${stem(name)}_edited.pdf"
+
+    /** A watermark added (roadmap P6.12, appendix D Q261). zh-CN: 加了水印 (路线图 P6.12, 附录 D Q261). */
+    fun watermarked(name: String) = "${stem(name)}_watermarked.pdf"
+
+    /** Page numbers, headers or footers added (roadmap P6.12, appendix D Q261). zh-CN: 加了页码, 页眉或页脚 (路线图 P6.12, 附录 D Q261). */
+    fun numbered(name: String) = "${stem(name)}_numbered.pdf"
+
+    /** Compressed (roadmap P6.12, appendix D Q261). zh-CN: 压缩后 (路线图 P6.12, 附录 D Q261). */
+    fun compressed(name: String) = "${stem(name)}_compressed.pdf"
+
+    /** The form filled (roadmap P6.12, appendix D Q261). zh-CN: 填写了表单 (路线图 P6.12, 附录 D Q261). */
+    fun filled(name: String) = "${stem(name)}_filled.pdf"
+
+    /** The document properties or the outline changed (roadmap P6.12, appendix D Q261). zh-CN: 改了文档属性或书签 (路线图 P6.12, 附录 D Q261). */
+    fun properties(name: String) = "${stem(name)}_properties.pdf"
 
     fun splitFolder(name: String) = "${stem(name)}_split"
 

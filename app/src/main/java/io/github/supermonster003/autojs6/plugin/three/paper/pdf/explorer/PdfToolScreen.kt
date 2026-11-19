@@ -105,10 +105,11 @@ import java.text.NumberFormat
  * and the outcome. The toolbox adds choosing and ordering the inputs (the built-in file browser or the system picker),
  * the output folder, the organize grid and, for its outcome, opening and sharing the results. Test tags: `tool-start`,
  * `tool-cancel`, `tool-done`, `tool-error`, `tool-retry`, `tool-password-<n>`, `tool-unlock-<n>`, `tool-add`,
- * `tool-remove-<n>`, `tool-output`, `tool-open`, `tool-share`, `tool-finish`, `tool-page-<page>`.
+ * `tool-remove-<n>`, `tool-output`, `tool-open`, `tool-share`, `tool-finish`, `tool-page-<page>`; the options of the editing
+ * tools and the result summary are in `PdfEditToolOptions.kt`.
  * zh-CN: 工具界面, 由文件管理器工具 (路线图 P3.3, 附录 D Q70; [PdfToolActivity]) 与工具箱向导 (路线图 P4.2; 首页的一个目的地) 共用:
  * 输入文件, 选项, 然后是可取消的进度与结果. 工具箱另有选择与排列输入 (自带文件浏览器或系统选择器), 输出目录, 页面整理网格, 以及
- * 结果的打开与分享. 测试标签见上.
+ * 结果的打开与分享. 测试标签见上; 编辑类工具的选项与结果摘要在 `PdfEditToolOptions.kt` 中.
  */
 @Composable
 internal fun PdfToolScreen(model: PdfToolViewModel, onClose: () -> Unit) {
@@ -242,6 +243,7 @@ internal fun PdfToolScreen(model: PdfToolViewModel, onClose: () -> Unit) {
                         style = MaterialTheme.typography.bodyLarge,
                     )
                     if (phase.result.files > 1) Text(stringResource(R.string.tool_done_files, phase.result.files), style = MaterialTheme.typography.bodyMedium)
+                    ToolSummaryBlock(phase.result)
                     Button(onClick = onClose, modifier = Modifier.testTag("tool-finish")) { Text(stringResource(R.string.tool_done)) }
                 }
             }
@@ -285,6 +287,11 @@ private fun Options(model: PdfToolViewModel, padding: PaddingValues, storage: St
             ToolKind.EXTRACT_TEXT -> PagesField(model)
             ToolKind.ENCRYPT -> EncryptOptions(model)
             ToolKind.DECRYPT -> DecryptOptions(model)
+            ToolKind.WATERMARK -> WatermarkOptions(model)
+            ToolKind.PAGE_NUMBERS -> PageNumbersOptions(model)
+            ToolKind.COMPRESS -> CompressOptions(model)
+            ToolKind.FILL_FORM -> FillFormOptions(model)
+            ToolKind.PROPERTIES -> PropertiesOptions(model)
             ToolKind.ORGANIZE, null -> Unit
         }
         OutputSection(model, onBrowseOutput)
@@ -564,7 +571,7 @@ private fun FromImagesOptions(model: PdfToolViewModel) {
 }
 
 @Composable
-private fun PagesField(model: PdfToolViewModel) {
+internal fun PagesField(model: PdfToolViewModel) {
     val pageCount = model.inputs.firstOrNull()?.pageCount ?: 0
     OutlinedTextField(
         value = model.pages,
@@ -813,6 +820,7 @@ private fun ToolboxOutcome(result: ToolResult, padding: PaddingValues, onFinish:
             textAlign = TextAlign.Center,
         )
         if (result.files > 1) Text(stringResource(R.string.tool_done_files, result.files), style = MaterialTheme.typography.bodyMedium)
+        ToolSummaryBlock(result)
         if (files.isNotEmpty()) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.toolbox_result_files), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
@@ -866,7 +874,7 @@ private fun ToolboxOutcome(result: ToolResult, padding: PaddingValues, onFinish:
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun Chips(content: @Composable () -> Unit) {
+internal fun Chips(content: @Composable () -> Unit) {
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) { content() }
 }
 
@@ -881,7 +889,7 @@ private fun Centered(padding: PaddingValues, content: @Composable ColumnScope.()
 }
 
 /** A file from the system picker: its URI and the name the provider gives. zh-CN: 来自系统选择器的文件: URI 及提供者给出的名称. */
-private fun targetOf(context: Context, uri: Uri): ToolTarget =
+internal fun targetOf(context: Context, uri: Uri): ToolTarget =
     ToolTarget(uri, ThreePaperPdfViewerActivity.displayNameOf(context, uri) ?: context.getString(R.string.viewer_untitled))
 
 /** The message of a failure code, or null for the generic message. zh-CN: 错误码对应的消息; 使用通用消息时为 null. */
@@ -908,7 +916,7 @@ private const val BROWSE_OUTPUT = "output"
 
 private const val MIME_PDF = "application/pdf"
 
-private const val MIME_IMAGES = "image/*"
+internal const val MIME_IMAGES = "image/*"
 
 /** The header item above the pages of the organize grid. zh-CN: 整理网格中页面之上的标题项. */
 private const val HEADER_ITEMS = 1
