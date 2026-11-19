@@ -162,9 +162,12 @@ internal class WatermarkPreview(
     }
 
     private fun render(file: File): Bitmap? {
+        // The engine keeps its scratch file in this folder and refuses one that does not exist (PDFBox ScratchFile).
+        // zh-CN: 引擎把暂存文件放在这个文件夹, 文件夹不存在时拒绝打开 (PDFBox ScratchFile).
+        val scratch = File(directory, "render").apply { mkdirs() }
         val descriptor = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
         try {
-            val document = ViewerDocument.open(descriptor, null, File(directory, "render"))
+            val document = ViewerDocument.open(descriptor, null, scratch)
             try {
                 val frame = document.pages.firstOrNull() ?: return null
                 val height = (WIDTH_PX * frame.height / frame.width).roundToInt().coerceIn(1, WIDTH_PX * MAX_ASPECT)
