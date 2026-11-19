@@ -183,6 +183,9 @@ class RecentDocumentsDeviceTest {
         try {
             ActivityScenario.launch(HomeActivity::class.java).use {
                 awaitListed(EMPTY_TAG)
+                // The tool list can push the recent section below the screen, so scroll back to the open entry.
+                // zh-CN: 工具列表可能把最近文件区挤出屏幕, 因此先滚回 "打开" 一项.
+                awaitListed("paper.home.open")
                 click("paper.home.open")
                 click("browser.system")
                 assertEquals(1, picker.hits)
