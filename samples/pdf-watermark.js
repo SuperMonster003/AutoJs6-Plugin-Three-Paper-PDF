@@ -56,13 +56,16 @@ function step(label, body) {
     }
 }
 
-/* 没有样例文档时现场生成几页文字. */
+/*
+ * 没有样例文档时现场生成几页文字. 四周留 72 pt: fromText 的默认边距 (36 pt) 与页码, 页眉页脚的默认边距相同,
+ * 不加大的话页码会压在每页最后一行正文上.
+ */
 function demoSource() {
     let lines = ['Quarterly report', ''];
-    for (let i = 1; i <= 120; i++) {
+    for (let i = 1; i <= 100; i++) {
         lines.push('Line ' + i + ': watermark and page number sample of 3-Paper PDF.');
     }
-    return pdf.fromText(lines.join('\n'), outPath('demo-source.pdf'), { fontSize: 14 }).path;
+    return pdf.fromText(lines.join('\n'), outPath('demo-source.pdf'), { fontSize: 14, margin: 72 }).path;
 }
 
 /* 第 n 页的文字. */
