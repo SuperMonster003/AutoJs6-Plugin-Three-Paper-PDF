@@ -4,6 +4,7 @@ import io.github.supermonster003.autojs6.plugin.three.paper.pdf.RepositoryFiles.
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.RepositoryFiles.androidOrNull
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.RepositoryFiles.child
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.RepositoryFiles.children
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.codegen.AutoJs6Scripts
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.appearance.LauncherIconMode
 import org.autojs.plugin.common.api.PluginActions
 import org.autojs.plugin.common.api.PluginCapabilityKeys
@@ -300,7 +301,12 @@ class ManifestContractTest {
         assertEquals("@xml/viewer_file_paths", paths.android("resource"))
         val roots = RepositoryFiles.xml("app/src/main/res/xml/viewer_file_paths.xml")
         // FileProvider reads plain attributes here. zh-CN: FileProvider 在此读取不带命名空间的属性.
-        assertEquals("viewer-share/", roots.children("cache-path").single().getAttribute("path"))
+        // The viewer copies, and the scripts too large to send inline to the host's CREATE_SCRIPT entry (roadmap P6.13).
+        // zh-CN: 查看器的副本, 以及太大而不能内联发给宿主 CREATE_SCRIPT 入口的脚本 (路线图 P6.13).
+        assertEquals(
+            listOf("${AutoJs6Scripts.CACHE_FOLDER}/", "viewer-share/"),
+            roots.children("cache-path").map { it.getAttribute("path") }.sorted(),
+        )
         // The toolbox results on the shared storage (roadmap P4.2, appendix D Q104). zh-CN: 共享存储上的工具箱结果.
         assertEquals(".", roots.children("external-path").single().getAttribute("path"))
         listOf("files-path", "external-files-path", "external-cache-path", "root-path").forEach { tag ->

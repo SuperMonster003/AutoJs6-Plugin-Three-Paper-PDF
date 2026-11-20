@@ -79,6 +79,20 @@ val hostApiAars: List<File> = run {
     }
 }
 
+// The host's Rhino jar (roadmap P6.13), locked in locks/rhino-jar.lock: the JVM tests compile and run the generated
+// scripts with the same Rhino as AutoJs6 scripts. Staged under testlibs/ (libs/ holds only the host contract AARs) and on
+// the test classpath only; the APK carries no Rhino.
+// zh-CN: 宿主的 Rhino jar (路线图 P6.13), 锁定在 locks/rhino-jar.lock 中: JVM 测试用与 AutoJs6 脚本相同的 Rhino 编译并运行生成的脚本.
+// 暂存于 testlibs/ (libs/ 只放宿主契约 AAR), 只在测试类路径上; APK 不含 Rhino.
+val rhinoTestJar: File = run {
+    val entries = readLock("locks/rhino-jar.lock")
+    check(entries.keys == setOf("format", "rhino.file", "rhino.sha256", "rhino.source")) { "Unexpected keys in locks/rhino-jar.lock" }
+    val fileName = entries.getValue("rhino.file")
+    check(fileName == File(fileName).name && fileName.endsWith(".jar")) { "Invalid rhino.file in locks/rhino-jar.lock" }
+    check(entries.getValue("rhino.source").matches(Regex("[0-9a-f]{40}"))) { "rhino.source must be the full host commit" }
+    verifiedFile("testlibs/$fileName", entries["rhino.sha256"], "rhino")
+}
+
 run {
     // The extra TLS trust anchor of res/xml/network_security_config.xml (roadmap P4.1, the update check on Android 7.0;
     // copied from 3-Macaw Speech cf32b5e): the ISRG Root X1 certificate in DER form, locked in locks/trust-anchors.lock
@@ -276,6 +290,7 @@ dependencies {
 
     testImplementation(libs.junit)
     testImplementation(libs.org.json)
+    testImplementation(files(rhinoTestJar))
     androidTestImplementation(libs.test.ext.junit)
     androidTestImplementation(libs.test.runner)
     androidTestImplementation(libs.test.rules)

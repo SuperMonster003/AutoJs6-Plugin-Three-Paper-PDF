@@ -2,9 +2,13 @@
 <!--
     Copies handed to other apps by the viewer (ViewerViewModel.SHARE_DIRECTORY, roadmap P3.1) and the toolbox results on
     the shared storage, shared in place (roadmap P4.2, appendix D Q104; ui.toolbox.ToolboxFiles copies the others into
-    viewer-share/).
+    viewer-share/), and the scripts too large to send inline to the host's CREATE_SCRIPT entry
+    (codegen.AutoJs6Scripts.CACHE_FOLDER, roadmap P6.13).
 -->
 <paths>
+    <cache-path
+        name="create-script"
+        path="create-script/" />
     <cache-path
         name="viewer"
         path="viewer-share/" />

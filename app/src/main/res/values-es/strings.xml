@@ -250,6 +250,20 @@
     <string name="tool_result_warnings">Notas</string>
     <string name="tool_retry">Reintentar</string>
     <string name="tool_running" tools:ignore="TypographyEllipsis">Procesando...</string>
+    <string name="tool_script_bun_note">Los scripts de Bun funcionan en Android 13 o posterior.</string>
+    <string name="tool_script_copied">Script copiado</string>
+    <string name="tool_script_copy">Copiar script</string>
+    <string name="tool_script_guessed">Algunas rutas no se pudieron leer y se han supuesto. Revisa las rutas marcadas en el script antes de ejecutarlo.</string>
+    <string name="tool_script_hint">Repite la misma tarea con un script de AutoJs6: elige un entorno de ejecución y luego copia, guarda o abre el script.</string>
+    <string name="tool_script_open">Abrir en AutoJs6</string>
+    <string name="tool_script_open_failed">No se puede abrir el editor de AutoJs6</string>
+    <string name="tool_script_open_too_large">El script supera los 4 MiB que acepta AutoJs6; guárdalo o cópialo en su lugar</string>
+    <string name="tool_script_passwords">El script no incluye las contraseñas: escríbelas donde pone null.</string>
+    <string name="tool_script_save">Guardar como .js</string>
+    <string name="tool_script_save_access">Concede el acceso a todos los archivos para guardar scripts en la carpeta de salida.</string>
+    <string name="tool_script_save_failed">No se puede guardar el script en %1$s</string>
+    <string name="tool_script_saved">Guardado en %1$s</string>
+    <string name="tool_script_title">Script</string>
     <string name="tool_slot_center">Centro</string>
     <string name="tool_slot_left">Izquierda</string>
     <string name="tool_slot_right">Derecha</string>

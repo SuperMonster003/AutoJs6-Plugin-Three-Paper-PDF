@@ -250,6 +250,20 @@
     <string name="tool_result_warnings">提示</string>
     <string name="tool_retry">再試一次</string>
     <string name="tool_running" tools:ignore="TypographyEllipsis">正在處理...</string>
+    <string name="tool_script_bun_note">Bun 指令碼需要 Android 13 以上版本.</string>
+    <string name="tool_script_copied">已複製指令碼</string>
+    <string name="tool_script_copy">複製指令碼</string>
+    <string name="tool_script_guessed">部分路徑無法讀取, 已依推測填入. 執行前請核對指令碼中標示的路徑.</string>
+    <string name="tool_script_hint">用 AutoJs6 指令碼完成相同的工作: 選擇執行環境, 然後複製, 儲存或開啟指令碼.</string>
+    <string name="tool_script_open">在 AutoJs6 中開啟</string>
+    <string name="tool_script_open_failed">無法開啟 AutoJs6 的編輯器</string>
+    <string name="tool_script_open_too_large">指令碼超過 AutoJs6 可接收的 4 MiB, 請儲存或複製後使用</string>
+    <string name="tool_script_passwords">指令碼不含密碼: 請在寫著 null 的位置填入密碼.</string>
+    <string name="tool_script_save">儲存為 .js</string>
+    <string name="tool_script_save_access">授予所有檔案存取權限後, 才能將指令碼儲存至輸出資料夾.</string>
+    <string name="tool_script_save_failed">無法將指令碼儲存至 %1$s</string>
+    <string name="tool_script_saved">已儲存至 %1$s</string>
+    <string name="tool_script_title">指令碼</string>
     <string name="tool_slot_center">中</string>
     <string name="tool_slot_left">左</string>
     <string name="tool_slot_right">右</string>

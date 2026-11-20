@@ -250,6 +250,20 @@
     <string name="tool_result_warnings">참고</string>
     <string name="tool_retry">다시 시도</string>
     <string name="tool_running" tools:ignore="TypographyEllipsis">처리 중...</string>
+    <string name="tool_script_bun_note">Bun 스크립트는 Android 13 이상에서 실행됩니다.</string>
+    <string name="tool_script_copied">스크립트를 복사했습니다</string>
+    <string name="tool_script_copy">스크립트 복사</string>
+    <string name="tool_script_guessed">일부 경로를 읽을 수 없어 추정한 경로를 넣었습니다. 실행하기 전에 스크립트에 표시된 경로를 확인하세요.</string>
+    <string name="tool_script_hint">같은 작업을 AutoJs6 스크립트로 실행할 수 있습니다: 런타임을 고른 뒤 스크립트를 복사, 저장하거나 여세요.</string>
+    <string name="tool_script_open">AutoJs6에서 열기</string>
+    <string name="tool_script_open_failed">AutoJs6 편집기를 열 수 없습니다</string>
+    <string name="tool_script_open_too_large">스크립트가 AutoJs6이 받을 수 있는 4 MiB를 넘습니다. 저장하거나 복사해서 사용하세요</string>
+    <string name="tool_script_passwords">스크립트에는 비밀번호가 들어 있지 않습니다: null로 적힌 곳에 비밀번호를 넣으세요.</string>
+    <string name="tool_script_save">.js로 저장</string>
+    <string name="tool_script_save_access">스크립트를 출력 폴더에 저장하려면 모든 파일 접근 권한을 허용하세요.</string>
+    <string name="tool_script_save_failed">스크립트를 %1$s에 저장할 수 없습니다</string>
+    <string name="tool_script_saved">%1$s에 저장했습니다</string>
+    <string name="tool_script_title">스크립트</string>
     <string name="tool_slot_center">가운데</string>
     <string name="tool_slot_left">왼쪽</string>
     <string name="tool_slot_right">오른쪽</string>

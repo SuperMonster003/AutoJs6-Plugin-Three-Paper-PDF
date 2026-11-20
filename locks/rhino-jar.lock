@@ -1,0 +1,8 @@
+# Rhino jar for the JVM tests of the script generator (roadmap P6.13, ScriptGeneratorRhinoTest): generated scripts are
+#   compiled and run by the same Rhino as AutoJs6 scripts. Byte-identical copy of the host's own
+#   libs/org-mozilla-rhino-2_0_0-SNAPSHOT.jar (the AutoJs6 fork of Rhino, MPL-2.0), which last changed in host commit
+#   ac71b91fd3 (2026-11-17); staged on 2026-11-20. Test classpath only, never in the APK. See testlibs/README.md.
+format=1
+rhino.file=org-mozilla-rhino-2_0_0-SNAPSHOT.jar
+rhino.sha256=af6eb5bbeac672ad24f85d61d0e12e98247c8cb761194d6c3ebead1e3f5886b2
+rhino.source=ac71b91fd3a4500c5f982569623dfea69728e5ca

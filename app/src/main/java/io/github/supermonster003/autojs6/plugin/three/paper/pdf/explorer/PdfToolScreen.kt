@@ -49,6 +49,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -116,6 +117,7 @@ internal fun PdfToolScreen(model: PdfToolViewModel, onClose: () -> Unit) {
     val context = LocalContext.current
     val phase = model.phase
     val storage = rememberStorageAccess()
+    val snackbar = remember { SnackbarHostState() }
     var browsing by rememberSaveable { mutableStateOf<String?>(null) }
     val pickOne = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let { model.addTargets(listOf(targetOf(context, it))) }
@@ -190,6 +192,7 @@ internal fun PdfToolScreen(model: PdfToolViewModel, onClose: () -> Unit) {
         title = stringResource(model.kind?.title ?: R.string.tool_title),
         singleLineTitle = true,
         onBack = { if (!model.toolbox && phase == Phase.Running) model.cancel() else onClose() },
+        snackbarHostState = snackbar,
         bottomBar = {
             if (phase == Phase.Ready) {
                 Surface(color = MaterialTheme.colorScheme.background) {
@@ -233,9 +236,13 @@ internal fun PdfToolScreen(model: PdfToolViewModel, onClose: () -> Unit) {
                 OutlinedButton(onClick = model::cancel, modifier = Modifier.testTag("tool-cancel")) { Text(stringResource(R.string.viewer_cancel)) }
             }
             is Phase.Done -> if (model.toolbox) {
-                ToolboxOutcome(phase.result, padding, finish)
+                ToolboxOutcome(phase.result, padding, finish) { ResultScript(model, phase.result, snackbar, storage) }
             } else {
-                Centered(padding) {
+                Column(
+                    modifier = Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(24.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
                     Text(stringResource(R.string.tool_done_title), style = MaterialTheme.typography.headlineSmall)
                     Text(
                         text = stringResource(R.string.tool_done_saved, phase.result.displayPath),
@@ -244,6 +251,7 @@ internal fun PdfToolScreen(model: PdfToolViewModel, onClose: () -> Unit) {
                     )
                     if (phase.result.files > 1) Text(stringResource(R.string.tool_done_files, phase.result.files), style = MaterialTheme.typography.bodyMedium)
                     ToolSummaryBlock(phase.result)
+                    ResultScript(model, phase.result, snackbar, storage)
                     Button(onClick = onClose, modifier = Modifier.testTag("tool-finish")) { Text(stringResource(R.string.tool_done)) }
                 }
             }
@@ -803,7 +811,7 @@ private fun PageCell(model: PdfToolViewModel, index: Int, page: PdfToolViewModel
 
 /** The toolbox outcome: where the results went, each result to open, and opening or sharing them. zh-CN: 工具箱结果: 结果位置, 可逐个打开的结果, 以及打开或分享. */
 @Composable
-private fun ToolboxOutcome(result: ToolResult, padding: PaddingValues, onFinish: () -> Unit) {
+private fun ToolboxOutcome(result: ToolResult, padding: PaddingValues, onFinish: () -> Unit, script: @Composable () -> Unit) {
     val context = LocalContext.current
     val files = remember(result) { ToolboxFiles.filesOf(File(result.displayPath)) }
     Column(
@@ -869,7 +877,19 @@ private fun ToolboxOutcome(result: ToolResult, padding: PaddingValues, onFinish:
             }
             TextButton(onClick = onFinish, modifier = Modifier.testTag("tool-finish")) { Text(stringResource(R.string.tool_done)) }
         }
+        script()
     }
+}
+
+/**
+ * The run written as a script under the result (roadmap P6.13); nothing when the screen no longer knows the run (it
+ * was recreated from a saved state).
+ * zh-CN: 结果下方写成脚本的本次执行 (路线图 P6.13); 界面已不知道本次执行 (从保存的状态重建) 时不显示.
+ */
+@Composable
+private fun ResultScript(model: PdfToolViewModel, result: ToolResult, snackbar: SnackbarHostState, storage: StorageAccessState) {
+    val request = remember(result, model.scriptRun) { model.scriptRequestOf(result) } ?: return
+    ScriptBlock(request, snackbar, storage)
 }
 
 @OptIn(ExperimentalLayoutApi::class)

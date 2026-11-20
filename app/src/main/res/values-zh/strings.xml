@@ -250,6 +250,20 @@
     <string name="tool_result_warnings">提示</string>
     <string name="tool_retry">重试</string>
     <string name="tool_running" tools:ignore="TypographyEllipsis">正在处理...</string>
+    <string name="tool_script_bun_note">Bun 脚本需要 Android 13 或更高版本.</string>
+    <string name="tool_script_copied">已复制脚本</string>
+    <string name="tool_script_copy">复制脚本</string>
+    <string name="tool_script_guessed">部分路径无法读取, 已按推测填写. 运行前请核对脚本中标出的路径.</string>
+    <string name="tool_script_hint">用 AutoJs6 脚本完成同样的任务: 选择运行时, 然后复制, 保存或打开脚本.</string>
+    <string name="tool_script_open">在 AutoJs6 中打开</string>
+    <string name="tool_script_open_failed">无法打开 AutoJs6 的编辑器</string>
+    <string name="tool_script_open_too_large">脚本超过 AutoJs6 可接收的 4 MiB, 请保存或复制后使用</string>
+    <string name="tool_script_passwords">脚本不含密码: 请在写着 null 的位置填入密码.</string>
+    <string name="tool_script_save">保存为 .js</string>
+    <string name="tool_script_save_access">授予所有文件访问权限后, 才能把脚本保存到输出目录.</string>
+    <string name="tool_script_save_failed">无法把脚本保存到 %1$s</string>
+    <string name="tool_script_saved">已保存到 %1$s</string>
+    <string name="tool_script_title">脚本</string>
     <string name="tool_slot_center">中</string>
     <string name="tool_slot_left">左</string>
     <string name="tool_slot_right">右</string>

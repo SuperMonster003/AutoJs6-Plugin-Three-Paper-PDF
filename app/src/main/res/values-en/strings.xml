@@ -250,6 +250,20 @@
     <string name="tool_result_warnings">Notes</string>
     <string name="tool_retry">Try again</string>
     <string name="tool_running" tools:ignore="TypographyEllipsis">Working...</string>
+    <string name="tool_script_bun_note">Bun scripts run on Android 13 or later.</string>
+    <string name="tool_script_copied">Script copied</string>
+    <string name="tool_script_copy">Copy script</string>
+    <string name="tool_script_guessed">Some paths could not be read and were guessed. Check the paths the script marks before running it.</string>
+    <string name="tool_script_hint">Do the same task from an AutoJs6 script: choose a runtime, then copy, save or open the script.</string>
+    <string name="tool_script_open">Open in AutoJs6</string>
+    <string name="tool_script_open_failed">Cannot open the AutoJs6 editor</string>
+    <string name="tool_script_open_too_large">The script is larger than the 4 MiB AutoJs6 accepts; save or copy it instead</string>
+    <string name="tool_script_passwords">The script leaves out passwords: fill them in where it says null.</string>
+    <string name="tool_script_save">Save as .js</string>
+    <string name="tool_script_save_access">Grant all files access to save scripts in the output folder.</string>
+    <string name="tool_script_save_failed">Cannot save the script to %1$s</string>
+    <string name="tool_script_saved">Saved to %1$s</string>
+    <string name="tool_script_title">Script</string>
     <string name="tool_slot_center">Center</string>
     <string name="tool_slot_left">Left</string>
     <string name="tool_slot_right">Right</string>

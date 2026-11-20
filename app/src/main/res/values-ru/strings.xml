@@ -250,6 +250,20 @@
     <string name="tool_result_warnings">Примечания</string>
     <string name="tool_retry">Повторить</string>
     <string name="tool_running" tools:ignore="TypographyEllipsis">Обработка...</string>
+    <string name="tool_script_bun_note">Скрипты Bun работают на Android 13 и новее.</string>
+    <string name="tool_script_copied">Скрипт скопирован</string>
+    <string name="tool_script_copy">Копировать скрипт</string>
+    <string name="tool_script_guessed">Некоторые пути не удалось прочитать, они подставлены по догадке. Перед запуском проверьте пути, отмеченные в скрипте.</string>
+    <string name="tool_script_hint">Выполните ту же задачу скриптом AutoJs6: выберите среду выполнения, затем скопируйте, сохраните или откройте скрипт.</string>
+    <string name="tool_script_open">Открыть в AutoJs6</string>
+    <string name="tool_script_open_failed">Не удалось открыть редактор AutoJs6</string>
+    <string name="tool_script_open_too_large">Скрипт больше 4 МиБ, которые принимает AutoJs6; сохраните или скопируйте его</string>
+    <string name="tool_script_passwords">Скрипт не содержит паролей: впишите их там, где стоит null.</string>
+    <string name="tool_script_save">Сохранить как .js</string>
+    <string name="tool_script_save_access">Предоставьте доступ ко всем файлам, чтобы сохранять скрипты в папку вывода.</string>
+    <string name="tool_script_save_failed">Не удалось сохранить скрипт в %1$s</string>
+    <string name="tool_script_saved">Сохранено: %1$s</string>
+    <string name="tool_script_title">Скрипт</string>
     <string name="tool_slot_center">По центру</string>
     <string name="tool_slot_left">Слева</string>
     <string name="tool_slot_right">Справа</string>

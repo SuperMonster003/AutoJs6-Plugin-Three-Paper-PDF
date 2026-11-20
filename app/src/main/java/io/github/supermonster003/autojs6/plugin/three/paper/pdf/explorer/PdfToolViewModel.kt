@@ -17,6 +17,10 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ThreePaperPdfContract
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.codegen.ScriptRequest
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.codegen.ScriptRun
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.codegen.ScriptSource
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.edit.PdfEncryption
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.ToolTask
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.ToolTasks
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.ToolboxPreferences
@@ -133,6 +137,14 @@ internal class PdfToolViewModel(application: Application, saved: SavedStateHandl
 
     /** The toolbox task of the last start, while the screen shows it. zh-CN: 最近一次开始的工具箱任务, 界面显示它期间保留. */
     var task by mutableStateOf<ToolTask?>(null)
+        private set
+
+    /**
+     * What the last start asked for, so the result page can write it as a script (roadmap P6.13); null before a start
+     * and after the screen was recreated from a saved state (the result page then shows no script).
+     * zh-CN: 最近一次开始所请求的内容, 供结果页写成脚本 (路线图 P6.13); 开始之前, 以及界面从保存的状态重建之后为 null (此时结果页不显示脚本).
+     */
+    var scriptRun by mutableStateOf<ScriptRun?>(null)
         private set
 
     val phase: Phase by derivedStateOf {
@@ -410,6 +422,13 @@ internal class PdfToolViewModel(application: Application, saved: SavedStateHandl
             val password = if (tool == ToolKind.DECRYPT) decryptPassword.ifEmpty { null } ?: input.password else input.password
             ToolInput(input.target, password)
         }
+        scriptRun = ScriptRun.of(
+            tool,
+            jobInputs.map { ScriptSource(it.target.uri.toString(), it.target.displayName, password = it.password != null) },
+            options,
+            (options as? ToolOptions.Watermark)?.image?.let { ScriptSource(it.uri.toString(), it.displayName) },
+            parentPath,
+        )
         if (toolbox) {
             val folder = outputFolder ?: return
             task = ToolTasks.submit(getApplication(), tool, jobInputs, options, folder)
@@ -470,6 +489,17 @@ internal class PdfToolViewModel(application: Application, saved: SavedStateHandl
         task?.let { ToolTasks.dismiss(getApplication(), it) }
         task = null
         localPhase = Phase.Ready
+    }
+
+    /**
+     * The last start written as a script request, with the result at [result]'s path and the AES key length the
+     * runner picked for an encryption; null when there is no start to write.
+     * zh-CN: 把最近一次开始写成脚本请求, 结果位于 [result] 的路径, 加密时使用执行器选定的 AES 密钥长度; 没有可写的开始时为 null.
+     */
+    fun scriptRequestOf(result: ToolResult): ScriptRequest? {
+        val run = scriptRun ?: return null
+        val keyLength = if (PdfEncryption.aes256Available) PdfContract.ENCRYPTION_KEY_LENGTH_256 else PdfContract.ENCRYPTION_KEY_LENGTH_128
+        return run.requestFor(result.displayPath, keyLength)
     }
 
     /** The user saw the toolbox outcome: drop its card from the home screen. zh-CN: 用户已看到工具箱结果: 从首页移除其卡片. */

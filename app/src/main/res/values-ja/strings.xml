@@ -250,6 +250,20 @@
     <string name="tool_result_warnings">注意事項</string>
     <string name="tool_retry">再試行</string>
     <string name="tool_running" tools:ignore="TypographyEllipsis">処理しています...</string>
+    <string name="tool_script_bun_note">Bun スクリプトは Android 13 以降で実行できます.</string>
+    <string name="tool_script_copied">スクリプトをコピーしました</string>
+    <string name="tool_script_copy">スクリプトをコピー</string>
+    <string name="tool_script_guessed">一部のパスは読み取れなかったため推測で入れています. 実行する前に, スクリプトで示されたパスを確認してください.</string>
+    <string name="tool_script_hint">同じ処理を AutoJs6 のスクリプトで実行できます: ランタイムを選び, スクリプトをコピー, 保存, または開いてください.</string>
+    <string name="tool_script_open">AutoJs6 で開く</string>
+    <string name="tool_script_open_failed">AutoJs6 のエディターを開けません</string>
+    <string name="tool_script_open_too_large">スクリプトが AutoJs6 の受け取れる 4 MiB を超えています. 保存またはコピーして使ってください</string>
+    <string name="tool_script_passwords">スクリプトにはパスワードが含まれていません: null と書かれた箇所に入力してください.</string>
+    <string name="tool_script_save">.js として保存</string>
+    <string name="tool_script_save_access">スクリプトを出力フォルダーに保存するには, すべてのファイルへのアクセスを許可してください.</string>
+    <string name="tool_script_save_failed">スクリプトを %1$s に保存できません</string>
+    <string name="tool_script_saved">%1$s に保存しました</string>
+    <string name="tool_script_title">スクリプト</string>
     <string name="tool_slot_center">中央</string>
     <string name="tool_slot_left">左</string>
     <string name="tool_slot_right">右</string>

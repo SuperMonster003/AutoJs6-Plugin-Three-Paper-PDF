@@ -250,6 +250,20 @@
     <string name="tool_result_warnings">Remarques</string>
     <string name="tool_retry">Réessayer</string>
     <string name="tool_running" tools:ignore="TypographyEllipsis">Traitement en cours...</string>
+    <string name="tool_script_bun_note">Les scripts Bun fonctionnent sous Android 13 ou version ultérieure.</string>
+    <string name="tool_script_copied">Script copié</string>
+    <string name="tool_script_copy">Copier le script</string>
+    <string name="tool_script_guessed">Certains chemins n\'ont pas pu être lus et ont été devinés. Vérifiez les chemins signalés dans le script avant de l\'exécuter.</string>
+    <string name="tool_script_hint">Refaites la même tâche avec un script AutoJs6: choisissez un environnement d\'exécution, puis copiez, enregistrez ou ouvrez le script.</string>
+    <string name="tool_script_open">Ouvrir dans AutoJs6</string>
+    <string name="tool_script_open_failed">Impossible d\'ouvrir l\'éditeur d\'AutoJs6</string>
+    <string name="tool_script_open_too_large">Le script dépasse les 4 Mio qu\'AutoJs6 accepte; enregistrez-le ou copiez-le plutôt</string>
+    <string name="tool_script_passwords">Le script ne contient pas les mots de passe: saisissez-les là où il indique null.</string>
+    <string name="tool_script_save">Enregistrer en .js</string>
+    <string name="tool_script_save_access">Accordez l\'accès à tous les fichiers pour enregistrer les scripts dans le dossier de sortie.</string>
+    <string name="tool_script_save_failed">Impossible d\'enregistrer le script dans %1$s</string>
+    <string name="tool_script_saved">Enregistré dans %1$s</string>
+    <string name="tool_script_title">Script</string>
     <string name="tool_slot_center">Centre</string>
     <string name="tool_slot_left">Gauche</string>
     <string name="tool_slot_right">Droite</string>
