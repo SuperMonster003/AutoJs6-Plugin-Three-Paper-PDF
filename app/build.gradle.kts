@@ -286,7 +286,8 @@ dependencies {
     // 与 3-Slate Studio 相同.
     implementation(libs.material.color.utilities)
     debugImplementation(libs.compose.ui.tooling)
-    debugImplementation(libs.compose.ui.test.manifest)
+    // No ui-test-manifest: the Compose tests use createEmptyComposeRule and launch the real activities, while
+    // ui-test-manifest would merge an exported androidx.activity.ComponentActivity into the debug APK.
 
     testImplementation(libs.junit)
     testImplementation(libs.org.json)
