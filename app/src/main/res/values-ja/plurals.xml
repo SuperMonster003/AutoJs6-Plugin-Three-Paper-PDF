@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="tool_warning_characters_replaced">
+        <item quantity="other">最初の %2$d 個を超える補助平面の文字 (絵文字など) %1$d 個を置換文字 U+FFFD として書き込みました.</item>
+    </plurals>
+    <plurals name="tool_warning_fields_ignored">
+        <item quantity="other">フォームに存在しないフィールド名 %1$d 個を無視しました: %2$s.</item>
+    </plurals>
+    <plurals name="tool_warning_fields_ignored_more">
+        <item quantity="other">%1$s ほか %2$d 個</item>
+    </plurals>
+    <plurals name="tool_warning_images_too_large">
+        <item quantity="other">%1$d 枚の画像は大きすぎてこの端末でデコードできないため, そのままにしました.</item>
+    </plurals>
+    <plurals name="tool_warning_images_undecodable">
+        <item quantity="other">%1$d 枚の画像はデコードできないため (JPEG 2000 や破損したデータなど), そのままにしました.</item>
+    </plurals>
+    <plurals name="tool_warning_remote_resources_blocked">
+        <item quantity="other">外部ネットワークのリソース %1$d 件を読み込みませんでした.</item>
+    </plurals>
+    <plurals name="tool_warning_signatures_invalidated">
+        <item quantity="other">署名済みの署名フィールド %1$d 個が入力により無効になりました.</item>
+    </plurals>
+</resources>

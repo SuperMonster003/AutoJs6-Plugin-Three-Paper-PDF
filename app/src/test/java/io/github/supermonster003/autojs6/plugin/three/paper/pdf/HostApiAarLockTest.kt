@@ -84,7 +84,7 @@ class HostApiAarLockTest {
 
     private companion object {
         const val HOST_LOCK = "locks/host-api-aars.lock"
-        const val PDF_API_HOST_COMMIT = "19ab55f80"
+        const val PDF_API_HOST_COMMIT = "d88f78a7b"
     }
 
 }

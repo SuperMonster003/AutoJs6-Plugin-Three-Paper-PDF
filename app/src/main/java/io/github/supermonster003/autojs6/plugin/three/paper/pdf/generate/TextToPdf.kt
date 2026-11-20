@@ -13,6 +13,7 @@ import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.Operation
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.PdfLoader
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfFailure
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfOptions
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfWarning
 import org.autojs.plugin.pdf.api.PdfContract
 import org.autojs.plugin.pdf.api.PdfErrorCodes
 import org.autojs.plugin.pdf.api.PdfOps
@@ -52,12 +53,12 @@ internal object TextToPdf {
         val lineSpacing: Float,
         val title: String?,
         val hasFont: Boolean,
-        val warnings: List<String>,
+        val warnings: List<PdfWarning>,
     )
 
     fun request(options: PdfOptions, inputCount: Int): Request {
         if (inputCount !in 1..2) throw PdfFailure.invalid("${PdfOps.FROM_TEXT} takes the text and an optional font, got $inputCount inputs")
-        val warnings = ArrayList<String>()
+        val warnings = ArrayList<PdfWarning>()
         val page = PageLayout.documentPageSize(options, PdfOps.FROM_TEXT, warnings)
         val margin = PageLayout.margin(options, PageLayout.DEFAULT_DOCUMENT_MARGIN)
         val fontSize = positive(options, PdfContract.KEY_FONT_SIZE, MAX_FONT_SIZE, DEFAULT_FONT_SIZE)

@@ -17,8 +17,11 @@ import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.MapValues
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfFailure
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfOptions
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfPayload
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfWarning
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.assertWarning
 import org.autojs.plugin.pdf.api.PdfContract
 import org.autojs.plugin.pdf.api.PdfErrorCodes
+import org.autojs.plugin.pdf.api.PdfWarningCodes
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -235,7 +238,12 @@ class FormFillTest {
 
         val ignored = fill("""{ "values": { "name": "Bob", "u1": "x" }, "flatten": ["u2"] }""", ignoreMissing = true)
         assertEquals(1, ignored.outcome.filled)
-        assertEquals(listOf("2 field names match no form field and were ignored: 'u1', 'u2'"), ignored.outcome.warnings)
+        assertEquals(listOf("2 field names match no form field and were ignored: 'u1', 'u2'"), ignored.outcome.warnings.map { it.text })
+        assertWarning(ignored.outcome.warnings.single(), PdfWarningCodes.FIELDS_IGNORED)
+        assertEquals(
+            mapOf(PdfWarningCodes.ARG_COUNT to 2, PdfWarningCodes.ARG_NAMES to "'u1', 'u2'", PdfWarningCodes.ARG_MORE to 0),
+            ignored.outcome.warnings.single().args,
+        )
         assertEquals("Bob", values(ignored.bytes)["name"])
     }
 
@@ -301,8 +309,11 @@ class FormFillTest {
     fun `static XFA is removed and a signed signature gives a warning`() {
         val filled = fill("""{ "values": { "name": "Bob" } }""", PdfFixtures.signatureAndXfa())
         assertEquals(2, filled.outcome.warnings.size)
-        assertTrue(filled.outcome.warnings[0], filled.outcome.warnings[0].contains("1 signed signature field"))
-        assertTrue(filled.outcome.warnings[1], filled.outcome.warnings[1].contains("XFA"))
+        assertTrue(filled.outcome.warnings[0].text, filled.outcome.warnings[0].text.contains("1 signed signature field"))
+        assertTrue(filled.outcome.warnings[1].text, filled.outcome.warnings[1].text.contains("XFA"))
+        assertWarning(filled.outcome.warnings[0], PdfWarningCodes.SIGNATURES_INVALIDATED)
+        assertEquals(1, filled.outcome.warnings[0].args[PdfWarningCodes.ARG_COUNT])
+        assertWarning(filled.outcome.warnings[1], PdfWarningCodes.XFA_REMOVED)
         reopen(filled.bytes) { document ->
             assertNull(FormFields.acroForm(document)!!.cosObject.getDictionaryObject(COSName.XFA))
             assertEquals("Bob", FormFields.value(entry(document, "name")))
@@ -319,9 +330,10 @@ class FormFillTest {
         fun warnings(prepare: (PDDocument) -> Unit) = fill("""{ "values": { "name": "Bob" } }""", prepare = prepare).outcome.warnings
         assertTrue(warnings { }.isEmpty())
         val keystroke = warnings { document -> entry(document, "name").dictionary.setItem(COSName.AA, COSDictionary().apply { setItem(COSName.K, COSDictionary()) }) }
-        assertTrue(keystroke.toString(), keystroke.single().contains("JavaScript"))
+        assertTrue(keystroke.toString(), keystroke.single().text.contains("JavaScript"))
+        assertWarning(keystroke.single(), PdfWarningCodes.FORM_SCRIPTS_NOT_RUN)
         val calculation = warnings { document -> FormFields.acroForm(document)!!.cosObject.setItem(COSName.CO, COSArray().apply { add(entry(document, "code").dictionary) }) }
-        assertTrue(calculation.toString(), calculation.single().contains("JavaScript"))
+        assertTrue(calculation.toString(), calculation.single().text.contains("JavaScript"))
         // Actions of other fields or other triggers do not count. zh-CN: 其他字段的动作或其他触发条件不算.
         assertTrue(warnings { document -> entry(document, "code").dictionary.setItem(COSName.AA, COSDictionary().apply { setItem(COSName.K, COSDictionary()) }) }.isEmpty())
         assertTrue(warnings { document -> entry(document, "name").dictionary.setItem(COSName.AA, COSDictionary().apply { setItem(COSName.getPDFName("Fo"), COSDictionary()) }) }.isEmpty())
@@ -340,11 +352,12 @@ class FormFillTest {
         assertFalse(FormFill.request(options(), 2).ignoreMissing)
         assertTrue(FormFill.request(options(PdfContract.KEY_IGNORE_MISSING to true), 2).ignoreMissing)
         assertNull(FormFill.request(options(PdfContract.KEY_PASSWORD to ""), 2).password)
-        val result = FormFill.result(2, 100L, FormFill.Outcome(3, 1, 0, listOf("w")))
+        val warning = PdfWarning("w", PdfWarningCodes.XFA_REMOVED)
+        val result = FormFill.result(2, 100L, FormFill.Outcome(3, 1, 0, listOf(warning)))
         assertEquals(3, result[PdfContract.KEY_FILLED])
         assertEquals(2, result[PdfContract.KEY_PAGE_COUNT])
         assertEquals(100L, result[PdfContract.KEY_SIZE_BYTES])
-        assertArrayEquals(arrayOf("w"), result[PdfContract.KEY_WARNINGS] as Array<*>)
+        assertEquals(listOf(warning), result[PdfContract.KEY_WARNINGS])
         assertFalse(FormFill.result(2, 100L, FormFill.Outcome(0, 0, 0, emptyList())).containsKey(PdfContract.KEY_WARNINGS))
     }
 

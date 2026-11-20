@@ -7,6 +7,8 @@ import com.tom_roush.pdfbox.cos.COSStream
 import com.tom_roush.pdfbox.pdmodel.graphics.image.PDImageXObject
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.StopSignal
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.stamp.JpegData
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfWarning
+import org.autojs.plugin.pdf.api.PdfWarningCodes
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.util.IdentityHashMap
@@ -58,7 +60,7 @@ internal object ImageCompression {
     enum class Skip { NOT_ABOVE_DPI, ONE_BIT, STENCIL, MASKED, UNSUPPORTED, UNDECODABLE, TOO_LARGE, NOT_SMALLER }
 
     /** The counts of [apply] and its warnings. zh-CN: [apply] 的计数及其警告. */
-    class Summary(val total: Int, val recompressed: Int, val skipped: Map<Skip, Int>, val warnings: List<String>) {
+    class Summary(val total: Int, val recompressed: Int, val skipped: Map<Skip, Int>, val warnings: List<PdfWarning>) {
 
         val skippedCount: Int get() = skipped.values.sum()
 
@@ -99,10 +101,30 @@ internal object ImageCompression {
             if (reason == null) recompressed++ else skipped[reason] = (skipped[reason] ?: 0) + 1
             progress(use.page)
         }
-        val warnings = ArrayList<String>()
-        skipped[Skip.UNDECODABLE]?.let { warnings += "$it ${images(it)} cannot be decoded (for example JPEG 2000 or a damaged stream) and ${were(it)} kept as ${they(it)} ${were(it)}" }
-        skipped[Skip.TOO_LARGE]?.let { warnings += "$it ${images(it)} ${are(it)} too large to decode on this device and ${were(it)} kept as ${they(it)} ${were(it)}" }
-        return Summary(uses.size, recompressed, skipped, warnings)
+        return Summary(uses.size, recompressed, skipped, warningsOf(skipped))
+    }
+
+    /**
+     * The warnings of the images kept because they could not be decoded or were too large.
+     * zh-CN: 因无法解码或太大而保留的图片的警告.
+     */
+    internal fun warningsOf(skipped: Map<Skip, Int>): List<PdfWarning> {
+        val warnings = ArrayList<PdfWarning>()
+        skipped[Skip.UNDECODABLE]?.let {
+            warnings += PdfWarning(
+                "$it ${images(it)} cannot be decoded (for example JPEG 2000 or a damaged stream) and ${were(it)} kept as ${they(it)} ${were(it)}",
+                PdfWarningCodes.IMAGES_UNDECODABLE,
+                mapOf(PdfWarningCodes.ARG_COUNT to it),
+            )
+        }
+        skipped[Skip.TOO_LARGE]?.let {
+            warnings += PdfWarning(
+                "$it ${images(it)} ${are(it)} too large to decode on this device and ${were(it)} kept as ${they(it)} ${were(it)}",
+                PdfWarningCodes.IMAGES_TOO_LARGE,
+                mapOf(PdfWarningCodes.ARG_COUNT to it),
+            )
+        }
+        return warnings
     }
 
     private fun images(count: Int) = if (count == 1) "image" else "images"

@@ -24,9 +24,11 @@ import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.Operation
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.PdfLoader
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfFailure
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfOptions
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfWarning
 import org.autojs.plugin.pdf.api.PdfContract
 import org.autojs.plugin.pdf.api.PdfErrorCodes
 import org.autojs.plugin.pdf.api.PdfOps
+import org.autojs.plugin.pdf.api.PdfWarningCodes
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.util.concurrent.CountDownLatch
@@ -58,7 +60,7 @@ internal class HtmlToPdf(private val context: Context) {
         val margin: Float,
         val baseUrl: String?,
         val timeoutMs: Long?,
-        val warnings: List<String>,
+        val warnings: List<PdfWarning>,
         val javaScript: Boolean = PdfContract.DEFAULT_JAVA_SCRIPT,
     )
 
@@ -83,8 +85,7 @@ internal class HtmlToPdf(private val context: Context) {
         conversion.failure.get()?.let { throw it }
         operation.stop.checkStop()
         val warnings = ArrayList(request.warnings)
-        val blocked = conversion.blocked.get()
-        if (blocked > 0) warnings += "$blocked remote resource${if (blocked == 1) " was" else "s were"} not loaded"
+        blockedWarning(conversion.blocked.get())?.let { warnings += it }
         PDDocument.load(printed, MemoryUsageSetting.setupMixed(PdfLoader.DEFAULT_MAIN_MEMORY_BYTES).setTempDir(directory)).use { document ->
             return GeneratedDocuments.write(document, conversion.title.get(), operation, warnings, request.page)
         }
@@ -250,7 +251,7 @@ internal class HtmlToPdf(private val context: Context) {
         fun request(options: PdfOptions, inputCount: Int): Request {
             if (inputCount != 1) throw PdfFailure.invalid("${PdfOps.FROM_HTML} takes one HTML input, got $inputCount")
             if (!isAvailable) throw PdfFailure.unsupported("${PdfContract.FEATURE_GENERATE_HTML} is not available on this device")
-            val warnings = ArrayList<String>()
+            val warnings = ArrayList<PdfWarning>()
             val page = PageLayout.documentPageSize(options, PdfOps.FROM_HTML, warnings)
             val margin = PageLayout.margin(options, PageLayout.DEFAULT_DOCUMENT_MARGIN)
             PageLayout.contentBox(page, margin, minimum = MIN_CONTENT_POINTS)
@@ -273,6 +274,16 @@ internal class HtmlToPdf(private val context: Context) {
         val isAvailable: Boolean
             @SuppressLint("WebViewApiAvailability")
             get() = PaperPrintCallbacks.isAvailable && (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || runCatching { WebView.getCurrentWebViewPackage() != null }.getOrDefault(false))
+
+        /**
+         * The warning that [blocked] remote resources were not loaded, or null when there were none.
+         * zh-CN: 有 [blocked] 项远程资源没有加载时的警告, 没有时为 null.
+         */
+        internal fun blockedWarning(blocked: Int): PdfWarning? = if (blocked <= 0) null else PdfWarning(
+            "$blocked remote resource${if (blocked == 1) " was" else "s were"} not loaded",
+            PdfWarningCodes.REMOTE_RESOURCES_BLOCKED,
+            mapOf(PdfWarningCodes.ARG_COUNT to blocked),
+        )
 
         private fun mils(points: Float): Int = (points * 1000f / POINTS_PER_INCH).roundToInt()
 

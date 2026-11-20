@@ -8,6 +8,7 @@ import android.os.Build
 import android.os.ParcelFileDescriptor
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
@@ -300,7 +301,7 @@ class ToolboxEditToolsDeviceTest {
         awaitTag("tool-properties-facts")
         awaitTag("tool-properties-outline")
         compose.onNodeWithTag("tool-properties-title").performScrollTo().performTextReplacement(TITLE)
-        compose.onNodeWithTag("tool-properties-clear-outline").performScrollTo().performClick()
+        switchOn("tool-properties-clear-outline")
         start()
         awaitTag("tool-done")
         awaitTag("tool-result-summary")
@@ -339,6 +340,21 @@ class ToolboxEditToolsDeviceTest {
     }
 
     private fun sample(name: String, displayName: String) = ToolTarget(Uri.fromFile(PdfServiceHarness.sampleFile(name)), displayName)
+
+    /**
+     * Clicks the switch [tag] until it is on: a click while the keyboard of the previous field still moves the layout
+     * can miss, and then the run used the old value (the clear outline switch failed this way in one of four runs).
+     * zh-CN: 点击开关 [tag] 直到它打开: 上一个输入框的键盘仍在移动布局时点击可能落空, 运行随之沿用旧值 (清除大纲开关曾在四次运行里失败一次).
+     */
+    private fun switchOn(tag: String) {
+        fun on() = compose.onAllNodesWithTag(tag).fetchSemanticsNodes().any { it.config.getOrNull(SemanticsProperties.ToggleableState) == ToggleableState.On }
+        repeat(START_ATTEMPTS) {
+            if (on()) return
+            compose.onNodeWithTag(tag).performScrollTo().performClick()
+            if (runCatching { compose.waitUntil(START_WAIT_MILLIS) { on() } }.isSuccess) return
+        }
+        if (!on()) fail("the switch $tag took no click")
+    }
 
     private fun start() {
         compose.waitUntil(TIMEOUT_MILLIS) {
@@ -388,10 +404,21 @@ class ToolboxEditToolsDeviceTest {
         checkNotNull(answer.getStringArray(PdfContract.KEY_TEXTS)).joinToString("\n").filterNot { it.isWhitespace() }
     }
 
-    /** Chooses the "Custom" chip of the option [prefix] and types [text]. zh-CN: 选择选项 [prefix] 的 "自定义" 并输入 [text]. */
+    /**
+     * Chooses the "Custom" chip of the option [prefix] and types [text]. The chip is clicked until its field shows: like
+     * the switches of [switchOn], a click while the keyboard of the previous field still moves the layout can miss (the
+     * rotation chip of the watermark failed this way in one of three runs).
+     * zh-CN: 选择选项 [prefix] 的 "自定义" 并输入 [text]. 芯片点击到其输入框出现为止: 与 [switchOn] 的开关一样, 上一个输入框的键盘仍在移动布局时点击可能落空
+     * (水印的旋转芯片曾在三次运行里失败一次).
+     */
     private fun custom(prefix: String, text: String) {
-        compose.onNodeWithTag("$prefix-custom").performScrollTo().performClick()
-        awaitTag("$prefix-value")
+        fun shown() = compose.onAllNodesWithTag("$prefix-value", useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
+        repeat(START_ATTEMPTS) {
+            if (shown()) return@repeat
+            compose.onNodeWithTag("$prefix-custom").performScrollTo().performClick()
+            runCatching { compose.waitUntil(START_WAIT_MILLIS) { shown() } }
+        }
+        if (!shown()) fail("the chip $prefix-custom took no click")
         compose.onNodeWithTag("$prefix-value").performScrollTo().performTextReplacement(text)
     }
 

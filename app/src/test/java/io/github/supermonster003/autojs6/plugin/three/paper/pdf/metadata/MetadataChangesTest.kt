@@ -11,8 +11,10 @@ import io.github.supermonster003.autojs6.plugin.three.paper.pdf.read.DocumentInf
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.read.OutlineReader
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfFailure
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfPayload
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.assertWarning
 import org.autojs.plugin.pdf.api.PdfContract
 import org.autojs.plugin.pdf.api.PdfErrorCodes
+import org.autojs.plugin.pdf.api.PdfWarningCodes
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -125,6 +127,7 @@ class MetadataChangesTest {
                 document.documentCatalog.cosObject.setItem(COSName.METADATA, stream)
                 val warnings = InfoChanges.apply(document, mapOf(InfoChanges.TITLE to "T"))
                 assertEquals(packet, 1, warnings.size)
+                assertWarning(warnings.single(), PdfWarningCodes.XMP_REMOVED)
                 assertNull(packet, document.documentCatalog.cosObject.getDictionaryObject(COSName.METADATA))
                 assertEquals("T", document.documentInformation.title)
             }

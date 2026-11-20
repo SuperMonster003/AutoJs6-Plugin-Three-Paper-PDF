@@ -8,6 +8,8 @@ import com.tom_roush.pdfbox.pdmodel.PDDocument
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.edit.PdfWriting
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.StopSignal
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.render.CountingOutputStream
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfWarning
+import org.autojs.plugin.pdf.api.PdfWarningCodes
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -86,7 +88,7 @@ internal object PdfRendererCheck : RenderCheck {
 internal object CompactWriting {
 
     /** The written size, whether object streams were used, and the warnings. zh-CN: 写出的大小, 是否使用对象流, 以及警告. */
-    data class Result(val sizeBytes: Long, val objectStreams: Boolean, val warnings: List<String>)
+    data class Result(val sizeBytes: Long, val objectStreams: Boolean, val warnings: List<PdfWarning>)
 
     fun write(
         document: PDDocument,
@@ -118,7 +120,11 @@ internal object CompactWriting {
                 "the writer failed: $e"
             }
             if (reason == null) return Result(copy(file, output, stop), true, emptyList())
-            val warning = "object streams were not used because $reason; the output has a classic cross-reference table"
+            val warning = PdfWarning(
+                "object streams were not used because $reason; the output has a classic cross-reference table",
+                PdfWarningCodes.OBJECT_STREAMS_NOT_USED,
+                mapOf(PdfWarningCodes.ARG_REASON to reason),
+            )
             return Result(PdfWriting.write(document, output, stop, onlyProducer), false, listOf(warning))
         } finally {
             file.delete()

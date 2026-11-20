@@ -23,8 +23,10 @@ import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PayloadObje
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfFailure
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfOptions
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfPayload
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfWarning
 import org.autojs.plugin.pdf.api.PdfContract
 import org.autojs.plugin.pdf.api.PdfOps
+import org.autojs.plugin.pdf.api.PdfWarningCodes
 import java.io.File
 import java.io.FileOutputStream
 import kotlin.math.roundToLong
@@ -60,7 +62,7 @@ internal object TextLayers {
     class Layer(val path: String, val page: Long, val width: Double, val height: Double, val lines: List<Line>)
 
     /** What [apply] did. zh-CN: [apply] 的结果. */
-    class Outcome(val layerPages: Int, val skippedPages: Int, val lines: Int, val warnings: List<String>)
+    class Outcome(val layerPages: Int, val skippedPages: Int, val lines: Int, val warnings: List<PdfWarning>)
 
     fun request(options: PdfOptions, inputCount: Int): Request {
         if (inputCount != 2) throw PdfFailure.invalid("${PdfOps.ADD_TEXT_LAYER} takes the source and the payload (2 inputs), got $inputCount")
@@ -330,12 +332,18 @@ internal object TextLayers {
         }
 
         /** Finishes the font; answers the warnings. zh-CN: 完成字体; 返回警告. */
-        fun finish(): List<String> {
+        fun finish(): List<PdfWarning> {
             val font = font ?: return emptyList()
             font.finish()
             val overflow = font.overflowCount
             if (overflow == 0) return emptyList()
-            return listOf("$overflow distinct characters beyond the first ${GlyphlessFont.SLOT_COUNT} outside the Basic Multilingual Plane were written as U+FFFD")
+            return listOf(
+                PdfWarning(
+                    "$overflow distinct characters beyond the first ${GlyphlessFont.SLOT_COUNT} outside the Basic Multilingual Plane were written as U+FFFD",
+                    PdfWarningCodes.CHARACTERS_REPLACED,
+                    mapOf(PdfWarningCodes.ARG_COUNT to overflow, PdfWarningCodes.ARG_LIMIT to GlyphlessFont.SLOT_COUNT),
+                ),
+            )
         }
 
     }

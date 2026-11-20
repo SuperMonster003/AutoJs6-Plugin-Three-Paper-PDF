@@ -18,8 +18,10 @@ import io.github.supermonster003.autojs6.plugin.three.paper.pdf.fixtures.PdfFixt
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.read.PageFrame
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfFailure
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfPayload
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.assertWarning
 import org.autojs.plugin.pdf.api.PdfContract
 import org.autojs.plugin.pdf.api.PdfErrorCodes
+import org.autojs.plugin.pdf.api.PdfWarningCodes
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -421,7 +423,12 @@ class TextLayersTest {
         val output = blank().use { document ->
             val outcome = apply(document, listOf(layer(1, 100.0, 100.0, many to box(0.0, 0.0, 100.0, 5.0))))
             assertEquals(1, outcome.warnings.size)
-            assertTrue(outcome.warnings.single(), outcome.warnings.single().startsWith("1 distinct characters"))
+            assertTrue(outcome.warnings.single().text, outcome.warnings.single().text.startsWith("1 distinct characters"))
+            assertWarning(outcome.warnings.single(), PdfWarningCodes.CHARACTERS_REPLACED)
+            assertEquals(
+                mapOf(PdfWarningCodes.ARG_COUNT to 1, PdfWarningCodes.ARG_LIMIT to GlyphlessFont.SLOT_COUNT),
+                outcome.warnings.single().args,
+            )
             bytes(document)
         }
         PDDocument.load(output).use { document ->

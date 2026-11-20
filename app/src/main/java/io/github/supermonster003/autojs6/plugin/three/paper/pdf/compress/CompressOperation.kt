@@ -9,9 +9,11 @@ import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.PdfLoader
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.StopSignal
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfFailure
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfOptions
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfWarning
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.write.CompactWriting
 import org.autojs.plugin.pdf.api.PdfContract
 import org.autojs.plugin.pdf.api.PdfOps
+import org.autojs.plugin.pdf.api.PdfWarningCodes
 import java.io.File
 import java.io.FileOutputStream
 
@@ -71,8 +73,11 @@ internal object CompressOperation {
      * The warning of an output of [sizeBytes] that is not smaller than the source of [sourceBytes] (D57), or null.
      * zh-CN: 输出 [sizeBytes] 字节不比源文件 [sourceBytes] 字节小时的警告 (D57), 否则为 null.
      */
-    fun sizeWarning(sizeBytes: Long, sourceBytes: Long): String? =
-        if (sizeBytes < sourceBytes) null else "the output ($sizeBytes bytes) is not smaller than the source ($sourceBytes bytes); it was written anyway, compare sizeBytes with sourceBytes"
+    fun sizeWarning(sizeBytes: Long, sourceBytes: Long): PdfWarning? = if (sizeBytes < sourceBytes) null else PdfWarning(
+        "the output ($sizeBytes bytes) is not smaller than the source ($sourceBytes bytes); it was written anyway, compare sizeBytes with sourceBytes",
+        PdfWarningCodes.OUTPUT_NOT_SMALLER,
+        mapOf(PdfWarningCodes.ARG_SIZE_BYTES to sizeBytes, PdfWarningCodes.ARG_SOURCE_BYTES to sourceBytes),
+    )
 
     fun write(request: Request, input: ParcelFileDescriptor, directory: File, operation: Operations.Operation, codec: ImageCodec = AndroidImageCodec): Map<String, Any?> {
         operation.progress(PdfContract.STAGE_OPENING, 0, 1)
@@ -104,7 +109,7 @@ internal object CompressOperation {
                 put(PdfContract.KEY_IMAGES_RECOMPRESSED, changes.images.recompressed)
                 put(PdfContract.KEY_IMAGES_SKIPPED, changes.images.skippedCount)
                 put(PdfContract.KEY_OBJECT_STREAMS, written.objectStreams)
-                if (warnings.isNotEmpty()) put(PdfContract.KEY_WARNINGS, warnings.toTypedArray())
+                if (warnings.isNotEmpty()) put(PdfContract.KEY_WARNINGS, warnings)
             }
         }
     }

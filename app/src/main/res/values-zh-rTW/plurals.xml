@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="tool_warning_characters_replaced">
+        <item quantity="other">超出前 %2$d 個的 %1$d 個補充平面字元 (如表情符號) 已寫為替代字元 U+FFFD.</item>
+    </plurals>
+    <plurals name="tool_warning_fields_ignored">
+        <item quantity="other">%1$d 個欄位名稱在表單中不存在, 已忽略: %2$s.</item>
+    </plurals>
+    <plurals name="tool_warning_fields_ignored_more">
+        <item quantity="other">%1$s 等另外 %2$d 個</item>
+    </plurals>
+    <plurals name="tool_warning_images_too_large">
+        <item quantity="other">%1$d 張圖片太大, 無法在本機解碼, 已維持原樣.</item>
+    </plurals>
+    <plurals name="tool_warning_images_undecodable">
+        <item quantity="other">%1$d 張圖片無法解碼 (例如 JPEG 2000 或資料損毀), 已維持原樣.</item>
+    </plurals>
+    <plurals name="tool_warning_remote_resources_blocked">
+        <item quantity="other">%1$d 項外部網路資源沒有載入.</item>
+    </plurals>
+    <plurals name="tool_warning_signatures_invalidated">
+        <item quantity="other">%1$d 個已簽署的簽章欄位因填寫而失效.</item>
+    </plurals>
+</resources>

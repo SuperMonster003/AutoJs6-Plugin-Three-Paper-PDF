@@ -20,7 +20,9 @@ import io.github.supermonster003.autojs6.plugin.three.paper.pdf.edit.PdfWriting
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.StopSignal
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.fixtures.PdfFixtures
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfFailure
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.assertWarning
 import org.autojs.plugin.pdf.api.PdfErrorCodes
+import org.autojs.plugin.pdf.api.PdfWarningCodes
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -233,7 +235,8 @@ class ObjectStreamWriterTest {
             val (result, bytes) = compact(input, damage = damage)
             assertFalse(label, result.objectStreams)
             assertEquals(label, 1, result.warnings.size)
-            assertTrue(result.warnings.single(), result.warnings.single().startsWith("object streams were not used because "))
+            assertTrue(result.warnings.single().text, result.warnings.single().text.startsWith("object streams were not used because "))
+            assertWarning(result.warnings.single(), PdfWarningCodes.OBJECT_STREAMS_NOT_USED)
             val raw = bytes.toString(Charsets.ISO_8859_1)
             assertTrue(label, raw.contains("\nxref\n") && raw.contains("trailer"))
             assertFalse(label, raw.contains("/Type /ObjStm"))
@@ -252,7 +255,8 @@ class ObjectStreamWriterTest {
         }
         assertEquals(1, verifying)
         assertFalse(result.objectStreams)
-        assertTrue(result.warnings.single(), result.warnings.single().contains("the renderer saw 1 pages"))
+        assertTrue(result.warnings.single().text, result.warnings.single().text.contains("the renderer saw 1 pages"))
+        assertTrue((result.warnings.single().args[PdfWarningCodes.ARG_REASON] as String).contains("the renderer saw 1 pages"))
         assertEquals(1, summary(output.toByteArray()).pages)
     }
 

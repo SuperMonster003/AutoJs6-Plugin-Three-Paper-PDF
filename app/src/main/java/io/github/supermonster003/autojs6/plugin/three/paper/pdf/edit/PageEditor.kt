@@ -14,6 +14,8 @@ import com.tom_roush.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOut
 import com.tom_roush.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlineNode
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.StopSignal
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.read.OutlineReader
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfWarning
+import org.autojs.plugin.pdf.api.PdfWarningCodes
 import java.io.IOException
 import java.util.Collections
 import java.util.IdentityHashMap
@@ -47,7 +49,7 @@ object PageEditor {
      * could not be kept.
      * zh-CN: 应用 [placements] ([document] 的页, 从 1 计数, 每页至多一次), 返回无法保留的内容的警告.
      */
-    fun apply(document: PDDocument, placements: List<PagePlacement>, stop: StopSignal): List<String> {
+    fun apply(document: PDDocument, placements: List<PagePlacement>, stop: StopSignal): List<PdfWarning> {
         require(placements.isNotEmpty()) { "no page is placed" }
         val catalog = document.documentCatalog.cosObject
         val source = ArrayList<COSDictionary>(document.numberOfPages)
@@ -59,7 +61,7 @@ object PageEditor {
         val kept = identitySet<COSDictionary>().apply { addAll(placed) }
         require(kept.size == placed.size) { "a page is placed twice" }
         val removed = identitySet<COSDictionary>().apply { source.filterTo(this) { it !in kept } }
-        val warnings = ArrayList<String>()
+        val warnings = ArrayList<PdfWarning>()
 
         placed.forEach { inherit(it) }
         if (removed.isNotEmpty()) prune(document, placed, removed, warnings, stop)
@@ -104,7 +106,7 @@ object PageEditor {
         page.setInt(COSName.ROTATE, Math.floorMod(current + degrees, 360))
     }
 
-    private fun prune(document: PDDocument, placed: List<COSDictionary>, removed: Set<COSDictionary>, warnings: MutableList<String>, stop: StopSignal) {
+    private fun prune(document: PDDocument, placed: List<COSDictionary>, removed: Set<COSDictionary>, warnings: MutableList<PdfWarning>, stop: StopSignal) {
         val catalog = document.documentCatalog.cosObject
         // The outline resolves named destinations, so it goes before them. zh-CN: 大纲要解析命名目标, 因此先于命名目标处理.
         pruneOutline(document, removed, warnings, stop)
@@ -135,13 +137,13 @@ object PageEditor {
         catalog.removeItem(COSName.THREADS)
     }
 
-    private fun pruneOutline(document: PDDocument, removed: Set<COSDictionary>, warnings: MutableList<String>, stop: StopSignal) {
+    private fun pruneOutline(document: PDDocument, removed: Set<COSDictionary>, warnings: MutableList<PdfWarning>, stop: StopSignal) {
         val catalog = document.documentCatalog
         val outline = try {
             catalog.documentOutline ?: return
         } catch (e: RuntimeException) {
             catalog.documentOutline = null
-            warnings += "the outline is damaged and was dropped"
+            warnings += outlineDamaged()
             return
         }
         try {
@@ -150,14 +152,24 @@ object PageEditor {
             catalog.documentOutline = if (rebuilt.hasChildren()) rebuilt else null
         } catch (e: IOException) {
             catalog.documentOutline = null
-            warnings += "the outline could not be adjusted and was dropped: ${e.message}"
+            warnings += outlineNotAdjusted(e)
         } catch (e: RuntimeException) {
             // Damaged entries (wrong types, broken links); PdfFailure (a stop) is no RuntimeException and passes.
             // zh-CN: 损坏的条目 (类型错误, 链接断开); PdfFailure (停止) 不是 RuntimeException, 照常抛出.
             catalog.documentOutline = null
-            warnings += "the outline could not be adjusted and was dropped: ${e.message}"
+            warnings += outlineNotAdjusted(e)
         }
     }
+
+    /** The warning of a damaged outline. zh-CN: 大纲损坏时的警告. */
+    internal fun outlineDamaged() = PdfWarning("the outline is damaged and was dropped", PdfWarningCodes.OUTLINE_DAMAGED)
+
+    /** The warning of an outline that could not be adjusted because of [e]. zh-CN: 因 [e] 无法调整大纲时的警告. */
+    internal fun outlineNotAdjusted(e: Exception) = PdfWarning(
+        "the outline could not be adjusted and was dropped: ${e.message}",
+        PdfWarningCodes.OUTLINE_NOT_ADJUSTED,
+        mapOf(PdfWarningCodes.ARG_REASON to e.message.toString()),
+    )
 
     private fun copyChildren(
         document: PDDocument,

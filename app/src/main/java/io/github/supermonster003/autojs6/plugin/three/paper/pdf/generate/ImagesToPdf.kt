@@ -23,9 +23,11 @@ import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.Operation
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.PdfLoader
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfFailure
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfOptions
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfWarning
 import org.autojs.plugin.pdf.api.PdfContract
 import org.autojs.plugin.pdf.api.PdfErrorCodes
 import org.autojs.plugin.pdf.api.PdfOps
+import org.autojs.plugin.pdf.api.PdfWarningCodes
 import java.io.ByteArrayInputStream
 import java.io.File
 
@@ -73,7 +75,7 @@ internal object ImagesToPdf {
     }
 
     fun write(request: Request, inputs: List<ParcelFileDescriptor>, directory: File, operation: Operations.Operation): Map<String, Any?> {
-        val warnings = ArrayList<String>()
+        val warnings = ArrayList<PdfWarning>()
         PDDocument(MemoryUsageSetting.setupMixed(PdfLoader.DEFAULT_MAIN_MEMORY_BYTES).setTempDir(directory)).use { document ->
             inputs.forEachIndexed { index, input ->
                 operation.stop.checkStop()
@@ -86,7 +88,7 @@ internal object ImagesToPdf {
     }
 
     /** Adds the page of image [number] (from 1). zh-CN: 添加第 [number] 张图片 (从 1 起) 的页面. */
-    internal fun addPage(document: PDDocument, bytes: ByteArray, request: Request, number: Int, warnings: MutableList<String>) {
+    internal fun addPage(document: PDDocument, bytes: ByteArray, request: Request, number: Int, warnings: MutableList<PdfWarning>) {
         val jpeg = JpegInfo.read(bytes)?.takeIf { it.embeddable }
         val source = if (jpeg != null) embedJpeg(document, bytes, jpeg) else decode(document, bytes, request.quality, number, warnings)
         val (displayWidth, displayHeight) = if (source.orientation in 5..8) source.height to source.width else source.width to source.height
@@ -122,7 +124,24 @@ internal object ImagesToPdf {
         return Source(image, info.width, info.height, info.orientation)
     }
 
-    private fun decode(document: PDDocument, bytes: ByteArray, quality: Int?, number: Int, warnings: MutableList<String>): Source {
+    /**
+     * The warning that image [number] of [width] x [height] was decoded at [decodedWidth] x [decodedHeight].
+     * zh-CN: 第 [number] 张图片 ([width] x [height]) 按 [decodedWidth] x [decodedHeight] 解码时的警告.
+     */
+    internal fun downsampledWarning(number: Int, width: Int, height: Int, decodedWidth: Int, decodedHeight: Int) = PdfWarning(
+        "image $number of $width x $height was decoded at $decodedWidth x $decodedHeight (above ${PdfContract.MAX_RENDER_PIXELS} pixels)",
+        PdfWarningCodes.IMAGE_DOWNSAMPLED,
+        mapOf(
+            PdfWarningCodes.ARG_IMAGE to number,
+            PdfWarningCodes.ARG_WIDTH to width,
+            PdfWarningCodes.ARG_HEIGHT to height,
+            PdfWarningCodes.ARG_DECODED_WIDTH to decodedWidth,
+            PdfWarningCodes.ARG_DECODED_HEIGHT to decodedHeight,
+            PdfWarningCodes.ARG_MAX_PIXELS to PdfContract.MAX_RENDER_PIXELS,
+        ),
+    )
+
+    private fun decode(document: PDDocument, bytes: ByteArray, quality: Int?, number: Int, warnings: MutableList<PdfWarning>): Source {
         val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
         val width = bounds.outWidth
@@ -135,7 +154,7 @@ internal object ImagesToPdf {
         }
         val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options) ?: throw notAnImage(number)
         try {
-            if (sample > 1) warnings += "image $number of $width x $height was decoded at ${bitmap.width} x ${bitmap.height} (above ${PdfContract.MAX_RENDER_PIXELS} pixels)"
+            if (sample > 1) warnings += downsampledWarning(number, width, height, bitmap.width, bitmap.height)
             dropOpaqueAlpha(bitmap)
             val image = if (quality == null) LosslessFactory.createFromImage(document, bitmap) else JPEGFactory.createFromImage(document, bitmap, quality / 100f)
             return Source(image, width, height, decodedOrientation(bytes))

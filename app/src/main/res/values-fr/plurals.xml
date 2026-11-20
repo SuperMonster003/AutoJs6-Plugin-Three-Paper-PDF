@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="tool_warning_characters_replaced">
+        <item quantity="one">%1$d caractère supplémentaire (comme un emoji) au-delà des %2$d premiers a été écrit comme caractère de remplacement U+FFFD.</item>
+        <item quantity="many">%1$d caractères supplémentaires (comme des emoji) au-delà des %2$d premiers ont été écrits comme caractère de remplacement U+FFFD.</item>
+        <item quantity="other">%1$d caractères supplémentaires (comme des emoji) au-delà des %2$d premiers ont été écrits comme caractère de remplacement U+FFFD.</item>
+    </plurals>
+    <plurals name="tool_warning_fields_ignored">
+        <item quantity="one">%1$d nom de champ n\'existe pas dans le formulaire et a été ignoré: %2$s.</item>
+        <item quantity="many">%1$d noms de champs n\'existent pas dans le formulaire et ont été ignorés: %2$s.</item>
+        <item quantity="other">%1$d noms de champs n\'existent pas dans le formulaire et ont été ignorés: %2$s.</item>
+    </plurals>
+    <plurals name="tool_warning_fields_ignored_more">
+        <item quantity="one">%1$s et %2$d autre</item>
+        <item quantity="many">%1$s et %2$d autres</item>
+        <item quantity="other">%1$s et %2$d autres</item>
+    </plurals>
+    <plurals name="tool_warning_images_too_large">
+        <item quantity="one">%1$d image est trop grande pour être décodée sur cet appareil et a été conservée telle quelle.</item>
+        <item quantity="many">%1$d images sont trop grandes pour être décodées sur cet appareil et ont été conservées telles quelles.</item>
+        <item quantity="other">%1$d images sont trop grandes pour être décodées sur cet appareil et ont été conservées telles quelles.</item>
+    </plurals>
+    <plurals name="tool_warning_images_undecodable">
+        <item quantity="one">%1$d image ne peut pas être décodée (par exemple JPEG 2000 ou données endommagées) et a été conservée telle quelle.</item>
+        <item quantity="many">%1$d images ne peuvent pas être décodées (par exemple JPEG 2000 ou données endommagées) et ont été conservées telles quelles.</item>
+        <item quantity="other">%1$d images ne peuvent pas être décodées (par exemple JPEG 2000 ou données endommagées) et ont été conservées telles quelles.</item>
+    </plurals>
+    <plurals name="tool_warning_remote_resources_blocked">
+        <item quantity="one">%1$d ressource réseau externe n\'a pas été chargée.</item>
+        <item quantity="many">%1$d ressources réseau externes n\'ont pas été chargées.</item>
+        <item quantity="other">%1$d ressources réseau externes n\'ont pas été chargées.</item>
+    </plurals>
+    <plurals name="tool_warning_signatures_invalidated">
+        <item quantity="one">%1$d champ de signature signé n\'est plus valide car le formulaire a été rempli.</item>
+        <item quantity="many">%1$d champs de signature signés ne sont plus valides car le formulaire a été rempli.</item>
+        <item quantity="other">%1$d champs de signature signés ne sont plus valides car le formulaire a été rempli.</item>
+    </plurals>
+</resources>

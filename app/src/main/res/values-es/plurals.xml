@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="tool_warning_characters_replaced">
+        <item quantity="one">%1$d carácter suplementario (como un emoji) más allá de los primeros %2$d se escribió como el carácter de reemplazo U+FFFD.</item>
+        <item quantity="many">%1$d caracteres suplementarios (como emojis) más allá de los primeros %2$d se escribieron como el carácter de reemplazo U+FFFD.</item>
+        <item quantity="other">%1$d caracteres suplementarios (como emojis) más allá de los primeros %2$d se escribieron como el carácter de reemplazo U+FFFD.</item>
+    </plurals>
+    <plurals name="tool_warning_fields_ignored">
+        <item quantity="one">%1$d nombre de campo no existe en el formulario y se ignoró: %2$s.</item>
+        <item quantity="many">%1$d nombres de campo no existen en el formulario y se ignoraron: %2$s.</item>
+        <item quantity="other">%1$d nombres de campo no existen en el formulario y se ignoraron: %2$s.</item>
+    </plurals>
+    <plurals name="tool_warning_fields_ignored_more">
+        <item quantity="one">%1$s y %2$d más</item>
+        <item quantity="many">%1$s y %2$d más</item>
+        <item quantity="other">%1$s y %2$d más</item>
+    </plurals>
+    <plurals name="tool_warning_images_too_large">
+        <item quantity="one">%1$d imagen es demasiado grande para decodificarla en este dispositivo y se conservó tal cual.</item>
+        <item quantity="many">%1$d imágenes son demasiado grandes para decodificarlas en este dispositivo y se conservaron tal cual.</item>
+        <item quantity="other">%1$d imágenes son demasiado grandes para decodificarlas en este dispositivo y se conservaron tal cual.</item>
+    </plurals>
+    <plurals name="tool_warning_images_undecodable">
+        <item quantity="one">%1$d imagen no se puede decodificar (por ejemplo JPEG 2000 o datos dañados) y se conservó tal cual.</item>
+        <item quantity="many">%1$d imágenes no se pueden decodificar (por ejemplo JPEG 2000 o datos dañados) y se conservaron tal cual.</item>
+        <item quantity="other">%1$d imágenes no se pueden decodificar (por ejemplo JPEG 2000 o datos dañados) y se conservaron tal cual.</item>
+    </plurals>
+    <plurals name="tool_warning_remote_resources_blocked">
+        <item quantity="one">%1$d recurso de red externo no se cargó.</item>
+        <item quantity="many">%1$d recursos de red externos no se cargaron.</item>
+        <item quantity="other">%1$d recursos de red externos no se cargaron.</item>
+    </plurals>
+    <plurals name="tool_warning_signatures_invalidated">
+        <item quantity="one">%1$d campo de firma firmado dejó de ser válido al rellenar el formulario.</item>
+        <item quantity="many">%1$d campos de firma firmados dejaron de ser válidos al rellenar el formulario.</item>
+        <item quantity="other">%1$d campos de firma firmados dejaron de ser válidos al rellenar el formulario.</item>
+    </plurals>
+</resources>

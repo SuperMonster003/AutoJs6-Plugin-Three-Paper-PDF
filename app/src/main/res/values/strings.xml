@@ -278,6 +278,18 @@
     <string name="tool_title">PDF tool</string>
     <string name="tool_unit_points">pt</string>
     <string name="tool_unlock">Unlock</string>
+    <string name="tool_warning_fit_page_size_used_a4">There is no image to fit the page size to, so A4 was used.</string>
+    <string name="tool_warning_form_scripts_not_run">The form\'s JavaScript (formatting, validation, calculation) was not run, so values that depend on it stay as they were.</string>
+    <string name="tool_warning_image_downsampled" tools:ignore="PluralsCandidate">Image %1$d (%2$d x %3$d) is larger than %4$d pixels and was embedded at %5$d x %6$d.</string>
+    <string name="tool_warning_not_encrypted">The file is not encrypted and was saved as it is.</string>
+    <string name="tool_warning_object_streams_not_used">Object streams were not used, the file was written the usual way (reason: %1$s).</string>
+    <string name="tool_warning_outline_damaged">The bookmarks of the source file are damaged, the new file has none.</string>
+    <string name="tool_warning_outline_not_adjusted">The bookmarks could not be matched to the new pages, the new file has none (%1$s).</string>
+    <string name="tool_warning_output_not_smaller">The new file (%1$s) is not smaller than the source file (%2$s), it was written anyway.</string>
+    <string name="tool_warning_owner_password_random">No owner password was entered, so a random one was set to make the permissions take effect. The security settings of this file cannot be removed later.</string>
+    <string name="tool_warning_user_password_is_owner">The user password is the same as the owner password, so opening the file with it gives full access and the permissions have no effect.</string>
+    <string name="tool_warning_xfa_removed">The static XFA form data was removed, so readers show the filled values.</string>
+    <string name="tool_warning_xmp_removed">The XMP metadata could not be read and was removed.</string>
     <string name="tool_watermark_choose_image">Choose image</string>
     <string name="tool_watermark_layer">Layer</string>
     <string name="tool_watermark_layer_over">Over the content</string>

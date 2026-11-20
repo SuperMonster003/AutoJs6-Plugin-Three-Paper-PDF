@@ -2,7 +2,9 @@ package io.github.supermonster003.autojs6.plugin.three.paper.pdf.generate
 
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfFailure
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfOptions
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfWarning
 import org.autojs.plugin.pdf.api.PdfContract
+import org.autojs.plugin.pdf.api.PdfWarningCodes
 import kotlin.math.max
 import kotlin.math.min
 
@@ -76,10 +78,14 @@ internal object PageLayout {
      * The page size of `fromText` / `fromHtml`: A4 when absent; `fit` is A4 too and adds a warning to [warnings].
      * zh-CN: `fromText` / `fromHtml` 的页面尺寸: 缺省为 A4; `fit` 也取 A4, 并向 [warnings] 追加警告.
      */
-    fun documentPageSize(options: PdfOptions, op: String, warnings: MutableCollection<String>): PageSize.Fixed = when (val size = pageSize(options)) {
+    fun documentPageSize(options: PdfOptions, op: String, warnings: MutableCollection<PdfWarning>): PageSize.Fixed = when (val size = pageSize(options)) {
         null -> A4
         PageSize.Fit -> {
-            warnings += "$op has no image to fit; ${PdfContract.KEY_PAGE_SIZE} \"${PdfContract.PAGE_SIZE_FIT}\" used A4"
+            warnings += PdfWarning(
+                "$op has no image to fit; ${PdfContract.KEY_PAGE_SIZE} \"${PdfContract.PAGE_SIZE_FIT}\" used A4",
+                PdfWarningCodes.FIT_PAGE_SIZE_USED_A4,
+                mapOf(PdfWarningCodes.ARG_OP to op),
+            )
             A4
         }
         is PageSize.Fixed -> size

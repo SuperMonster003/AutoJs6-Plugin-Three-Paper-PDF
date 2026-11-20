@@ -10,9 +10,11 @@ import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.Operation
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.PdfLoader
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfFailure
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfOptions
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfWarning
 import org.autojs.plugin.pdf.api.PdfContract
 import org.autojs.plugin.pdf.api.PdfErrorCodes
 import org.autojs.plugin.pdf.api.PdfOps
+import org.autojs.plugin.pdf.api.PdfWarningCodes
 import java.io.File
 import java.io.FileOutputStream
 import java.security.MessageDigest
@@ -150,8 +152,8 @@ object PdfEncryption {
     }
 
     /** The warnings of `decrypt` on [document]. zh-CN: `decrypt` 对 [document] 给出的警告. */
-    fun decryptWarnings(document: PDDocument): List<String> =
-        if (document.isEncrypted) emptyList() else listOf("the input is not encrypted; it was copied unchanged")
+    fun decryptWarnings(document: PDDocument): List<PdfWarning> =
+        if (document.isEncrypted) emptyList() else listOf(PdfWarning("the input is not encrypted; it was copied unchanged", PdfWarningCodes.NOT_ENCRYPTED))
 
     /**
      * Sets the security of [request] on [document] (the old security of an encrypted input is replaced, which needs its
@@ -160,7 +162,7 @@ object PdfEncryption {
      * zh-CN: 在 [document] 上设置 [request] 指定的加密 (已加密输入的原有加密被替换, 这需要其所有者密码) 并返回警告. 未给出所有者密码时,
      * 若授予全部权限则用户密码以所有者身份打开; 否则使用随机所有者密码使权限位生效 (附录 D Q36 (a)).
      */
-    fun protect(document: PDDocument, request: EncryptRequest): List<String> {
+    fun protect(document: PDDocument, request: EncryptRequest): List<PdfWarning> {
         if (document.isEncrypted) {
             if (!document.currentAccessPermission.isOwnerPermission) {
                 throw PdfFailure(PdfErrorCodes.PERMISSION_DENIED, "the input was opened with its user password; changing its security needs the owner password")
@@ -169,18 +171,24 @@ object PdfEncryption {
             // zh-CN: 使用新的字典: 否则 protect() 会改写旧字典并保留其中的其他条目.
             document.setEncryptionDictionary(PDEncryption())
         }
-        val warnings = ArrayList<String>()
+        val warnings = ArrayList<PdfWarning>()
         val restricted = request.permissions != PdfContract.PERMISSIONS
         val owner = when {
             request.ownerPassword != null -> request.ownerPassword
             restricted -> {
-                warnings += "no ${PdfContract.KEY_OWNER_PASSWORD} was given; a random owner password keeps the permissions in force, so they cannot be lifted and decrypt cannot remove the security later"
+                warnings += PdfWarning(
+                    "no ${PdfContract.KEY_OWNER_PASSWORD} was given; a random owner password keeps the permissions in force, so they cannot be lifted and decrypt cannot remove the security later",
+                    PdfWarningCodes.OWNER_PASSWORD_RANDOM,
+                )
                 generatedOwnerPassword()
             }
             else -> request.userPassword
         }
         if (restricted && owner == request.userPassword) {
-            warnings += "${PdfContract.KEY_USER_PASSWORD} equals ${PdfContract.KEY_OWNER_PASSWORD}; the user password opens the document as owner, so the permissions are not in force"
+            warnings += PdfWarning(
+                "${PdfContract.KEY_USER_PASSWORD} equals ${PdfContract.KEY_OWNER_PASSWORD}; the user password opens the document as owner, so the permissions are not in force",
+                PdfWarningCodes.USER_PASSWORD_IS_OWNER,
+            )
         }
         val policy = StandardProtectionPolicy(owner, request.userPassword, accessPermission(request.permissions))
         policy.encryptionKeyLength = request.keyLength
@@ -209,10 +217,10 @@ object PdfEncryption {
         return bytes.joinToString("") { "%02x".format(it.toInt() and 0xFF) }
     }
 
-    private fun result(pageCount: Int, sizeBytes: Long, warnings: Collection<String>): Map<String, Any?> = buildMap {
+    private fun result(pageCount: Int, sizeBytes: Long, warnings: Collection<PdfWarning>): Map<String, Any?> = buildMap {
         put(PdfContract.KEY_PAGE_COUNT, pageCount)
         put(PdfContract.KEY_SIZE_BYTES, sizeBytes)
-        if (warnings.isNotEmpty()) put(PdfContract.KEY_WARNINGS, warnings.toTypedArray())
+        if (warnings.isNotEmpty()) put(PdfContract.KEY_WARNINGS, warnings.toList())
     }
 
 }

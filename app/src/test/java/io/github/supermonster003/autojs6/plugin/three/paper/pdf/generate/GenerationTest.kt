@@ -9,9 +9,12 @@ import com.tom_roush.pdfbox.util.Matrix
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.MapValues
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfFailure
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfOptions
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfWarning
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.assertWarning
 import org.autojs.plugin.pdf.api.PdfContract
 import org.autojs.plugin.pdf.api.PdfErrorCodes
 import org.autojs.plugin.pdf.api.PdfOps
+import org.autojs.plugin.pdf.api.PdfWarningCodes
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -96,12 +99,14 @@ class GenerationTest {
         assertCode(PdfErrorCodes.INVALID_ARGUMENT) { PageLayout.pageSize(options(PdfContract.KEY_PAGE_SIZE to floatArrayOf(10f))) }
         assertCode(PdfErrorCodes.INVALID_ARGUMENT) { PageLayout.pageSize(options(PdfContract.KEY_PAGE_SIZE to 595)) }
 
-        val warnings = ArrayList<String>()
+        val warnings = ArrayList<PdfWarning>()
         assertEquals(PageLayout.A4, PageLayout.documentPageSize(options(), PdfOps.FROM_TEXT, warnings))
         assertTrue(warnings.isEmpty())
         assertEquals(PageLayout.A4, PageLayout.documentPageSize(options(PdfContract.KEY_PAGE_SIZE to PdfContract.PAGE_SIZE_FIT), PdfOps.FROM_TEXT, warnings))
         assertEquals(1, warnings.size)
-        assertTrue(warnings.single().contains(PdfOps.FROM_TEXT))
+        assertTrue(warnings.single().text.contains(PdfOps.FROM_TEXT))
+        assertWarning(warnings.single(), PdfWarningCodes.FIT_PAGE_SIZE_USED_A4)
+        assertEquals(PdfOps.FROM_TEXT, warnings.single().args[PdfWarningCodes.ARG_OP])
     }
 
     @Test
@@ -212,7 +217,7 @@ class GenerationTest {
         val rotated = withExif(jpeg(300, 200), 6)
         val gray = jpeg(40, 40, gray = true)
         val cmyk = cmykHeader(60, 80, adobe = true)
-        val warnings = ArrayList<String>()
+        val warnings = ArrayList<PdfWarning>()
         val saved = PDDocument().use { document ->
             ImagesToPdf.addPage(document, landscape, imageRequest(), 1, warnings)
             ImagesToPdf.addPage(document, rotated, imageRequest(), 2, warnings)

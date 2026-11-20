@@ -14,7 +14,7 @@ process and needs the AIDL stubs and constants at run time.
 | --- | --- | --- | --- |
 | `common-plugin-api.aar` | `plugin-api/common-plugin-api` | `PluginInfo`, `IPluginInfoProvider`, `PluginActions`, `PluginCapabilityKeys`, `AutoJs6HostSettingsContract`, `PluginSettingsTransferProvider` | `9849b15091dcb255cd1c47140790081eebc074aec2e3e9b28c18f12bf9ef4a6a` |
 | `explorer-action-api.aar` | `plugin-api/explorer-action-api` | `IExplorerActionPlugin` and the archive session interfaces, `ExplorerActionProtocol` (version 28), the catalog, target, session and output keys, `ExplorerActionHostEngineIds` | `2b0b21cd63c5f9bb1012d53ec8441a3a0c23bc42835f65b4a9fadd3c70db78cb` |
-| `pdf-api.aar` | `plugin-api/pdf-api` | `IPdfPlugin`, `IPdfDocument`, `IPdfViewerSession`, `IPdfProgressCallback`, `IPdfViewerCallback`, `PdfActions`, `PdfIds`, `PdfContract`, `PdfCapabilityKeys`, `PdfErrorCodes`, `PdfOps` (contract version 2) | `116c2b7737ba2f62e68e1cb3fb8afd9dbc549c020a0d9c6de1b7ba54def9aa9a` |
+| `pdf-api.aar` | `plugin-api/pdf-api` | `IPdfPlugin`, `IPdfDocument`, `IPdfViewerSession`, `IPdfProgressCallback`, `IPdfViewerCallback`, `PdfActions`, `PdfIds`, `PdfContract`, `PdfCapabilityKeys`, `PdfErrorCodes`, `PdfOps`, `PdfWarningCodes` (contract version 2) | `c5ee0c184b2ff78e92d3c74bf81de35a4a5b1788873dd9bc6c28a744e4432609` |
 
 Provenance (2026-11-12, roadmap P0.1):
 
@@ -27,10 +27,13 @@ Provenance (2026-11-12, roadmap P0.1):
   declares as a `hostEngine` action; the module has not changed since. It replaced the release build of host commit
   `e0eda70330` (67,325 B, sha256 `d387e728...268d87b87`), byte-identical to the copy AutoJs4 Runtime
   1.1.0 stages.
-- `pdf-api.aar` (48,213 B) is the 1.1.0 release build (`:plugin-api:pdf-api:assembleRelease`, unsigned) of host
-  commit `19ab55f80` (contract version 2, roadmap P6.1 / P6.2 row 1, D58; protocol
-  `docs/dev/pdf-plugin-protocol-v1.md`, section "Version 2"), staged on 2026-11-19. It adds the optional text stamp
-  field `pageOffset` (`PdfContract.FIELD_PAGE_OFFSET`, at most `MAX_PAGE_OFFSET` either way, roadmap Q211 (a)) to the
+- `pdf-api.aar` (51,929 B) is the 1.1.0 release build (`:plugin-api:pdf-api:assembleRelease`, unsigned) of host
+  commit `d88f78a7b` (contract version 2, roadmap P6.1 / P6.2 row 1, D58; protocol
+  `docs/dev/pdf-plugin-protocol-v1.md`, sections "Version 2" and "Warning codes"), staged on 2026-11-20. It adds the
+  completion keys `PdfContract.KEY_WARNING_CODES` and `KEY_WARNING_ARGS` and the class `PdfWarningCodes` (the 18
+  warning codes and their arguments, roadmap Q264 (b)) to the release of host commit `19ab55f80` (48,213 B, sha256
+  `116c2b77...def9aa9a`, staged on 2026-11-19), appended in place before the plugin published version 2. That one
+  added the optional text stamp field `pageOffset` (`PdfContract.FIELD_PAGE_OFFSET`, at most `MAX_PAGE_OFFSET` either way, roadmap Q211 (a)) to the
   first contract version 2 build of host commit `0f679d6b1` (48,160 B, sha256 `a463870d...9c04fdd`, staged on
   2026-11-18), appended in place before the plugin published version 2. It depends on `common-plugin-api` and does not embed
   its classes. The baseline `PdfContract.CONTRACT_VERSION` stays 1 (the plugin declares it as `pdfContractVersion`)

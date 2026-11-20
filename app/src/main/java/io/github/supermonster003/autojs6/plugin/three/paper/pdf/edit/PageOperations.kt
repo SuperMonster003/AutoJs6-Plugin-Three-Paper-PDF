@@ -10,6 +10,7 @@ import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.PdfLoader
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.PdfSession
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfFailure
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfOptions
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfWarning
 import org.autojs.plugin.pdf.api.PdfContract
 import org.json.JSONArray
 import org.json.JSONObject
@@ -53,7 +54,7 @@ object PageOperations {
     fun split(call: PdfSession.Call, parts: List<IntArray>, operation: Operations.Operation): Map<String, Any?> {
         check(parts.size == operation.outputs.size) { "${parts.size} parts for ${operation.outputs.size} outputs" }
         val items = JSONArray()
-        val warnings = LinkedHashSet<String>()
+        val warnings = LinkedHashSet<PdfWarning>()
         parts.forEachIndexed { index, pages ->
             operation.stop.checkStop()
             operation.progress(PdfContract.STAGE_WRITING, index, parts.size)
@@ -70,7 +71,7 @@ object PageOperations {
         }
         return buildMap {
             put(PdfContract.KEY_ITEMS, items.toString())
-            if (warnings.isNotEmpty()) put(PdfContract.KEY_WARNINGS, warnings.toTypedArray())
+            if (warnings.isNotEmpty()) put(PdfContract.KEY_WARNINGS, warnings.toList())
         }
     }
 
@@ -136,10 +137,10 @@ object PageOperations {
         }
     }
 
-    private fun result(pageCount: Int, sizeBytes: Long, warnings: Collection<String>): Map<String, Any?> = buildMap {
+    private fun result(pageCount: Int, sizeBytes: Long, warnings: Collection<PdfWarning>): Map<String, Any?> = buildMap {
         put(PdfContract.KEY_PAGE_COUNT, pageCount)
         put(PdfContract.KEY_SIZE_BYTES, sizeBytes)
-        if (warnings.isNotEmpty()) put(PdfContract.KEY_WARNINGS, warnings.toTypedArray())
+        if (warnings.isNotEmpty()) put(PdfContract.KEY_WARNINGS, warnings.toList())
     }
 
     /** An unbuffered stream on [output] that [PdfWriting] never closes. zh-CN: [output] 上的无缓冲流, [PdfWriting] 不会关闭它. */

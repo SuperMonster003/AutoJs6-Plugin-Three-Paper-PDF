@@ -10,8 +10,11 @@ import io.github.supermonster003.autojs6.plugin.three.paper.pdf.read.DocumentInf
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.MapValues
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfFailure
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfOptions
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfWarning
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.assertWarning
 import org.autojs.plugin.pdf.api.PdfContract
 import org.autojs.plugin.pdf.api.PdfErrorCodes
+import org.autojs.plugin.pdf.api.PdfWarningCodes
 import org.junit.After
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
@@ -51,7 +54,7 @@ class PdfEncryptionTest {
 
     private fun options(vararg pairs: Pair<String, Any?>) = PdfOptions(MapValues(mapOf(*pairs)))
 
-    private class Encrypted(val bytes: ByteArray, val warnings: List<String>)
+    private class Encrypted(val bytes: ByteArray, val warnings: List<PdfWarning>)
 
     /** Encrypts [bytes] (opened with [password]) like the operation does. zh-CN: 像操作那样加密 [bytes] (用 [password] 打开). */
     private fun encrypt(bytes: ByteArray, vararg pairs: Pair<String, Any?>, password: String? = null): Encrypted {
@@ -195,7 +198,8 @@ class PdfEncryptionTest {
         // zh-CN: 有限制: 使用随机所有者密码, 因此用户密码得到所请求的权限位 (附录 D Q36 (a)).
         val restricted = encrypt(original, PdfContract.KEY_USER_PASSWORD to "only-user", PdfContract.KEY_PERMISSIONS to arrayOf(PdfContract.PERMISSION_PRINT))
         assertEquals(1, restricted.warnings.size)
-        assertTrue(restricted.warnings.single(), restricted.warnings.single().contains("random owner password"))
+        assertTrue(restricted.warnings.single().text, restricted.warnings.single().text.contains("random owner password"))
+        assertWarning(restricted.warnings.single(), PdfWarningCodes.OWNER_PASSWORD_RANDOM)
         opened(restricted.bytes, "only-user") { document ->
             assertFalse(document.currentAccessPermission.isOwnerPermission)
             assertEquals(listOf(PdfContract.PERMISSION_PRINT), permissionsOf(document))
@@ -222,7 +226,8 @@ class PdfEncryptionTest {
             PdfContract.KEY_PERMISSIONS to arrayOf(PdfContract.PERMISSION_PRINT),
         )
         assertEquals(1, same.warnings.size)
-        assertTrue(same.warnings.single(), same.warnings.single().contains("not in force"))
+        assertTrue(same.warnings.single().text, same.warnings.single().text.contains("not in force"))
+        assertWarning(same.warnings.single(), PdfWarningCodes.USER_PASSWORD_IS_OWNER)
         opened(same.bytes, "same") { assertTrue(it.currentAccessPermission.isOwnerPermission) }
     }
 
@@ -243,6 +248,7 @@ class PdfEncryptionTest {
         }
         PDDocument.load(PdfFixtures.singlePageText()).use { document ->
             assertEquals(1, PdfEncryption.decryptWarnings(document).size)
+            assertWarning(PdfEncryption.decryptWarnings(document).single(), PdfWarningCodes.NOT_ENCRYPTED)
         }
     }
 

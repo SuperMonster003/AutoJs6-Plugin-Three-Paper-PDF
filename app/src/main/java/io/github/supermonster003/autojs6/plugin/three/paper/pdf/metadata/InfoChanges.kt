@@ -12,7 +12,9 @@ import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PayloadObje
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfFailure
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfOptions
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfPayload
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfWarning
 import org.autojs.plugin.pdf.api.PdfContract
+import org.autojs.plugin.pdf.api.PdfWarningCodes
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -74,7 +76,7 @@ internal object InfoChanges {
      * Applies [changes] to the document information and the catalog XMP of [document]; answers the warnings.
      * zh-CN: 把 [changes] 应用到 [document] 的文档信息与目录 XMP; 返回警告.
      */
-    fun apply(document: PDDocument, changes: Map<String, String?>): List<String> {
+    fun apply(document: PDDocument, changes: Map<String, String?>): List<PdfWarning> {
         val information = document.documentInformation
         for ((key, value) in changes) {
             when (key) {
@@ -97,7 +99,7 @@ internal object InfoChanges {
         val synced = packet?.let { XmpSync.apply(it, changes) }
         if (synced == null) {
             catalog.removeItem(COSName.METADATA)
-            return listOf("the XMP metadata could not be parsed and was removed, so readers do not show its old values")
+            return listOf(PdfWarning("the XMP metadata could not be parsed and was removed, so readers do not show its old values", PdfWarningCodes.XMP_REMOVED))
         }
         metadata.createOutputStream().use { it.write(synced) }
         return emptyList()
@@ -117,10 +119,10 @@ internal object InfoChanges {
         }
     }
 
-    fun result(pageCount: Int, sizeBytes: Long, warnings: List<String>): Map<String, Any?> = buildMap {
+    fun result(pageCount: Int, sizeBytes: Long, warnings: List<PdfWarning>): Map<String, Any?> = buildMap {
         put(PdfContract.KEY_PAGE_COUNT, pageCount)
         put(PdfContract.KEY_SIZE_BYTES, sizeBytes)
-        if (warnings.isNotEmpty()) put(PdfContract.KEY_WARNINGS, warnings.toTypedArray())
+        if (warnings.isNotEmpty()) put(PdfContract.KEY_WARNINGS, warnings)
     }
 
 }

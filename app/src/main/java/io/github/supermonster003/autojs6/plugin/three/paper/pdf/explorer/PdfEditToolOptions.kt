@@ -761,8 +761,8 @@ private fun KeyValueBlock(rows: List<Pair<String, String>>, modifier: Modifier) 
 
 /**
  * What a tool reports on its result page: the new size of a compressed file, the filled fields, the changed
- * properties, and the operation's warnings (in English, as the engine gives them; appendix D Q264).
- * zh-CN: 工具在结果页上报告的内容: 压缩后的大小, 填写的字段数, 修改的属性, 以及操作的警告 (英文, 按引擎原文; 附录 D Q264).
+ * properties, and the operation's warnings, localized by their codes and in English otherwise (appendix D Q264 b).
+ * zh-CN: 工具在结果页上报告的内容: 压缩后的大小, 填写的字段数, 修改的属性, 以及操作的警告 (按代码本地化, 否则为英文; 附录 D Q264 b).
  */
 @Composable
 internal fun ToolSummaryBlock(result: ToolResult) {
@@ -803,8 +803,9 @@ internal fun ToolSummaryBlock(result: ToolResult) {
         }
         if (result.warnings.isNotEmpty()) {
             Text(stringResource(R.string.tool_result_warnings), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+            val strings = remember(context) { ToolWarningStrings.of(context) }
             result.warnings.forEach { warning ->
-                Text(warning, modifier = Modifier.testTag("tool-result-warning"), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(warning.localized(strings), modifier = Modifier.testTag("tool-result-warning"), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }

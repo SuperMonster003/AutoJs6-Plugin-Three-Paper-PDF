@@ -3,9 +3,10 @@
 # explorer-action-api: protocol version 28 release from host commit 2b93a8ea3, staged on 2026-11-19 for the host command
 #   id pdf-make-searchable (ExplorerActionHostEngineIds, roadmap D67 / P6.11). It replaced the release of host commit
 #   e0eda70330 (67,325 B), byte-identical to the copy AutoJs4 Runtime 1.1.0 stages.
-# pdf-api: 1.1.0 release from host commit 19ab55f80 (contract version 2, baseline CONTRACT_VERSION 1), unsigned; staged
-#   on 2026-11-19 for the page offset of text stamp items (FIELD_PAGE_OFFSET, MAX_PAGE_OFFSET, roadmap Q211 (a)). It
-#   replaced the first contract version 2 build of host commit 0f679d6b1 (staged 2026-11-18, roadmap P6.2 row 1, D58),
+# pdf-api: 1.1.0 release from host commit d88f78a7b (contract version 2, baseline CONTRACT_VERSION 1), unsigned; staged
+#   on 2026-11-20 for the warning codes (KEY_WARNING_CODES, KEY_WARNING_ARGS, PdfWarningCodes, roadmap Q264 (b)). It
+#   replaced the release of host commit 19ab55f80 (48,213 B, staged 2026-11-19 for the page offset of text stamp
+#   items, roadmap Q211 (a)), which replaced the first contract version 2 build of host commit 0f679d6b1 (staged 2026-11-18, roadmap P6.2 row 1, D58),
 #   which replaced the 1.0.0 release of host commit c37a23258d (contract version 1, packaged-app entry of roadmap
 #   Q145 (b), D43).
 format=1
@@ -14,4 +15,4 @@ common-plugin-api.sha256=9849b15091dcb255cd1c47140790081eebc074aec2e3e9b28c18f12
 explorer-action-api.file=explorer-action-api.aar
 explorer-action-api.sha256=2b0b21cd63c5f9bb1012d53ec8441a3a0c23bc42835f65b4a9fadd3c70db78cb
 pdf-api.file=pdf-api.aar
-pdf-api.sha256=116c2b7737ba2f62e68e1cb3fb8afd9dbc549c020a0d9c6de1b7ba54def9aa9a
+pdf-api.sha256=c5ee0c184b2ff78e92d3c74bf81de35a4a5b1788873dd9bc6c28a744e4432609

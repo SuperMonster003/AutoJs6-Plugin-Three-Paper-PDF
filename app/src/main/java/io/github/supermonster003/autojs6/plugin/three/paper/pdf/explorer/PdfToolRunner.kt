@@ -159,11 +159,11 @@ internal data class OrganizedPage(val page: Int, val rotation: Int)
 internal class ToolInput(val target: ToolTarget, val password: String?)
 
 /**
- * The published result: the path the file manager shows, the files written, the engine's warnings and what the tool
- * reports beyond them.
- * zh-CN: 已发布的结果: 文件管理器显示的路径, 写入的文件数, 引擎的警告, 以及工具在警告之外报告的内容.
+ * The published result: the path the file manager shows, the files written, the engine's warnings (with their codes,
+ * Q264 b) and what the tool reports beyond them.
+ * zh-CN: 已发布的结果: 文件管理器显示的路径, 写入的文件数, 引擎的警告 (带代码, Q264 b), 以及工具在警告之外报告的内容.
  */
-internal class ToolResult(val displayPath: String, val files: Int, val warnings: List<String>, val summary: ToolSummary? = null)
+internal class ToolResult(val displayPath: String, val files: Int, val warnings: List<ToolWarning>, val summary: ToolSummary? = null)
 
 /**
  * Runs one file manager tool (roadmap P3.3) through the in-process PDF plugin ([ToolEngine]), the same requests a
@@ -575,7 +575,7 @@ internal class PdfToolRunner(
             val answer = write(pending.descriptor)
             checkCancelled()
             val path = hostCall { pending.commit() }
-            return ToolResult(path, 1, answer?.getStringArray(PdfContract.KEY_WARNINGS)?.filterNotNull().orEmpty(), summarize(answer ?: Bundle()))
+            return ToolResult(path, 1, ToolWarning.of(answer), summarize(answer ?: Bundle()))
         } catch (e: Throwable) {
             runCatching { pending.descriptor.close() }
             pending.abort()
@@ -705,10 +705,12 @@ internal class PdfToolRunner(
 
     /**
      * A request of [version]: the operations added in 1.1.0 (`stamp`, `compress`, `fillForm`, `setInfo`, `setOutline`)
-     * need `CONTRACT_VERSION_2`.
-     * zh-CN: [version] 版本的请求: 1.1.0 新增的操作 (`stamp`, `compress`, `fillForm`, `setInfo`, `setOutline`) 需要 `CONTRACT_VERSION_2`.
+     * need `CONTRACT_VERSION_2`, and every tool asks with the highest version so that its warnings carry their codes
+     * for the result page (Q264 b).
+     * zh-CN: [version] 版本的请求: 1.1.0 新增的操作 (`stamp`, `compress`, `fillForm`, `setInfo`, `setOutline`) 需要 `CONTRACT_VERSION_2`;
+     * 所有工具都以最高版本请求, 使警告带上代码供结果页使用 (Q264 b).
      */
-    private fun request(op: String? = null, version: Int = ThreePaperPdfContract.CONTRACT_VERSION, fill: Bundle.() -> Unit = {}): Bundle = Bundle().apply {
+    private fun request(op: String? = null, version: Int = ThreePaperPdfContract.MAX_CONTRACT_VERSION, fill: Bundle.() -> Unit = {}): Bundle = Bundle().apply {
         putInt(PdfContract.KEY_CONTRACT_VERSION, version)
         op?.let { putString(PdfContract.KEY_OP, it) }
         fill()

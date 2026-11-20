@@ -24,10 +24,12 @@ import io.github.supermonster003.autojs6.plugin.three.paper.pdf.stamp.JpegData
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.MapValues
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfFailure
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfOptions
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.assertWarning
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.write.CompactWriting
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.write.RenderCheck
 import org.autojs.plugin.pdf.api.PdfContract
 import org.autojs.plugin.pdf.api.PdfErrorCodes
+import org.autojs.plugin.pdf.api.PdfWarningCodes
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -237,7 +239,9 @@ class CompressOperationTest {
             assertEquals("the photo is decoded once", listOf("400x400->200x200@75"), codec.calls)
             assertEquals(listOf(1, 1, 1, 1), pages)
             assertEquals(1, summary.warnings.size)
-            assertTrue(summary.warnings.single(), summary.warnings.single().startsWith("1 image cannot be decoded"))
+            assertTrue(summary.warnings.single().text, summary.warnings.single().text.startsWith("1 image cannot be decoded"))
+            assertWarning(summary.warnings.single(), PdfWarningCodes.IMAGES_UNDECODABLE)
+            assertEquals(1, summary.warnings.single().args[PdfWarningCodes.ARG_COUNT])
             val stream = photo.cosObject
             assertEquals(COSName.DCT_DECODE, stream.getDictionaryObject(COSName.FILTER))
             assertEquals(200, stream.getInt(COSName.WIDTH))
@@ -336,7 +340,10 @@ class CompressOperationTest {
     fun `the size warning appears when the output is not smaller`() {
         assertNull(CompressOperation.sizeWarning(99, 100))
         assertNotNull(CompressOperation.sizeWarning(100, 100))
-        assertTrue(CompressOperation.sizeWarning(120, 100)!!.contains("120 bytes"))
+        val warning = CompressOperation.sizeWarning(120, 100)!!
+        assertTrue(warning.text.contains("120 bytes"))
+        assertWarning(warning, PdfWarningCodes.OUTPUT_NOT_SMALLER)
+        assertEquals(mapOf(PdfWarningCodes.ARG_SIZE_BYTES to 120L, PdfWarningCodes.ARG_SOURCE_BYTES to 100L), warning.args)
     }
 
     @Test

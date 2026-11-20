@@ -24,9 +24,11 @@ import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PayloadObje
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfFailure
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfOptions
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfPayload
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfWarning
 import org.autojs.plugin.pdf.api.PdfContract
 import org.autojs.plugin.pdf.api.PdfErrorCodes
 import org.autojs.plugin.pdf.api.PdfOps
+import org.autojs.plugin.pdf.api.PdfWarningCodes
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -91,7 +93,7 @@ internal object FormFill {
      * What [apply] did: fields given a value, fields flattened, fields drawn by the Canvas fallback, warnings.
      * zh-CN: [apply] 的结果: 被设置值的字段数, 被扁平化的字段数, 由 Canvas 回落绘制的字段数, 警告.
      */
-    class Outcome(val filled: Int, val flattened: Int, val fallback: Int, val warnings: List<String>)
+    class Outcome(val filled: Int, val flattened: Int, val fallback: Int, val warnings: List<PdfWarning>)
 
     /** A checked value. zh-CN: 校验过的取值. */
     private sealed interface Assignment {
@@ -147,18 +149,23 @@ internal object FormFill {
         }
         val byName = LinkedHashMap<String, MutableList<FormFields.Entry>>()
         terminals.forEach { byName.getOrPut(it.name) { ArrayList() } += it }
-        val warnings = ArrayList<String>()
+        val warnings = ArrayList<PdfWarning>()
 
         val flattenNames = (payload.flatten as? Flatten.Named)?.names.orEmpty()
         val unknown = (payload.values.keys + flattenNames).filter { it !in byName }.distinct()
         if (unknown.isNotEmpty()) {
             val listed = unknown.take(PdfContract.MAX_LISTED_UNKNOWN_FIELDS).joinToString(", ") { "'$it'" }
-            val more = if (unknown.size > PdfContract.MAX_LISTED_UNKNOWN_FIELDS) " and ${unknown.size - PdfContract.MAX_LISTED_UNKNOWN_FIELDS} more" else ""
+            val beyond = (unknown.size - PdfContract.MAX_LISTED_UNKNOWN_FIELDS).coerceAtLeast(0)
+            val more = if (beyond > 0) " and $beyond more" else ""
             val count = if (unknown.size == 1) "1 field name matches" else "${unknown.size} field names match"
             if (!ignoreMissing) {
                 throw PdfFailure.invalid("$count no form field: $listed$more (${PdfContract.KEY_IGNORE_MISSING} skips unknown names)")
             }
-            warnings += "$count no form field and ${if (unknown.size == 1) "was" else "were"} ignored: $listed$more"
+            warnings += PdfWarning(
+                "$count no form field and ${if (unknown.size == 1) "was" else "were"} ignored: $listed$more",
+                PdfWarningCodes.FIELDS_IGNORED,
+                mapOf(PdfWarningCodes.ARG_COUNT to unknown.size, PdfWarningCodes.ARG_NAMES to listed, PdfWarningCodes.ARG_MORE to beyond),
+            )
         }
 
         // Check every value before changing anything. zh-CN: 修改之前先检查全部取值.
@@ -195,15 +202,22 @@ internal object FormFill {
         if (fallback.isNotEmpty()) drawFallback(document, form, fallback, drawer, stop)
 
         if (planned.isNotEmpty() && scripted(form, planned.map { it.first })) {
-            warnings += "the form has JavaScript actions (format, validation or calculation) that ${PdfOps.FILL_FORM} does not run; values that scripts would compute or reformat stay as they are"
+            warnings += PdfWarning(
+                "the form has JavaScript actions (format, validation or calculation) that ${PdfOps.FILL_FORM} does not run; values that scripts would compute or reformat stay as they are",
+                PdfWarningCodes.FORM_SCRIPTS_NOT_RUN,
+            )
         }
         val signed = terminals.count { it.type == PdfContract.FORM_FIELD_SIGNATURE && FormFields.signed(it) }
         if (signed > 0) {
-            warnings += "the document has $signed signed signature field${if (signed == 1) "" else "s"}; the filled copy is rewritten, so ${if (signed == 1) "that signature no longer validates" else "those signatures no longer validate"}"
+            warnings += PdfWarning(
+                "the document has $signed signed signature field${if (signed == 1) "" else "s"}; the filled copy is rewritten, so ${if (signed == 1) "that signature no longer validates" else "those signatures no longer validate"}",
+                PdfWarningCodes.SIGNATURES_INVALIDATED,
+                mapOf(PdfWarningCodes.ARG_COUNT to signed),
+            )
         }
         if (xfa == PdfContract.XFA_STATIC) {
             form.cosObject.removeItem(COSName.XFA)
-            warnings += "the static XFA form data was removed, so readers show the AcroForm values"
+            warnings += PdfWarning("the static XFA form data was removed, so readers show the AcroForm values", PdfWarningCodes.XFA_REMOVED)
         }
 
         if (toFlatten.isNotEmpty()) flatten(document, form, toFlatten, stop)

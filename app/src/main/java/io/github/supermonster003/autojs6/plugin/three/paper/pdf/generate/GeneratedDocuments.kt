@@ -5,6 +5,7 @@ import com.tom_roush.pdfbox.pdmodel.PDDocument
 import com.tom_roush.pdfbox.pdmodel.common.PDRectangle
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.edit.PdfWriting
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.Operations
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfWarning
 import org.autojs.plugin.pdf.api.PdfContract
 import java.io.FileOutputStream
 import java.util.Calendar
@@ -25,7 +26,7 @@ internal object GeneratedDocuments {
         document: PDDocument,
         title: String?,
         operation: Operations.Operation,
-        warnings: Collection<String>,
+        warnings: Collection<PdfWarning>,
         pageSize: PageLayout.PageSize.Fixed? = null,
     ): Map<String, Any?> {
         operation.stop.checkStop()
@@ -49,9 +50,15 @@ internal object GeneratedDocuments {
         return buildMap {
             put(PdfContract.KEY_PAGE_COUNT, document.numberOfPages)
             put(PdfContract.KEY_SIZE_BYTES, size)
-            if (warnings.isNotEmpty()) put(PdfContract.KEY_WARNINGS, warnings.distinct().toTypedArray())
+            if (warnings.isNotEmpty()) put(PdfContract.KEY_WARNINGS, distinct(warnings))
         }
     }
+
+    /**
+     * One entry per distinct text, its code and arguments with it, so the expanded arrays keep one length.
+     * zh-CN: 每种文字一条, 代码与参数随之保留, 展开后的几个数组长度仍然相同.
+     */
+    internal fun distinct(warnings: Collection<PdfWarning>): List<PdfWarning> = warnings.distinctBy { it.text }
 
     private fun outputStream(output: ParcelFileDescriptor) = FileOutputStream(output.fileDescriptor)
 

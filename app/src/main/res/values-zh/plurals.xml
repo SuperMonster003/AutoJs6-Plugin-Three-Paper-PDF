@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="tool_warning_characters_replaced">
+        <item quantity="other">超出前 %2$d 个的 %1$d 个补充平面字符 (如表情) 已写为替换字符 U+FFFD.</item>
+    </plurals>
+    <plurals name="tool_warning_fields_ignored">
+        <item quantity="other">%1$d 个字段名在表单中不存在, 已忽略: %2$s.</item>
+    </plurals>
+    <plurals name="tool_warning_fields_ignored_more">
+        <item quantity="other">%1$s 等另外 %2$d 个</item>
+    </plurals>
+    <plurals name="tool_warning_images_too_large">
+        <item quantity="other">%1$d 张图片太大, 无法在本机解码, 已保持原样.</item>
+    </plurals>
+    <plurals name="tool_warning_images_undecodable">
+        <item quantity="other">%1$d 张图片无法解码 (如 JPEG 2000 或数据损坏), 已保持原样.</item>
+    </plurals>
+    <plurals name="tool_warning_remote_resources_blocked">
+        <item quantity="other">%1$d 项外部网络资源没有加载.</item>
+    </plurals>
+    <plurals name="tool_warning_signatures_invalidated">
+        <item quantity="other">%1$d 个已签名的签名字段因填写而失效.</item>
+    </plurals>
+</resources>

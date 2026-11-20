@@ -8,6 +8,7 @@ import android.system.Os
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfAnswers
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfBundles
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfFailure
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfWarnings
 import org.autojs.plugin.pdf.api.IPdfProgressCallback
 import org.autojs.plugin.pdf.api.PdfContract
 import org.autojs.plugin.pdf.api.PdfErrorCodes
@@ -91,7 +92,10 @@ class Operations(
 
         internal fun start(work: (Operation) -> Map<String, Any?>) {
             val result = try {
-                val answer = work(this)
+                // Warnings become the English texts, plus their codes and arguments for version 2 (Q264 b); a malformed
+                // warning fails the operation instead of the completion.
+                // zh-CN: 警告展开为英文原文, 版本 2 另加代码与参数 (Q264 b); 格式错误的警告让操作失败, 而不是让完成包出错.
+                val answer = PdfWarnings.expand(work(this), contractVersion)
                 stop.checkStop()
                 outputs.forEach { flush(it) }
                 Result.success(answer)
@@ -108,7 +112,10 @@ class Operations(
             val bundle = result.fold(
                 onSuccess = { answer ->
                     outputs.forEach { runCatching { it.close() } }
-                    PdfBundles.toBundle(PdfAnswers.success(contractVersion, answer))
+                    // Q304: above MAX_EVENT_BYTES the arguments of the warnings go first, then their codes.
+                    // zh-CN: Q304: 超过 MAX_EVENT_BYTES 时先去掉警告参数, 再去掉警告代码.
+                    val envelope = PdfAnswers.success(contractVersion, answer)
+                    PdfBundles.toBundle(PdfWarnings.fit(envelope) { PdfBundles.parcelSize(PdfBundles.toBundle(it)) })
                 },
                 onFailure = { error ->
                     // A partly written file is never left behind: the host deletes the outputs after onError.
