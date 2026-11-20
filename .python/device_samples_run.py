@@ -1,6 +1,7 @@
 """Runs the samples of samples/ on a device and checks their results (3-Paper PDF roadmap P5.3).
 
-Usage: py -3.12 -I .python/device_samples_run.py -s SERIAL [--only NAME,...] [--view] [--no-demo] [--keep] [--timeout SECONDS]
+Usage: py -3.12 -I .python/device_samples_run.py -s SERIAL [--only NAME,...] [--view] [--no-demo] [--keep] [--old-plugin]
+       [--timeout SECONDS]
 
 1. The host (with the pdf module, 6.8.1 or later) and 3-Paper PDF must already be installed, enabled and allowed to
    read and write shared storage; the Node sample also needs Node.js Runtime 2.2.0 or later, the Bun sample Bun
@@ -19,6 +20,10 @@ Usage: py -3.12 -I .python/device_samples_run.py -s SERIAL [--only NAME,...] [--
 5. The pushed fixtures, samples and every output (.../samples/, which the samples write by default) are removed
    afterwards unless --keep is given; /sdcard/Documents/3-Paper PDF/ itself is removed only when it is empty and did
    not exist before. A .../samples/ that existed before is left alone and the run stops.
+6. The samples of 3-Paper PDF 1.1.0 (forms, watermark, searchable, compress, properties; roadmap P6.14) and the fifth
+   part of the Node project and the Bun script need plugin 1.1.0 or later. With --old-plugin (a 1.0.x plugin is
+   installed) they must stop with the UNSUPPORTED hint instead; without it an UNSUPPORTED answer fails. When no OCR
+   plugin is installed, the searchable sample must stop with the OCR_UNAVAILABLE hint, which counts as a pass.
 Every check prints one line "PASS|FAIL|SKIP <name> <key values>"; the exit code is 1 when a check failed.
 
 zh-CN: 在设备上运行 samples/ 中的样例并检查结果 (3-Paper PDF 路线图 P5.3). 1. 宿主 (带 pdf 模块, 6.8.1 或以上) 与 3-Paper PDF 须已安装, 启用
@@ -29,7 +34,9 @@ SKIP. 本工具不安装任何东西, 也不应答任何对话框. 2. samples/fi
 文档时会现场生成演示文档的 Rhino 样例, 去掉样例文档再运行一遍 ("demo" 轮, 与宿主样例目录中的情形相同); --no-demo 跳过这一轮. pdf-view.js
 只在给出 --view 时运行 (会打开查看器窗口, 6 秒后关闭). 4. Bun 样例运行期间经宿主脚本授予 pdf.control, 结束后恢复原值. 5. 结束后删除推送的样例
 文档, 样例与全部产物 (样例默认写到 .../samples/), 给出 --keep 时保留; /sdcard/Documents/3-Paper PDF/ 本身只在为空且原先不存在时删除. 原先就有
-.../samples/ 时不动它并停止运行. 每项检查输出一行 "PASS|FAIL|SKIP <名称> <关键数值>"; 有检查失败时退出码为 1.
+.../samples/ 时不动它并停止运行. 6. 3-Paper PDF 1.1.0 的样例 (forms, watermark, searchable, compress, properties; 路线图 P6.14) 以及
+Node 项目与 Bun 脚本的第 5 段需要 1.1.0 或以上的插件. 给出 --old-plugin (装的是 1.0.x 插件) 时它们必须给出 UNSUPPORTED 提示后停止; 不给时
+UNSUPPORTED 算失败. 没有安装 OCR 插件时, searchable 样例必须给出 OCR_UNAVAILABLE 提示后停止, 这种情形算通过. 每项检查输出一行 "PASS|FAIL|SKIP <名称> <关键数值>"; 有检查失败时退出码为 1.
 """
 import argparse
 import json
@@ -50,7 +57,10 @@ FIXTURES = f"{BASE}/fixtures"
 RUNNER = f"{BASE}/runner"
 OUTPUTS = f"{BASE}/samples"
 REPO = Path(__file__).resolve().parents[1]
-RHINO = ("read", "render", "pages", "generate", "encrypt", "ocr-manual", "view")
+RHINO = ("read", "render", "pages", "generate", "encrypt", "ocr-manual", "forms", "watermark", "searchable", "compress",
+         "properties", "view")
+# The samples that need 3-Paper PDF 1.1.0 (roadmap P6.14). zh-CN: 需要 3-Paper PDF 1.1.0 的样例 (路线图 P6.14).
+V110 = ("forms", "watermark", "searchable", "compress", "properties")
 NO_DEMO = ()
 
 
@@ -201,6 +211,14 @@ def check_rhino(serial, checks, name, demo, args, scratch):
     if s is None:
         checks.judge(label, None, [], "")
         return
+    if name in V110:
+        unsupported = str(s.get("unsupported") or "")
+        if args.old_plugin:
+            checks.judge(f"{label}.unsupported", s, [("UNSUPPORTED hint", bool(unsupported))], f"unsupported={unsupported[:120]!r}")
+            return
+        if unsupported:
+            checks.report("FAIL", label, f"UNSUPPORTED {unsupported[:120]!r} (a 1.0.x plugin? use --old-plugin)")
+            return
     if name == "read":
         info, enc = s.get("info") or {}, s.get("encrypted") or {}
         perms = enc.get("permissions") or {}
@@ -250,6 +268,53 @@ def check_rhino(serial, checks, name, demo, args, scratch):
                       ("decrypt", dec.get("withUserPassword") == "PERMISSION_DENIED" and dec.get("encryptedAfter") is False)]
         detail = (f"open={opened.get('withoutPassword')}/{opened.get('wrongPassword')} copy={perms.get('copy')} "
                   f"printOnly.copy={only.get('copy')} decrypt={dec.get('withUserPassword')}/encrypted={dec.get('encryptedAfter')}")
+    elif name == "forms":
+        forms, fill, recover, flat = (s.get(key) or {} for key in ("forms", "fill", "recover", "flatten"))
+        conditions = [
+            ("forms", forms.get("count") == (2 if demo else 11)),
+            ("fillForm", fill.get("filled") == (2 if demo else 9) and fill.get("matched") == fill.get("filled")),
+            ("recover", recover.get("strict") == "INVALID_ARGUMENT" and recover.get("ignoreMissing") == ["FIELDS_IGNORED"]
+             and recover.get("restored") == "Ada" and recover.get("defaultValue") == "Ada" and recover.get("wrongType") == "INVALID_ARGUMENT"),
+            ("flatten", flat.get("fields") == 0 and flat.get("formFieldCount") == 0 and flat.get("hits") == ([1] if demo else [1, 2])),
+        ]
+        detail = (f"forms={forms.get('count')} filled={fill.get('filled')}/{fill.get('matched')} warningCodes={fill.get('warningCodes')} "
+                  f"recover={recover} flatten={flat}")
+    elif name == "watermark":
+        pages = 3 if demo else 6
+        numbers, stamp = s.get("pageNumbers") or {}, s.get("stamp") or {}
+        conditions = [(key, (s.get(key) or {}).get("pageCount") == pages) for key in ("watermark", "tile", "image")]
+        conditions += [("pageNumbers", numbers.get("pageCount") == pages and numbers.get("found") is True),
+                       ("stamp", stamp.get("items") == 2 and stamp.get("secondPage") is True)]
+        detail = (f"pages={[(s.get(key) or {}).get('pageCount') for key in ('watermark', 'tile', 'image')]} pageNumbers={numbers} "
+                  f"stamp={stamp}")
+    elif name == "searchable":
+        if s.get("ocrUnavailable"):
+            conditions = [("OCR_UNAVAILABLE hint", "makeSearchable" not in s)]
+            detail = f"no OCR engine: {str(s.get('ocrUnavailable'))[:120]!r}"
+        else:
+            made, read, again, layer = (s.get(key) or {} for key in ("makeSearchable", "read", "again", "addTextLayer"))
+            conditions = [
+                ("makeSearchable", made.get("ocrPages") == 1 and made.get("layerPages") == 1 and (made.get("lines") or 0) >= 1),
+                ("read", read.get("hits") == [1]),
+                ("again", again.get("ocrPages") == 0 and again.get("skippedPages") == 1),
+                ("addTextLayer", layer.get("layerPages") == 1 and 1 <= (layer.get("lines") or 0) <= (layer.get("detected") or 0)),
+            ]
+            detail = (f"makeSearchable={made.get('ocrPages')}/{made.get('layerPages')}/{made.get('lines')} lines {made.get('ms')}ms "
+                      f"read={read} again={again} addTextLayer={layer}")
+    elif name == "compress":
+        low, high, custom = (s.get(key) or {} for key in ("low", "high", "custom"))
+        conditions = [("low", low.get("kept") is True and (low.get("sizeBytes") or 0) < (low.get("sourceBytes") or 0)),
+                      ("high", bool(high.get("sourceBytes"))),
+                      ("custom", custom.get("kept") is True)]
+        detail = "; ".join(f"{key}={v.get('sourceBytes')}->{v.get('sizeBytes')} kept={v.get('kept')} images={v.get('images')}"
+                           for key, v in (("low", low), ("high", high), ("custom", custom)))
+    elif name == "properties":
+        info, outline = s.get("setInfo") or {}, s.get("setOutline") or {}
+        conditions = [("setInfo", info.get("title") == "3-Paper PDF 样例" and info.get("author") == "AutoJs6" and info.get("creator") is None),
+                      ("setOutline", [outline.get("before"), outline.get("after")] == ([0, 2] if demo else [4, 5])
+                       and outline.get("last") == ("正文" if demo else "附录 (样例添加)")),
+                      ("cleared", s.get("cleared") == 0)]
+        detail = f"setInfo={info} setOutline={outline} cleared={s.get('cleared')}"
     else:  # ocr-manual
         manual, auto = s.get("manual") or {}, s.get("auto") or {}
         if "code" in auto:
@@ -286,12 +351,23 @@ def check_node(serial, checks, args, scratch):
     if s is None:
         for line in console_errors(serial):
             print(f"INFO console {line}")
-    text, merge = (s or {}).get("text") or {}, (s or {}).get("merge") or {}
+    text, merge, v110 = (s or {}).get("text") or {}, (s or {}).get("merge") or {}, (s or {}).get("v110") or {}
     checks.judge("node", s, [("text", text.get("pages") == [1, 2] and text.get("sources") == ["text", "text"]),
                              ("render", bool((s or {}).get("render"))),
                              ("merge", merge.get("pageCount") == 12 and (merge.get("outline") or [None])[0] == "First copy"),
-                             ("cancel", (s or {}).get("cancel") in ("CANCELLED", "finished"))],
-                 f"text={text} render={(s or {}).get('render')} merge={merge} cancel={(s or {}).get('cancel')}")
+                             ("cancel", (s or {}).get("cancel") in ("CANCELLED", "finished")),
+                             *v110_conditions(args, v110, [("stamp", v110.get("stamp") == 6),
+                                                           ("setInfo", v110.get("title") == "Node.js sample"),
+                                                           ("compress", isinstance((v110.get("compress") or {}).get("warningCodes"), list)),
+                                                           ("forms", v110.get("fields") == 0 and v110.get("filled") == 2)])],
+                 f"text={text} render={(s or {}).get('render')} merge={merge} cancel={(s or {}).get('cancel')} v110={v110}")
+
+
+def v110_conditions(args, v110, conditions):
+    """The checks of the fifth part (3-Paper PDF 1.1.0) of the Node project and the Bun script. zh-CN: 第 5 段的检查."""
+    if args.old_plugin:
+        return [("v110 UNSUPPORTED hint", bool(v110.get("unsupported")))]
+    return [("v110 supported", not v110.get("unsupported")), *conditions]
 
 
 GRANT_JS = """
@@ -338,13 +414,18 @@ def check_bun(serial, checks, args, scratch, sdk):
                 print(f"INFO console {line}")
     finally:
         set_pdf_grant(serial, before, scratch)
-    text = (s or {}).get("text") or {}
+    text, v110 = (s or {}).get("text") or {}, (s or {}).get("v110") or {}
     checks.judge("bun", s, [("text", text.get("pages") == [1] and text.get("hits") == [2, 5]),
                             ("render", str((s or {}).get("render", "")).startswith("480x")),
                             ("extract", (s or {}).get("extract") == 1),
-                            ("timeout", str((s or {}).get("timeout", "")) in ("finished", "CANCELLED (TimeoutError)"))],
+                            ("timeout", str((s or {}).get("timeout", "")) in ("finished", "CANCELLED (TimeoutError)")),
+                            *v110_conditions(args, v110, [("stamp", v110.get("stamp") == 6),
+                                                          ("setOutline", v110.get("outline") == ["Start", "End"]),
+                                                          ("compress", isinstance((v110.get("compress") or {}).get("warningCodes"), list)),
+                                                          ("formFieldCount", v110.get("formFieldCount") == 0),
+                                                          ("forms", v110.get("fields") == 11 and v110.get("filled") == 1)])],
                  f"text={text} render={(s or {}).get('render')} extract={(s or {}).get('extract')} timeout={(s or {}).get('timeout')} "
-                 f"grant restored to {before}")
+                 f"v110={v110} grant restored to {before}")
 
 
 def main():
@@ -354,6 +435,8 @@ def main():
     parser.add_argument("--view", action="store_true", help="also run pdf-view.js (opens the viewer window)")
     parser.add_argument("--no-demo", action="store_true", help="skip the pass without fixtures")
     parser.add_argument("--keep", action="store_true", help="keep the pushed files and every output")
+    parser.add_argument("--old-plugin", action="store_true",
+                        help="a 1.0.x plugin is installed: the 1.1.0 samples must stop with the UNSUPPORTED hint")
     parser.add_argument("--timeout", type=int, default=300, help="seconds per sample")
     args = parser.parse_args()
     serial = args.serial
