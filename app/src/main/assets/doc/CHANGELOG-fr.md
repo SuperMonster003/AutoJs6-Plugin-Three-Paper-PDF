@@ -8,7 +8,19 @@
 
 ###### 2026/11/20
 
+* `Note` Les nouvelles méthodes de script et l'action "Créer un PDF interrogeable" du gestionnaire de fichiers nécessitent AutoJs6 6.8.1 ou ultérieur, et leur utilisation dans les scripts Node.js ou Bun nécessite aussi Node.js Runtime 2.2.0 ou Bun Runtime 0.23.0 ou ultérieur; les nouveaux outils de la boîte à outils ne dépendent pas d'AutoJs6
+* `Fonctionnalité` pdf.forms et pdf.fillForm lisent les champs de formulaire (champs de texte, cases à cocher, boutons radio, listes déroulantes, zones de liste) et les remplissent par nom de champ, avec aplatissement facultatif en contenu de page ordinaire; pdf.info indique en plus le nombre de champs de formulaire
+* `Fonctionnalité` pdf.watermark et pdf.stamp ajoutent des filigranes texte ou image, des numéros de page, des en-têtes et des pieds de page, avec position, rotation, opacité, mosaïque et pages concernées
+* `Fonctionnalité` pdf.makeSearchable écrit une couche de texte invisible dans les pages numérisées à l'aide d'un plugin OCR, ce qui donne des PDF dont le texte peut être recherché et copié; pdf.addTextLayer écrit les résultats reconnus par le script lui-même
+* `Fonctionnalité` pdf.compress réencode les images intégrées et compresse les flux, peut supprimer les métadonnées, et propose les préréglages low / medium / high ou une résolution et une qualité personnalisées; le résultat indique la taille avant et après
+* `Fonctionnalité` pdf.setInfo modifie les propriétés du document comme le titre, l'auteur, le sujet, les mots-clés et le créateur, et pdf.setOutline réécrit ou supprime le plan dans la forme que renvoie pdf.outline
+* `Fonctionnalité` Chaque nouvelle méthode a une forme Async et une méthode du même nom dans PdfDocument, et fonctionne aussi dans Node.js, Bun et les applications empaquetées par AutoJs6; les résultats des méthodes qui écrivent des fichiers contiennent aussi warningCodes, pour que les scripts traitent les indications par code
+* `Fonctionnalité` La boîte à outils gagne 5 outils, "Ajouter un filigrane au PDF" (avec aperçu d'une page), "Ajouter des numéros de page", "Compresser le PDF", "Remplir le formulaire" et "Propriétés du document", soit 13 en tout; le filigrane, les numéros de page et la compression acceptent aussi des valeurs personnalisées en plus des préréglages
+* `Fonctionnalité` L'écran de résultat des outils et des actions du gestionnaire de fichiers peut écrire le traitement sous forme de script Rhino, Node.js ou Bun, avec "Copier le script", "Enregistrer en .js" et "Ouvrir dans AutoJs6"; les mots de passe restent à null dans le script et sont à remplir vous-même
+* `Fonctionnalité` Le menu PDF du gestionnaire de fichiers d'AutoJs6 gagne "Compresser le PDF" et "Ajouter un filigrane au PDF", qui enregistrent le résultat à côté du fichier d'origine, ainsi que "Créer un PDF interrogeable" à l'aide d'un plugin OCR
 * `Amélioration` La page Historique des versions se développe et se réduit désormais par version: une version réduite affiche sa date et le nombre d'entrées par catégorie, une version développée ne nomme chaque catégorie qu'une fois; toutes les versions peuvent être développées ou réduites d'un coup, et la plus récente s'ouvre développée; la page a pour sous-titre le nom du plugin
+* `Amélioration` Les indications de traitement de l'écran de résultat des outils s'affichent désormais dans la langue de l'interface au lieu de l'anglais seul
+* `Amélioration` Réécriture des instructions affichées dans le centre des plugins en cinq parties: prise en main, fonctionnalités principales, utilisation dans les scripts, prérequis et questions fréquentes
 
 # v1.0.0
 

@@ -1,7 +1,7 @@
 {
   "$name": "简体中文",
   "text_current_lowercase": "当前",
-  "text_plugin_synopsis": "读取, 渲染, 合并, 拆分, 生成与加密 PDF 文件, 内置查看器与文件管理器入口",
+  "text_plugin_synopsis": "读取, 渲染, 合并, 拆分, 生成, 压缩与加密 PDF 文件, 可填写表单与添加水印, 内置查看器与文件管理器入口",
   "h3_languages_with_ascii": "语言 (Languages)",
   "p_languages_all_supported_for_readme": "当前 README.md 支持以下语言",
   "h3_introduction": "简介",
@@ -23,7 +23,7 @@
   "h3_links": "相关链接",
   "text_link_autojs6": "AutoJs6 项目",
   "p_roadmap": "功能规划, 设计决策与完成情况以可勾选清单维护在 ROADMAP.md 中. 未勾选条目表示规划意向, 不代表当前版本能力.",
-  "p_introduction_what": "3-Paper PDF 是 AutoJs6 的 PDF 插件, 也是不装 AutoJs6 也能单独使用的 PDF 工具箱与查看器. 它可以读取 PDF 的信息, 文本, 大纲与内嵌图片, 把页面渲染为图片; 可以合并, 拆分, 抽取, 删除, 重排与旋转页面; 可以把图片, 文本或 HTML 生成为 PDF, 并对文档加密或解密.",
+  "p_introduction_what": "3-Paper PDF 是 AutoJs6 的 PDF 插件, 也是不装 AutoJs6 也能单独使用的 PDF 工具箱与查看器. 它可以读取 PDF 的信息, 文本, 大纲与内嵌图片, 把页面渲染为图片; 可以合并, 拆分, 抽取, 删除, 重排与旋转页面; 可以把图片, 文本或 HTML 生成为 PDF, 并对文档加密或解密. 1.1.0 起还可以读取与填写表单, 添加水印, 页码与页眉页脚, 借助 OCR 插件生成可搜索 PDF, 压缩文件体积, 以及修改文档属性与书签.",
   "p_introduction_how": "处理在插件内用 Android 系统的 `PdfRenderer` 与纯 Java 的 PDFBox-Android 完成, AutoJs6 宿主因此保持精简. AutoJs6 脚本通过全局模块 `pdf` 使用这些功能, Node.js 与 Bun 运行时插件中的脚本也可以使用; 脚本传入的路径由 AutoJs6 打开后交给插件, 插件处理脚本文件不需要存储权限. 插件自带查看器, 可以从启动器, AutoJs6 的文件管理器, 其他应用的 \"打开方式\" 或脚本 (`pdf.view`) 打开.",
   "p_status_note": "AutoJs6 脚本的 `pdf` 模块与文件管理器入口需要 AutoJs6 {{ required_host_version_name }} (内部版本号 {{ required_host_version_code }}) 或更高版本, 较旧的 AutoJs6 在插件中心会把本插件显示为不兼容; 工具箱与查看器不依赖 AutoJs6, 可以单独使用.",
   "features": [
@@ -32,9 +32,14 @@
     "页面操作: 合并 (保留书签), 拆分, 抽取, 删除, 重排与旋转页面; 页码从 1 开始, 范围写作 `'1-3,5,8-'`.",
     "生成: 图片转 PDF (JPEG 直接嵌入, 不重新编码), 文本转 PDF (可指定字体), HTML 转 PDF (不加载远程网址).",
     "加密: 用密码打开加密文档, 以 AES-256 加密并设置权限, 去除加密.",
+    "表单: 列出表单字段 (文本框, 复选框, 单选按钮, 组合框与列表框) 及其当前值, 按字段名填写, 可选拼合为普通页面内容; `pdf.info` 返回表单字段数.",
+    "水印与页码: 添加文字或图片水印, 页码, 页眉与页脚, 可以设置位置, 旋转, 不透明度, 平铺与适用的页; 文字中可用 `{page}`, `{total}`, `{date}` 与 `{name}` 占位.",
+    "可搜索 PDF: 借助 OCR 插件识别扫描页并写入不可见的文字层, 之后可以搜索, 选择与复制文字, 再次读取文本也不必重新识别; 脚本自己识别的结果可以用 `pdf.addTextLayer` 写入.",
+    "压缩: 按设定的分辨率与画质重新编码内嵌图片, 压缩未压缩的数据流, 可选移除元数据; 提供 low / medium / high 三档预设, 也可以自定义数值, 结果给出压缩前后的大小.",
+    "文档属性与书签: 修改标题, 作者, 主题, 关键词与创建程序; 读出书签 (大纲) 修改后写回, 或全部清除.",
     "查看器: 连续滚动, 双指缩放, 缩略图, 大纲, 搜索高亮, 跳页, 密码输入与夜间模式; 其他应用可以用 \"打开方式\" 或分享把 PDF 交给它; 脚本可以打开查看器并接收翻页与关闭事件.",
-    "工具箱: 合并, 拆分, 转图片, 图片转 PDF, 加密, 解密, 提取文本与页面整理 8 项工具, 任务在后台依次执行, 通知栏显示进度; 最近文件也会记住用系统文件选择器打开的文件.",
-    "AutoJs6 文件管理器: 点按 PDF 即在插件查看器中打开, 压缩包内不超过 512 MiB 的 PDF 也能直接打开; 菜单提供合并, 拆分, 转图片, 提取文本, 加密与移除密码.",
+    "工具箱: 合并, 拆分, 转图片, 图片转 PDF, 加密, 解密, 提取文本, 页面整理, 添加水印 (带预览), 添加页码, 压缩, 填写表单与文档属性 13 项工具, 水印, 页码与压缩可以自定义数值; 任务在后台依次执行, 通知栏显示进度; 结果页可以把这次处理写成 Rhino, Node.js 或 Bun 脚本; 最近文件也会记住用系统文件选择器打开的文件.",
+    "AutoJs6 文件管理器: 点按 PDF 即在插件查看器中打开, 压缩包内不超过 512 MiB 的 PDF 也能直接打开; 菜单提供合并, 拆分, 压缩, 转图片, 添加水印, 提取文本, 加密与移除密码, 还可以借助 OCR 插件生成可搜索 PDF.",
     "OCR: `pdf.text(path, { ocr: true })` 借助已安装的 OCR 插件 (ML Kit OCR, Paddle OCR 或 Rapid OCR) 识别没有文本层的扫描页.",
     "Node.js 与 Bun: Node.js Runtime 2.2.0 与 Bun Runtime 0.23.0 起提供同样的 `pdf` 模块, 方法返回 Promise, 可以用 `signal` 或 `timeoutMs` 中止调用."
   ],
@@ -47,11 +52,31 @@
   "compatibility_points": [
     "Android {{ min_android_version }} (API {{ android_min_sdk }}) 及以上, 所有 ABI 共用一个安装包; 工具箱与查看器不依赖 AutoJs6.",
     "AutoJs6 脚本与文件管理器: 需要 AutoJs6 {{ required_host_version_name }} (内部版本号 {{ required_host_version_code }}) 或更高版本.",
+    "1.1.0 新增的脚本方法 (表单, 水印与页码, 可搜索 PDF, 压缩, 文档属性与书签): 需要 AutoJs6 {{ required_host_version_name }} 或更高版本与本插件 1.1.0 或更高版本, Node.js Runtime 与 Bun Runtime 的版本要求与其他方法相同; 插件仍为 1.0.x 时这些方法报 `UNSUPPORTED` 并提示到插件中心更新, 不写出文件, 其他方法照常可用.",
     "AutoJs6 打包的应用: 需由 AutoJs6 {{ required_host_version_name }} (内部版本号 {{ required_host_version_code }}) 或更高版本打包, 运行的设备上需安装本插件; 打包时自动加入 `org.autojs.plugin.pdf.permission.RUNTIME` 权限, 不需要修改 `project.json` (Node.js 项目需声明 `files`, Bun 项目需声明 `pdf.control`).",
     "Node.js: 需要 Node.js Runtime 插件 2.2.0 及以上, 用 `require('autojs6:pdf')` 加载; 项目在 `project.json` 的 `node.permissions` 中声明 `files`, 写文件另需 `files.write`, 识别文字另需 `ocr`, 打开查看器另需 `ui`.",
     "Bun: 需要 Bun Runtime 插件 0.23.0 及以上 (Android 13 及以上), 通过 `host.pdf` 使用; 在 Bun Runtime 的设置页开启 `pdf.control`, 识别文字另需 `ocr.control`.",
-    "OCR: 识别扫描页文字需另装 OCR 插件 (ML Kit OCR, Paddle OCR 或 Rapid OCR); 未安装时识别扫描页报 `OCR_UNAVAILABLE`, 其他功能不受影响."
+    "OCR: 识别扫描页文字与生成可搜索 PDF 需另装 OCR 插件 (ML Kit OCR, Paddle OCR 或 Rapid OCR); 未安装时这两项报 `OCR_UNAVAILABLE`, 其他功能不受影响."
   ],
+  "p_compatibility_matrix": "各版本的运行要求与功能范围",
+  "text_matrix_item": "项目",
+  "text_matrix_android": "{{ min_android_version }} (API {{ android_min_sdk }}) 及以上",
+  "text_matrix_autojs6_v1_0": "6.8.1 (内部版本号 6641) 及以上",
+  "text_matrix_autojs6_v1_1": "{{ required_host_version_name }} (内部版本号 {{ required_host_version_code }}) 及以上",
+  "text_matrix_node": "2.2.0 及以上",
+  "text_matrix_bun": "0.23.0 及以上 (Android 13 及以上)",
+  "text_matrix_ocr_label": "OCR 插件 (可选)",
+  "text_matrix_ocr_v1_0": "识别扫描页",
+  "text_matrix_ocr_v1_1": "识别扫描页, 生成可搜索 PDF",
+  "text_matrix_script_label": "脚本方法",
+  "text_matrix_script_v1_0": "读取, 渲染, 页面操作, 生成, 加密, OCR, 查看器",
+  "text_matrix_script_v1_1": "另加表单, 水印与页码, 可搜索 PDF, 压缩, 文档属性与书签",
+  "text_matrix_toolbox_label": "工具箱",
+  "text_matrix_toolbox_v1_0": "8 项工具",
+  "text_matrix_toolbox_v1_1": "13 项工具, 可自定义数值, 可生成脚本",
+  "text_matrix_explorer_label": "AutoJs6 文件管理器菜单",
+  "text_matrix_explorer_v1_0": "6 项",
+  "text_matrix_explorer_v1_1": "9 项 (另加压缩, 添加水印, 生成可搜索 PDF)",
   "p_script_api_intro": "AutoJs6 脚本通过全局模块 `pdf` (也可写作 `$pdf`) 使用这些功能 (完整说明见 [AutoJs6 文档 > PDF](https://docs.autojs6.com/#/pdf))",
   "p_script_api_node": "Node.js 与 Bun 中同名方法返回 Promise (Bun 通过 `host.pdf` 使用)",
   "api_points": [
@@ -59,6 +84,7 @@
     "每个方法都有阻塞形态与返回 Promise 的 `xxxAsync` 形态, 二者参数与结果相同; 阻塞形态不能在 UI 线程调用 (报 `INVALID_ARGUMENT`), 界面脚本请用 `xxxAsync`; 写文件的方法接受 `onProgress`, Promise 带 `cancel()`; 取消或停止脚本时不会留下写了一半的文件.",
     "`pdf.merge` 的 `displayNames` 为每个输入的书签项命名: `null` 取文件名 (去掉 `.pdf`), 空白字符串取该文档的标题 (没有标题时为 `Document <n>`); 选项超过约 63 KiB 时报 `LIMIT_EXCEEDED`, 不写输出.",
     "`pdf.fromHtml` 默认执行页面中的脚本, `javaScript: false` 可关闭; 不加载任何外部内容, 网络请求以空内容应答并记入 `warnings`.",
+    "1.1.0 的写出方法 (例如 `pdf.fillForm`, `pdf.stamp`, `pdf.compress`) 与其他写出方法一样可以省略输出路径 (或传 `null`), 结果写到 `Documents/3-Paper PDF/`; `PdfDocument` 的同名方法沿用打开时的密码, 选项中不能再写 `password`; 写出文件的结果另有与 `warnings` 一一对应的 `warningCodes`, 便于脚本按代码处理.",
     "`pdf.view(path, options)` 打开查看器并返回 `PdfViewSession`, 可监听 `page` / `close` 事件, 调用 `goTo(page)`, `state()`, `close()`; AutoJs6 不在前台时 (Android 10 及以上且没有悬浮窗权限) 报 `UI_REQUIRES_FOREGROUND`.",
     "Node.js 与 Bun: 全部方法返回 Promise; `signal` (AbortSignal) 与 `timeoutMs` 中止调用, 都以 `CANCELLED` 拒绝, 超时的 `cause` 为 `TimeoutError`; `timeoutMs` 须为大于 0 且不超过 2147483647 的有限数, 小数向上取整.",
     "失败时抛出 `PdfError`, 其 `code` 为稳定的错误码, 例如 `PASSWORD_REQUIRED`, `WRONG_PASSWORD` 或 `PAGE_OUT_OF_RANGE`; `pdf.isAvailable()` 可以预先探测插件是否可用."
@@ -87,6 +113,14 @@
     {
       "q": "最近文件里的文件打不开了怎么办?",
       "a": "用系统文件选择器打开的文件会保留读取授权, 重启后仍能直接打开. 文件被删除, 移动或授权被撤销后, 点按该条会给出提示并把它从列表中移除, 请用 \"打开 PDF\" 重新选择."
+    },
+    {
+      "q": "填写的表单值在查看器里看不到?",
+      "a": "在 Android 14 及以下的系统上, 插件查看器只有拼合后才会显示填写的值, 其他 PDF 应用不受影响. 需要在查看器中查看时, 填写时开启拼合 (`flatten: true`, 或 \"填写表单\" 工具中的 \"拼合字段\"); 拼合后的字段无法再编辑."
+    },
+    {
+      "q": "压缩后的文件为什么没有变小?",
+      "a": "压缩主要缩小内嵌图片. 图片已经足够小, 或者是插件不重新编码的类型 (例如 JPEG 2000, CMYK 或 1 位图片) 时效果有限; 结果不比原文件小时仍会写出, 并在结果中给出提示, 可以保留原文件."
     }
   ],
   "p_security_intro": "插件在设计上尽量收窄权限面:",
@@ -101,7 +135,7 @@
   "p_engine": "页面渲染使用 Android 系统的 `PdfRenderer`; 文本, 大纲, 图片, 页面操作与加密使用 [PDFBox-Android](https://github.com/TomRoush/PdfBox-Android) (Apache-2.0, 纯 Java), 加密依赖 Bouncy Castle (MIT 式许可). PDF 处理不包含原生库, 不使用 pdfium 或 MuPDF 等原生渲染库.",
   "p_license": "项目代码使用 [Mozilla Public License 2.0]({{ license_url }}). 第三方组件与数据的许可见第三方声明.",
   "text_link_third_party": "第三方声明 (THIRD_PARTY_NOTICES.md)",
-  "instruction_p_what": "3-Paper PDF 为 AutoJs6 脚本提供 `pdf` 模块, 用于读取, 渲染, 合并, 拆分, 生成与加密 PDF 文件. 它同时是可以单独使用的 PDF 查看器与工具箱, 无需安装 AutoJs6.",
+  "instruction_p_what": "3-Paper PDF 为 AutoJs6 脚本提供 `pdf` 模块, 用于读取, 渲染, 合并, 拆分, 生成与加密 PDF 文件, 还能填写表单, 添加水印与页码, 压缩文件体积. 它同时是可以单独使用的 PDF 查看器与工具箱, 无需安装 AutoJs6.",
   "instruction_h3_start": "开始使用",
   "instruction_start_steps": [
     "在 AutoJs6 脚本中直接使用全局模块 `pdf`, 示例见下文.",
@@ -114,10 +148,11 @@
     "**渲染**: 把页面渲染为图像对象或 PNG / JPEG / WebP 文件, 可以按 dpi, 缩放比例或目标宽高指定尺寸.",
     "**页面操作**: 合并 (保留书签), 拆分, 抽取, 删除, 重排与旋转页面.",
     "**生成与加密**: 把图片, 文本或 HTML 生成为 PDF; 为文档设置密码与权限, 或去除密码.",
-    "**扫描页识别**: 借助已安装的 OCR 插件识别没有文本层的扫描页.",
+    "**编辑**: 填写表单, 添加水印, 页码与页眉页脚, 压缩文件体积, 修改标题, 作者等文档属性与书签.",
+    "**扫描页识别**: 借助已安装的 OCR 插件识别没有文本层的扫描页, 也可以为扫描件写入文字层, 生成可搜索的 PDF.",
     "**查看器**: 连续滚动, 双指缩放, 缩略图, 大纲, 搜索高亮, 跳页与夜间模式. 其他应用可以通过 \"打开方式\" 或分享把 PDF 交给它.",
-    "**工具箱**: 合并, 拆分, 转图片, 图片转 PDF, 加密, 解密, 提取文本与页面整理. 任务在后台依次执行, 通知栏显示进度.",
-    "**AutoJs6 文件管理器**: 点按 PDF 即用查看器打开, 压缩包内的 PDF 也可直接打开; 文件菜单提供合并, 拆分, 转图片, 提取文本, 加密与移除密码."
+    "**工具箱**: 合并, 拆分, 压缩, 添加水印等 13 项工具, 处理完成后可以把同样的处理写成脚本. 任务在后台依次执行, 通知栏显示进度.",
+    "**AutoJs6 文件管理器**: 点按 PDF 即用查看器打开, 压缩包内的 PDF 也可直接打开; 文件菜单提供合并, 拆分, 压缩, 添加水印等处理, 还可以生成可搜索 PDF."
   ],
   "instruction_h3_script": "在脚本中使用",
   "instruction_p_script": "在 AutoJs6 脚本中直接使用全局模块 `pdf`. 页码从 1 开始, 页码范围写作 `'1-3,5,8-'`:",
@@ -133,7 +168,7 @@
     "工具箱与从启动器打开的查看器需要所有文件访问权限, 脚本处理文件不需要插件的这项权限.",
     "AutoJs6 打包的应用同样可以使用 `pdf` 模块: 需由 AutoJs6 {{ required_host_version_name }} 或更高版本打包, 运行的设备上需安装本插件.",
     "Node.js 脚本需要 Node.js Runtime 插件 2.2.0 或更高版本, 并在 `project.json` 的 `node.permissions` 中声明 `files`; Bun 脚本需要 Bun Runtime 插件 0.23.0 或更高版本 (Android 13 及以上), 并在其设置页开启 `pdf.control`.",
-    "识别扫描页的文字需要另行安装 OCR 插件 (ML Kit OCR, Paddle OCR 或 Rapid OCR)."
+    "识别扫描页的文字与生成可搜索 PDF 需要另行安装 OCR 插件 (ML Kit OCR, Paddle OCR 或 Rapid OCR)."
   ],
   "instruction_h3_faq": "常见问题",
   "instruction_faq": [
@@ -148,6 +183,10 @@
     {
       "q": "最近文件中的文件无法打开时的处理",
       "a": "文件被删除, 移动或访问授权被撤销后, 点按该条目会给出提示并将其从列表中移除. 请通过 \"打开 PDF\" 重新选择."
+    },
+    {
+      "q": "填写的表单值在查看器中不显示的原因",
+      "a": "在 Android 14 及以下的系统上, 内置查看器只有拼合后才会显示填写的值, 其他 PDF 应用不受影响. 需要在查看器中查看时, 填写时选择 \"拼合字段\"."
     }
   ],
   "instruction_p_more": "完整的脚本说明见 [AutoJs6 文档 > PDF](https://docs.autojs6.com/#/pdf), 其他信息见 [项目主页]({{ repo_url }})."

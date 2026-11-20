@@ -49,7 +49,7 @@
     <string name="notification_task_failed">%1$s: не завершено</string>
     <string name="notification_tasks_queued">В очереди: %1$d</string>
     <string name="notification_tasks_title">Обработка PDF</string>
-    <string name="plugin_description">Чтение, отрисовка, объединение, разделение, создание и шифрование PDF-файлов, встроенный просмотрщик и пункты в файловом менеджере</string>
+    <string name="plugin_description">Чтение, отрисовка, объединение, разделение, создание, сжатие и шифрование PDF-файлов, заполнение форм и водяные знаки, встроенный просмотрщик и пункты в файловом менеджере</string>
     <string name="release_history">История выпусков</string>
     <string name="release_history_collapse_all">Свернуть всё</string>
     <string name="release_history_collapsed">Свёрнуто</string>

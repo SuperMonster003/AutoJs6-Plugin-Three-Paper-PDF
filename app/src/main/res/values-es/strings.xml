@@ -49,7 +49,7 @@
     <string name="notification_task_failed">%1$s: no completado</string>
     <string name="notification_tasks_queued">En cola: %1$d</string>
     <string name="notification_tasks_title">Procesando PDF</string>
-    <string name="plugin_description">Lectura, renderizado, combinación, división, generación y cifrado de archivos PDF, con visor integrado y entradas en el gestor de archivos</string>
+    <string name="plugin_description">Lectura, renderizado, combinación, división, generación, compresión y cifrado de archivos PDF, relleno de formularios y marcas de agua, con visor integrado y entradas en el gestor de archivos</string>
     <string name="release_history">Historial de versiones</string>
     <string name="release_history_collapse_all">Contraer todo</string>
     <string name="release_history_collapsed">Contraído</string>

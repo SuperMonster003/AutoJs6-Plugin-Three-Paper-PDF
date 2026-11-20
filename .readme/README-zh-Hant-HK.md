@@ -8,7 +8,7 @@
     </picture>
   </p>
 
-  <p>讀取, 渲染, 合併, 拆分, 生成與加密 PDF 檔案, 內置檢視器與檔案管理器入口</p>
+  <p>讀取, 渲染, 合併, 拆分, 生成, 壓縮與加密 PDF 檔案, 可填寫表格與加上水印, 內置檢視器與檔案管理器入口</p>
 
   <p>
     <a href="https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Paper-PDF/releases"><img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/SuperMonster003/AutoJs6-Plugin-Three-Paper-PDF?label=Release"/></a>
@@ -42,7 +42,7 @@
 
 ******
 
-3-Paper PDF 是 AutoJs6 的 PDF 插件, 也是不安裝 AutoJs6 也能單獨使用的 PDF 工具箱與檢視器. 它可以讀取 PDF 的資訊, 文字, 大綱與內嵌圖片, 把頁面渲染為圖片; 可以合併, 拆分, 抽取, 刪除, 重排與旋轉頁面; 可以把圖片, 文字或 HTML 生成為 PDF, 並為文件加密或解密.
+3-Paper PDF 是 AutoJs6 的 PDF 插件, 也是不安裝 AutoJs6 也能單獨使用的 PDF 工具箱與檢視器. 它可以讀取 PDF 的資訊, 文字, 大綱與內嵌圖片, 把頁面渲染為圖片; 可以合併, 拆分, 抽取, 刪除, 重排與旋轉頁面; 可以把圖片, 文字或 HTML 生成為 PDF, 並為文件加密或解密. 1.1.0 起還可以讀取與填寫表格, 加上水印, 頁碼與頁眉頁腳, 借助 OCR 插件生成可搜索 PDF, 壓縮檔案體積, 以及修改文件屬性與書籤.
 
 處理在插件內以 Android 系統的 `PdfRenderer` 與純 Java 的 PDFBox-Android 完成, AutoJs6 主程式因此保持精簡. AutoJs6 腳本透過全域模組 `pdf` 使用這些功能, Node.js Runtime 與 Bun Runtime 插件中的腳本也可以使用; 腳本傳入的路徑由 AutoJs6 開啟後交給插件, 插件處理腳本檔案不需要儲存權限. 插件內置檢視器, 可以從啟動器, AutoJs6 的檔案管理器, 其他應用程式的 "開啟方式" 或腳本 (`pdf.view`) 開啟.
 
@@ -59,9 +59,14 @@
 - 頁面操作: 合併 (保留書籤), 拆分, 抽取, 刪除, 重排與旋轉頁面; 頁碼從 1 開始, 範圍寫作 `'1-3,5,8-'`.
 - 生成: 圖片轉 PDF (JPEG 直接嵌入, 不重新編碼), 文字轉 PDF (可指定字型), HTML 轉 PDF (不載入遠端網址).
 - 加密: 以密碼開啟加密文件, 以 AES-256 加密並設定權限, 移除加密.
+- 表格: 列出表格欄位 (文字框, 勾選框, 單選按鈕, 組合框與清單框) 及其目前的值, 按欄位名稱填寫, 可選擇平面化為普通頁面內容; `pdf.info` 傳回表格欄位數.
+- 水印與頁碼: 加上文字或圖片水印, 頁碼, 頁眉與頁腳, 可以設定位置, 旋轉, 不透明度, 平鋪與適用的頁面; 文字中可用 `{page}`, `{total}`, `{date}` 與 `{name}` 佔位.
+- 可搜索 PDF: 借助 OCR 插件識別掃描頁並寫入不可見的文字層, 之後可以搜尋, 選取與複製文字, 再次讀取文字也不必重新識別; 腳本自行識別的結果可以用 `pdf.addTextLayer` 寫入.
+- 壓縮: 按設定的解像度與品質重新編碼內嵌圖片, 壓縮未壓縮的資料流, 可選擇移除元數據; 提供 low / medium / high 三檔預設, 亦可以自訂數值, 結果列出壓縮前後的大小.
+- 文件屬性與書籤: 修改標題, 作者, 主題, 關鍵字與建立程式; 讀出書籤 (大綱) 修改後寫回, 或全部清除.
 - 檢視器: 連續捲動, 雙指縮放, 縮圖, 大綱, 搜尋醒目標示, 跳頁, 密碼輸入與夜間模式; 其他應用程式可以用 "開啟方式" 或分享把 PDF 交給它; 腳本可以開啟檢視器並接收翻頁與關閉事件.
-- 工具箱: 合併, 拆分, 轉圖片, 圖片轉 PDF, 加密, 解密, 擷取文字與頁面整理 8 項工具, 任務在背景依次執行, 通知欄顯示進度; 最近檔案也會記住用系統檔案選擇器開啟的檔案.
-- AutoJs6 檔案管理器: 點按 PDF 即在插件檢視器中開啟, 壓縮檔內不超過 512 MiB 的 PDF 也能直接開啟; 選單提供合併, 拆分, 轉圖片, 擷取文字, 加密與移除密碼.
+- 工具箱: 合併, 拆分, 轉圖片, 圖片轉 PDF, 加密, 解密, 擷取文字, 頁面整理, 加上水印 (附預覽), 加上頁碼, 壓縮, 填寫表格與文件屬性 13 項工具, 水印, 頁碼與壓縮可以自訂數值; 任務在背景依次執行, 通知欄顯示進度; 結果頁可以把這次處理寫成 Rhino, Node.js 或 Bun 腳本; 最近檔案也會記住用系統檔案選擇器開啟的檔案.
+- AutoJs6 檔案管理器: 點按 PDF 即在插件檢視器中開啟, 壓縮檔內不超過 512 MiB 的 PDF 也能直接開啟; 選單提供合併, 拆分, 壓縮, 轉圖片, 加上水印, 擷取文字, 加密與移除密碼, 亦可以借助 OCR 插件生成可搜索 PDF.
 - OCR: `pdf.text(path, { ocr: true })` 借助已安裝的 OCR 插件 (ML Kit OCR, Paddle OCR 或 Rapid OCR) 識別沒有文字層的掃描頁.
 - Node.js 與 Bun: Node.js Runtime 2.2.0 與 Bun Runtime 0.23.0 起提供同樣的 `pdf` 模組, 方法傳回 Promise, 可以用 `signal` 或 `timeoutMs` 中止呼叫.
 
@@ -85,10 +90,24 @@
 
 - Android 7.0 (API 24) 或以上, 所有 ABI 共用一個安裝套件; 工具箱與檢視器不依賴 AutoJs6.
 - AutoJs6 腳本與檔案管理器: 需要 AutoJs6 6.8.1 (內部版本號 6641) 或更新版本.
+- 1.1.0 新增的腳本方法 (表格, 水印與頁碼, 可搜索 PDF, 壓縮, 文件屬性與書籤): 需要 AutoJs6 6.8.1 或更新版本與本插件 1.1.0 或更新版本, Node.js Runtime 與 Bun Runtime 的版本要求與其他方法相同; 插件仍為 1.0.x 時這些方法會報 `UNSUPPORTED` 並提示到插件中心更新, 不會寫出檔案, 其他方法照常可用.
 - AutoJs6 打包的應用程式: 需由 AutoJs6 6.8.1 (內部版本號 6641) 或更新版本打包, 執行的裝置上需安裝本插件; 打包時自動加入 `org.autojs.plugin.pdf.permission.RUNTIME` 權限, 不需要修改 `project.json` (Node.js 專案需聲明 `files`, Bun 專案需聲明 `pdf.control`).
 - Node.js: 需要 Node.js Runtime 插件 2.2.0 或以上, 以 `require('autojs6:pdf')` 載入; 專案在 `project.json` 的 `node.permissions` 中聲明 `files`, 寫入檔案另需 `files.write`, 識別文字另需 `ocr`, 開啟檢視器另需 `ui`.
 - Bun: 需要 Bun Runtime 插件 0.23.0 或以上 (Android 13 或以上), 透過 `host.pdf` 使用; 在 Bun Runtime 的設定頁開啟 `pdf.control`, 識別文字另需 `ocr.control`.
-- OCR: 識別掃描頁文字需另外安裝 OCR 插件 (ML Kit OCR, Paddle OCR 或 Rapid OCR); 未安裝時識別掃描頁會報 `OCR_UNAVAILABLE`, 其他功能不受影響.
+- OCR: 識別掃描頁文字與生成可搜索 PDF 需另外安裝 OCR 插件 (ML Kit OCR, Paddle OCR 或 Rapid OCR); 未安裝時這兩項會報 `OCR_UNAVAILABLE`, 其他功能不受影響.
+
+各版本的運行要求與功能範圍:
+
+| 項目 | 1.0.0 | 1.1.0 |
+| --- | --- | --- |
+| Android | 7.0 (API 24) 或以上 | 7.0 (API 24) 或以上 |
+| AutoJs6 | 6.8.1 (內部版本號 6641) 或以上 | 6.8.1 (內部版本號 6641) 或以上 |
+| Node.js Runtime | 2.2.0 或以上 | 2.2.0 或以上 |
+| Bun Runtime | 0.23.0 或以上 (Android 13 或以上) | 0.23.0 或以上 (Android 13 或以上) |
+| OCR 插件 (可選) | 識別掃描頁 | 識別掃描頁, 生成可搜索 PDF |
+| 腳本方法 | 讀取, 渲染, 頁面操作, 生成, 加密, OCR, 檢視器 | 另加表格, 水印與頁碼, 可搜索 PDF, 壓縮, 文件屬性與書籤 |
+| 工具箱 | 8 項工具 | 13 項工具, 可自訂數值, 可生成腳本 |
+| AutoJs6 檔案管理器選單 | 6 項 | 9 項 (另加壓縮, 加上水印, 生成可搜索 PDF) |
 
 ******
 
@@ -119,6 +138,13 @@ pdf.fromText(files.read("./notes.txt"), "./notes.pdf", { fontSize: 14 });
 pdf.fromHtml("<h1>Report</h1><p>Hello</p>", "./report.pdf");
 pdf.encrypt("./report.pdf", "./report-locked.pdf", { userPassword: "open", ownerPassword: "owner", permissions: { print: true, copy: false } });
 
+// 1.1.0
+pdf.fillForm("./form.pdf", "./form-filled.pdf", { "applicant.name": "AutoJs6", "applicant.agree": true }, { flatten: true });
+pdf.watermark("./report.pdf", "./report-draft.pdf", { text: "DRAFT" });
+pdf.stamp("./report.pdf", "./report-numbered.pdf", { pageNumbers: { format: "{page} / {total}" } });
+pdf.compress("./photos.pdf", "./photos-small.pdf", { preset: "low" });
+pdf.setInfo("./report.pdf", "./report-info.pdf", { title: "Report", author: "AutoJs6" });
+
 let session = pdf.view("./book.pdf", { page: 5, search: "AutoJs6" });
 session.on("page", (e) => console.log("page", e.page));
 session.on("close", () => console.log("closed"));
@@ -145,6 +171,7 @@ const pdf = require("autojs6:pdf");
 - 每個方法都有阻塞形式與傳回 Promise 的 `xxxAsync` 形式, 兩者參數與結果相同; 阻塞形式不能在 UI 執行緒呼叫 (報 `INVALID_ARGUMENT`), 介面腳本請用 `xxxAsync`; 寫入檔案的方法接受 `onProgress`, Promise 帶有 `cancel()`; 取消或停止腳本時不會留下寫了一半的檔案.
 - `pdf.merge` 的 `displayNames` 為每個輸入的書籤項命名: `null` 取檔案名稱 (去掉 `.pdf`), 空白字串取該文件的標題 (沒有標題時為 `Document <n>`); 選項超過約 63 KiB 時報 `LIMIT_EXCEEDED`, 不寫入輸出.
 - `pdf.fromHtml` 預設執行頁面中的腳本, `javaScript: false` 可關閉; 不載入任何外部內容, 網絡請求以空內容回應並記入 `warnings`.
+- 1.1.0 的寫出方法 (例如 `pdf.fillForm`, `pdf.stamp`, `pdf.compress`) 與其他寫出方法一樣可以省略輸出路徑 (或傳入 `null`), 結果寫到 `Documents/3-Paper PDF/`; `PdfDocument` 的同名方法沿用開啟時的密碼, 選項中不能再寫 `password`; 寫出檔案的結果另有與 `warnings` 一一對應的 `warningCodes`, 方便腳本按代碼處理.
 - `pdf.view(path, options)` 開啟檢視器並傳回 `PdfViewSession`, 可以監聽 `page` / `close` 事件, 呼叫 `goTo(page)`, `state()`, `close()`; AutoJs6 不在前台時 (Android 10 或以上且沒有懸浮窗權限) 報 `UI_REQUIRES_FOREGROUND`.
 - Node.js 與 Bun: 全部方法傳回 Promise; `signal` (AbortSignal) 與 `timeoutMs` 可中止呼叫, 均以 `CANCELLED` 拒絕, 逾時的 `cause` 為 `TimeoutError`; `timeoutMs` 須為大於 0 且不超過 2147483647 的有限數, 小數向上取整.
 - 失敗時拋出 `PdfError`, 其 `code` 為穩定的錯誤碼, 例如 `PASSWORD_REQUIRED`, `WRONG_PASSWORD` 或 `PAGE_OUT_OF_RANGE`; `pdf.isAvailable()` 可以預先探測插件是否可用.
@@ -178,6 +205,14 @@ PDF 處理不使用原生程式庫: 頁面渲染使用系統的 `PdfRenderer`, �
 #### 最近檔案中的檔案開不了怎麼辦?
 
 用系統檔案選擇器開啟的檔案會保留讀取授權, 重新啟動後仍能直接開啟. 檔案被刪除, 移動或授權被撤銷後, 點按該項目會顯示提示並將它從清單中移除, 請用 "開啟 PDF" 重新選擇.
+
+#### 填寫的表格值在檢視器中為甚麼看不到?
+
+在 Android 14 或更早版本上, 插件檢視器只有平面化後才會顯示填寫的值, 其他 PDF 應用程式不受影響. 需要在檢視器中查看時, 填寫時開啟平面化 (`flatten: true`, 或 "填寫表格" 工具中的 "平面化欄位"); 平面化後的欄位無法再編輯.
+
+#### 壓縮後的檔案為甚麼沒有變小?
+
+壓縮主要是縮小內嵌圖片. 圖片已經足夠小, 或者是插件不會重新編碼的類型 (例如 JPEG 2000, CMYK 或 1 位元圖片) 時效果有限; 結果不比原檔案小時仍會寫出, 並在結果中提示, 可以保留原檔案.
 
 ******
 
@@ -243,7 +278,19 @@ native libraries: libandroidx.graphics.path.so of Jetpack Compose only (arm64-v8
 
 _2026/11/20_
 
+- `提示` 新增的腳本方法與檔案管理器的 "生成可搜索 PDF" 需要 AutoJs6 6.8.1 或更新版本, 在 Node.js 或 Bun 腳本中使用另需 Node.js Runtime 2.2.0 或 Bun Runtime 0.23.0 或更新版本; 工具箱的新工具不依賴 AutoJs6
+- `新增` pdf.forms 與 pdf.fillForm: 讀取表格欄位 (文字框, 勾選框, 單選按鈕, 組合框, 清單框) 並按欄位名稱填寫, 可以平面化為普通頁面內容; pdf.info 新增表格欄位數
+- `新增` pdf.watermark 與 pdf.stamp: 加上文字或圖片水印, 頁碼, 頁眉與頁腳, 可設定位置, 旋轉, 不透明度, 平鋪與適用的頁面
+- `新增` pdf.makeSearchable 借助 OCR 插件為掃描頁寫入不可見的文字層, 生成可以搜尋和複製文字的 PDF; pdf.addTextLayer 寫入腳本自行識別的結果
+- `新增` pdf.compress 重新編碼內嵌圖片並壓縮資料流, 可移除元數據, 提供 low / medium / high 三檔預設, 亦可以自訂解像度與品質; 結果列出壓縮前後的大小
+- `新增` pdf.setInfo 修改標題, 作者, 主題, 關鍵字與建立程式等文件屬性, pdf.setOutline 按 pdf.outline 傳回的結構改寫或清除書籤
+- `新增` 新方法都有 Async 形式與 PdfDocument 的同名方法, 在 Node.js, Bun 與 AutoJs6 打包的應用程式中同樣可用; 寫出檔案的結果另有 warningCodes, 方便腳本按代碼處理提示
+- `新增` 工具箱新增 "為 PDF 加上水印" (附單頁預覽), "加上頁碼", "壓縮 PDF", "填寫表格" 與 "文件屬性" 5 項工具, 共 13 項; 水印, 頁碼與壓縮除預設外亦可以輸入自訂數值
+- `新增` 工具箱與檔案管理器動作的結果頁可以把這次處理寫成 Rhino, Node.js 或 Bun 腳本, 並可 "複製腳本", "儲存為 .js" 或 "在 AutoJs6 中開啟"; 腳本中的密碼留作 null, 需自行填寫
+- `新增` AutoJs6 檔案管理器的 PDF 選單新增 "壓縮 PDF" 與 "為 PDF 加上水印", 結果儲存在原檔案旁; 另有借助 OCR 插件的 "生成可搜索 PDF"
 - `優化` 發行歷史頁改為按版本展開或收起: 收起時顯示日期與各類別的項目數, 展開後每個類別只標示一次, 可一次展開或收起全部, 打開時展開最新版本; 頁面標題由 "版本記錄" 改為 "發行歷史", 副標題為插件名稱, 設定頁 "關於" 部分與更新對話框中的入口也隨之改名
+- `優化` 工具結果頁的處理提示改為按介面語言顯示, 此前只顯示英文
+- `優化` 插件中心中的使用說明重新編寫, 分為開始使用, 主要功能, 在腳本中使用, 運行要求與常見問題五部分
 
 #### v1.0.0
 

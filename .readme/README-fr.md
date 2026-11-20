@@ -8,7 +8,7 @@
     </picture>
   </p>
 
-  <p>Lecture, rendu, fusion, découpage, génération et chiffrement de fichiers PDF, avec une visionneuse intégrée et des entrées dans le gestionnaire de fichiers</p>
+  <p>Lecture, rendu, fusion, découpage, génération, compression et chiffrement de fichiers PDF, remplissage de formulaires et ajout de filigranes, avec une visionneuse intégrée et des entrées dans le gestionnaire de fichiers</p>
 
   <p>
     <a href="https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Paper-PDF/releases"><img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/SuperMonster003/AutoJs6-Plugin-Three-Paper-PDF?label=Release"/></a>
@@ -42,7 +42,7 @@ Le README.md actuel prend en charge les langues suivantes:
 
 ******
 
-3-Paper PDF est le plugin PDF d'AutoJs6, et aussi une boîte à outils et une visionneuse PDF qui fonctionnent seules, sans AutoJs6. Il lit les informations, le texte, le plan et les images intégrées d'un PDF et rend les pages en images; il fusionne, découpe, extrait, supprime, réordonne et fait pivoter les pages; il génère des PDF à partir d'images, de texte ou de HTML, et chiffre ou déchiffre les documents.
+3-Paper PDF est le plugin PDF d'AutoJs6, et aussi une boîte à outils et une visionneuse PDF qui fonctionnent seules, sans AutoJs6. Il lit les informations, le texte, le plan et les images intégrées d'un PDF et rend les pages en images; il fusionne, découpe, extrait, supprime, réordonne et fait pivoter les pages; il génère des PDF à partir d'images, de texte ou de HTML, et chiffre ou déchiffre les documents. Depuis la version 1.1.0, il lit et remplit aussi les formulaires, ajoute des filigranes, des numéros de page, des en-têtes et des pieds de page, crée des PDF interrogeables à l'aide d'un plugin OCR, réduit la taille des fichiers et modifie les propriétés du document et le plan.
 
 Le traitement s'exécute dans le plugin avec le `PdfRenderer` d'Android et PDFBox-Android, en pur Java, si bien que l'hôte AutoJs6 reste léger. Les scripts AutoJs6 utilisent ces fonctions via le module global `pdf`, tout comme les scripts des plugins Node.js Runtime et Bun Runtime; AutoJs6 ouvre les chemins transmis par les scripts et les remet au plugin, qui n'a donc besoin d'aucune autorisation de stockage pour traiter les fichiers des scripts. Le plugin possède sa propre visionneuse, que l'on ouvre depuis le lanceur, le gestionnaire de fichiers d'AutoJs6, la commande "Ouvrir avec" d'autres applications ou un script (`pdf.view`).
 
@@ -59,9 +59,14 @@ Le traitement s'exécute dans le plugin avec le `PdfRenderer` d'Android et PDFBo
 - Opérations sur les pages: fusionner (en conservant les signets), découper, extraire, supprimer, réordonner et faire pivoter des pages; les numéros de page commencent à 1 et les plages s'écrivent `'1-3,5,8-'`.
 - Génération: images vers PDF (JPEG intégrés tels quels, sans réencodage), texte vers PDF (avec la police de votre choix) et HTML vers PDF (aucune URL distante n'est chargée).
 - Chiffrement: ouvrir des documents chiffrés avec un mot de passe, chiffrer en AES-256 et définir les autorisations, retirer le chiffrement.
+- Formulaires: lister les champs du formulaire (champs de texte, cases à cocher, boutons radio, listes déroulantes et zones de liste) avec leurs valeurs actuelles, les remplir par nom de champ et, au choix, les aplatir en contenu de page ordinaire; `pdf.info` renvoie le nombre de champs de formulaire.
+- Filigranes et numéros de page: ajouter des filigranes texte ou image, des numéros de page, des en-têtes et des pieds de page, avec position, rotation, opacité, mosaïque et pages concernées; les textes peuvent utiliser les espaces réservés `{page}`, `{total}`, `{date}` et `{name}`.
+- PDF interrogeable: reconnaître les pages numérisées à l'aide d'un plugin OCR et écrire une couche de texte invisible, pour que le texte puisse être recherché, sélectionné et copié, et que sa lecture ultérieure ne demande pas de nouvelle reconnaissance; les résultats reconnus par le script lui-même peuvent être écrits avec `pdf.addTextLayer`.
+- Compression: réencoder les images intégrées à la résolution et à la qualité choisies, compresser les flux non compressés et, au choix, supprimer les métadonnées; les préréglages low / medium / high ou des valeurs personnalisées sont disponibles, et le résultat indique la taille avant et après.
+- Propriétés du document et plan: modifier le titre, l'auteur, le sujet, les mots-clés et le créateur; lire le plan (signets), le modifier et le réécrire, ou le supprimer.
 - Visionneuse: défilement continu, zoom à deux doigts, miniatures, plan, surlignage des résultats de recherche, accès direct à une page, saisie du mot de passe et mode nuit; d'autres applications peuvent lui confier des PDF via "Ouvrir avec" ou le partage; les scripts peuvent ouvrir la visionneuse et recevoir les événements de changement de page et de fermeture.
-- Boîte à outils: 8 outils pour fusionner, découper, convertir en images, convertir des images en PDF, chiffrer, déchiffrer, extraire le texte et organiser les pages; les tâches s'exécutent l'une après l'autre en arrière-plan, avec leur progression dans la notification; les fichiers récents retiennent aussi les fichiers ouverts avec le sélecteur de fichiers du système.
-- Gestionnaire de fichiers d'AutoJs6: toucher un PDF l'ouvre dans la visionneuse du plugin, et les PDF de 512 MiB au plus contenus dans une archive s'ouvrent aussi directement; le menu propose fusionner, découper, convertir en images, extraire le texte, chiffrer et supprimer le mot de passe.
+- Boîte à outils: 13 outils pour fusionner, découper, convertir en images, convertir des images en PDF, chiffrer, déchiffrer, extraire le texte, organiser les pages, ajouter un filigrane (avec aperçu), ajouter des numéros de page, compresser, remplir un formulaire et modifier les propriétés du document, avec des valeurs personnalisées pour le filigrane, les numéros de page et la compression; les tâches s'exécutent l'une après l'autre en arrière-plan, avec leur progression dans la notification; l'écran de résultat peut écrire le traitement sous forme de script Rhino, Node.js ou Bun; les fichiers récents retiennent aussi les fichiers ouverts avec le sélecteur de fichiers du système.
+- Gestionnaire de fichiers d'AutoJs6: toucher un PDF l'ouvre dans la visionneuse du plugin, et les PDF de 512 MiB au plus contenus dans une archive s'ouvrent aussi directement; le menu propose fusionner, découper, compresser, convertir en images, ajouter un filigrane, extraire le texte, chiffrer et supprimer le mot de passe, et peut créer un PDF interrogeable à l'aide d'un plugin OCR.
 - OCR: `pdf.text(path, { ocr: true })` reconnaît les pages numérisées sans couche de texte à l'aide d'un plugin OCR installé (ML Kit OCR, Paddle OCR ou Rapid OCR).
 - Node.js et Bun: Node.js Runtime 2.2.0 et Bun Runtime 0.23.0 ou ultérieurs proposent le même module `pdf`; ses méthodes renvoient des Promises, et les appels peuvent être interrompus avec `signal` ou `timeoutMs`.
 
@@ -85,10 +90,24 @@ Le traitement s'exécute dans le plugin avec le `PdfRenderer` d'Android et PDFBo
 
 - Android 7.0 (API 24) ou ultérieur, un seul paquet pour toutes les ABI; la boîte à outils et la visionneuse ne dépendent pas d'AutoJs6.
 - Scripts AutoJs6 et gestionnaire de fichiers: nécessitent AutoJs6 6.8.1 (version interne 6641) ou ultérieur.
+- Méthodes de script ajoutées en 1.1.0 (formulaires, filigranes et numéros de page, PDF interrogeable, compression, propriétés du document et plan): nécessitent AutoJs6 6.8.1 ou ultérieur et ce plugin 1.1.0 ou ultérieur, avec les mêmes versions de Node.js Runtime et de Bun Runtime que les autres méthodes; tant que le plugin est encore en 1.0.x, ces méthodes échouent avec `UNSUPPORTED` en invitant à le mettre à jour dans le centre des plugins, n'écrivent aucun fichier, et les autres méthodes fonctionnent normalement.
 - Applications empaquetées par AutoJs6: doivent être empaquetées par AutoJs6 6.8.1 (version interne 6641) ou ultérieur, et ce plugin doit être installé sur l'appareil qui les exécute; l'empaquetage ajoute l'autorisation `org.autojs.plugin.pdf.permission.RUNTIME`, `project.json` n'a donc pas besoin d'être modifié (un projet Node.js déclare `files`, un projet Bun déclare `pdf.control`).
 - Node.js: nécessite le plugin Node.js Runtime 2.2.0 ou ultérieur, chargé avec `require('autojs6:pdf')`; le projet déclare `files` dans `node.permissions` de `project.json`, ainsi que `files.write` pour écrire des fichiers, `ocr` pour reconnaître du texte et `ui` pour ouvrir la visionneuse.
 - Bun: nécessite le plugin Bun Runtime 0.23.0 ou ultérieur (Android 13 ou ultérieur), utilisé via `host.pdf`; activez `pdf.control` dans l'écran des paramètres de Bun Runtime, ainsi que `ocr.control` pour reconnaître du texte.
-- OCR: la reconnaissance des pages numérisées nécessite un plugin OCR (ML Kit OCR, Paddle OCR ou Rapid OCR); sans lui, la reconnaissance des pages numérisées échoue avec `OCR_UNAVAILABLE`, sans effet sur les autres fonctions.
+- OCR: la reconnaissance des pages numérisées et la création de PDF interrogeables nécessitent un plugin OCR (ML Kit OCR, Paddle OCR ou Rapid OCR); sans lui, ces deux fonctions échouent avec `OCR_UNAVAILABLE`, sans effet sur les autres fonctions.
+
+Prérequis et fonctions par version:
+
+| Élément | 1.0.0 | 1.1.0 |
+| --- | --- | --- |
+| Android | 7.0 (API 24) ou ultérieur | 7.0 (API 24) ou ultérieur |
+| AutoJs6 | 6.8.1 (version interne 6641) ou ultérieur | 6.8.1 (version interne 6641) ou ultérieur |
+| Node.js Runtime | 2.2.0 ou ultérieur | 2.2.0 ou ultérieur |
+| Bun Runtime | 0.23.0 ou ultérieur (Android 13 ou ultérieur) | 0.23.0 ou ultérieur (Android 13 ou ultérieur) |
+| Plugin OCR (facultatif) | Reconnaissance des pages numérisées | Reconnaissance des pages numérisées, création de PDF interrogeables |
+| Méthodes de script | Lecture, rendu, opérations sur les pages, génération, chiffrement, OCR, visionneuse | En plus: formulaires, filigranes et numéros de page, PDF interrogeable, compression, propriétés du document et plan |
+| Boîte à outils | 8 outils | 13 outils, valeurs personnalisées, génération de scripts |
+| Menu du gestionnaire de fichiers d'AutoJs6 | 6 actions | 9 actions (en plus: compresser, ajouter un filigrane, créer un PDF interrogeable) |
 
 ******
 
@@ -119,6 +138,13 @@ pdf.fromText(files.read("./notes.txt"), "./notes.pdf", { fontSize: 14 });
 pdf.fromHtml("<h1>Report</h1><p>Hello</p>", "./report.pdf");
 pdf.encrypt("./report.pdf", "./report-locked.pdf", { userPassword: "open", ownerPassword: "owner", permissions: { print: true, copy: false } });
 
+// 1.1.0
+pdf.fillForm("./form.pdf", "./form-filled.pdf", { "applicant.name": "AutoJs6", "applicant.agree": true }, { flatten: true });
+pdf.watermark("./report.pdf", "./report-draft.pdf", { text: "DRAFT" });
+pdf.stamp("./report.pdf", "./report-numbered.pdf", { pageNumbers: { format: "{page} / {total}" } });
+pdf.compress("./photos.pdf", "./photos-small.pdf", { preset: "low" });
+pdf.setInfo("./report.pdf", "./report-info.pdf", { title: "Report", author: "AutoJs6" });
+
 let session = pdf.view("./book.pdf", { page: 5, search: "AutoJs6" });
 session.on("page", (e) => console.log("page", e.page));
 session.on("close", () => console.log("closed"));
@@ -145,6 +171,7 @@ const pdf = require("autojs6:pdf");
 - Chaque méthode existe sous une forme bloquante et sous une forme `xxxAsync` qui renvoie une Promise, avec les mêmes arguments et résultats; la forme bloquante ne peut pas être appelée sur le thread de l'interface (elle échoue avec `INVALID_ARGUMENT`), les scripts d'interface utilisent donc `xxxAsync`; les méthodes qui écrivent des fichiers acceptent `onProgress` et leur Promise possède `cancel()`; annuler ou arrêter le script ne laisse jamais de fichier à moitié écrit.
 - Les `displayNames` de `pdf.merge` nomment le signet de chaque entrée: `null` reprend le nom du fichier (sans `.pdf`), et une chaîne vide ou faite d'espaces reprend le titre du document (`Document <n>` s'il n'en a pas); des options de plus de 63 KiB environ échouent avec `LIMIT_EXCEEDED` sans rien écrire.
 - `pdf.fromHtml` exécute par défaut les scripts de la page, et `javaScript: false` les désactive; aucun contenu externe n'est chargé: les requêtes réseau reçoivent une réponse vide et sont consignées dans `warnings`.
+- Les méthodes d'écriture de la version 1.1.0 (par exemple `pdf.fillForm`, `pdf.stamp` et `pdf.compress`) peuvent, comme les autres méthodes d'écriture, omettre le chemin de sortie (ou recevoir `null`), et le résultat est écrit dans `Documents/3-Paper PDF/`; les méthodes du même nom de `PdfDocument` réutilisent le mot de passe donné à l'ouverture et n'acceptent pas `password` dans leurs options; les résultats des méthodes qui écrivent des fichiers contiennent aussi `warningCodes`, un code par entrée de `warnings`, pour que les scripts puissent les traiter par code.
 - `pdf.view(path, options)` ouvre la visionneuse et renvoie une `PdfViewSession` avec les événements `page` / `close` et les méthodes `goTo(page)`, `state()` et `close()`; elle échoue avec `UI_REQUIRES_FOREGROUND` lorsque AutoJs6 n'est pas au premier plan (sous Android 10 ou ultérieur sans l'autorisation de superposition).
 - Node.js et Bun: chaque méthode renvoie une Promise; `signal` (un AbortSignal) et `timeoutMs` interrompent l'appel, qui est rejeté avec `CANCELLED` dans les deux cas, et un délai dépassé a pour `cause` une `TimeoutError`; `timeoutMs` doit être un nombre fini supérieur à 0 et au plus égal à 2147483647, et les décimales sont arrondies à l'entier supérieur.
 - Les échecs lèvent une `PdfError` avec un `code` stable comme `PASSWORD_REQUIRED`, `WRONG_PASSWORD` ou `PAGE_OUT_OF_RANGE`; `pdf.isAvailable()` vérifie à l'avance si le plugin est disponible.
@@ -178,6 +205,14 @@ Oui. Un PDF de 512 MiB au plus contenu dans une archive s'ouvre directement dans
 #### Que faire si un fichier des fichiers récents ne s'ouvre plus?
 
 Les fichiers ouverts avec le sélecteur de fichiers du système conservent leur autorisation de lecture et s'ouvrent directement même après un redémarrage. Si le fichier a été supprimé ou déplacé, ou si l'autorisation a été révoquée, toucher l'entrée affiche un message et la retire de la liste; choisissez de nouveau le fichier avec "Ouvrir un PDF".
+
+#### Pourquoi les valeurs saisies dans le formulaire ne s'affichent-elles pas dans la visionneuse?
+
+Sous Android 14 et versions antérieures, la visionneuse du plugin n'affiche les valeurs saisies qu'après aplatissement; les autres applications PDF ne sont pas concernées. Pour les voir dans la visionneuse, aplatissez lors du remplissage (`flatten: true`, ou "Aplatir les champs" dans l'outil "Remplir le formulaire"); les champs aplatis ne peuvent plus être modifiés.
+
+#### Pourquoi le fichier compressé n'est-il pas plus petit?
+
+La compression réduit surtout les images intégrées. Quand les images sont déjà assez petites, ou d'un type que le plugin ne réencode pas (par exemple JPEG 2000, CMYK ou images 1 bit), l'effet est limité; un résultat qui n'est pas plus petit est tout de même écrit, avec une indication dans le résultat, et vous pouvez garder le fichier d'origine.
 
 ******
 
@@ -243,7 +278,19 @@ Les plans, décisions de conception et l'avancement sont suivis sous forme de li
 
 _2026/11/20_
 
+- `Note` Les nouvelles méthodes de script et l'action "Créer un PDF interrogeable" du gestionnaire de fichiers nécessitent AutoJs6 6.8.1 ou ultérieur, et leur utilisation dans les scripts Node.js ou Bun nécessite aussi Node.js Runtime 2.2.0 ou Bun Runtime 0.23.0 ou ultérieur; les nouveaux outils de la boîte à outils ne dépendent pas d'AutoJs6
+- `Fonctionnalité` pdf.forms et pdf.fillForm lisent les champs de formulaire (champs de texte, cases à cocher, boutons radio, listes déroulantes, zones de liste) et les remplissent par nom de champ, avec aplatissement facultatif en contenu de page ordinaire; pdf.info indique en plus le nombre de champs de formulaire
+- `Fonctionnalité` pdf.watermark et pdf.stamp ajoutent des filigranes texte ou image, des numéros de page, des en-têtes et des pieds de page, avec position, rotation, opacité, mosaïque et pages concernées
+- `Fonctionnalité` pdf.makeSearchable écrit une couche de texte invisible dans les pages numérisées à l'aide d'un plugin OCR, ce qui donne des PDF dont le texte peut être recherché et copié; pdf.addTextLayer écrit les résultats reconnus par le script lui-même
+- `Fonctionnalité` pdf.compress réencode les images intégrées et compresse les flux, peut supprimer les métadonnées, et propose les préréglages low / medium / high ou une résolution et une qualité personnalisées; le résultat indique la taille avant et après
+- `Fonctionnalité` pdf.setInfo modifie les propriétés du document comme le titre, l'auteur, le sujet, les mots-clés et le créateur, et pdf.setOutline réécrit ou supprime le plan dans la forme que renvoie pdf.outline
+- `Fonctionnalité` Chaque nouvelle méthode a une forme Async et une méthode du même nom dans PdfDocument, et fonctionne aussi dans Node.js, Bun et les applications empaquetées par AutoJs6; les résultats des méthodes qui écrivent des fichiers contiennent aussi warningCodes, pour que les scripts traitent les indications par code
+- `Fonctionnalité` La boîte à outils gagne 5 outils, "Ajouter un filigrane au PDF" (avec aperçu d'une page), "Ajouter des numéros de page", "Compresser le PDF", "Remplir le formulaire" et "Propriétés du document", soit 13 en tout; le filigrane, les numéros de page et la compression acceptent aussi des valeurs personnalisées en plus des préréglages
+- `Fonctionnalité` L'écran de résultat des outils et des actions du gestionnaire de fichiers peut écrire le traitement sous forme de script Rhino, Node.js ou Bun, avec "Copier le script", "Enregistrer en .js" et "Ouvrir dans AutoJs6"; les mots de passe restent à null dans le script et sont à remplir vous-même
+- `Fonctionnalité` Le menu PDF du gestionnaire de fichiers d'AutoJs6 gagne "Compresser le PDF" et "Ajouter un filigrane au PDF", qui enregistrent le résultat à côté du fichier d'origine, ainsi que "Créer un PDF interrogeable" à l'aide d'un plugin OCR
 - `Amélioration` La page Historique des versions se développe et se réduit désormais par version: une version réduite affiche sa date et le nombre d'entrées par catégorie, une version développée ne nomme chaque catégorie qu'une fois; toutes les versions peuvent être développées ou réduites d'un coup, et la plus récente s'ouvre développée; la page a pour sous-titre le nom du plugin
+- `Amélioration` Les indications de traitement de l'écran de résultat des outils s'affichent désormais dans la langue de l'interface au lieu de l'anglais seul
+- `Amélioration` Réécriture des instructions affichées dans le centre des plugins en cinq parties: prise en main, fonctionnalités principales, utilisation dans les scripts, prérequis et questions fréquentes
 
 #### v1.0.0
 

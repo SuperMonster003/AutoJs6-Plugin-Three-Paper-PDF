@@ -49,7 +49,7 @@
     <string name="notification_task_failed">%1$s 未完成</string>
     <string name="notification_tasks_queued">另有 %1$d 個任務排隊中</string>
     <string name="notification_tasks_title">正在處理 PDF</string>
-    <string name="plugin_description">讀取, 渲染, 合併, 拆分, 生成與加密 PDF 檔案, 內置檢視器與檔案管理器入口</string>
+    <string name="plugin_description">讀取, 渲染, 合併, 拆分, 生成, 壓縮與加密 PDF 檔案, 可填寫表格與加上水印, 內置檢視器與檔案管理器入口</string>
     <string name="release_history">發行歷史</string>
     <string name="release_history_collapse_all">收起全部</string>
     <string name="release_history_collapsed">已收起</string>

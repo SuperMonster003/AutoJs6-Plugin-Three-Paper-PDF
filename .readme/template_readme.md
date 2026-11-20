@@ -65,6 +65,19 @@
 
 {{ placeholder_compatibility_points }}
 
+{{ p_compatibility_matrix }}:
+
+| {{ text_matrix_item }} | 1.0.0 | 1.1.0 |
+| --- | --- | --- |
+| Android | {{ text_matrix_android }} | {{ text_matrix_android }} |
+| AutoJs6 | {{ text_matrix_autojs6_v1_0 }} | {{ text_matrix_autojs6_v1_1 }} |
+| Node.js Runtime | {{ text_matrix_node }} | {{ text_matrix_node }} |
+| Bun Runtime | {{ text_matrix_bun }} | {{ text_matrix_bun }} |
+| {{ text_matrix_ocr_label }} | {{ text_matrix_ocr_v1_0 }} | {{ text_matrix_ocr_v1_1 }} |
+| {{ text_matrix_script_label }} | {{ text_matrix_script_v1_0 }} | {{ text_matrix_script_v1_1 }} |
+| {{ text_matrix_toolbox_label }} | {{ text_matrix_toolbox_v1_0 }} | {{ text_matrix_toolbox_v1_1 }} |
+| {{ text_matrix_explorer_label }} | {{ text_matrix_explorer_v1_0 }} | {{ text_matrix_explorer_v1_1 }} |
+
 ******
 
 ### {{ h3_script_api }}
@@ -93,6 +106,13 @@ pdf.fromImages(["./1.jpg", "./2.png"], "./album.pdf", { pageSize: "A4", fit: "co
 pdf.fromText(files.read("./notes.txt"), "./notes.pdf", { fontSize: 14 });
 pdf.fromHtml("<h1>Report</h1><p>Hello</p>", "./report.pdf");
 pdf.encrypt("./report.pdf", "./report-locked.pdf", { userPassword: "open", ownerPassword: "owner", permissions: { print: true, copy: false } });
+
+// 1.1.0
+pdf.fillForm("./form.pdf", "./form-filled.pdf", { "applicant.name": "AutoJs6", "applicant.agree": true }, { flatten: true });
+pdf.watermark("./report.pdf", "./report-draft.pdf", { text: "DRAFT" });
+pdf.stamp("./report.pdf", "./report-numbered.pdf", { pageNumbers: { format: "{page} / {total}" } });
+pdf.compress("./photos.pdf", "./photos-small.pdf", { preset: "low" });
+pdf.setInfo("./report.pdf", "./report-info.pdf", { title: "Report", author: "AutoJs6" });
 
 let session = pdf.view("./book.pdf", { page: 5, search: "AutoJs6" });
 session.on("page", (e) => console.log("page", e.page));

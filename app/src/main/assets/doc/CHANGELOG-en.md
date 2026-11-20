@@ -8,7 +8,19 @@
 
 ###### 2026/11/20
 
+* `Hint` The new script methods and "Make searchable PDF" of the file manager require AutoJs6 6.8.1 or later, and use in Node.js or Bun scripts requires Node.js Runtime 2.2.0 or Bun Runtime 0.23.0 or later; the new toolbox tools do not depend on AutoJs6
+* `Feature` pdf.forms and pdf.fillForm read form fields (text fields, check boxes, radio buttons, combo boxes, list boxes) and fill them in by field name, optionally flattened into ordinary page content; pdf.info adds the number of form fields
+* `Feature` pdf.watermark and pdf.stamp add text or image watermarks, page numbers, headers and footers, with position, rotation, opacity, tiling and the pages they apply to
+* `Feature` pdf.makeSearchable writes an invisible text layer into scanned pages with an OCR plugin, making PDF files whose text can be searched and copied; pdf.addTextLayer writes results a script recognized itself
+* `Feature` pdf.compress re-encodes embedded images and compresses streams, can remove metadata, and offers the low / medium / high presets or custom resolution and quality; the result gives the size before and after
+* `Feature` pdf.setInfo changes document properties such as the title, author, subject, keywords and creator, and pdf.setOutline rewrites or removes the outline in the shape pdf.outline returns
+* `Feature` Every new method has an Async form and a method of the same name on PdfDocument, and works in Node.js, Bun and apps packaged by AutoJs6 too; results of methods that write files also carry warningCodes, so scripts can handle the hints by code
+* `Feature` The toolbox adds 5 tools, "Add watermark to PDF" (with a one-page preview), "Add page numbers", "Compress PDF", "Fill in form" and "Document properties", 13 in all; watermark, page numbers and compression also accept custom values besides the presets
+* `Feature` The result page of toolbox and file manager actions can write the run as a Rhino, Node.js or Bun script, with "Copy script", "Save as .js" and "Open in AutoJs6"; passwords are left as null in the script for you to fill in
+* `Feature` The PDF menu of the AutoJs6 file manager adds "Compress PDF" and "Add watermark to PDF", which save the result next to the original file, and "Make searchable PDF" with an OCR plugin
 * `Improvement` The release history page now expands and collapses by version: a collapsed version shows its date and the number of entries per category, an expanded one names each category once; all versions can be expanded or collapsed at once, and the newest one opens expanded; the page is titled "Release history" (formerly "Version history") with the plugin name as the subtitle, and its entries in the "About" section of the settings and in the update dialog are renamed to match
+* `Improvement` The processing hints on the tool result page are now shown in the interface language instead of English only
+* `Improvement` Rewrote the instructions shown in the Plugin Center in five parts: getting started, main features, using it in scripts, requirements and FAQ
 
 # v1.0.0
 

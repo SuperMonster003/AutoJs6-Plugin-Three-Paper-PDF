@@ -1,7 +1,7 @@
 {
   "$name": "English",
   "text_current_lowercase": "current",
-  "text_plugin_synopsis": "Read, render, merge, split, generate and encrypt PDF files, with a built-in viewer and file manager entries",
+  "text_plugin_synopsis": "Read, render, merge, split, generate, compress and encrypt PDF files, fill in forms and add watermarks, with a built-in viewer and file manager entries",
   "h3_languages_with_ascii": "Languages",
   "p_languages_all_supported_for_readme": "The README.md file is currently available in the following languages",
   "h3_introduction": "Introduction",
@@ -23,7 +23,7 @@
   "h3_links": "Related links",
   "text_link_autojs6": "AutoJs6 project",
   "p_roadmap": "Plans, design decisions and progress are tracked as a checklist in ROADMAP.md. Unchecked items are plans, not features of the current version.",
-  "p_introduction_what": "3-Paper PDF is the PDF plugin of AutoJs6, and also a PDF toolbox and viewer that works on its own without AutoJs6. It reads the information, text, outline and embedded images of a PDF and renders pages to images; it merges, splits, extracts, deletes, reorders and rotates pages; it generates PDF files from images, text or HTML, and encrypts or decrypts documents.",
+  "p_introduction_what": "3-Paper PDF is the PDF plugin of AutoJs6, and also a PDF toolbox and viewer that works on its own without AutoJs6. It reads the information, text, outline and embedded images of a PDF and renders pages to images; it merges, splits, extracts, deletes, reorders and rotates pages; it generates PDF files from images, text or HTML, and encrypts or decrypts documents. Since 1.1.0 it also reads and fills in forms, adds watermarks, page numbers, headers and footers, makes searchable PDF files with an OCR plugin, reduces the file size, and changes the document properties and the outline.",
   "p_introduction_how": "Processing runs inside the plugin with the `PdfRenderer` of Android and the pure Java PDFBox-Android, so the AutoJs6 host stays small. AutoJs6 scripts use these features through the global module `pdf`, and so do scripts of the Node.js Runtime and Bun Runtime plugins; AutoJs6 opens the paths that scripts pass and hands them to the plugin, so the plugin needs no storage permission to process script files. The plugin comes with its own viewer, which opens from the launcher, the AutoJs6 file manager, \"Open with\" in other apps or scripts (`pdf.view`).",
   "p_status_note": "The `pdf` module of AutoJs6 scripts and the file manager entries require AutoJs6 {{ required_host_version_name }} (internal build {{ required_host_version_code }}) or later; older AutoJs6 versions show the plugin as incompatible in the Plugin Center. The toolbox and the viewer do not depend on AutoJs6 and work on their own.",
   "features": [
@@ -32,9 +32,14 @@
     "Page operations: merge (bookmarks kept), split, extract, delete, reorder and rotate pages; page numbers start at 1 and ranges are written as `'1-3,5,8-'`.",
     "Generation: images to PDF (JPEG embedded as is, without re-encoding), text to PDF (with a font of your choice) and HTML to PDF (no remote URLs are loaded).",
     "Encryption: open encrypted documents with a password, encrypt with AES-256 and set permissions, remove encryption.",
+    "Forms: list the form fields (text fields, check boxes, radio buttons, combo boxes and list boxes) with their current values, fill them in by field name and optionally flatten them into ordinary page content; `pdf.info` returns the number of form fields.",
+    "Watermarks and page numbers: add text or image watermarks, page numbers, headers and footers, with position, rotation, opacity, tiling and the pages they apply to; texts can use the placeholders `{page}`, `{total}`, `{date}` and `{name}`.",
+    "Searchable PDF: recognize scanned pages with an OCR plugin and write an invisible text layer, so the text can be searched, selected and copied, and reading the text later needs no new recognition; results a script recognized itself can be written with `pdf.addTextLayer`.",
+    "Compression: re-encode embedded images at the chosen resolution and quality, compress uncompressed streams and optionally remove metadata; the low / medium / high presets or custom values are available, and the result gives the size before and after.",
+    "Document properties and outline: change the title, author, subject, keywords and creator; read the outline (bookmarks), change it and write it back, or remove it.",
     "Viewer: continuous scrolling, pinch zoom, thumbnails, outline, search highlights, go to page, password prompt and night mode; other apps can hand PDF files to it with \"Open with\" or sharing; scripts can open the viewer and receive page change and close events.",
-    "Toolbox: 8 tools to merge, split, convert to images, convert images to PDF, encrypt, decrypt, extract text and organize pages; tasks run one after another in the background, with the progress in the notification; the recent files also remember files opened with the system file picker.",
-    "AutoJs6 file manager: tapping a PDF opens it in the plugin viewer, and PDF files of up to 512 MiB inside archives open directly too; the menu offers merge, split, convert to images, extract text, encrypt and remove the password.",
+    "Toolbox: 13 tools to merge, split, convert to images, convert images to PDF, encrypt, decrypt, extract text, organize pages, add a watermark (with a preview), add page numbers, compress, fill in forms and edit the document properties, with custom values for the watermark, page numbers and compression; tasks run one after another in the background, with the progress in the notification; the result page can write the run as a Rhino, Node.js or Bun script; the recent files also remember files opened with the system file picker.",
+    "AutoJs6 file manager: tapping a PDF opens it in the plugin viewer, and PDF files of up to 512 MiB inside archives open directly too; the menu offers merge, split, compress, convert to images, add a watermark, extract text, encrypt and remove the password, and can make a searchable PDF with an OCR plugin.",
     "OCR: `pdf.text(path, { ocr: true })` recognizes scanned pages without a text layer with an installed OCR plugin (ML Kit OCR, Paddle OCR or Rapid OCR).",
     "Node.js and Bun: Node.js Runtime 2.2.0 and Bun Runtime 0.23.0 and later offer the same `pdf` module; its methods return Promises, and calls can be aborted with `signal` or `timeoutMs`."
   ],
@@ -47,11 +52,31 @@
   "compatibility_points": [
     "Android {{ min_android_version }} (API {{ android_min_sdk }}) and later, a single package for every ABI; the toolbox and the viewer do not depend on AutoJs6.",
     "AutoJs6 scripts and file manager: require AutoJs6 {{ required_host_version_name }} (internal build {{ required_host_version_code }}) or later.",
+    "Script methods new in 1.1.0 (forms, watermarks and page numbers, searchable PDF, compression, document properties and outline): require AutoJs6 {{ required_host_version_name }} or later and this plugin 1.1.0 or later, with the same Node.js Runtime and Bun Runtime versions as the other methods; while the plugin is still 1.0.x, these methods fail with `UNSUPPORTED` and a hint to update in the Plugin Center, write no file, and the other methods work as usual.",
     "Apps packaged by AutoJs6: must be packaged by AutoJs6 {{ required_host_version_name }} (internal build {{ required_host_version_code }}) or later, and this plugin must be installed on the device that runs them; packaging adds the permission `org.autojs.plugin.pdf.permission.RUNTIME`, so `project.json` needs no change (a Node.js project declares `files`, a Bun project declares `pdf.control`).",
     "Node.js: requires the Node.js Runtime plugin 2.2.0 or later, loaded with `require('autojs6:pdf')`; the project declares `files` in `node.permissions` of `project.json`, plus `files.write` to write files, `ocr` to recognize text and `ui` to open the viewer.",
     "Bun: requires the Bun Runtime plugin 0.23.0 or later (Android 13 and later), used through `host.pdf`; turn on `pdf.control` on the settings screen of Bun Runtime, plus `ocr.control` to recognize text.",
-    "OCR: recognizing scanned pages needs an OCR plugin (ML Kit OCR, Paddle OCR or Rapid OCR); without one, recognizing scanned pages fails with `OCR_UNAVAILABLE`, and the other features are not affected."
+    "OCR: recognizing scanned pages and making searchable PDF files need an OCR plugin (ML Kit OCR, Paddle OCR or Rapid OCR); without one, these two fail with `OCR_UNAVAILABLE`, and the other features are not affected."
   ],
+  "p_compatibility_matrix": "Requirements and features by version",
+  "text_matrix_item": "Item",
+  "text_matrix_android": "{{ min_android_version }} (API {{ android_min_sdk }}) or later",
+  "text_matrix_autojs6_v1_0": "6.8.1 (internal build 6641) or later",
+  "text_matrix_autojs6_v1_1": "{{ required_host_version_name }} (internal build {{ required_host_version_code }}) or later",
+  "text_matrix_node": "2.2.0 or later",
+  "text_matrix_bun": "0.23.0 or later (Android 13 or later)",
+  "text_matrix_ocr_label": "OCR plugin (optional)",
+  "text_matrix_ocr_v1_0": "Recognize scanned pages",
+  "text_matrix_ocr_v1_1": "Recognize scanned pages, make searchable PDF files",
+  "text_matrix_script_label": "Script methods",
+  "text_matrix_script_v1_0": "Reading, rendering, page operations, generation, encryption, OCR, viewer",
+  "text_matrix_script_v1_1": "Plus forms, watermarks and page numbers, searchable PDF, compression, document properties and outline",
+  "text_matrix_toolbox_label": "Toolbox",
+  "text_matrix_toolbox_v1_0": "8 tools",
+  "text_matrix_toolbox_v1_1": "13 tools, custom values, script generation",
+  "text_matrix_explorer_label": "AutoJs6 file manager menu",
+  "text_matrix_explorer_v1_0": "6 actions",
+  "text_matrix_explorer_v1_1": "9 actions (plus compress, add watermark, make searchable PDF)",
   "p_script_api_intro": "AutoJs6 scripts use these features through the global module `pdf` (also available as `$pdf`; see [AutoJs6 documentation > PDF](https://docs.autojs6.com/#/pdf) for the full reference)",
   "p_script_api_node": "In Node.js and Bun, the methods of the same names return Promises (Bun uses them through `host.pdf`)",
   "api_points": [
@@ -59,6 +84,7 @@
     "Each method has a blocking form and an `xxxAsync` form that returns a Promise, with the same arguments and results; the blocking form cannot be called on the UI thread (it fails with `INVALID_ARGUMENT`), so UI scripts use `xxxAsync`; methods that write files accept `onProgress`, and their Promise has `cancel()`; cancelling or stopping the script never leaves a half-written file.",
     "The `displayNames` of `pdf.merge` name the bookmark of each input: `null` takes the file name (without `.pdf`), and a blank string takes the document title (`Document <n>` when there is none); options larger than about 63 KiB fail with `LIMIT_EXCEEDED` and write nothing.",
     "`pdf.fromHtml` runs the scripts of the page by default, and `javaScript: false` turns them off; no external content is loaded: network requests are answered with empty content and recorded in `warnings`.",
+    "The writing methods of 1.1.0 (for example `pdf.fillForm`, `pdf.stamp` and `pdf.compress`) can omit the output path (or pass `null`) like the other writing methods, and the result goes to `Documents/3-Paper PDF/`; the methods of the same name on `PdfDocument` reuse the password given when opening and do not accept `password` in their options; results of methods that write files also carry `warningCodes`, one code per entry of `warnings`, so scripts can handle them by code.",
     "`pdf.view(path, options)` opens the viewer and returns a `PdfViewSession` with the `page` / `close` events and the `goTo(page)`, `state()` and `close()` methods; it fails with `UI_REQUIRES_FOREGROUND` when AutoJs6 is not in the foreground (on Android 10 and later without the overlay permission).",
     "Node.js and Bun: every method returns a Promise; `signal` (an AbortSignal) and `timeoutMs` abort the call, which rejects with `CANCELLED` in both cases, and a timeout has a `TimeoutError` as its `cause`; `timeoutMs` must be a finite number greater than 0 and at most 2147483647, and fractions are rounded up.",
     "Failures throw a `PdfError` with a stable `code` such as `PASSWORD_REQUIRED`, `WRONG_PASSWORD` or `PAGE_OUT_OF_RANGE`; `pdf.isAvailable()` checks in advance whether the plugin is available."
@@ -87,6 +113,14 @@
     {
       "q": "What if a file in the recent files no longer opens?",
       "a": "Files opened with the system file picker keep their read grant and still open directly after a restart. When a file has been deleted or moved, or its grant revoked, tapping the entry shows a message and removes it from the list; choose the file again with \"Open a PDF\"."
+    },
+    {
+      "q": "Why are the filled-in form values not shown in the viewer?",
+      "a": "On Android 14 and earlier, the plugin viewer shows filled-in values only after flattening; other PDF apps show them either way. To see them in the viewer, flatten when filling in (`flatten: true`, or \"Flatten fields\" in the \"Fill in form\" tool); flattened fields can no longer be edited."
+    },
+    {
+      "q": "Why did the compressed file not get smaller?",
+      "a": "Compression mainly shrinks embedded images. When the images are already small enough, or of a type the plugin does not re-encode (for example JPEG 2000, CMYK or 1-bit images), the effect is limited; an output that is not smaller is still written, with a hint in the result, and you can keep the original file."
     }
   ],
   "p_security_intro": "The plugin keeps its permission surface as small as possible:",
@@ -101,7 +135,7 @@
   "p_engine": "Pages are rendered with the `PdfRenderer` of Android; text, outline, images, page operations and encryption use [PDFBox-Android](https://github.com/TomRoush/PdfBox-Android) (Apache-2.0, pure Java), and encryption relies on Bouncy Castle (MIT-style license). PDF processing contains no native library and uses no native renderer such as pdfium or MuPDF.",
   "p_license": "The project code is licensed under the [Mozilla Public License 2.0]({{ license_url }}). Third-party components and data are listed in the third-party notices.",
   "text_link_third_party": "Third-party notices (THIRD_PARTY_NOTICES.md)",
-  "instruction_p_what": "3-Paper PDF provides the `pdf` module for AutoJs6 scripts to read, render, merge, split, generate and encrypt PDF files. It is also a PDF viewer and toolbox that can be used on its own, without AutoJs6.",
+  "instruction_p_what": "3-Paper PDF provides the `pdf` module for AutoJs6 scripts to read, render, merge, split, generate and encrypt PDF files, and also to fill in forms, add watermarks and page numbers and reduce the file size. It is also a PDF viewer and toolbox that can be used on its own, without AutoJs6.",
   "instruction_h3_start": "Getting started",
   "instruction_start_steps": [
     "Use the global `pdf` module directly in AutoJs6 scripts; see the example below.",
@@ -114,10 +148,11 @@
     "**Rendering**: pages to image objects or PNG / JPEG / WebP files, sized by dpi, scale or target width and height.",
     "**Page operations**: merge (bookmarks kept), split, extract, delete, reorder and rotate pages.",
     "**Generation and encryption**: create PDF files from images, text or HTML; set a password and permissions on a document, or remove the password.",
-    "**Scanned page recognition**: recognize the text of scanned pages without a text layer with an installed OCR plugin.",
+    "**Editing**: fill in forms, add watermarks, page numbers, headers and footers, reduce the file size, and change the outline and document properties such as the title and author.",
+    "**Scanned page recognition**: recognize the text of scanned pages without a text layer with an installed OCR plugin, or write a text layer into a scan to make a searchable PDF.",
     "**Viewer**: continuous scrolling, pinch zoom, thumbnails, outline, search highlights, go to page and night mode. Other apps can hand PDF files to it through \"Open with\" or sharing.",
-    "**Toolbox**: merge, split, convert to images, convert images to PDF, encrypt, decrypt, extract text and organize pages. Tasks run one after another in the background, with the progress shown in the notification.",
-    "**AutoJs6 file manager**: tapping a PDF opens it in the viewer, and PDF files inside archives also open directly; the file menu offers merge, split, convert to images, extract text, encrypt and remove the password."
+    "**Toolbox**: 13 tools such as merge, split, compress and add watermark; after a run, the same processing can be written as a script. Tasks run one after another in the background, with the progress shown in the notification.",
+    "**AutoJs6 file manager**: tapping a PDF opens it in the viewer, and PDF files inside archives also open directly; the file menu offers processing such as merge, split, compress and add watermark, and can make a searchable PDF."
   ],
   "instruction_h3_script": "Using it in scripts",
   "instruction_p_script": "Use the global `pdf` module directly in AutoJs6 scripts. Page numbers start at 1, and page ranges are written as `'1-3,5,8-'`:",
@@ -133,7 +168,7 @@
     "The toolbox and the viewer opened from the launcher require all files access; scripts do not need this permission of the plugin to process files.",
     "Apps packaged by AutoJs6 can also use the `pdf` module: they must be packaged by AutoJs6 {{ required_host_version_name }} or later, and this plugin must be installed on the device that runs them.",
     "Node.js scripts require the Node.js Runtime plugin 2.2.0 or later and must declare `files` in `node.permissions` of `project.json`; Bun scripts require the Bun Runtime plugin 0.23.0 or later (Android 13 and later), with `pdf.control` turned on in its settings.",
-    "Recognizing the text of scanned pages requires an additional OCR plugin (ML Kit OCR, Paddle OCR or Rapid OCR)."
+    "Recognizing the text of scanned pages and making searchable PDF files require an additional OCR plugin (ML Kit OCR, Paddle OCR or Rapid OCR)."
   ],
   "instruction_h3_faq": "FAQ",
   "instruction_faq": [
@@ -148,6 +183,10 @@
     {
       "q": "When a file in the recent files cannot be opened",
       "a": "After a file is deleted or moved, or its access grant is revoked, tapping the entry shows a message and removes it from the list. Choose the file again through \"Open a PDF\"."
+    },
+    {
+      "q": "Why filled-in form values are not shown in the viewer",
+      "a": "On Android 14 and earlier, the built-in viewer shows filled-in values only after flattening; other PDF apps show them either way. To see them in the viewer, choose \"Flatten fields\" when filling in."
     }
   ],
   "instruction_p_more": "See [AutoJs6 docs > PDF](https://docs.autojs6.com/#/pdf) for the complete script reference and the [project page]({{ repo_url }}) for more information."

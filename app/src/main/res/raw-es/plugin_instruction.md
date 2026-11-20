@@ -1,4 +1,4 @@
-3-Paper PDF proporciona el módulo `pdf` a los scripts de AutoJs6 para leer, renderizar, combinar, dividir, generar y cifrar archivos PDF. También es un visor y una caja de herramientas de PDF que se pueden usar por separado, sin AutoJs6.
+3-Paper PDF ofrece el módulo `pdf` a los scripts de AutoJs6 para leer, renderizar, combinar, dividir, generar y cifrar archivos PDF, y también para rellenar formularios, añadir marcas de agua y números de página y reducir el tamaño de los archivos. También es un visor y una caja de herramientas de PDF que se pueden usar por sí solos, sin AutoJs6.
 
 ### Primeros pasos
 
@@ -12,10 +12,11 @@
 - **Renderizado**: páginas como objetos de imagen o archivos PNG / JPEG / WebP, con el tamaño indicado por dpi, escala o ancho y alto de destino.
 - **Operaciones de páginas**: combinar (conservando los marcadores), dividir, extraer, eliminar, reordenar y girar páginas.
 - **Generación y cifrado**: crear archivos PDF a partir de imágenes, texto o HTML; establecer una contraseña y permisos en un documento, o quitar la contraseña.
-- **Reconocimiento de páginas escaneadas**: reconocer el texto de páginas escaneadas sin capa de texto con un complemento de OCR instalado.
+- **Edición**: rellenar formularios, añadir marcas de agua, números de página, encabezados y pies de página, reducir el tamaño de los archivos, y cambiar el esquema y las propiedades del documento, como el título y el autor.
+- **Reconocimiento de páginas escaneadas**: reconocer el texto de las páginas escaneadas sin capa de texto con un complemento de OCR instalado, o escribir una capa de texto en un documento escaneado para crear un PDF con búsqueda de texto.
 - **Visor**: desplazamiento continuo, zoom con dos dedos, miniaturas, esquema, resaltado de búsqueda, ir a una página y modo nocturno. Otras aplicaciones pueden entregarle archivos PDF mediante "Abrir con" o al compartir.
-- **Caja de herramientas**: combinar, dividir, convertir a imágenes, convertir imágenes a PDF, cifrar, descifrar, extraer texto y organizar páginas. Las tareas se ejecutan una tras otra en segundo plano, con el progreso en la notificación.
-- **Gestor de archivos de AutoJs6**: al tocar un PDF se abre en el visor, y los PDF dentro de archivos comprimidos también se abren directamente; el menú de archivos ofrece combinar, dividir, convertir a imágenes, extraer texto, cifrar y quitar la contraseña.
+- **Caja de herramientas**: 13 herramientas como combinar, dividir, comprimir y añadir marca de agua; después de un proceso, el mismo proceso se puede escribir como script. Las tareas se ejecutan una tras otra en segundo plano, con el progreso mostrado en la notificación.
+- **Gestor de archivos de AutoJs6**: al tocar un PDF se abre en el visor, y los PDF dentro de archivos comprimidos también se abren directamente; el menú de archivos ofrece procesos como combinar, dividir, comprimir y añadir marca de agua, y puede crear un PDF con búsqueda de texto.
 
 ### Uso en scripts
 
@@ -46,7 +47,7 @@ pdf.merge(["./a.pdf", "./b.pdf"], "./ab.pdf");
 - La caja de herramientas y el visor abierto desde el lanzador requieren el acceso a todos los archivos; los scripts no necesitan este permiso del complemento para procesar archivos.
 - Las aplicaciones empaquetadas por AutoJs6 también pueden usar el módulo `pdf`: deben empaquetarse con AutoJs6 6.8.1 o posterior, y este complemento debe estar instalado en el dispositivo que las ejecuta.
 - Los scripts de Node.js requieren el complemento Node.js Runtime 2.2.0 o posterior y deben declarar `files` en `node.permissions` de `project.json`; los scripts de Bun requieren el complemento Bun Runtime 0.23.0 o posterior (Android 13 o posterior), con `pdf.control` activado en sus ajustes.
-- Reconocer el texto de páginas escaneadas requiere un complemento de OCR adicional (ML Kit OCR, Paddle OCR o Rapid OCR).
+- El reconocimiento del texto de las páginas escaneadas y la creación de PDF con búsqueda de texto requieren un complemento de OCR adicional (ML Kit OCR, Paddle OCR o Rapid OCR).
 
 ### Preguntas frecuentes
 
@@ -61,5 +62,9 @@ El módulo de scripts y las entradas del gestor de archivos requieren AutoJs6 6.
 **Casos en que un archivo reciente no se abre**
 
 Si un archivo se eliminó o se movió, o se revocó su permiso de acceso, al tocar la entrada se muestra un aviso y se quita de la lista. Vuelva a elegir el archivo con "Abrir un PDF".
+
+**Motivos por los que los valores introducidos en el formulario no se muestran en el visor**
+
+En Android 14 y versiones anteriores, el visor integrado solo muestra los valores introducidos después de acoplarlos; las demás aplicaciones de PDF no se ven afectadas. Para verlos en el visor, elija "Acoplar los campos" al rellenar.
 
 La referencia completa de scripts está en [Documentación de AutoJs6 > PDF](https://docs.autojs6.com/#/pdf), y el resto de la información en la [página del proyecto](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Paper-PDF).

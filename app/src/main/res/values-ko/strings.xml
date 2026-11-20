@@ -49,7 +49,7 @@
     <string name="notification_task_failed">%1$s: 완료되지 않음</string>
     <string name="notification_tasks_queued">%1$d개 대기 중</string>
     <string name="notification_tasks_title">PDF 처리 중</string>
-    <string name="plugin_description">PDF 파일 읽기, 렌더링, 병합, 분할, 생성과 암호화, 뷰어와 파일 관리자 진입점 내장</string>
+    <string name="plugin_description">PDF 파일 읽기, 렌더링, 병합, 분할, 생성, 압축과 암호화, 양식 작성과 워터마크 추가, 뷰어와 파일 관리자 진입점 내장</string>
     <string name="release_history">릴리스 기록</string>
     <string name="release_history_collapse_all">모두 접기</string>
     <string name="release_history_collapsed">접힘</string>

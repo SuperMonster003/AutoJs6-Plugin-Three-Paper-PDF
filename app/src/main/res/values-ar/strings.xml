@@ -49,7 +49,7 @@
     <string name="notification_task_failed">%1$s: لم يكتمل</string>
     <string name="notification_tasks_queued">في الانتظار: %1$d</string>
     <string name="notification_tasks_title">جارٍ معالجة ملفات PDF</string>
-    <string name="plugin_description">قراءة ملفات PDF وعرضها ودمجها وتقسيمها وإنشاؤها وتشفيرها, مع عارض مدمج ومداخل في مدير الملفات</string>
+    <string name="plugin_description">قراءة ملفات PDF وعرضها ودمجها وتقسيمها وإنشاؤها وضغطها وتشفيرها, وتعبئة النماذج وإضافة العلامات المائية, مع عارض مدمج ومداخل في مدير الملفات</string>
     <string name="release_history">سجل الإصدارات</string>
     <string name="release_history_collapse_all">طيّ الكل</string>
     <string name="release_history_collapsed">مطوي</string>

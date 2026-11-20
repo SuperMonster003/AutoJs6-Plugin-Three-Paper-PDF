@@ -1,4 +1,4 @@
-3-Paper PDF provides the `pdf` module for AutoJs6 scripts to read, render, merge, split, generate and encrypt PDF files. It is also a PDF viewer and toolbox that can be used on its own, without AutoJs6.
+3-Paper PDF provides the `pdf` module for AutoJs6 scripts to read, render, merge, split, generate and encrypt PDF files, and also to fill in forms, add watermarks and page numbers and reduce the file size. It is also a PDF viewer and toolbox that can be used on its own, without AutoJs6.
 
 ### Getting started
 
@@ -12,10 +12,11 @@
 - **Rendering**: pages to image objects or PNG / JPEG / WebP files, sized by dpi, scale or target width and height.
 - **Page operations**: merge (bookmarks kept), split, extract, delete, reorder and rotate pages.
 - **Generation and encryption**: create PDF files from images, text or HTML; set a password and permissions on a document, or remove the password.
-- **Scanned page recognition**: recognize the text of scanned pages without a text layer with an installed OCR plugin.
+- **Editing**: fill in forms, add watermarks, page numbers, headers and footers, reduce the file size, and change the outline and document properties such as the title and author.
+- **Scanned page recognition**: recognize the text of scanned pages without a text layer with an installed OCR plugin, or write a text layer into a scan to make a searchable PDF.
 - **Viewer**: continuous scrolling, pinch zoom, thumbnails, outline, search highlights, go to page and night mode. Other apps can hand PDF files to it through "Open with" or sharing.
-- **Toolbox**: merge, split, convert to images, convert images to PDF, encrypt, decrypt, extract text and organize pages. Tasks run one after another in the background, with the progress shown in the notification.
-- **AutoJs6 file manager**: tapping a PDF opens it in the viewer, and PDF files inside archives also open directly; the file menu offers merge, split, convert to images, extract text, encrypt and remove the password.
+- **Toolbox**: 13 tools such as merge, split, compress and add watermark; after a run, the same processing can be written as a script. Tasks run one after another in the background, with the progress shown in the notification.
+- **AutoJs6 file manager**: tapping a PDF opens it in the viewer, and PDF files inside archives also open directly; the file menu offers processing such as merge, split, compress and add watermark, and can make a searchable PDF.
 
 ### Using it in scripts
 
@@ -46,7 +47,7 @@ pdf.merge(["./a.pdf", "./b.pdf"], "./ab.pdf");
 - The toolbox and the viewer opened from the launcher require all files access; scripts do not need this permission of the plugin to process files.
 - Apps packaged by AutoJs6 can also use the `pdf` module: they must be packaged by AutoJs6 6.8.1 or later, and this plugin must be installed on the device that runs them.
 - Node.js scripts require the Node.js Runtime plugin 2.2.0 or later and must declare `files` in `node.permissions` of `project.json`; Bun scripts require the Bun Runtime plugin 0.23.0 or later (Android 13 and later), with `pdf.control` turned on in its settings.
-- Recognizing the text of scanned pages requires an additional OCR plugin (ML Kit OCR, Paddle OCR or Rapid OCR).
+- Recognizing the text of scanned pages and making searchable PDF files require an additional OCR plugin (ML Kit OCR, Paddle OCR or Rapid OCR).
 
 ### FAQ
 
@@ -61,5 +62,9 @@ The script module and the file manager entries require AutoJs6 6.8.1 or later, a
 **When a file in the recent files cannot be opened**
 
 After a file is deleted or moved, or its access grant is revoked, tapping the entry shows a message and removes it from the list. Choose the file again through "Open a PDF".
+
+**Why filled-in form values are not shown in the viewer**
+
+On Android 14 and earlier, the built-in viewer shows filled-in values only after flattening; other PDF apps show them either way. To see them in the viewer, choose "Flatten fields" when filling in.
 
 See [AutoJs6 docs > PDF](https://docs.autojs6.com/#/pdf) for the complete script reference and the [project page](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Paper-PDF) for more information.

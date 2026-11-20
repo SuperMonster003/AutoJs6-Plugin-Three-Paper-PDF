@@ -8,7 +8,7 @@
     </picture>
   </p>
 
-  <p>Lectura, renderizado, combinación, división, generación y cifrado de archivos PDF, con visor integrado y entradas en el gestor de archivos</p>
+  <p>Lectura, renderizado, combinación, división, generación, compresión y cifrado de archivos PDF, relleno de formularios y marcas de agua, con visor integrado y entradas en el gestor de archivos</p>
 
   <p>
     <a href="https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Paper-PDF/releases"><img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/SuperMonster003/AutoJs6-Plugin-Three-Paper-PDF?label=Release"/></a>
@@ -42,7 +42,7 @@ El README.md actual admite los siguientes idiomas:
 
 ******
 
-3-Paper PDF es el complemento PDF de AutoJs6 y, además, una caja de herramientas y un visor de PDF que funcionan por sí solos, sin AutoJs6. Lee la información, el texto, el esquema y las imágenes incrustadas de un PDF y renderiza páginas como imágenes; combina, divide, extrae, elimina, reordena y gira páginas; genera PDF a partir de imágenes, texto o HTML, y cifra o descifra documentos.
+3-Paper PDF es el complemento PDF de AutoJs6 y, además, una caja de herramientas y un visor de PDF que funcionan por sí solos, sin AutoJs6. Lee la información, el texto, el esquema y las imágenes incrustadas de un PDF y renderiza páginas como imágenes; combina, divide, extrae, elimina, reordena y gira páginas; genera PDF a partir de imágenes, texto o HTML, y cifra o descifra documentos. Desde la versión 1.1.0 también lee y rellena formularios, añade marcas de agua, números de página, encabezados y pies de página, crea PDF con búsqueda de texto mediante un complemento de OCR, reduce el tamaño de los archivos y modifica las propiedades del documento y el esquema.
 
 El procesamiento se ejecuta en el complemento con el `PdfRenderer` de Android y PDFBox-Android, en Java puro, de modo que el host AutoJs6 sigue siendo ligero. Los scripts de AutoJs6 usan estas funciones mediante el módulo global `pdf`, igual que los scripts de los complementos Node.js Runtime y Bun Runtime; AutoJs6 abre las rutas que pasan los scripts y se las entrega al complemento, por lo que este no necesita permiso de almacenamiento para procesar los archivos de los scripts. El complemento incluye su propio visor, que se abre desde el lanzador, el gestor de archivos de AutoJs6, la opción "Abrir con" de otras aplicaciones o un script (`pdf.view`).
 
@@ -59,9 +59,14 @@ El procesamiento se ejecuta en el complemento con el `PdfRenderer` de Android y 
 - Operaciones de páginas: combinar (conservando los marcadores), dividir, extraer, eliminar, reordenar y girar páginas; los números de página empiezan en 1 y los rangos se escriben `'1-3,5,8-'`.
 - Generación: imágenes a PDF (los JPEG se incrustan tal cual, sin recodificar), texto a PDF (con la fuente que elija) y HTML a PDF (no se cargan URL remotas).
 - Cifrado: abrir documentos cifrados con contraseña, cifrar con AES-256 y establecer permisos, quitar el cifrado.
+- Formularios: listar los campos del formulario (campos de texto, casillas de verificación, botones de opción, cuadros combinados y cuadros de lista) con sus valores actuales, rellenarlos por nombre de campo y, si se desea, acoplarlos como contenido normal de la página; `pdf.info` devuelve el número de campos de formulario.
+- Marcas de agua y números de página: añadir marcas de agua de texto o de imagen, números de página, encabezados y pies de página, con posición, rotación, opacidad, mosaico y las páginas a las que se aplican; los textos pueden usar los marcadores `{page}`, `{total}`, `{date}` y `{name}`.
+- PDF con búsqueda de texto: reconocer las páginas escaneadas con un complemento de OCR y escribir una capa de texto invisible, de modo que el texto se pueda buscar, seleccionar y copiar, y que leerlo después no requiera un nuevo reconocimiento; los resultados que reconozca el propio script se pueden escribir con `pdf.addTextLayer`.
+- Compresión: volver a codificar las imágenes incrustadas con la resolución y la calidad elegidas, comprimir los flujos sin comprimir y, si se desea, eliminar los metadatos; hay ajustes predefinidos low / medium / high o valores personalizados, y el resultado indica el tamaño antes y después.
+- Propiedades del documento y esquema: cambiar el título, el autor, el asunto, las palabras clave y el creador; leer el esquema (marcadores), modificarlo y volver a escribirlo, o eliminarlo.
 - Visor: desplazamiento continuo, zoom con dos dedos, miniaturas, esquema, resaltado de búsqueda, ir a una página, introducción de contraseña y modo nocturno; otras aplicaciones pueden entregarle archivos PDF con "Abrir con" o compartiendo; los scripts pueden abrir el visor y recibir los eventos de cambio de página y de cierre.
-- Caja de herramientas: 8 herramientas para combinar, dividir, convertir a imágenes, convertir imágenes a PDF, cifrar, descifrar, extraer texto y organizar páginas; las tareas se ejecutan una tras otra en segundo plano, con el progreso en la notificación; los archivos recientes también recuerdan los archivos abiertos con el selector de archivos del sistema.
-- Gestor de archivos de AutoJs6: al tocar un PDF se abre en el visor del complemento, y los PDF de hasta 512 MiB dentro de archivos comprimidos también se abren directamente; el menú ofrece combinar, dividir, convertir a imágenes, extraer texto, cifrar y quitar la contraseña.
+- Caja de herramientas: 13 herramientas para combinar, dividir, convertir a imágenes, convertir imágenes a PDF, cifrar, descifrar, extraer texto, organizar páginas, añadir una marca de agua (con vista previa), añadir números de página, comprimir, rellenar formularios y editar las propiedades del documento, con valores personalizados para la marca de agua, los números de página y la compresión; las tareas se ejecutan una tras otra en segundo plano, con el progreso en la notificación; la pantalla de resultados puede escribir el proceso como un script de Rhino, Node.js o Bun; los archivos recientes también recuerdan los archivos abiertos con el selector de archivos del sistema.
+- Gestor de archivos de AutoJs6: al tocar un PDF se abre en el visor del complemento, y los PDF de hasta 512 MiB dentro de archivos comprimidos también se abren directamente; el menú ofrece combinar, dividir, comprimir, convertir a imágenes, añadir una marca de agua, extraer texto, cifrar y quitar la contraseña, y puede crear un PDF con búsqueda de texto mediante un complemento de OCR.
 - OCR: `pdf.text(path, { ocr: true })` reconoce las páginas escaneadas sin capa de texto con un complemento OCR instalado (ML Kit OCR, Paddle OCR o Rapid OCR).
 - Node.js y Bun: Node.js Runtime 2.2.0 y Bun Runtime 0.23.0 o posteriores ofrecen el mismo módulo `pdf`; sus métodos devuelven Promises, y las llamadas se pueden interrumpir con `signal` o `timeoutMs`.
 
@@ -85,10 +90,24 @@ El procesamiento se ejecuta en el complemento con el `PdfRenderer` de Android y 
 
 - Android 7.0 (API 24) o posterior, un único paquete para todas las ABI; la caja de herramientas y el visor no dependen de AutoJs6.
 - Scripts de AutoJs6 y gestor de archivos: requieren AutoJs6 6.8.1 (compilación interna 6641) o posterior.
+- Métodos de script nuevos en 1.1.0 (formularios, marcas de agua y números de página, PDF con búsqueda de texto, compresión, propiedades del documento y esquema): requieren AutoJs6 6.8.1 o posterior y este complemento 1.1.0 o posterior, con las mismas versiones de Node.js Runtime y Bun Runtime que los demás métodos; mientras el complemento siga en 1.0.x, estos métodos fallan con `UNSUPPORTED` e indican que se actualice en el centro de complementos, no escriben ningún archivo, y los demás métodos funcionan con normalidad.
 - Aplicaciones empaquetadas por AutoJs6: deben empaquetarse con AutoJs6 6.8.1 (compilación interna 6641) o posterior, y este complemento debe estar instalado en el dispositivo que las ejecuta; el empaquetado añade el permiso `org.autojs.plugin.pdf.permission.RUNTIME`, así que no hace falta modificar `project.json` (un proyecto Node.js declara `files` y un proyecto Bun declara `pdf.control`).
 - Node.js: requiere el complemento Node.js Runtime 2.2.0 o posterior, cargado con `require('autojs6:pdf')`; el proyecto declara `files` en `node.permissions` de `project.json`, además de `files.write` para escribir archivos, `ocr` para reconocer texto y `ui` para abrir el visor.
 - Bun: requiere el complemento Bun Runtime 0.23.0 o posterior (Android 13 o posterior), usado mediante `host.pdf`; active `pdf.control` en la pantalla de ajustes de Bun Runtime, además de `ocr.control` para reconocer texto.
-- OCR: reconocer páginas escaneadas requiere un complemento OCR (ML Kit OCR, Paddle OCR o Rapid OCR); sin él, el reconocimiento de páginas escaneadas falla con `OCR_UNAVAILABLE`, y las demás funciones no se ven afectadas.
+- OCR: el reconocimiento de las páginas escaneadas y la creación de PDF con búsqueda de texto requieren un complemento de OCR (ML Kit OCR, Paddle OCR o Rapid OCR); sin él, estas dos funciones fallan con `OCR_UNAVAILABLE`, sin afectar a las demás funciones.
+
+Requisitos y funciones por versión:
+
+| Elemento | 1.0.0 | 1.1.0 |
+| --- | --- | --- |
+| Android | 7.0 (API 24) o posterior | 7.0 (API 24) o posterior |
+| AutoJs6 | 6.8.1 (compilación interna 6641) o posterior | 6.8.1 (compilación interna 6641) o posterior |
+| Node.js Runtime | 2.2.0 o posterior | 2.2.0 o posterior |
+| Bun Runtime | 0.23.0 o posterior (Android 13 o posterior) | 0.23.0 o posterior (Android 13 o posterior) |
+| Complemento de OCR (opcional) | Reconocimiento de páginas escaneadas | Reconocimiento de páginas escaneadas, creación de PDF con búsqueda de texto |
+| Métodos de script | Lectura, renderizado, operaciones con páginas, generación, cifrado, OCR, visor | Además: formularios, marcas de agua y números de página, PDF con búsqueda de texto, compresión, propiedades del documento y esquema |
+| Caja de herramientas | 8 herramientas | 13 herramientas, valores personalizados, generación de scripts |
+| Menú del gestor de archivos de AutoJs6 | 6 acciones | 9 acciones (además: comprimir, añadir marca de agua, crear PDF con búsqueda de texto) |
 
 ******
 
@@ -119,6 +138,13 @@ pdf.fromText(files.read("./notes.txt"), "./notes.pdf", { fontSize: 14 });
 pdf.fromHtml("<h1>Report</h1><p>Hello</p>", "./report.pdf");
 pdf.encrypt("./report.pdf", "./report-locked.pdf", { userPassword: "open", ownerPassword: "owner", permissions: { print: true, copy: false } });
 
+// 1.1.0
+pdf.fillForm("./form.pdf", "./form-filled.pdf", { "applicant.name": "AutoJs6", "applicant.agree": true }, { flatten: true });
+pdf.watermark("./report.pdf", "./report-draft.pdf", { text: "DRAFT" });
+pdf.stamp("./report.pdf", "./report-numbered.pdf", { pageNumbers: { format: "{page} / {total}" } });
+pdf.compress("./photos.pdf", "./photos-small.pdf", { preset: "low" });
+pdf.setInfo("./report.pdf", "./report-info.pdf", { title: "Report", author: "AutoJs6" });
+
 let session = pdf.view("./book.pdf", { page: 5, search: "AutoJs6" });
 session.on("page", (e) => console.log("page", e.page));
 session.on("close", () => console.log("closed"));
@@ -145,6 +171,7 @@ const pdf = require("autojs6:pdf");
 - Cada método tiene una forma bloqueante y una forma `xxxAsync` que devuelve una Promise, con los mismos argumentos y resultados; la forma bloqueante no se puede llamar en el hilo de la interfaz (falla con `INVALID_ARGUMENT`), así que los scripts de interfaz usan `xxxAsync`; los métodos que escriben archivos aceptan `onProgress` y su Promise tiene `cancel()`; cancelar o detener el script nunca deja un archivo a medio escribir.
 - Los `displayNames` de `pdf.merge` dan nombre al marcador de cada entrada: `null` toma el nombre del archivo (sin `.pdf`), y una cadena vacía o de espacios toma el título del documento (`Document <n>` si no tiene); unas opciones de más de unos 63 KiB fallan con `LIMIT_EXCEEDED` y no escriben nada.
 - `pdf.fromHtml` ejecuta por defecto los scripts de la página, y `javaScript: false` los desactiva; no se carga ningún contenido externo: las solicitudes de red reciben una respuesta vacía y quedan registradas en `warnings`.
+- Los métodos de escritura de la versión 1.1.0 (por ejemplo `pdf.fillForm`, `pdf.stamp` y `pdf.compress`) pueden omitir la ruta de salida (o recibir `null`) igual que los demás métodos de escritura, y el resultado se escribe en `Documents/3-Paper PDF/`; los métodos del mismo nombre de `PdfDocument` reutilizan la contraseña indicada al abrir y no aceptan `password` en sus opciones; los resultados de los métodos que escriben archivos también incluyen `warningCodes`, un código por cada entrada de `warnings`, para que los scripts puedan tratarlos por código.
 - `pdf.view(path, options)` abre el visor y devuelve un `PdfViewSession` con los eventos `page` / `close` y los métodos `goTo(page)`, `state()` y `close()`; falla con `UI_REQUIRES_FOREGROUND` cuando AutoJs6 no está en primer plano (en Android 10 o posterior sin el permiso de superposición).
 - Node.js y Bun: todos los métodos devuelven una Promise; `signal` (un AbortSignal) y `timeoutMs` interrumpen la llamada, que se rechaza con `CANCELLED` en ambos casos, y un tiempo agotado tiene como `cause` un `TimeoutError`; `timeoutMs` debe ser un número finito mayor que 0 y como máximo 2147483647, y los decimales se redondean hacia arriba.
 - Los fallos lanzan un `PdfError` con un `code` estable como `PASSWORD_REQUIRED`, `WRONG_PASSWORD` o `PAGE_OUT_OF_RANGE`; `pdf.isAvailable()` comprueba de antemano si el complemento está disponible.
@@ -178,6 +205,14 @@ Sí. Un PDF de hasta 512 MiB dentro de un archivo comprimido se abre directament
 #### Qué hago si un archivo de los archivos recientes ya no se abre?
 
 Los archivos abiertos con el selector de archivos del sistema conservan su permiso de lectura y se siguen abriendo directamente tras reiniciar. Si el archivo se ha eliminado o movido, o se ha revocado el permiso, al tocar la entrada se muestra un aviso y se quita de la lista; vuelva a elegir el archivo con "Abrir un PDF".
+
+#### Por qué los valores introducidos en el formulario no se muestran en el visor?
+
+En Android 14 y versiones anteriores, el visor del complemento solo muestra los valores introducidos después de acoplarlos; las demás aplicaciones de PDF no se ven afectadas. Para verlos en el visor, acople al rellenar (`flatten: true`, o "Acoplar los campos" en la herramienta "Rellenar formulario"); los campos acoplados ya no se pueden editar.
+
+#### Por qué el archivo comprimido no es más pequeño?
+
+La compresión reduce sobre todo las imágenes incrustadas. Cuando las imágenes ya son lo bastante pequeñas, o son de un tipo que el complemento no vuelve a codificar (por ejemplo JPEG 2000, CMYK o imágenes de 1 bit), el efecto es limitado; un resultado que no es más pequeño se escribe igualmente, con un aviso en el resultado, y puede conservar el archivo original.
 
 ******
 
@@ -243,7 +278,19 @@ Los planes, las decisiones de diseño y el progreso se registran como lista de v
 
 _2026/11/20_
 
+- `Aviso` Los nuevos métodos de script y la acción "Crear PDF con búsqueda de texto" del gestor de archivos requieren AutoJs6 6.8.1 o posterior, y usarlos en scripts de Node.js o Bun requiere además Node.js Runtime 2.2.0 o Bun Runtime 0.23.0 o posterior; las nuevas herramientas de la caja de herramientas no dependen de AutoJs6
+- `Función` pdf.forms y pdf.fillForm leen los campos de formulario (campos de texto, casillas de verificación, botones de opción, cuadros combinados, cuadros de lista) y los rellenan por nombre de campo, con la opción de acoplarlos como contenido normal de la página; pdf.info añade el número de campos de formulario
+- `Función` pdf.watermark y pdf.stamp añaden marcas de agua de texto o de imagen, números de página, encabezados y pies de página, con posición, rotación, opacidad, mosaico y las páginas a las que se aplican
+- `Función` pdf.makeSearchable escribe una capa de texto invisible en las páginas escaneadas mediante un complemento de OCR y crea PDF cuyo texto se puede buscar y copiar; pdf.addTextLayer escribe los resultados que reconozca el propio script
+- `Función` pdf.compress vuelve a codificar las imágenes incrustadas y comprime los flujos, puede eliminar los metadatos, y ofrece los ajustes predefinidos low / medium / high o una resolución y una calidad personalizadas; el resultado indica el tamaño antes y después
+- `Función` pdf.setInfo cambia propiedades del documento como el título, el autor, el asunto, las palabras clave y el creador, y pdf.setOutline reescribe o elimina el esquema con la estructura que devuelve pdf.outline
+- `Función` Cada método nuevo tiene una forma Async y un método del mismo nombre en PdfDocument, y funciona también en Node.js, Bun y las aplicaciones empaquetadas por AutoJs6; los resultados de los métodos que escriben archivos también incluyen warningCodes, para que los scripts traten los avisos por código
+- `Función` La caja de herramientas añade 5 herramientas, "Añadir marca de agua al PDF" (con vista previa de una página), "Añadir números de página", "Comprimir PDF", "Rellenar formulario" y "Propiedades del documento", 13 en total; la marca de agua, los números de página y la compresión aceptan también valores personalizados además de los ajustes predefinidos
+- `Función` La pantalla de resultados de las herramientas y de las acciones del gestor de archivos puede escribir el proceso como un script de Rhino, Node.js o Bun, con "Copiar script", "Guardar como .js" y "Abrir en AutoJs6"; las contraseñas quedan como null en el script para que las rellene usted
+- `Función` El menú PDF del gestor de archivos de AutoJs6 añade "Comprimir PDF" y "Añadir marca de agua al PDF", que guardan el resultado junto al archivo original, y "Crear PDF con búsqueda de texto" mediante un complemento de OCR
 - `Mejora` La página Historial de versiones ahora se expande y contrae por versión: una versión contraída muestra su fecha y el número de entradas por categoría, una expandida nombra cada categoría una sola vez; todas las versiones se pueden expandir o contraer a la vez y la más reciente se abre expandida; la página lleva el nombre del complemento como subtítulo
+- `Mejora` Las indicaciones de procesamiento de la pantalla de resultados de las herramientas ahora se muestran en el idioma de la interfaz en lugar de solo en inglés
+- `Mejora` Se reescribieron las instrucciones del centro de complementos en cinco partes: primeros pasos, funciones principales, uso en scripts, requisitos y preguntas frecuentes
 
 #### v1.0.0
 

@@ -49,7 +49,7 @@
     <string name="notification_task_failed">%1$s did not finish</string>
     <string name="notification_tasks_queued" tools:ignore="PluralsCandidate">%1$d more queued</string>
     <string name="notification_tasks_title">Processing PDF files</string>
-    <string name="plugin_description">Read, render, merge, split, generate and encrypt PDF files, with a built-in viewer and file manager entries</string>
+    <string name="plugin_description">Read, render, merge, split, generate, compress and encrypt PDF files, fill in forms and add watermarks, with a built-in viewer and file manager entries</string>
     <string name="release_history">Release history</string>
     <string name="release_history_collapse_all">Collapse all</string>
     <string name="release_history_collapsed">Collapsed</string>

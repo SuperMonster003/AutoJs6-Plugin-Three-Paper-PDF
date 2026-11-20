@@ -49,7 +49,7 @@
     <string name="notification_task_failed">%1$s: non terminé</string>
     <string name="notification_tasks_queued">En attente: %1$d</string>
     <string name="notification_tasks_title">Traitement des PDF</string>
-    <string name="plugin_description">Lecture, rendu, fusion, découpage, génération et chiffrement de fichiers PDF, avec une visionneuse intégrée et des entrées dans le gestionnaire de fichiers</string>
+    <string name="plugin_description">Lecture, rendu, fusion, découpage, génération, compression et chiffrement de fichiers PDF, remplissage de formulaires et ajout de filigranes, avec une visionneuse intégrée et des entrées dans le gestionnaire de fichiers</string>
     <string name="release_history">Historique des versions</string>
     <string name="release_history_collapse_all">Tout réduire</string>
     <string name="release_history_collapsed">Réduit</string>

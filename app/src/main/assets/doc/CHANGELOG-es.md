@@ -8,7 +8,19 @@
 
 ###### 2026/11/20
 
+* `Aviso` Los nuevos métodos de script y la acción "Crear PDF con búsqueda de texto" del gestor de archivos requieren AutoJs6 6.8.1 o posterior, y usarlos en scripts de Node.js o Bun requiere además Node.js Runtime 2.2.0 o Bun Runtime 0.23.0 o posterior; las nuevas herramientas de la caja de herramientas no dependen de AutoJs6
+* `Función` pdf.forms y pdf.fillForm leen los campos de formulario (campos de texto, casillas de verificación, botones de opción, cuadros combinados, cuadros de lista) y los rellenan por nombre de campo, con la opción de acoplarlos como contenido normal de la página; pdf.info añade el número de campos de formulario
+* `Función` pdf.watermark y pdf.stamp añaden marcas de agua de texto o de imagen, números de página, encabezados y pies de página, con posición, rotación, opacidad, mosaico y las páginas a las que se aplican
+* `Función` pdf.makeSearchable escribe una capa de texto invisible en las páginas escaneadas mediante un complemento de OCR y crea PDF cuyo texto se puede buscar y copiar; pdf.addTextLayer escribe los resultados que reconozca el propio script
+* `Función` pdf.compress vuelve a codificar las imágenes incrustadas y comprime los flujos, puede eliminar los metadatos, y ofrece los ajustes predefinidos low / medium / high o una resolución y una calidad personalizadas; el resultado indica el tamaño antes y después
+* `Función` pdf.setInfo cambia propiedades del documento como el título, el autor, el asunto, las palabras clave y el creador, y pdf.setOutline reescribe o elimina el esquema con la estructura que devuelve pdf.outline
+* `Función` Cada método nuevo tiene una forma Async y un método del mismo nombre en PdfDocument, y funciona también en Node.js, Bun y las aplicaciones empaquetadas por AutoJs6; los resultados de los métodos que escriben archivos también incluyen warningCodes, para que los scripts traten los avisos por código
+* `Función` La caja de herramientas añade 5 herramientas, "Añadir marca de agua al PDF" (con vista previa de una página), "Añadir números de página", "Comprimir PDF", "Rellenar formulario" y "Propiedades del documento", 13 en total; la marca de agua, los números de página y la compresión aceptan también valores personalizados además de los ajustes predefinidos
+* `Función` La pantalla de resultados de las herramientas y de las acciones del gestor de archivos puede escribir el proceso como un script de Rhino, Node.js o Bun, con "Copiar script", "Guardar como .js" y "Abrir en AutoJs6"; las contraseñas quedan como null en el script para que las rellene usted
+* `Función` El menú PDF del gestor de archivos de AutoJs6 añade "Comprimir PDF" y "Añadir marca de agua al PDF", que guardan el resultado junto al archivo original, y "Crear PDF con búsqueda de texto" mediante un complemento de OCR
 * `Mejora` La página Historial de versiones ahora se expande y contrae por versión: una versión contraída muestra su fecha y el número de entradas por categoría, una expandida nombra cada categoría una sola vez; todas las versiones se pueden expandir o contraer a la vez y la más reciente se abre expandida; la página lleva el nombre del complemento como subtítulo
+* `Mejora` Las indicaciones de procesamiento de la pantalla de resultados de las herramientas ahora se muestran en el idioma de la interfaz en lugar de solo en inglés
+* `Mejora` Se reescribieron las instrucciones del centro de complementos en cinco partes: primeros pasos, funciones principales, uso en scripts, requisitos y preguntas frecuentes
 
 # v1.0.0
 
