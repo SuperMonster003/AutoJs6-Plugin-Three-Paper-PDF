@@ -42,7 +42,10 @@ RUNNER = TEST_PACKAGE + "/androidx.test.runner.AndroidJUnitRunner"
 TAGS = ("PaperRenderPerf", "PaperMergePerf", "PaperImagesPerf", "PaperHtmlSpike", "PaperCryptoSpike", "PaperViewerPerf", "PaperStampSpike",
         "PaperObjectStreams", "PaperFontSubset", "PaperCompress", "PaperMetadata", "PaperTextLayer", "PaperForms")
 ROOT = Path(__file__).resolve().parent.parent
-PLUGIN_APK = ROOT / "app/build/outputs/apk/debug/autojs6-plugin-three-paper-pdf-v1.0.0.apk"
+# The debug APK is named after VERSION_NAME. zh-CN: debug APK 以 VERSION_NAME 命名.
+VERSION_NAME = next(line.split("=", 1)[1].strip() for line in (ROOT / "version.properties").read_text(encoding="utf-8").splitlines()
+                    if line.startswith("VERSION_NAME="))
+PLUGIN_APK = ROOT / f"app/build/outputs/apk/debug/autojs6-plugin-three-paper-pdf-v{VERSION_NAME}.apk"
 TEST_APK = ROOT / "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk"
 
 # `am instrument -r` status codes. zh-CN: `am instrument -r` 的状态码.

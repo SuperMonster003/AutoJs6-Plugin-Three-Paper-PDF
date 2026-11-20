@@ -275,7 +275,10 @@ def check_rhino(serial, checks, name, demo, args, scratch):
             ("fillForm", fill.get("filled") == (2 if demo else 9) and fill.get("matched") == fill.get("filled")),
             ("recover", recover.get("strict") == "INVALID_ARGUMENT" and recover.get("ignoreMissing") == ["FIELDS_IGNORED"]
              and recover.get("restored") == "Ada" and recover.get("defaultValue") == "Ada" and recover.get("wrongType") == "INVALID_ARGUMENT"),
-            ("flatten", flat.get("fields") == 0 and flat.get("formFieldCount") == 0 and flat.get("hits") == ([1] if demo else [1, 2])),
+            # pdf.search answers one hit per match, so a page with several filled values appears more than once.
+            # zh-CN: pdf.search 每处匹配一项, 填了多个值的页面会出现多次.
+            ("flatten", flat.get("fields") == 0 and flat.get("formFieldCount") == 0
+             and sorted(set(flat.get("hits") or [])) == ([1] if demo else [1, 2])),
         ]
         detail = (f"forms={forms.get('count')} filled={fill.get('filled')}/{fill.get('matched')} warningCodes={fill.get('warningCodes')} "
                   f"recover={recover} flatten={flat}")

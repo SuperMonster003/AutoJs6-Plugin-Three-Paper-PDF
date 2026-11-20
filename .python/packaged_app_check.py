@@ -1,4 +1,4 @@
-"""Checks that an app packaged by AutoJs6 can use the pdf module (3-Paper PDF roadmap P5.5, Q145 (b)).
+"""Checks that an app packaged by AutoJs6 can use the pdf module (3-Paper PDF roadmap P5.5 and P6.15, Q145 (b)).
 
 Usage: py -3.12 -I .python/packaged_app_check.py -s SERIAL [--host-apk APK] [--host-test-apk APK] [--template-apk APK]
        [--plugin-apk APK] [--app-apk APK] [--no-unavailable] [--keep] [--adb-timeout SECONDS]
@@ -9,11 +9,14 @@ Usage: py -3.12 -I .python/packaged_app_check.py -s SERIAL [--host-apk APK] [--h
    The --*-apk options install those first (install -r -t); the tool answers no dialog.
 2. Unless --app-apk is given, the host test PackagedAppPdfDeviceTest#producesPackagedApp packs a Rhino project
    (org.autojs.autojs6.paperpdf) with the template plugin (switched on in Plugin Center for the run if it is off) and
-   the APK is pulled and installed. Its script calls pdf.fromText, open, render, merge, info, encrypt and view once each
-   and writes the results to paper-packaged-result.json in its external files directory, then keeps one document open.
+   the APK is pulled and installed. Its script calls pdf.fromText, open, render, merge, info, encrypt and view once each,
+   then the contract version 2 methods of 3-Paper PDF 1.1.0 watermark, compress and fillForm (on a two-field form the
+   script writes itself) once each, writes the results to paper-packaged-result.json in its external files directory
+   and keeps one document open. A host test package without the version 2 steps, or a 1.0.x plugin, reports them SKIP.
 3. Checks: the packaging flow granted org.autojs.plugin.pdf.permission.RUNTIME; every call returned what it should
    (page counts, the size of the rendered page, PASSWORD_REQUIRED without the password, the viewer session state and
-   its "finished" close reason); the plugin keeps the document in cache/pdf/k<uid>-<pid>/ and releases it after the
+   its "finished" close reason, a watermarked copy of the page count, a compression result with one warning code per
+   warning, the filled form read back); the plugin keeps the document in cache/pdf/k<uid>-<pid>/ and releases it after the
    app is killed (am force-stop), within 90 seconds.
 4. Unless --no-unavailable is given, the plugin is uninstalled with its data kept (pm uninstall -k), the app runs again
    and every call must report PLUGIN_UNAVAILABLE; the plugin is then installed back (--plugin-apk, or the APK pulled
@@ -29,8 +32,10 @@ zh-CN: 检查由 AutoJs6 打包的应用能否使用 pdf 模块 (3-Paper PDF 路
 以及带打包入口的可调试 3-Paper PDF (1.0.0, P5.5). 给出 --*-apk 选项时先安装它们 (install -r -t); 本工具不应答任何对话框.
 2. 未给 --app-apk 时, 由宿主测试 PackagedAppPdfDeviceTest#producesPackagedApp 用模板插件打包一个 Rhino 项目 (org.autojs.autojs6.paperpdf;
 模板插件在插件中心关闭时本次运行临时打开), 拉取并安装 APK. 应用脚本对 pdf.fromText, open, render, merge, info, encrypt 与 view 各调用一次,
-把结果写到自身外部文件目录的 paper-packaged-result.json, 然后保持一个文档打开. 3. 检查: 打包流程授予了 org.autojs.plugin.pdf.permission.RUNTIME;
-每项调用的返回符合预期 (页数, 渲染页的尺寸, 不给密码时报 PASSWORD_REQUIRED, 查看器会话状态与 "finished" 关闭原因); 插件把文档放在
+再对 3-Paper PDF 1.1.0 契约版本 2 的 watermark, compress 与 fillForm (脚本自己写出的两个字段的表单) 各调用一次, 把结果写到自身外部文件目录的
+paper-packaged-result.json, 然后保持一个文档打开. 宿主测试包没有版本 2 的步骤或插件为 1.0.x 时, 这三项报 SKIP. 3. 检查: 打包流程授予了 org.autojs.plugin.pdf.permission.RUNTIME;
+每项调用的返回符合预期 (页数, 渲染页的尺寸, 不给密码时报 PASSWORD_REQUIRED, 查看器会话状态与 "finished" 关闭原因, 加水印后的页数,
+压缩结果的警告代码与警告逐条对应, 填写后读回的表单值); 插件把文档放在
 cache/pdf/k<uid>-<pid>/, 应用被杀 (am force-stop) 后 90 秒内释放. 4. 未给 --no-unavailable 时, 保留数据卸载插件 (pm uninstall -k), 再运行一次应用,
 每项调用都应报 PLUGIN_UNAVAILABLE; 之后装回插件 (--plugin-apk, 或卸载前从设备拉取的 APK). 5. 结束时删除打包应用与宿主里的 APK 副本,
 恢复插件中心状态, 给出 --keep 时保留. 宿主, 其测试包与模板插件保持安装.
@@ -63,7 +68,8 @@ MIN_HOST_BUILD = 6641
 ENABLE_STATE = "shared_prefs/plugin_center_enable_state.xml"
 TEMPLATE_OFF = f'<boolean name="key_$_enabled_plugin_$_{TEMPLATE}" value="false" />'
 TEMPLATE_ON = f'<boolean name="key_$_enabled_plugin_$_{TEMPLATE}" value="true" />'
-CALLS = ("fromText", "open", "render", "merge", "info", "encrypt", "view", "hold")
+CALLS = ("fromText", "open", "render", "merge", "info", "encrypt", "watermark", "compress", "fillForm", "view", "hold")
+VERSION_2 = ("watermark", "compress", "fillForm")
 RESULT_TIMEOUT = 90
 RELEASE_TIMEOUT = 90
 ADB_TIMEOUT = 600  # seconds for each adb install / push / pull, --adb-timeout; zh-CN: 每次 adb 传输的秒数
@@ -192,12 +198,39 @@ def check_calls(checks, result):
     locked = value(result, "encrypt")
     checks.judge("encrypt", locked is not None and locked.get("withoutPassword") == "PASSWORD_REQUIRED" and locked.get("encrypted") is True,
                  f"withoutPassword={locked and locked.get('withoutPassword')} encrypted={locked and locked.get('encrypted')}")
+    check_version_2(checks, result)
     view = value(result, "view")
     state = (view or {}).get("state") or {}
     checks.judge("view", view is not None and view.get("reason") == "finished" and state.get("pageCount") == 2,
                  f"state={state.get('page')}/{state.get('pageCount')} visible={state.get('visible')} reason={view and view.get('reason')}")
     held = value(result, "hold")
     checks.judge("hold", held is not None, f"pageCount={held.get('pageCount')}" if held is not None else f"code={steps.get('hold', {}).get('code')}")
+
+
+def check_version_2(checks, result):
+    """The contract version 2 steps (3-Paper PDF 1.1.0). zh-CN: 契约版本 2 的步骤 (3-Paper PDF 1.1.0)."""
+    steps = result.get("steps", {})
+    for name in VERSION_2:
+        step = steps.get(name)
+        if step is None:
+            checks.report("SKIP", name, "the host test package has no version 2 steps")
+        elif not step.get("ok") and step.get("code") == "UNSUPPORTED":
+            checks.report("SKIP", name, f"UNSUPPORTED (a 1.0.x plugin): {str(step.get('message'))[:80]}")
+    if any(name not in steps or steps[name].get("code") == "UNSUPPORTED" for name in VERSION_2):
+        return
+    marked = value(result, "watermark")
+    checks.judge("watermark", marked is not None and marked.get("pageCount") == 1 and marked.get("sizeBytes", 0) > marked.get("sourceBytes", 0),
+                 f"pageCount={marked and marked.get('pageCount')} bytes={marked and marked.get('sourceBytes')} -> {marked and marked.get('sizeBytes')}"
+                 + ("" if marked is not None else f" code={steps['watermark'].get('code')}"))
+    packed = value(result, "compress")
+    codes = (packed or {}).get("warningCodes")
+    checks.judge("compress", packed is not None and packed.get("pageCount") == 2 and isinstance(codes, list) and len(codes) == packed.get("warnings"),
+                 f"bytes={packed and packed.get('sourceBytes')} -> {packed and packed.get('sizeBytes')} warningCodes={codes}"
+                 + ("" if packed is not None else f" code={steps['compress'].get('code')}"))
+    filled = value(result, "fillForm")
+    checks.judge("fillForm", filled is not None and filled.get("filled") == 2 and filled.get("name") == "Packaged" and filled.get("agree") is True,
+                 f"filled={filled and filled.get('filled')} name={filled and filled.get('name')} agree={filled and filled.get('agree')}"
+                 + ("" if filled is not None else f" code={steps['fillForm'].get('code')}"))
 
 
 def check_release(checks, serial, result):
@@ -235,7 +268,7 @@ def check_unavailable(checks, serial, plugin_apk, work):
         if result is None:
             checks.report("FAIL", "unavailable", f"no result within {RESULT_TIMEOUT} s")
             return
-        codes = {name: (result["steps"].get(name) or {}).get("code") for name in CALLS if name != "hold"}
+        codes = {name: (result["steps"].get(name) or {}).get("code") for name in CALLS if name != "hold" and name in result["steps"]}
         wrong = {name: code for name, code in codes.items() if code != "PLUGIN_UNAVAILABLE"}
         checks.judge("unavailable", result.get("available") == "false" and not wrong,
                      f"isAvailable={result.get('available')} {len(codes) - len(wrong)}/{len(codes)} calls PLUGIN_UNAVAILABLE"
