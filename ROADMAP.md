@@ -534,7 +534,7 @@ P6.9 / P6.10 定稿 -> P6.14 (文档, 声明, 样例)      全部 -> P6.15 (真�
 
 ## P6: 1.1.0 表单, 水印, 可搜索 PDF, 压缩, 元数据与大纲, 生成脚本代码 (D20, D46 - D70)
 
-状态: 进行中 (2026-11-15 立项完成; 2026-11-18 批次 10 完成 7 / 34 行: P6.1 三行, P6.2 第 2 - 4 行, P6.7; 2026-11-19 批次 11 完成后 11 / 34 行: 新增 P6.2 第 1 行, P6.3, P6.9 第 1, 3 行; 批次 12 之后 15 / 34 行: 新增 P6.6, P6.8 (paper-p6-compress, 另做了 Q211 (a) 的插件侧), P6.9 第 2 行, P6.11 宿主行 (paper-p6-searchable); 批次 13 之后 21 / 34 行: 新增 P6.4 两行, P6.5 (paper-p6-forms), P6.10 三行与 Q231 B (paper-p6-runtime); 2026-11-20 批次 14 之后 26 / 34 行: 新增 P6.11 插件行, P6.12 两行 (paper-p6-tools), P6.14 第 1, 2 行 (paper-p6-docs), 补卡 paper-p6-outline 做了 Q270 (b) / Q280; 批次 15 之后 27 / 34 行: 新增 P6.13 与 Q265 (b) (paper-p6-codegen), Q264 (b) 的契约与宿主侧 (paper-p6-warncode, 插件侧在批次 16); 批次 16 之后 29 / 34 行: 新增 P6.14 第 3, 4 行 (paper-p6-readme, 另做了 Q264 (b) 插件侧与 Q291 (a) / Q310 (a))). 范围已由维护者确认并扩为六项 (D46, 附录 D Q173 - Q184); 立项前的 5 行粗条目 (原 P6.1 - P6.5) 由本节的 P6.1 - P6.16 共 34 行取代. 设备: API 24 / 33 / 35 AVD, 附录 F 的五台真机 (OCR 相关的项要装有 OCR 引擎的设备). 依赖与批次建议见第 6 节; 脚本 API 草案见附录 B.6, 契约版本 2 草案见附录 C.4.
+状态: 进行中 (2026-11-15 立项完成; 2026-11-18 批次 10 完成 7 / 34 行: P6.1 三行, P6.2 第 2 - 4 行, P6.7; 2026-11-19 批次 11 完成后 11 / 34 行: 新增 P6.2 第 1 行, P6.3, P6.9 第 1, 3 行; 批次 12 之后 15 / 34 行: 新增 P6.6, P6.8 (paper-p6-compress, 另做了 Q211 (a) 的插件侧), P6.9 第 2 行, P6.11 宿主行 (paper-p6-searchable); 批次 13 之后 21 / 34 行: 新增 P6.4 两行, P6.5 (paper-p6-forms), P6.10 三行与 Q231 B (paper-p6-runtime); 2026-11-20 批次 14 之后 26 / 34 行: 新增 P6.11 插件行, P6.12 两行 (paper-p6-tools), P6.14 第 1, 2 行 (paper-p6-docs), 补卡 paper-p6-outline 做了 Q270 (b) / Q280; 批次 15 之后 27 / 34 行: 新增 P6.13 与 Q265 (b) (paper-p6-codegen), Q264 (b) 的契约与宿主侧 (paper-p6-warncode, 插件侧在批次 16); 批次 16 之后 29 / 34 行: 新增 P6.14 第 3, 4 行 (paper-p6-readme, 另做了 Q264 (b) 插件侧与 Q291 (a) / Q310 (a)); 2026-11-21 批次 17 之后 31 / 34 行: 新增 P6.15 第 2, 3 行 (paper-p6-device; 第 1 行缺 XQ-AT72 与小米平板两台, 第 4 行等维护者 E4)). 范围已由维护者确认并扩为六项 (D46, 附录 D Q173 - Q184); 立项前的 5 行粗条目 (原 P6.1 - P6.5) 由本节的 P6.1 - P6.16 共 34 行取代. 设备: API 24 / 33 / 35 AVD, 附录 F 的五台真机 (OCR 相关的项要装有 OCR 引擎的设备). 依赖与批次建议见第 6 节; 脚本 API 草案见附录 B.6, 契约版本 2 草案见附录 C.4.
 
 spike 约定 (参照 1.0.0 的 Q4 / Q5): S1 (表单外观), S2 (Canvas 印章), S3 (无字形字体的文本层), S4 (对象流写出器) 各自在所属条目开头先做, 结论 (通过的设备, 数值, 偏离派生决策之处) 写回该条目与对应的 D 行; 结论推翻派生决策时登记附录 D.
 
@@ -645,13 +645,18 @@ spike 约定 (参照 1.0.0 的 Q4 / Q5): S1 (表单外观), S2 (Canvas 印章), 
 ### P6.15 真机联调, 回归与性能基线
 
 - [ ] (测试) `scripts/device-regression.js` 加 1.1.0 的检查 (每个新方法的便捷层, 对象层与 Async 形态各至少一项, `makeSearchable` 在有 OCR 引擎的设备上跑); 第 6 节门禁 2 的设备 (Sony API 28 / 31 / 33, Xiaomi Pad API 35, OnePlus API 35) 与 AVD_API_33 全部通过; 宿主样例与 Node / Bun 样例在 API 33 真机通过.
-- [ ] (测试) 打包应用: `.python/packaged_app_check.py` 加版本 2 的操作 (水印, 压缩, 填写表单各一项), AVD_API_33 与一台 API 33 真机.
-- [ ] (测试) 契约兼容 (门禁 6): 含契约 2 的宿主配 `v1.0.0` 的 release 包; 只含契约 1 的宿主构建配插件 1.1.0.
+- [x] (测试) 打包应用: `.python/packaged_app_check.py` 加版本 2 的操作 (水印, 压缩, 填写表单各一项), AVD_API_33 与一台 API 33 真机.
+- [x] (测试) 契约兼容 (门禁 6): 含契约 2 的宿主配 `v1.0.0` 的 release 包; 只含契约 1 的宿主构建配插件 1.1.0.
 - [ ] (测试) E4 手测 (维护者在手机上操作): P6.12 的清单, P6.11 的宿主对话框, P6.13 的三种写法与 "在 AutoJs6 中打开"; 性能基线 (加水印, 压缩三类样本, 逐页 OCR 加写文本层) 填进附录 F.
 - 结果 (paper-p6-outline, 2026-11-20): outline 的截断标记 (Q270 (b) / Q280) 已在宿主, Node, Bun, 三处 d.ts, Ace 与文档站落地, 单测与门面测试覆盖截断与未截断; 真实插件上的超预算大纲留给本节端到端核对 (检查点见下一行与 paper-p6-outline 交接说明第 4 节).
 - 端到端检查点 (Q270 (b) / Q280, 真实插件 1.1.0, 随第 1 行或 E4 做): (1) 造超预算大纲: `pdf.fromText` 生成 1 页源文件, `pdf.setOutline` 写 10,000 项 `{ title: 'Section ' + 五位序号 + ' ' + 'x' 重复 30 次, page: 1, children: [] }` (每项约 76 个字符, 合计约 760,000, 远超插件 `JsonItems.BUDGET_CHARS` 320,000; 标题避开 `/`, Android 的 JSONObject 会把它转义成两个字符); (2) `pdf.outline(big)`: `truncated === true`, `length` 约 4,200 (< 10,000), 首项标题以 `Section 00000` 开头, `Object.keys(read).length === read.length`, `JSON.stringify` 里没有 truncated; `doc.outline()`, `outlineAsync` 与 `doc.outlineAsync()` 相同; (3) 未截断的文档 (源文件 `[]`, 或只写 3 项) `truncated === false`, 内容与写入的相同; (4) Node.js (CJS / ESM / Worker) 与 Bun: `await pdf.outline(big)` 的 `truncated === true`, 描述符不可枚举只读, `JSON.stringify` 与 Rhino 相同; (5) `pdf.setOutline(big, out2, pdf.outline(big))` 成功且只写回前面那段 (文档要求写回前先检查 truncated 的原因); (6) 嵌套大纲: 插件深度优先展开, 截断点可能落在某项的子项中间, 宿主按 `level` 重建树, 最后一个父项只带部分子项是预期行为.
 - 端到端检查点 (Q264 (b) 警告代码, Q300 - Q304, 真实插件 1.1.0, 随第 1 行与 E4 做; 出处 paper-p6-warncode 交接说明第 5 节): (1) 新宿主 + 新插件, Rhino: `pdf.compress` 一个已压缩过的小文件, `warnings` 含 "is not smaller", `warningCodes` 对应项为 `OUTPUT_NOT_SMALLER`; `pdf.encrypt(path, out, { permissions: { print: false } })` 不给 `ownerPassword` 为 `OWNER_PASSWORD_RANDOM`; `pdf.decrypt` 未加密的文件为 `NOT_ENCRYPTED`; `pdf.fillForm` 带未知字段名且 `ignoreMissing: true` 为 `FIELDS_IGNORED`; (2) PdfDocument: 打开带目录的文件, `doc.save(out, { delete: '1' })` 目录无法对应时为 `OUTLINE_NOT_ADJUSTED` (目录损坏的文件为 `OUTLINE_DAMAGED`); `pdf.split` 的 `warningCodes` 与 `warnings` 等长; (3) `pdf.fromImages` 两张超过 16,000,000 像素的图得到两条 `IMAGE_DOWNSAMPLED`; `pdf.fromHtml` 引用外部图片为 `REMOTE_RESOURCES_BLOCKED`; `pageSize: 'fit'` 的 `fromText` 为 `FIT_PAGE_SIZE_USED_A4`; (4) `pdf.makeSearchable` / `addTextLayer` 超过 2048 个不同的补充平面字符为 `CHARACTERS_REPLACED`; (5) Node.js (CJS / ESM / Worker) 与 Bun (`host.pdf`) 各跑 (1) 的 compress 用例, `warningCodes` 与 Rhino 相同; (6) 插件 1.0.0 + 新宿主: 同样的 compress 用例 `warningCodes` 为 `[null]`; 新插件 + 6.8.0 宿主: 脚本结果没有 `warningCodes`, `warnings` 不变; (7) 插件工具界面 (文件管理器 "压缩" 等) 结果页: 中文界面显示本地化文字, 切到其他语言同样; 人为构造未知代码时显示英文.
 - 端到端检查点 (P6.13 生成脚本与 Q265 (b), 随第 4 行 E4 做; 出处 paper-p6-codegen 交接说明第 4 节): (1) 宿主 6.8.1 构建上 "在 AutoJs6 中打开" 的内联与 `codeUri` 两种 (大脚本, 例如几百页的整理), 宿主新建脚本界面显示的名称与来源; (2) 三种写法的脚本在宿主里实际运行 13 个工具 (Bun 先在插件中心允许 `pdf.control`; Node.js 项目文件夹由宿主按 project.json 运行), 结果与工具一致, 填入密码占位后加密 / 解密可用; (3) 文件管理器模式的结果页同样有脚本块, 路径取文件管理器给出的文件夹; (4) ViewModel 被重建 (进程被杀后恢复) 时结果页不显示脚本块, 其余正常; (5) 推测路径 (提供方不给路径的 `content:` URI) 的脚本注明要核对路径; (6) 连续保存脚本时等 "已保存到" 的消息消失再点 (消息约 4 秒内盖住底部按钮).
+- 结果 (第 1 行, paper-p6-device, 2026-11-21; 未勾选: XQ-AT72 (未连接) 与小米平板 (3-tally 的 E4 占用中) 还没跑): `scripts/device-regression.js` 加 `version2()` 三种模式 (`contract=v2` / `plugin1` / `host1`): 9 个新方法的便捷层, 对象层与 Async 形态, 警告代码 (检查点 13 - 16), Q291 / Q310 范围 (19, 10 组 "等于上限通过, 超出失败且消息带选项路径"), 超预算大纲 (18), `perf.makeSearchable3`. 宿主 6642 (隔离克隆 `c4dc51955` 构建, 官方证书) + 插件 vc 90: XQ-DQ72 78 / 0 (`--view --ocr-sample --no-perf`), AVD_API_33 82 / 0, G8441 82 / 0, OnePlus 81 / 1 (v2.stamp: ColorOS 系统字体把 "3-Paper" 的连字符换成没有码位的替代字形, 提取为 U+0000, 登记 Q322). 前两轮暴露的测试写法问题已改 (文字水印比图片水印大是正常的; 脚本层 encrypt 必须给一个密码, `OWNER_PASSWORD_RANDOM` 用 userPassword + 受限权限; API 28 的 Rhino 选中 `eraseColor(long)`, 改为指名 int 重载; JPEG 原样嵌入不会降采样, 大图改用 PNG; 进度按 250 ms 节流, 快设备上阶段可能只有 opening).
+- 结果 (第 1 行的样例与检查点 11 / 17 / 18, paper-p6-device, 2026-11-21, XQ-DQ72): 插件 `samples/` 与宿主样例目录 (无夹具) 的 5 个 Rhino 样例和 Node.js / Bun 第 5 段全部通过 (`.python/device_samples_run.py`); 水印样例的演示文档改为 margin 72 (fromText 默认边距 36 pt 与印章默认边距相同, 页码压在每页最后一行正文上; 宿主样例副本同步, 宿主 `ad7e7a7b1`, `check_host_samples.py` 12 / 12; 登记 Q321); 运行器的表单拼合判断改按去重后的页码 (`pdf.search` 每处匹配一条). AVD_API_33 卸载 Rapid OCR 后 searchable 样例 OCR_UNAVAILABLE 2 / 2. 检查点 11: `.python/device_codegen_run.py` (JVM `ScriptDeviceExportTest` 导出 13 个工具的三种写法) 39 / 39. 检查点 17 / 18: `.python/device_runtime_v2_check.py`, 4 个警告代码在 Rhino / Node.js CJS / ESM / Worker / Bun 相同; Rhino 写 10,000 项大纲后五处读回都是 4210 项且 truncated; 写回截断大纲 (约 379 KB) Rhino 成功, Node.js (能力代理参数上限 32 KiB) 与 Bun (请求上限 64 KiB) 失败, 登记 Q320.
+- 结果 (第 2 行, paper-p6-device, 2026-11-21): `.python/packaged_app_check.py` 加 watermark / compress / fillForm 三步, 宿主打包应用的设备测试 `PackagedAppPdfDeviceTest` 同步加三步 (宿主 `5deac0e86`); AVD_API_33 16 / 16 (首轮 view 在慢模拟器上 4 s 内 pageCount 仍为 0, 重跑通过) 与 PLUGIN_UNAVAILABLE 10 / 10, XQ-DQ72 17 / 17.
+- 结果 (第 3 行, paper-p6-device, 2026-11-21, G8441): (1) 含契约 2 的宿主 6642 + `v1.0.0` release (vc 41, 与 GitHub Release 的 CRC32 2bf2221b 相同): 回归 44 / 0 / 2, 9 个新方法与 3 个 PdfDocument 方法为 UNSUPPORTED 且消息提示 1.1.0, compressAsync 相同, encrypt / decrypt 的 warningCodes 为 `[null]`; 5 个新样例 `--old-plugin` 以 UNSUPPORTED 提示结束, Node.js 414 (G8441) 与 Bun 383 (AVD_API_33) 的第 5 段相同. (2) 只含契约 1 的宿主 (设备上的 6641 原包, md5 91844af8, dex 里没有 `CONTRACT_VERSION_2`) + 插件 vc 90: 回归 42 / 0 / 2, 结果没有 warningCodes; 文件管理器目录 (`.python/device_explorer_catalog_check.py`, 调用宿主自己的 `ExplorerActionRegistry`) 5 / 5: 9 个工具都在且有标签, 宿主不认识的 `pdf-make-searchable` 只丢这一项.
+- 结果 (第 4 行的准备, paper-p6-device, 2026-11-21; 未勾选: 等维护者手测 E4, 维护者 00:3x 说当天不做): XQ-DQ72 与 OnePlus 装宿主 6642 release, 插件 vc 90, Node.js 414, Bun 383; `.python/device_e4_prep.py prepare` 写入并核对 19 个样本 (60 字段表单含已签名与未签名的签名字段, 动态 / 静态 XFA, 300 页, 仿扫描件 scan-like, AES-256 与只有所有者密码的加密件); 手测清单在看板笔记 `handoff/paper-p6-e4-checklist.md` (约 110 分钟). 性能基线 (印章, 压缩三类样本, 逐页 OCR 加写文本层) 已填进附录 F.
 - 验收: 上面四行的结果 (设备, 通过 / 失败数, 关键数值) 写进各行; 失败项要么修复后复跑, 要么登记待决.
 
 ### P6.16 1.1.0 发布 (D41, D53, D70)
@@ -1060,6 +1065,9 @@ payload            fillForm { values: { 名: 字符串 / 布尔 / 字符串数�
 | Q303 | Q264 (b) 的宿主界面 | (a) 宿主保持不显示警告, 0 个宿主字符串 (推荐) / (b) "生成可搜索 PDF" 结果框加本地化提示区 / (c) 加英文提示区 | 批次 15 | 已决 (a) (维护者 2026-11-20 08:34 选推荐项): 宿主界面不变 |
 | Q304 | 完成事件带上 `warningCodes` / `warningArgs` 后超过 `MAX_EVENT_BYTES` 时怎么办 | (a) 插件先去掉 `warningArgs`, 仍超出再去掉 `warningCodes`, `warnings` 原样保留, 读方按缺代码回落英文原文 (推荐, 已先行: 已写进协议文档 "Warning codes" 一节) / (b) 新增 `MAX_WARNINGS` 上限 (例如 64), 超出时截断三个数组并在末尾补一条汇总警告 | 批次 16 插件卡 (`engine/Operations.kt` 的 `finish()`) | 已决 (a) (维护者 2026-11-20 11:24 选推荐项, 保持现状, 经调度会话拍板): 由 paper-p6-readme 条目 1 在插件实施; 已实施 (插件 `2a11ca5`, `PdfWarnings.fit`, JVM `PdfWarningsTest` 覆盖) |
 | Q310 | Q291 (a) 核对时发现宿主 `PdfScriptArguments` 的另外几项同样比引擎宽: fromText 的 `fontSize` / `lineSpacing` 只要求大于 0 (引擎 `TextToPdf` 上限 1000 / 10), fromImages / fromText / fromHtml 的 `[宽, 高]` 页面尺寸只要求为正 (引擎 `PageLayout` 每边 1 至 14400 pt), render / renderToFile 的 `scale` 只要求大于 0 (引擎把 `scale` 乘以 72 换算为 dpi, 须在 1 至 2400 内); 超出时由引擎拒绝, 消息不带选项路径 | (a) 宿主一并收紧到引擎的上限, 文档站与 d.ts 写明范围 (推荐, 已先行) / (b) 只改 Q291 列出的水印 / 页码选项, 这几项保持由引擎报错 | P6.14, P6.15 (宿主 `PdfScriptArguments`, 文档站 `pdf.md`) | 已决 (a) 保持现状 (维护者 2026-11-20 21:35 选推荐项, 经调度会话拍板; 已实施: 宿主 `99581c5c6`). 原先行记录 (paper-p6-readme, 不阻塞): 宿主 `99581c5c6` (`MAX_TEXT_FONT_SIZE` 1000, `MAX_LINE_SPACING` 10, 页面每边 1 至 14400, `scale` 乘以 72 后在 `PdfContract.MIN_DPI` 至 `MAX_DPI` 内, 消息 "'options.scale' times 72 must be 1 to 2400 dpi"), 文档与声明随 Q291 同一批提交; 改选 (b) 时撤回宿主这三处检查与对应单测, 文档站 4 句与 d.ts 6 处注释, 约半小时 |
+| Q320 | Node.js / Bun 向 pdf 方法传大结构参数时超出桥的上限 (P6.15 检查点 18, XQ-DQ72): 读超预算大纲五种运行方式都正常; 把截断后的大纲 (约 379 KB) 写回时 Rhino 成功, Node.js 被能力代理拒绝 (`pdf.start` 的参数上限 32 KiB, `NodeCapabilityBrokerPolicy.DEFAULT_MAX_ARGS_BYTES`), Bun 为 PAYLOAD_TOO_LARGE (`MAX_HOST_CALL_REQUEST_BYTES` 64 KiB, 结果上限 256 KiB); Node.js 直接写 10,000 项还会超出 binder parcel (约 1.6 MB) | (a) 保持现状, 文档站 Node.js / Bun 的 pdf 页写明两运行时的参数上限与分批写法 (推荐) / (b) 提高 Node.js pdf 能力的 `maxArgsBytes` (例如与 files.write 相同的 2 MiB) 和 Bun 的请求上限 / (c) 运行时门面对超限参数改走临时文件通道 | P6.16 之前 (Node.js / Bun 文档, 运行时常量) | 待决 (paper-p6-device 2026-11-21 登记); 改选 (b): Node.js 与 Bun 各改常量并发版, 设备复测, Node.js 仍受 binder 约 1 MB 限制; (c): 两运行时与宿主新增通道, 约 1 - 2 天 |
+| Q321 | fromText 的默认边距 (`PageLayout.DEFAULT_DOCUMENT_MARGIN` 36 pt) 与印章默认边距 (契约 `PdfContract.DEFAULT_STAMP_MARGIN` 36 pt) 相同, 对 fromText 生成的文档用默认值加页码或页脚时会压在每页最后一行正文上 (样例 `pdf-watermark.js` 无夹具时的演示文档实测) | (a) 保持现状: 样例的演示文档改为 margin 72, 文档站 stamp 的 margin 说明补一句 (推荐) / (b) fromText 的默认边距改为 72 pt (插件常量, 行为变更, 1.1.0 尚未发布) / (c) 印章默认边距改小 (契约常量, 要改宿主 pdf-api) | P6.16 之前 (样例, 文档站) | 已按推荐先行待确认 (paper-p6-device 2026-11-21): 插件样例与宿主样例副本 (`ad7e7a7b1`) 已改, 文档的一句未做; 改选 (b): 插件一个常量 + 文档 + 回归复测; (c): 契约, 宿主, 插件与文档, 约半天 |
+| Q322 | ColorOS (OnePlus OPD2413, Android 15) 上印章文字里的部分连字符提取为 U+0000 (页眉页脚实测; 水印与表单外观走同一条 Skia 路径, 推断相同): 系统字体 OPPO Sans 4.0 EN 是可变字体 (Skia 写成 Type 3), 连字符前是数字或大写字母, 后是大写字母时 ("3-Paper", "A-B") 换成没有 cmap 码位的替代字形 (字形 910, 其余情况为 896), Skia 写的 ToUnicode 为 `<91> <0000>`; 画面正常, 但 `pdf.text` 得到 "3" + U+0000 + "Paper", 搜索 "3-Paper" 找不到. `ToUnicodeRepair` 对 NUL 目标不起作用 (NFKC 不变, 也画不出 U+0000 来比对字形); 把 `calt` / `case` 设为 0 也阻止不了替换 (`TextRunShaper` 实测) | (a) 1.1.0 内修: `ToUnicodeRepair` 改为按内容流的字形顺序与绘制的文字逐个对齐, 把 NUL 或缺失的目标改成同一位置画的字符 (只在字形数与码位数相等的文字段里改, 画面不变), 印章, 水印与表单外观共用; 约 150 行 + JVM 测试 + OnePlus 复测, P6.16 之前补一张卡 (推荐) / (b) 1.1.0 保持现状, 文档写明并建议用 `fontPath` 指定其他字体, 修复放 1.2.0 | P6.16 之前 | 待决 (paper-p6-device 2026-11-21 登记; P6.15 第 1 行 OnePlus 81 / 1 的那一项) |
 
 P6 的子会话登记新待决时从 Q185 起, 调度会话给每张卡分一段编号 (批次 10: 宿主卡 Q185 - Q189, 插件卡 Q190 - Q199).
 
@@ -1106,6 +1114,8 @@ P6 的子会话登记新待决时从 Q185 起, 调度会话给每张卡分一段
 | Redmi 22120RN86C (`bek749scrwv4wo8h`) | 33 | 旧宿主隐藏验证 (不兼容提示) |
 | AVD API 24 / 33 / 35 / 37 (`E:\.android\avd\`) | 24 / 33 / 35 / 37 | 最低版本与 fd 回落, CI 同款仪器测试 (33), 新系统行为 |
 
+P6.15 (2026-11-21 paper-p6-device) 的设备使用: G8441 (契约兼容门禁 6 与回归), XQ-DQ72 (回归, 样例, 生成脚本, 运行时, 打包应用, E4 主机), OnePlus (回归, 性能, E4 的 ColorOS 项; 系统字体 OPPO Sans 4.0 EN 是可变字体, Skia 写成 Type 3, 有无码位的连字符替代字形, 见 Q322), AVD_API_33 (回归, 打包应用, 无 OCR 时的样例, Bun 配旧插件的样例); XQ-AT72 未连接, 小米平板被 3-tally 的 E4 占用, 两台的 1.1.0 回归待补.
+
 ColorOS 后台启动 (P3.2 验收, 2026-11-14 paper-device, `.python/device_view_check.py`): OnePlus OPD2413 (ColorOS 15, API 35) 上宿主持有 "显示在其他应用上层" 权限 (allow) 时, 宿主退到后台 (HOME) 后 `pdf.view` 照常打开插件查看器并切到前台, 与 G8441 (API 28) 和 XQ-AT72 (该权限 allow) 相同, ColorOS 没有额外拦截; 没有该权限时按宿主规则报 `UI_REQUIRES_FOREGROUND` 且不打开 (Xiaomi Pad HyperOS API 35 实测). OnePlus 上没有测无该权限的情形 (维护者设备上已授权, 不改设置).
 
 16 KB 页设备: 1.0.0 只有 Compose 的 graphics-path 原生库, 构建时校验 16 KB 对齐 (Q9), 不需要; 若未来引入原生库再租用 Samsung SM-A566B / SM-F971B.
@@ -1143,6 +1153,9 @@ ColorOS 后台启动 (P3.2 验收, 2026-11-14 paper-device, `.python/device_view
 | AVD API 35 16 KB (x86_64) | 171 ms (输出 73,180 B) | 586 ms (输出 140,992 B) | 214 ms (输出 568,292 B) | 只读实例, 插件 57 (`ca94ec5`), 五个印章测试类一起运行 |
 | AVD API 24 (x86) | 436 ms (输出 77,156 B) | 1,071 ms (输出 147,457 B) | 273 ms (输出 567,868 B) | 只读实例, 插件 57, 与 G8441 的测试同时运行 |
 | Sony G8441 (API 28) | 466 ms (输出 69,364 B) | 1,560 ms (输出 131,536 B) | 567 ms (输出 567,814 B) | 插件 57, 五个印章测试类一起运行; 测完装回 release 41 |
+| Sony G8441 (API 28) | 484 / 485 ms (输出 69,364 B) | 2,981 ms (该进程的第一个印章操作) / 2,435 ms (整类运行) | 588 / 571 ms (输出 567,814 B) | P6.15, 2026-11-21 paper-p6-device: 插件 90, 四个计时测试一起运行 |
+| Sony XQ-DQ72 (API 33) | 171 ms (输出 71,230 B) | 647 ms (输出 133,841 B) | 257 ms (输出 568,362 B) | P6.15, 插件 90 |
+| OnePlus OPD2413 (API 35, ColorOS) | 154 ms (输出 74,109 B) | 933 ms (输出 142,987 B) | 223 ms (输出 568,292 B) | P6.15, 插件 90; 第 100 页提取出 "CONFIDENTIAL机密" |
 
 JPEG 由各设备的系统编码器生成, 566,104 - 566,658 B; 页码的输出比文字水印大, 因为 100 张印章页各成一个表单 (每页约 1 KB).
 
@@ -1153,8 +1166,29 @@ JPEG 由各设备的系统编码器生成, 566,104 - 566,658 B; 页码的输出�
 | AVD API 24 (x86) | 18,558 -> 11,344 B (61.1 %), 115 ms | 162,119 -> 24,047 B (14.8 %), 109 ms | 1,149,650 -> 201,632 B (17.5 %), 248 ms | 只读实例 |
 | AVD API 33 (x86_64) | 18,558 -> 11,344 B (61.1 %), 336 ms | 162,119 -> 25,709 B (15.9 %), 556 ms | 1,047,710 -> 211,630 B (20.2 %), 474 ms | 只读实例, 在 `--tests all` 中运行; 插件 60 / 61 单独运行时 text 208 - 426 ms, scan 178 - 604 ms, mixed 759 - 791 ms |
 | AVD API 35 16 KB (x86_64) | 18,558 -> 11,344 B (61.1 %), 113 ms | 162,119 -> 25,470 B (15.7 %), 74 ms | 1,047,645 -> 210,842 B (20.1 %), 220 ms | 只读实例 |
+| Sony G8441 (API 28) | 18,558 -> 11,345 B (61.1 %), 198 ms | 162,119 -> 24,046 B (14.8 %), 201 ms | 1,148,580 -> 202,650 B (17.6 %), 422 ms | P6.15, 2026-11-21 paper-p6-device, 插件 90 |
+| Sony XQ-DQ72 (API 33) | 18,558 -> 11,345 B (61.1 %), 67 ms | 162,119 -> 25,709 B (15.9 %), 129 ms | 1,047,710 -> 211,630 B (20.2 %), 181 ms | P6.15, 插件 90 |
+| OnePlus OPD2413 (API 35, ColorOS) | 18,558 -> 11,344 B (61.1 %), 53 ms | 162,119 -> 25,471 B (15.7 %), 60 ms | 1,047,645 -> 210,842 B (20.1 %), 218 ms | P6.15, 插件 90; 第 1 页平均像素差 72 dpi 0.498, 144 dpi 0.598 |
 
 文字型样本没有图片, 体积减少全部来自对象流与交叉引用流 (P6.7); 扫描件三页都缩到 875 x 1240; 图文混合样本的 10 张图片全部重编码, 第 1 页渲染与原页的平均像素差 72 dpi 0.498 - 0.544, 144 dpi 0.598 - 0.607. 真机数值留给 P6.15.
+
+脚本端到端计时 (P6.15, 2026-11-21 paper-p6-device): 同一组 `perf.*` 检查, 宿主 6642 (隔离克隆 `c4dc51955`), 插件 vc 90; 新增的 makeSearchable3 是 `scanned-multi.pdf` 三页 300 dpi 合成点阵字 (5 x 7 点阵, 识别率低, 只看流程与耗时), OCR 引擎由宿主自动选择 (第一个绑定的引擎). XQ-AT72 与小米平板未跑 (见 P6.15 第 1 行).
+
+| 设备 | render144 | merge100 | fromImages20 | makeSearchable3 (OCR 引擎) | 插件 versionCode |
+| --- | --- | --- | --- | --- | --- |
+| Sony G8441 (API 28) | 98 ms (77 - 256 ms) | 352 ms | 209 ms | 5,377 ms (1,792 ms / 页), 18 行 (Paddle OCR v3 2.1.0, 79) | 90 |
+| Sony XQ-DQ72 (API 33) | 25 ms | 150 ms | 68 ms | 1,405 ms (468 ms / 页), 18 行 (Paddle OCR v3 2.1.0, 79) | 90 |
+| OnePlus OPD2413 (API 35, ColorOS) | 21 ms | 96 ms | 34 ms | 1,510 ms (503 ms / 页), 18 行 (Paddle OCR v3 2.1.0, 79) | 90 |
+| AVD API 33 (x86_64) | 308 ms | 638 ms | 221 ms | 9,275 ms (3,092 ms / 页), 9 行 (Rapid OCR ppocrv6 1.0.6, 32) | 90 |
+
+逐页 OCR 加写文本层 (P6.15 / E4 的性能基线, 2026-11-21 paper-p6-device): `.python/device_e4_prep.py perf`, 源文件 `scan-like.pdf` (`article-3.pdf` 三页以 200 dpi 渲染, 旋转 1.2 度, 灰度 JPEG 70, 1,152,354 B), `pdf.makeSearchable(src, out, { ocrDpi })` 各跑一次; 宿主 6642 release, 插件 vc 90, OCR 引擎由宿主自动选择. 单词命中: 22 个已知单词在每页文字层里找到的个数.
+
+| 设备 | OCR 引擎 | ocrDpi 300 | ocrDpi 200 | 行数, 单词命中 | 输出体积 |
+| --- | --- | --- | --- | --- | --- |
+| Sony XQ-DQ72 (API 33) | Paddle OCR v3 2.1.0 (79) | 13,934 ms (4,645 ms / 页) | 14,378 ms (4,793 ms / 页) | 117 行, 每页 22 / 22 | - |
+| OnePlus OPD2413 (API 35, ColorOS) | Paddle OCR v3 2.1.0 (79; 设备上另装 v3 ko / arabic / Paddle-Lite, v5, v6 tiny) | 10,012 ms (3,337 ms / 页) | 11,505 ms (3,835 ms / 页) | 117 行, 每页 22 / 22 | 1,157,796 B / 1,157,693 B |
+
+两台都是 200 dpi 不比 300 dpi 快 (各只跑一次, 未重复取中位数); 文字层只增加约 5 KB.
 
 ## 附录 G. 已评估暂缓
 
