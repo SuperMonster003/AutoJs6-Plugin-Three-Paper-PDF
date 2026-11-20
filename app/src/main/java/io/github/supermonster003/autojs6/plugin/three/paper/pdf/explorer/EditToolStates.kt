@@ -1,14 +1,18 @@
 package io.github.supermonster003.autojs6.plugin.three.paper.pdf.explorer
 
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.SavedStateHandle
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.stamp.StampItems
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.stamp.TextStamp
 import org.autojs.plugin.pdf.api.PdfContract
 import org.json.JSONArray
 import org.json.JSONObject
+import java.math.BigDecimal
+import kotlin.math.roundToInt
 
 /**
  * The options of the watermark tool (roadmap P6.12, D68): text or image, one of nine positions, rotation, opacity and
@@ -16,8 +20,10 @@ import org.json.JSONObject
  * script facade ([ToolPayloads]).
  * zh-CN: 水印工具的选项 (路线图 P6.12, D68): 文字或图片, 九个位置之一, 旋转, 不透明度与平铺放在前面; 颜色, 字号, 图片宽度与图层放在
  * "高级" 中. 默认值与宿主脚本门面相同 ([ToolPayloads]).
+ * Every number and the colour also take a typed "Custom" value (appendix D Q265 (b), Q290), kept in `saved`.
+ * zh-CN: 每个数值与颜色也接受输入的 "自定义" 值 (附录 D Q265 (b), Q290), 保存在 `saved` 中.
  */
-internal class WatermarkState {
+internal class WatermarkState(saved: SavedStateHandle? = null) {
 
     var type by mutableStateOf(PdfContract.STAMP_TEXT)
         private set
@@ -26,18 +32,18 @@ internal class WatermarkState {
     var position by mutableStateOf(PdfContract.POSITION_CENTER)
 
     /** Counterclockwise degrees. zh-CN: 逆时针角度. */
-    var rotation by mutableIntStateOf(ToolPayloads.WATERMARK_TEXT_ROTATION.toInt())
+    val rotation = NumberField("watermark.rotation", ROTATION_RANGE, ToolPayloads.WATERMARK_TEXT_ROTATION.toInt(), saved)
 
     /** Percent. zh-CN: 百分比. */
-    var opacity by mutableIntStateOf((ToolPayloads.WATERMARK_OPACITY * PERCENT).toInt())
+    val opacity = NumberField("watermark.opacity", OPACITY_RANGE, (ToolPayloads.WATERMARK_OPACITY * PERCENT).roundToInt(), saved)
     var tile by mutableStateOf(false)
-    var color by mutableStateOf(ToolPayloads.WATERMARK_COLOR)
+    val color = ColorField("watermark.color", ToolPayloads.WATERMARK_COLOR, saved)
 
     /** Points; null fits half the page width. zh-CN: 点; null 表示适应半个页宽. */
-    var fontSize by mutableStateOf<Int?>(null)
+    val fontSize = NumberField("watermark.fontSize", FONT_SIZE_RANGE, null, saved)
 
     /** Points; null for the natural size, scaled down to fit the page. zh-CN: 点; null 表示原始尺寸, 超出页面时等比缩小. */
-    var width by mutableStateOf<Int?>(null)
+    val width = NumberField("watermark.width", WIDTH_RANGE, null, saved)
     var layer by mutableStateOf(PdfContract.LAYER_OVER)
     var advanced by mutableStateOf(false)
 
@@ -45,28 +51,38 @@ internal class WatermarkState {
     fun selectType(value: String) {
         if (type == value) return
         type = value
-        rotation = (if (value == PdfContract.STAMP_IMAGE) ToolPayloads.WATERMARK_IMAGE_ROTATION else ToolPayloads.WATERMARK_TEXT_ROTATION).toInt()
+        rotation.choose((if (value == PdfContract.STAMP_IMAGE) ToolPayloads.WATERMARK_IMAGE_ROTATION else ToolPayloads.WATERMARK_TEXT_ROTATION).toInt())
     }
 
     fun textTooLong(): Boolean = type == PdfContract.STAMP_TEXT && text.length > PdfContract.MAX_STAMP_TEXT_LENGTH
 
-    /** The options for [pages], or null without text or image. zh-CN: [pages] 对应的选项; 没有文字或图片时为 null. */
+    /** A typed value under "Advanced" of the current type is not valid. zh-CN: 当前类型在 "高级" 中输入的值无效. */
+    fun advancedInvalid(): Boolean = if (type == PdfContract.STAMP_IMAGE) width.invalid else color.invalid || fontSize.invalid
+
+    /** A typed value the current type uses is not valid. zh-CN: 当前类型用到的输入值无效. */
+    fun invalid(): Boolean = rotation.invalid || opacity.invalid || advancedInvalid()
+
+    /**
+     * The options for [pages], or null without text or image or while a typed value is not valid.
+     * zh-CN: [pages] 对应的选项; 没有文字或图片, 或输入的值无效时为 null.
+     */
     fun options(pages: String?): ToolOptions.Watermark? {
         val isImage = type == PdfContract.STAMP_IMAGE
         val picture = image
         if (isImage && picture == null) return null
         if (!isImage && (text.isBlank() || textTooLong())) return null
+        if (invalid()) return null
         return ToolOptions.Watermark(
             type = type,
             text = if (isImage) "" else text,
             image = if (isImage) picture else null,
             position = position,
-            rotation = rotation.toFloat(),
-            opacity = opacity / PERCENT,
+            rotation = checkNotNull(rotation.value()),
+            opacity = BigDecimal.valueOf(checkNotNull(opacity.value())).movePointLeft(PERCENT_DIGITS).toDouble(),
             tile = tile,
-            color = if (isImage) null else color,
-            fontSize = if (isImage) null else fontSize?.toFloat(),
-            width = if (isImage) width?.toFloat() else null,
+            color = if (isImage) null else color.value(),
+            fontSize = if (isImage) null else fontSize.value(),
+            width = if (isImage) width.value() else null,
             layer = layer,
             pages = pages,
         )
@@ -82,6 +98,18 @@ internal class WatermarkState {
 
         val WIDTHS = listOf(72, 144, 216, 288)
 
+        /** The engine's rotation limit (`StampItems`). zh-CN: 引擎的旋转上限 (`StampItems`). */
+        val ROTATION_RANGE = NumberRange(-StampItems.MAX_ROTATION, StampItems.MAX_ROTATION)
+
+        /** Opacity 0 - 1 of the engine, in percent. zh-CN: 引擎的不透明度 0 - 1, 以百分比表示. */
+        val OPACITY_RANGE = NumberRange(0.0, PERCENT)
+
+        /** Greater than 0, at most the engine's `TextStamp.MAX_FONT_SIZE`. zh-CN: 大于 0, 不超过引擎的 `TextStamp.MAX_FONT_SIZE`. */
+        val FONT_SIZE_RANGE = NumberRange(0.0, TextStamp.MAX_FONT_SIZE, aboveMinimum = true)
+
+        /** Greater than 0, at most the engine's `StampItems.MAX_LENGTH`. zh-CN: 大于 0, 不超过引擎的 `StampItems.MAX_LENGTH`. */
+        val WIDTH_RANGE = NumberRange(0.0, StampItems.MAX_LENGTH, aboveMinimum = true)
+
         /** Gray, red, blue, black. zh-CN: 灰, 红, 蓝, 黑. */
         val COLORS = listOf(ToolPayloads.WATERMARK_COLOR, "#D32F2F", "#1976D2", "#000000")
 
@@ -91,7 +119,10 @@ internal class WatermarkState {
             PdfContract.POSITION_BOTTOM_LEFT, PdfContract.POSITION_BOTTOM_CENTER, PdfContract.POSITION_BOTTOM_RIGHT,
         )
 
-        private const val PERCENT = 100f
+        private const val PERCENT = 100.0
+
+        /** Percent to a fraction moves the point two places. zh-CN: 百分比换成小数时小数点左移两位. */
+        private const val PERCENT_DIGITS = 2
 
     }
 
@@ -101,8 +132,9 @@ internal class WatermarkState {
  * The options of the page number tool (roadmap P6.12, D68): the format, its place on the top or bottom edge and the
  * number of the first selected page up front; the header and footer texts and the font size under "Advanced".
  * zh-CN: 页码工具的选项 (路线图 P6.12, D68): 格式, 在上下边缘的位置与所选第一页的编号放在前面; 页眉页脚文字与字号放在 "高级" 中.
+ * The font size also takes a typed "Custom" value (appendix D Q265 (b)). zh-CN: 字号也接受输入的 "自定义" 值 (附录 D Q265 (b)).
  */
-internal class PageNumbersState {
+internal class PageNumbersState(saved: SavedStateHandle? = null) {
 
     var numbered by mutableStateOf(true)
     var format by mutableStateOf(ToolPayloads.PAGE_NUMBER_FORMAT)
@@ -110,8 +142,11 @@ internal class PageNumbersState {
     var start by mutableStateOf("1")
     var header by mutableStateOf(ToolOptions.Slots())
     var footer by mutableStateOf(ToolOptions.Slots())
-    var fontSize by mutableIntStateOf(ToolPayloads.STAMP_FONT_SIZE.toInt())
+    val fontSize = NumberField("numbers.fontSize", WatermarkState.FONT_SIZE_RANGE, ToolPayloads.STAMP_FONT_SIZE.toInt(), saved)
     var advanced by mutableStateOf(false)
+
+    /** The typed font size under "Advanced" is not valid. zh-CN: "高级" 中输入的字号无效. */
+    fun advancedInvalid(): Boolean = fontSize.invalid
 
     fun startInvalid(): Boolean = numbered && startNumber(start) == null
 
@@ -123,7 +158,7 @@ internal class PageNumbersState {
 
     /** The options for [pages], or null while there is nothing to add or a value is not valid. zh-CN: [pages] 对应的选项; 没有要添加的内容或有无效值时为 null. */
     fun options(pages: String?): ToolOptions.PageNumbers? {
-        if (tooLong()) return null
+        if (tooLong() || fontSize.invalid) return null
         val first = if (numbered) {
             if (format.isBlank()) return null
             startNumber(start) ?: return null
@@ -137,7 +172,7 @@ internal class PageNumbersState {
             start = first,
             header = header,
             footer = footer,
-            fontSize = fontSize.toFloat(),
+            fontSize = checkNotNull(fontSize.value()),
             pages = pages,
         )
     }
@@ -182,13 +217,14 @@ internal class PageNumbersState {
  * The options of the compress tool (roadmap P6.12, D55, D68): one of three presets; its numbers, removing metadata
  * and object streams under "Advanced".
  * zh-CN: 压缩工具的选项 (路线图 P6.12, D55, D68): 三个预设之一; 其数值, 删除元数据与对象流放在 "高级" 中.
+ * Both numbers also take a typed "Custom" whole number (appendix D Q265 (b)). zh-CN: 两个数值也接受输入的 "自定义" 整数 (附录 D Q265 (b)).
  */
-internal class CompressState {
+internal class CompressState(private val saved: SavedStateHandle? = null) {
 
-    var preset by mutableStateOf(PdfContract.DEFAULT_COMPRESS_PRESET)
+    var preset by mutableStateOf(saved?.get<String>(KEY_PRESET) ?: PdfContract.DEFAULT_COMPRESS_PRESET)
         private set
-    var imageDpi by mutableIntStateOf(numbersOf(PdfContract.DEFAULT_COMPRESS_PRESET).imageDpi)
-    var imageQuality by mutableIntStateOf(numbersOf(PdfContract.DEFAULT_COMPRESS_PRESET).imageQuality)
+    val imageDpi = NumberField("compress.imageDpi", DPI_RANGE, numbersOf(PdfContract.DEFAULT_COMPRESS_PRESET).imageDpi, saved)
+    val imageQuality = NumberField("compress.imageQuality", QUALITY_RANGE, numbersOf(PdfContract.DEFAULT_COMPRESS_PRESET).imageQuality, saved)
     var removeMetadata by mutableStateOf(false)
     var objectStreams by mutableStateOf(PdfContract.DEFAULT_OBJECT_STREAMS)
     var advanced by mutableStateOf(false)
@@ -197,11 +233,20 @@ internal class CompressState {
     fun selectPreset(name: String) {
         val chosen = numbersOf(name)
         preset = chosen.name
-        imageDpi = chosen.imageDpi
-        imageQuality = chosen.imageQuality
+        saved?.set(KEY_PRESET, chosen.name)
+        imageDpi.choose(chosen.imageDpi)
+        imageQuality.choose(chosen.imageQuality)
     }
 
-    fun options(): ToolOptions.Compress = ToolOptions.Compress(preset, imageDpi, imageQuality, removeMetadata, objectStreams)
+    fun advancedInvalid(): Boolean = imageDpi.invalid || imageQuality.invalid
+
+    /** The options, or null while a typed number is not valid. zh-CN: 选项; 输入的数值无效时为 null. */
+    fun options(): ToolOptions.Compress? {
+        if (advancedInvalid()) return null
+        val dpi = checkNotNull(imageDpi.value()).toInt()
+        val quality = checkNotNull(imageQuality.value()).toInt()
+        return ToolOptions.Compress(preset, dpi, quality, removeMetadata, objectStreams)
+    }
 
     companion object {
 
@@ -210,6 +255,14 @@ internal class CompressState {
         val DPI_CHOICES = listOf(72, 96, 150, 220, 300)
 
         val QUALITY_CHOICES = listOf(40, 60, 75, 85, 95)
+
+        /** The engine's resolution range (`PdfContract`). zh-CN: 引擎的分辨率范围 (`PdfContract`). */
+        val DPI_RANGE = NumberRange(PdfContract.MIN_IMAGE_DPI.toDouble(), PdfContract.MAX_IMAGE_DPI.toDouble(), integer = true)
+
+        /** The engine's JPEG quality range (`PdfContract`). zh-CN: 引擎的 JPEG 质量范围 (`PdfContract`). */
+        val QUALITY_RANGE = NumberRange(PdfContract.MIN_QUALITY.toDouble(), PdfContract.MAX_QUALITY.toDouble(), integer = true)
+
+        private const val KEY_PRESET = "compress.preset"
 
         /**
          * The numbers of preset [name], or of the default preset when the name is unknown.

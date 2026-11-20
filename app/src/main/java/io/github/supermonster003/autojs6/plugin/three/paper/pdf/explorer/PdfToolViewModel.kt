@@ -15,6 +15,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.SavedStateHandle
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ThreePaperPdfContract
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.ToolTask
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.ToolTasks
@@ -42,7 +43,7 @@ import java.util.concurrent.Executors
  * [ToolTasks] 在前台服务中执行, 离开界面也不会停止). 两者共用选项, 校验与 [PdfToolRunner]. 引擎与宿主调用在一个工作线程上运行;
  * 状态都在主线程上.
  */
-internal class PdfToolViewModel(application: Application) : AndroidViewModel(application) {
+internal class PdfToolViewModel(application: Application, saved: SavedStateHandle) : AndroidViewModel(application) {
 
     sealed interface Phase {
         data object Inspecting : Phase
@@ -170,9 +171,10 @@ internal class PdfToolViewModel(application: Application) : AndroidViewModel(app
         private set
 
     /** The options of the tools added in 1.1.0 (roadmap P6.12). zh-CN: 1.1.0 新增工具的选项 (路线图 P6.12). */
-    val watermark = WatermarkState()
-    val pageNumbers = PageNumbersState()
-    val compress = CompressState()
+    // Their typed "Custom" values live in [saved] (appendix D Q265 (b)). zh-CN: 其输入的 "自定义" 值保存在 [saved] 中 (附录 D Q265 (b)).
+    val watermark = WatermarkState(saved)
+    val pageNumbers = PageNumbersState(saved)
+    val compress = CompressState(saved)
 
     /** The form fields of the fill-form tool, read when its input opens. zh-CN: 表单填写工具的字段, 在其输入打开时读取. */
     val fillForm = FillFormState()

@@ -124,6 +124,12 @@
     <string name="tool_compress_quality">Качество JPEG</string>
     <string name="tool_compress_remove_metadata">Удалить метаданные</string>
     <string name="tool_compress_remove_metadata_note">Удаляет название, автора и другие сведения о документе, а также миниатюры страниц.</string>
+    <string name="tool_custom">Своё</string>
+    <string name="tool_custom_color_hint">Введите #RRGGBB или #AARRGGBB, где AA в начале задает непрозрачность.</string>
+    <string name="tool_custom_range">Введите число от %1$s до %2$s.</string>
+    <string name="tool_custom_range_above">Введите число больше %1$s и не больше %2$s.</string>
+    <string name="tool_custom_range_integer">Введите целое число от %1$s до %2$s.</string>
+    <string name="tool_custom_value">Своё значение</string>
     <string name="tool_decrypt_not_encrypted">У этого PDF нет пароля.</string>
     <string name="tool_decrypt_note">У нового файла не будет пароля. Если у PDF есть отдельный пароль владельца, введите его.</string>
     <string name="tool_degrees">%1$d°</string>
@@ -256,6 +262,7 @@
     <string name="tool_start">Начать</string>
     <string name="tool_text_too_long" tools:ignore="PluralsCandidate">Не более %1$d символов.</string>
     <string name="tool_title">Инструмент PDF</string>
+    <string name="tool_unit_points">пт</string>
     <string name="tool_unlock">Разблокировать</string>
     <string name="tool_watermark_choose_image">Выбрать изображение</string>
     <string name="tool_watermark_layer">Слой</string>

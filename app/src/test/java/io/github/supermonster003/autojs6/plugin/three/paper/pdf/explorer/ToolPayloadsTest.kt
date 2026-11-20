@@ -32,7 +32,7 @@ class ToolPayloadsTest {
     @Test
     fun `an image watermark names image 0 and carries width, layer, tiling and pages`() {
         val item = ToolPayloads.watermarkItem(
-            watermark().copy(type = PdfContract.STAMP_IMAGE, text = "", rotation = 0f, tile = true, color = null, width = 144f, layer = PdfContract.LAYER_UNDER, pages = "2-4"),
+            watermark().copy(type = PdfContract.STAMP_IMAGE, text = "", rotation = 0.0, tile = true, color = null, width = 144.0, layer = PdfContract.LAYER_UNDER, pages = "2-4"),
         )
         assertEquals(0, item.getInt(PdfContract.FIELD_IMAGE))
         assertFalse(item.has(PdfContract.FIELD_TEXT))
@@ -42,6 +42,19 @@ class ToolPayloadsTest {
         assertTrue(item.getBoolean(PdfContract.FIELD_TILE))
         assertEquals("2-4", item.getString(PdfContract.FIELD_PAGES))
         assertEquals(0.0, item.getDouble(PdfContract.FIELD_ROTATION), DELTA)
+    }
+
+    @Test
+    fun `typed values reach the payload exactly`() {
+        // Appendix D Q265 (b): no float rounding between the screen and the request. zh-CN: 附录 D Q265 (b): 界面到请求之间没有浮点舍入.
+        val text = ToolPayloads.watermarkItem(watermark().copy(rotation = -12.5, opacity = 0.333, color = "#80FF0000", fontSize = 37.5))
+        assertEquals(-12.5, text.getDouble(PdfContract.FIELD_ROTATION), 0.0)
+        assertEquals(0.333, text.getDouble(PdfContract.FIELD_OPACITY), 0.0)
+        assertEquals("#80FF0000", text.getString(PdfContract.FIELD_COLOR))
+        assertEquals(37.5, text.getDouble(PdfContract.FIELD_FONT_SIZE), 0.0)
+        val image = ToolPayloads.watermarkItem(watermark().copy(type = PdfContract.STAMP_IMAGE, text = "", width = 100.25))
+        assertEquals(100.25, image.getDouble(PdfContract.FIELD_WIDTH), 0.0)
+        ToolPayloads.pageNumberItems(numbers().copy(fontSize = 9.5)).forEach { assertEquals(9.5, it.getDouble(PdfContract.FIELD_FONT_SIZE), 0.0) }
     }
 
     @Test

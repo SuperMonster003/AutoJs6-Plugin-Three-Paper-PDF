@@ -124,6 +124,12 @@
     <string name="tool_compress_quality">JPEG 品質</string>
     <string name="tool_compress_remove_metadata">メタデータを削除</string>
     <string name="tool_compress_remove_metadata_note">タイトルや作成者などの文書情報とページのサムネイルを削除します.</string>
+    <string name="tool_custom">カスタム</string>
+    <string name="tool_custom_color_hint">#RRGGBB, または先頭に不透明度 AA を付けた #AARRGGBB を入力してください.</string>
+    <string name="tool_custom_range">%1$s から %2$s までの数値を入力してください.</string>
+    <string name="tool_custom_range_above">%1$s より大きく %2$s 以下の数値を入力してください.</string>
+    <string name="tool_custom_range_integer">%1$s から %2$s までの整数を入力してください.</string>
+    <string name="tool_custom_value">カスタム値</string>
     <string name="tool_decrypt_not_encrypted">この PDF にはパスワードがありません.</string>
     <string name="tool_decrypt_note">新しいファイルにはパスワードがありません. PDF に別の所有者パスワードが設定されている場合は, そちらを入力してください.</string>
     <string name="tool_degrees">%1$d°</string>
@@ -256,6 +262,7 @@
     <string name="tool_start">開始</string>
     <string name="tool_text_too_long" tools:ignore="PluralsCandidate">%1$d 文字以内で入力してください.</string>
     <string name="tool_title">PDF ツール</string>
+    <string name="tool_unit_points">pt</string>
     <string name="tool_unlock">ロック解除</string>
     <string name="tool_watermark_choose_image">画像を選択</string>
     <string name="tool_watermark_layer">レイヤー</string>

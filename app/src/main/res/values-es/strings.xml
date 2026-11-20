@@ -124,6 +124,12 @@
     <string name="tool_compress_quality">Calidad JPEG</string>
     <string name="tool_compress_remove_metadata">Quitar metadatos</string>
     <string name="tool_compress_remove_metadata_note">Quita el título, el autor y otros datos del documento, además de las miniaturas de las páginas.</string>
+    <string name="tool_custom">Personalizado</string>
+    <string name="tool_custom_color_hint">Introduzca #RRGGBB, o #AARRGGBB con la opacidad AA delante.</string>
+    <string name="tool_custom_range">Introduzca un número de %1$s a %2$s.</string>
+    <string name="tool_custom_range_above">Introduzca un número mayor que %1$s y como máximo %2$s.</string>
+    <string name="tool_custom_range_integer">Introduzca un número entero de %1$s a %2$s.</string>
+    <string name="tool_custom_value">Valor personalizado</string>
     <string name="tool_decrypt_not_encrypted">Este PDF no tiene contraseña.</string>
     <string name="tool_decrypt_note">El nuevo archivo no tiene contraseña. Si el PDF tiene una contraseña de propietario distinta, introdúzcala.</string>
     <string name="tool_degrees">%1$d°</string>
@@ -256,6 +262,7 @@
     <string name="tool_start">Iniciar</string>
     <string name="tool_text_too_long" tools:ignore="PluralsCandidate">Use como máximo %1$d caracteres.</string>
     <string name="tool_title">Herramienta PDF</string>
+    <string name="tool_unit_points">pt</string>
     <string name="tool_unlock">Desbloquear</string>
     <string name="tool_watermark_choose_image">Elegir imagen</string>
     <string name="tool_watermark_layer">Capa</string>

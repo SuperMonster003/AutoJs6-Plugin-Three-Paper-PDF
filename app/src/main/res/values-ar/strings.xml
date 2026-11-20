@@ -124,6 +124,12 @@
     <string name="tool_compress_quality">جودة JPEG</string>
     <string name="tool_compress_remove_metadata">إزالة البيانات الوصفية</string>
     <string name="tool_compress_remove_metadata_note">يزيل العنوان والمؤلف ومعلومات المستند الأخرى وصور الصفحات المصغرة.</string>
+    <string name="tool_custom">مخصص</string>
+    <string name="tool_custom_color_hint">أدخل #RRGGBB, أو #AARRGGBB مع العتامة AA في البداية.</string>
+    <string name="tool_custom_range">أدخل رقما من %1$s إلى %2$s.</string>
+    <string name="tool_custom_range_above">أدخل رقما أكبر من %1$s ولا يتجاوز %2$s.</string>
+    <string name="tool_custom_range_integer">أدخل عددا صحيحا من %1$s إلى %2$s.</string>
+    <string name="tool_custom_value">قيمة مخصصة</string>
     <string name="tool_decrypt_not_encrypted">لا يحتوي ملف PDF هذا على كلمة مرور.</string>
     <string name="tool_decrypt_note">لن يكون للملف الجديد كلمة مرور. إذا كان لملف PDF كلمة مرور مالك منفصلة, فأدخلها.</string>
     <string name="tool_degrees">%1$d°</string>
@@ -256,6 +262,7 @@
     <string name="tool_start">بدء</string>
     <string name="tool_text_too_long" tools:ignore="PluralsCandidate">استخدم %1$d حرفا على الأكثر.</string>
     <string name="tool_title">أداة PDF</string>
+    <string name="tool_unit_points">pt</string>
     <string name="tool_unlock">فتح القفل</string>
     <string name="tool_watermark_choose_image">اختيار صورة</string>
     <string name="tool_watermark_layer">الطبقة</string>

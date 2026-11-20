@@ -62,6 +62,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -87,8 +88,14 @@ import org.autojs.plugin.pdf.api.PdfContract
  * `tool-compress-quality-<quality>`, `tool-compress-metadata`, `tool-compress-object-streams`, `tool-form-loading`,
  * `tool-form-error`, `tool-form-none`, `tool-form-xfa`, `tool-form-page-<page>`, `tool-form-field-<name>`,
  * `tool-form-choice-<name>-<n>`, `tool-form-flatten`, `tool-form-viewer-note`, `tool-properties-facts`,
- * `tool-properties-<key>`, `tool-properties-outline`, `tool-properties-clear-outline`, `tool-result-summary`.
- * zh-CN: 1.1.0 新增的编辑类工具的选项 (路线图 P6.12, D68), 以及所有工具结果页上的摘要. 不常用的选项放在折叠的 "高级" 行下. 测试标签见上.
+ * `tool-properties-<key>`, `tool-properties-outline`, `tool-properties-clear-outline`, `tool-result-summary`. Every
+ * number and the colour of a watermark also have a "Custom" chip (appendix D Q265 (b), Q290) tagged `<prefix>-custom`,
+ * whose field is `<prefix>-value` with the accepted range in `<prefix>-range`, the prefix being the chip tag without
+ * its value (`tool-watermark-rotation`, `tool-watermark-opacity`, `tool-watermark-color`, `tool-watermark-font`,
+ * `tool-watermark-width`, `tool-numbers-font`, `tool-compress-dpi`, `tool-compress-quality`).
+ * zh-CN: 1.1.0 新增的编辑类工具的选项 (路线图 P6.12, D68), 以及所有工具结果页上的摘要. 不常用的选项放在折叠的 "高级" 行下. 每个数值项与
+ * 水印颜色另有 "自定义" 档 (附录 D Q265 (b), Q290), 标签为 `<前缀>-custom`, 其输入框为 `<前缀>-value`, 可接受范围在 `<前缀>-range`,
+ * 前缀即档位标签去掉取值的部分. 测试标签见上.
  */
 
 /** Text or image, where, how and on which pages, with a one-page preview. zh-CN: 文字或图片, 位置, 样式与页码范围, 附单页预览. */
@@ -148,75 +155,94 @@ internal fun WatermarkOptions(model: PdfToolViewModel) {
     Chips {
         WatermarkState.ROTATIONS.forEach { degrees ->
             FilterChip(
-                selected = state.rotation == degrees,
-                onClick = { state.rotation = degrees },
+                selected = state.rotation.selected(degrees),
+                onClick = { state.rotation.choose(degrees) },
                 label = { Text(stringResource(R.string.tool_degrees, degrees)) },
                 modifier = Modifier.testTag("tool-watermark-rotation-$degrees"),
             )
         }
+        CustomChip(state.rotation, "tool-watermark-rotation")
     }
+    CustomNumberField(state.rotation, "tool-watermark-rotation", suffix = DEGREE_SIGN)
     Label(R.string.tool_watermark_opacity)
     Chips {
         WatermarkState.OPACITIES.forEach { percent ->
             FilterChip(
-                selected = state.opacity == percent,
-                onClick = { state.opacity = percent },
+                selected = state.opacity.selected(percent),
+                onClick = { state.opacity.choose(percent) },
                 label = { Text(NumberFormat.getPercentInstance().format(percent / PERCENT)) },
                 modifier = Modifier.testTag("tool-watermark-opacity-$percent"),
             )
         }
+        CustomChip(state.opacity, "tool-watermark-opacity")
     }
+    CustomNumberField(state.opacity, "tool-watermark-opacity", suffix = PERCENT_SIGN)
     SwitchRow(R.string.tool_watermark_tile, state.tile, "tool-watermark-tile") { state.tile = it }
-    AdvancedRow(state.advanced, "tool-watermark-advanced") { state.advanced = it }
-    if (state.advanced) {
+    // A typed value that is not valid keeps "Advanced" open, so the reason the start button is off stays in sight.
+    // zh-CN: 有无效的输入值时 "高级" 保持展开, 以便看到开始按钮不可用的原因.
+    val advanced = state.advanced || state.advancedInvalid()
+    AdvancedRow(advanced, "tool-watermark-advanced") { state.advanced = it }
+    if (advanced) {
         if (image) {
             Label(R.string.tool_watermark_width)
             Chips {
                 FilterChip(
-                    selected = state.width == null,
-                    onClick = { state.width = null },
+                    selected = state.width.selected(null),
+                    onClick = { state.width.choose(null) },
                     label = { Text(stringResource(R.string.tool_watermark_width_original)) },
                     modifier = Modifier.testTag("tool-watermark-width-fit"),
                 )
                 WatermarkState.WIDTHS.forEach { points ->
                     FilterChip(
-                        selected = state.width == points,
-                        onClick = { state.width = points },
+                        selected = state.width.selected(points),
+                        onClick = { state.width.choose(points) },
                         label = { Text(stringResource(R.string.tool_points, points)) },
                         modifier = Modifier.testTag("tool-watermark-width-$points"),
                     )
                 }
+                CustomChip(state.width, "tool-watermark-width")
             }
+            CustomNumberField(state.width, "tool-watermark-width", suffix = stringResource(R.string.tool_unit_points))
         } else {
             Label(R.string.tool_color)
             Chips {
                 WatermarkState.COLORS.zip(COLOR_NAMES).forEachIndexed { index, (color, name) ->
                     FilterChip(
-                        selected = state.color == color,
-                        onClick = { state.color = color },
+                        selected = state.color.selected(color),
+                        onClick = { state.color.choose(color) },
                         label = { Text(stringResource(name)) },
-                        leadingIcon = { Box(Modifier.size(16.dp).background(Color(color.toColorInt()), CircleShape)) },
+                        leadingIcon = { ColorSwatch(color) },
                         modifier = Modifier.testTag("tool-watermark-color-$index"),
                     )
                 }
+                FilterChip(
+                    selected = state.color.custom,
+                    onClick = { state.color.chooseCustom() },
+                    label = { Text(stringResource(R.string.tool_custom)) },
+                    leadingIcon = { ColorSwatch(state.color.color ?: state.color.preset) },
+                    modifier = Modifier.testTag("tool-watermark-color-custom"),
+                )
             }
+            CustomColorField(state.color, "tool-watermark-color")
             Label(R.string.tool_font_size)
             Chips {
                 FilterChip(
-                    selected = state.fontSize == null,
-                    onClick = { state.fontSize = null },
+                    selected = state.fontSize.selected(null),
+                    onClick = { state.fontSize.choose(null) },
                     label = { Text(stringResource(R.string.tool_font_size_auto)) },
                     modifier = Modifier.testTag("tool-watermark-font-auto"),
                 )
                 WatermarkState.FONT_SIZES.forEach { points ->
                     FilterChip(
-                        selected = state.fontSize == points,
-                        onClick = { state.fontSize = points },
+                        selected = state.fontSize.selected(points),
+                        onClick = { state.fontSize.choose(points) },
                         label = { Text(stringResource(R.string.tool_points, points)) },
                         modifier = Modifier.testTag("tool-watermark-font-$points"),
                     )
                 }
+                CustomChip(state.fontSize, "tool-watermark-font")
             }
+            CustomNumberField(state.fontSize, "tool-watermark-font", suffix = stringResource(R.string.tool_unit_points))
         }
         Label(R.string.tool_watermark_layer)
         Chips {
@@ -315,8 +341,8 @@ internal fun PageNumbersOptions(model: PdfToolViewModel) {
     }
     // Without a page number the header and footer are all there is, so they are not folded.
     // zh-CN: 不加页码时只剩页眉与页脚, 因此不折叠.
-    if (state.numbered) AdvancedRow(state.advanced, "tool-numbers-advanced") { state.advanced = it }
-    if (state.advanced || !state.numbered) {
+    if (state.numbered) AdvancedRow(state.advanced || state.advancedInvalid(), "tool-numbers-advanced") { state.advanced = it }
+    if (state.advanced || !state.numbered || state.advancedInvalid()) {
         Label(R.string.tool_page_numbers_header)
         SlotFields(state.header, "tool-numbers-header") { state.header = it }
         Label(R.string.tool_page_numbers_footer)
@@ -326,13 +352,15 @@ internal fun PageNumbersOptions(model: PdfToolViewModel) {
         Chips {
             PageNumbersState.FONT_SIZES.forEach { points ->
                 FilterChip(
-                    selected = state.fontSize == points,
-                    onClick = { state.fontSize = points },
+                    selected = state.fontSize.selected(points),
+                    onClick = { state.fontSize.choose(points) },
                     label = { Text(stringResource(R.string.tool_points, points)) },
                     modifier = Modifier.testTag("tool-numbers-font-$points"),
                 )
             }
+            CustomChip(state.fontSize, "tool-numbers-font")
         }
+        CustomNumberField(state.fontSize, "tool-numbers-font", suffix = stringResource(R.string.tool_unit_points))
     }
     if (state.overlaps()) Warning(R.string.tool_page_numbers_overlap, "tool-numbers-overlap")
     if (state.tooLong()) Warning(R.string.tool_text_too_long, "tool-numbers-too-long", PdfContract.MAX_STAMP_TEXT_LENGTH)
@@ -394,30 +422,35 @@ internal fun CompressOptions(model: PdfToolViewModel) {
         }
     }
     Note(R.string.tool_compress_note)
-    AdvancedRow(state.advanced, "tool-compress-advanced") { state.advanced = it }
-    if (state.advanced) {
+    val advanced = state.advanced || state.advancedInvalid()
+    AdvancedRow(advanced, "tool-compress-advanced") { state.advanced = it }
+    if (advanced) {
         Label(R.string.tool_compress_dpi)
         Chips {
             CompressState.DPI_CHOICES.forEach { dpi ->
                 FilterChip(
-                    selected = state.imageDpi == dpi,
-                    onClick = { state.imageDpi = dpi },
+                    selected = state.imageDpi.selected(dpi),
+                    onClick = { state.imageDpi.choose(dpi) },
                     label = { Text(NumberFormat.getIntegerInstance().format(dpi)) },
                     modifier = Modifier.testTag("tool-compress-dpi-$dpi"),
                 )
             }
+            CustomChip(state.imageDpi, "tool-compress-dpi")
         }
+        CustomNumberField(state.imageDpi, "tool-compress-dpi")
         Label(R.string.tool_compress_quality)
         Chips {
             CompressState.QUALITY_CHOICES.forEach { quality ->
                 FilterChip(
-                    selected = state.imageQuality == quality,
-                    onClick = { state.imageQuality = quality },
+                    selected = state.imageQuality.selected(quality),
+                    onClick = { state.imageQuality.choose(quality) },
                     label = { Text(NumberFormat.getIntegerInstance().format(quality)) },
                     modifier = Modifier.testTag("tool-compress-quality-$quality"),
                 )
             }
+            CustomChip(state.imageQuality, "tool-compress-quality")
         }
+        CustomNumberField(state.imageQuality, "tool-compress-quality")
         SwitchRow(R.string.tool_compress_remove_metadata, state.removeMetadata, "tool-compress-metadata", R.string.tool_compress_remove_metadata_note) {
             state.removeMetadata = it
         }
@@ -821,6 +854,73 @@ private fun PositionGrid(positions: List<String>, selected: String, tag: String,
     }
 }
 
+/** The "Custom" chip after the ready-made choices of [field]. zh-CN: [field] 预设档位之后的 "自定义" 档. */
+@Composable
+private fun CustomChip(field: NumberField, tag: String) {
+    FilterChip(
+        selected = field.custom,
+        onClick = { field.chooseCustom() },
+        label = { Text(stringResource(R.string.tool_custom)) },
+        modifier = Modifier.testTag("$tag-custom"),
+    )
+}
+
+/**
+ * The field of a number typed in as "Custom", shown while it is chosen: [suffix] is the unit after the text, the
+ * accepted range stands under it and turns red while the text is not a number in the range (the start button is off
+ * then, as the tool's options are null).
+ * zh-CN: 作为 "自定义" 输入的数值的输入框, 选中时显示: [suffix] 是文字后的单位, 可接受的范围显示在下方, 输入的不是该范围内的数时变红
+ * (此时工具选项为 null, 开始按钮不可用).
+ */
+@Composable
+private fun CustomNumberField(field: NumberField, tag: String, suffix: String? = null) {
+    if (!field.custom) return
+    val range = field.range
+    val format = NumberFormat.getNumberInstance().apply {
+        isGroupingUsed = false
+        maximumFractionDigits = RANGE_FRACTION_DIGITS
+    }
+    val message = when {
+        range.integer -> R.string.tool_custom_range_integer
+        range.aboveMinimum -> R.string.tool_custom_range_above
+        else -> R.string.tool_custom_range
+    }
+    OutlinedTextField(
+        value = field.text,
+        onValueChange = { field.text = it },
+        modifier = Modifier.fillMaxWidth().testTag("$tag-value"),
+        label = { Text(stringResource(R.string.tool_custom_value)) },
+        suffix = suffix?.let { { Text(it) } },
+        isError = field.invalid,
+        supportingText = { Text(stringResource(message, format.format(range.minimum), format.format(range.maximum)), modifier = Modifier.testTag("$tag-range")) },
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(keyboardType = if (range.integer) KeyboardType.Number else KeyboardType.Decimal),
+    )
+}
+
+/** The field of a colour typed in as "Custom" (appendix D Q290). zh-CN: 作为 "自定义" 输入的颜色的输入框 (附录 D Q290). */
+@Composable
+private fun CustomColorField(field: ColorField, tag: String) {
+    if (!field.custom) return
+    OutlinedTextField(
+        value = field.text,
+        onValueChange = { field.text = it },
+        modifier = Modifier.fillMaxWidth().testTag("$tag-value"),
+        label = { Text(stringResource(R.string.tool_custom_value)) },
+        leadingIcon = field.color?.let { color -> { ColorSwatch(color) } },
+        isError = field.invalid,
+        supportingText = { Text(stringResource(R.string.tool_custom_color_hint), modifier = Modifier.testTag("$tag-range")) },
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, autoCorrectEnabled = false, keyboardType = KeyboardType.Ascii),
+    )
+}
+
+/** A dot of [color] (`#RRGGBB` or `#AARRGGBB`). zh-CN: [color] 颜色的圆点 (`#RRGGBB` 或 `#AARRGGBB`). */
+@Composable
+private fun ColorSwatch(color: String) {
+    Box(Modifier.size(16.dp).border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape).background(Color(color.toColorInt()), CircleShape))
+}
+
 @Composable
 private fun AdvancedRow(open: Boolean, tag: String, onToggle: (Boolean) -> Unit) {
     Row(
@@ -884,6 +984,13 @@ private fun Loading(@StringRes text: Int, tag: String) {
 }
 
 private const val PERCENT = 100.0
+
+private const val DEGREE_SIGN = "\u00B0"
+
+private const val PERCENT_SIGN = "%"
+
+/** Fraction digits of the range bounds a field shows. zh-CN: 输入框显示的范围边界的小数位数. */
+private const val RANGE_FRACTION_DIGITS = 3
 
 private const val START_DIGITS = 7
 

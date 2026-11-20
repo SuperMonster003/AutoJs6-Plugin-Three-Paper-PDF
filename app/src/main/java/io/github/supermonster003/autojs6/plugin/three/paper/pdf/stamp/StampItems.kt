@@ -101,6 +101,9 @@ internal object StampItems {
     /** Largest image scale. zh-CN: 图片缩放的上限. */
     const val MAX_SCALE = 100.0
 
+    /** Largest rotation either way, in degrees (100 turns). zh-CN: 两个方向旋转角度的上限 (度, 100 圈). */
+    const val MAX_ROTATION = 36_000.0
+
     fun parse(payload: PayloadObject, imageCount: Int): List<StampItem> {
         val items = payload.array(PdfContract.FIELD_ITEMS)
         if (items.size == 0) throw PdfFailure.invalid("${items.path} is empty; give 1 - ${PdfContract.MAX_STAMP_ITEMS} items")
@@ -142,7 +145,7 @@ internal object StampItems {
             position = position(item),
             offsetX = item.optDouble(PdfContract.FIELD_OFFSET_X, signed) ?: 0.0,
             offsetY = item.optDouble(PdfContract.FIELD_OFFSET_Y, signed) ?: 0.0,
-            rotation = item.optDouble(PdfContract.FIELD_ROTATION, -36_000.0..36_000.0) ?: 0.0,
+            rotation = item.optDouble(PdfContract.FIELD_ROTATION, -MAX_ROTATION..MAX_ROTATION) ?: 0.0,
             opacity = item.optDouble(PdfContract.FIELD_OPACITY, 0.0..1.0) ?: 1.0,
             fontSize = positive(item, PdfContract.FIELD_FONT_SIZE, TextStamp.MAX_FONT_SIZE),
             color = item.optString(PdfContract.FIELD_COLOR)?.let { color(it, item.pathOf(PdfContract.FIELD_COLOR)) } ?: DEFAULT_COLOR,

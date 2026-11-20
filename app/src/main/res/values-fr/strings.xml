@@ -124,6 +124,12 @@
     <string name="tool_compress_quality">Qualité JPEG</string>
     <string name="tool_compress_remove_metadata">Supprimer les métadonnées</string>
     <string name="tool_compress_remove_metadata_note">Supprime le titre, l\'auteur et les autres informations du document, ainsi que les miniatures des pages.</string>
+    <string name="tool_custom">Personnalisé</string>
+    <string name="tool_custom_color_hint">Saisissez #RRGGBB, ou #AARRGGBB avec l\'opacité AA en tête.</string>
+    <string name="tool_custom_range">Saisissez un nombre de %1$s à %2$s.</string>
+    <string name="tool_custom_range_above">Saisissez un nombre supérieur à %1$s et au plus égal à %2$s.</string>
+    <string name="tool_custom_range_integer">Saisissez un nombre entier de %1$s à %2$s.</string>
+    <string name="tool_custom_value">Valeur personnalisée</string>
     <string name="tool_decrypt_not_encrypted">Ce PDF n\'a pas de mot de passe.</string>
     <string name="tool_decrypt_note">Le nouveau fichier n\'a pas de mot de passe. Si le PDF a un mot de passe propriétaire distinct, saisissez celui-ci.</string>
     <string name="tool_degrees">%1$d°</string>
@@ -256,6 +262,7 @@
     <string name="tool_start">Démarrer</string>
     <string name="tool_text_too_long" tools:ignore="PluralsCandidate">Utilisez au plus %1$d caractères.</string>
     <string name="tool_title">Outil PDF</string>
+    <string name="tool_unit_points">pt</string>
     <string name="tool_unlock">Déverrouiller</string>
     <string name="tool_watermark_choose_image">Choisir une image</string>
     <string name="tool_watermark_layer">Calque</string>

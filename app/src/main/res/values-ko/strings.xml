@@ -124,6 +124,12 @@
     <string name="tool_compress_quality">JPEG 품질</string>
     <string name="tool_compress_remove_metadata">메타데이터 제거</string>
     <string name="tool_compress_remove_metadata_note">제목, 작성자 등 문서 정보와 페이지 썸네일을 제거합니다.</string>
+    <string name="tool_custom">사용자 지정</string>
+    <string name="tool_custom_color_hint">#RRGGBB 또는 앞에 불투명도 AA를 붙인 #AARRGGBB를 입력하세요.</string>
+    <string name="tool_custom_range">%1$s부터 %2$s 사이의 숫자를 입력하세요.</string>
+    <string name="tool_custom_range_above">%1$s보다 크고 %2$s 이하인 숫자를 입력하세요.</string>
+    <string name="tool_custom_range_integer">%1$s부터 %2$s 사이의 정수를 입력하세요.</string>
+    <string name="tool_custom_value">사용자 지정 값</string>
     <string name="tool_decrypt_not_encrypted">이 PDF에는 비밀번호가 없습니다.</string>
     <string name="tool_decrypt_note">새 파일에는 비밀번호가 없습니다. PDF에 별도의 소유자 비밀번호가 있으면 그 비밀번호를 입력하세요.</string>
     <string name="tool_degrees">%1$d°</string>
@@ -256,6 +262,7 @@
     <string name="tool_start">시작</string>
     <string name="tool_text_too_long" tools:ignore="PluralsCandidate">%1$d자 이내로 입력하세요.</string>
     <string name="tool_title">PDF 도구</string>
+    <string name="tool_unit_points">pt</string>
     <string name="tool_unlock">잠금 해제</string>
     <string name="tool_watermark_choose_image">이미지 선택</string>
     <string name="tool_watermark_layer">레이어</string>

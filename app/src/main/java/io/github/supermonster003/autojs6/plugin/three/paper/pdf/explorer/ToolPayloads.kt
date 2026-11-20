@@ -18,16 +18,16 @@ import org.json.JSONObject
  */
 internal object ToolPayloads {
 
-    const val WATERMARK_TEXT_ROTATION = 45f
+    const val WATERMARK_TEXT_ROTATION = 45.0
 
-    const val WATERMARK_IMAGE_ROTATION = 0f
+    const val WATERMARK_IMAGE_ROTATION = 0.0
 
-    const val WATERMARK_OPACITY = 0.3f
+    const val WATERMARK_OPACITY = 0.3
 
     const val WATERMARK_COLOR = "#808080"
 
     /** The font size of page numbers, headers and footers. zh-CN: 页码, 页眉与页脚的字号. */
-    const val STAMP_FONT_SIZE = 10f
+    const val STAMP_FONT_SIZE = 10.0
 
     const val PAGE_NUMBER_FORMAT = "{page} / {total}"
 
@@ -46,14 +46,14 @@ internal object ToolPayloads {
         put(PdfContract.FIELD_TYPE, options.type)
         if (image) put(PdfContract.FIELD_IMAGE, 0) else put(PdfContract.FIELD_TEXT, options.text)
         put(PdfContract.FIELD_POSITION, options.position)
-        put(PdfContract.FIELD_ROTATION, options.rotation.toDouble())
-        put(PdfContract.FIELD_OPACITY, options.opacity.toDouble())
+        put(PdfContract.FIELD_ROTATION, options.rotation)
+        put(PdfContract.FIELD_OPACITY, options.opacity)
         if (options.tile) put(PdfContract.FIELD_TILE, true)
         if (!image) {
             put(PdfContract.FIELD_COLOR, options.color ?: WATERMARK_COLOR)
-            options.fontSize?.let { put(PdfContract.FIELD_FONT_SIZE, it.toDouble()) }
+            options.fontSize?.let { put(PdfContract.FIELD_FONT_SIZE, it) }
         } else {
-            options.width?.let { put(PdfContract.FIELD_WIDTH, it.toDouble()) }
+            options.width?.let { put(PdfContract.FIELD_WIDTH, it) }
         }
         if (options.layer != PdfContract.LAYER_OVER) put(PdfContract.FIELD_LAYER, options.layer)
         options.pages?.let { put(PdfContract.FIELD_PAGES, it) }
@@ -138,7 +138,7 @@ internal object ToolPayloads {
         put(PdfContract.FIELD_TEXT, text)
         put(PdfContract.FIELD_POSITION, position)
         own()
-        put(PdfContract.FIELD_FONT_SIZE, options.fontSize.toDouble())
+        put(PdfContract.FIELD_FONT_SIZE, options.fontSize)
         options.pages?.let { put(PdfContract.FIELD_PAGES, it) }
     }
 

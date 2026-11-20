@@ -79,12 +79,12 @@ internal sealed interface ToolOptions {
         val text: String,
         val image: ToolTarget?,
         val position: String,
-        val rotation: Float,
-        val opacity: Float,
+        val rotation: Double,
+        val opacity: Double,
         val tile: Boolean,
         val color: String?,
-        val fontSize: Float?,
-        val width: Float?,
+        val fontSize: Double?,
+        val width: Double?,
         val layer: String,
         val pages: String?,
     ) : ToolOptions
@@ -102,7 +102,7 @@ internal sealed interface ToolOptions {
         val start: Int,
         val header: Slots,
         val footer: Slots,
-        val fontSize: Float,
+        val fontSize: Double,
         val pages: String?,
     ) : ToolOptions
 

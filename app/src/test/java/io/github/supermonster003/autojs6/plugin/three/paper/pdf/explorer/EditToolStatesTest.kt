@@ -21,23 +21,23 @@ class EditToolStatesTest {
         state.text = "   "
         assertNull(state.options(null))
         state.text = "DRAFT"
-        state.opacity = 50
-        state.fontSize = 36
+        state.opacity.choose(50)
+        state.fontSize.choose(36)
         val text = checkNotNull(state.options("1-3"))
-        assertEquals(45f, text.rotation)
-        assertEquals(0.5f, text.opacity)
-        assertEquals(36f, text.fontSize)
+        assertEquals(45.0, text.rotation, 0.0)
+        assertEquals(0.5, text.opacity, 0.0)
+        assertEquals(36.0, checkNotNull(text.fontSize), 0.0)
         assertEquals("1-3", text.pages)
         assertNull(text.width)
 
         state.selectType(PdfContract.STAMP_IMAGE)
-        assertEquals(0, state.rotation)
+        assertEquals(0, state.rotation.preset)
         assertNull(state.options(null))
-        state.rotation = 90
+        state.rotation.choose(90)
         state.selectType(PdfContract.STAMP_IMAGE)
-        assertEquals(90, state.rotation)
+        assertEquals(90, state.rotation.preset)
         state.selectType(PdfContract.STAMP_TEXT)
-        assertEquals(45, state.rotation)
+        assertEquals(45, state.rotation.preset)
 
         state.text = "x".repeat(PdfContract.MAX_STAMP_TEXT_LENGTH + 1)
         assertTrue(state.textTooLong())
@@ -97,17 +97,17 @@ class EditToolStatesTest {
         val state = CompressState()
         val medium = CompressState.numbersOf(PdfContract.DEFAULT_COMPRESS_PRESET)
         assertEquals(PdfContract.DEFAULT_COMPRESS_PRESET, state.preset)
-        assertEquals(medium.imageDpi, state.imageDpi)
-        assertEquals(medium.imageQuality, state.imageQuality)
+        assertEquals(medium.imageDpi, state.imageDpi.preset)
+        assertEquals(medium.imageQuality, state.imageQuality.preset)
 
         state.selectPreset(PdfContract.COMPRESS_PRESET_HIGH)
         val high = CompressState.numbersOf(PdfContract.COMPRESS_PRESET_HIGH)
         assertEquals(PdfContract.COMPRESS_PRESET_HIGH, state.preset)
-        assertEquals(high.imageDpi, state.imageDpi)
+        assertEquals(high.imageDpi, state.imageDpi.preset)
         // The presets run from the smallest output to the best images. zh-CN: 预设从输出最小排到图片最好.
         assertTrue(high.imageDpi > medium.imageDpi)
 
-        state.imageQuality = 40
+        state.imageQuality.choose(40)
         state.removeMetadata = true
         state.objectStreams = false
         assertEquals(ToolOptions.Compress(PdfContract.COMPRESS_PRESET_HIGH, high.imageDpi, 40, true, false), state.options())

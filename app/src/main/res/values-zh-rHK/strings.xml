@@ -124,6 +124,12 @@
     <string name="tool_compress_quality">JPEG 品質</string>
     <string name="tool_compress_remove_metadata">刪除元數據</string>
     <string name="tool_compress_remove_metadata_note">刪除標題, 作者等文件資料及頁面縮圖.</string>
+    <string name="tool_custom">自訂</string>
+    <string name="tool_custom_color_hint">請輸入 #RRGGBB, 或在前面加上不透明度 AA 的 #AARRGGBB.</string>
+    <string name="tool_custom_range">請輸入 %1$s 至 %2$s 之間的數字.</string>
+    <string name="tool_custom_range_above">請輸入大於 %1$s 且不超過 %2$s 的數字.</string>
+    <string name="tool_custom_range_integer">請輸入 %1$s 至 %2$s 之間的整數.</string>
+    <string name="tool_custom_value">自訂值</string>
     <string name="tool_decrypt_not_encrypted">此 PDF 沒有密碼.</string>
     <string name="tool_decrypt_note">新檔案沒有密碼. 如果該 PDF 另設了擁有者密碼, 請輸入擁有者密碼.</string>
     <string name="tool_degrees">%1$d°</string>
@@ -256,6 +262,7 @@
     <string name="tool_start">開始</string>
     <string name="tool_text_too_long" tools:ignore="PluralsCandidate">最多 %1$d 個字元.</string>
     <string name="tool_title">PDF 工具</string>
+    <string name="tool_unit_points">pt</string>
     <string name="tool_unlock">解鎖</string>
     <string name="tool_watermark_choose_image">選擇圖片</string>
     <string name="tool_watermark_layer">圖層</string>
