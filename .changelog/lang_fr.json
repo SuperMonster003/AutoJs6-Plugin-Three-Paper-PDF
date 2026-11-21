@@ -35,7 +35,7 @@
         "Les indications de traitement de l'écran de résultat des outils s'affichent désormais dans la langue de l'interface au lieu de l'anglais seul",
         "Réécriture des instructions affichées dans le centre des plugins en cinq parties: prise en main, fonctionnalités principales, utilisation dans les scripts, prérequis et questions fréquentes",
         "Le retour depuis l'écran de résultat ou d'échec d'un outil, par la flèche de la barre du haut ou la touche retour du système, ramène désormais aux options en gardant les fichiers choisis et tout ce qui a été saisi, pour relancer après une modification; le nouveau résultat reçoit un numéro au lieu de remplacer le précédent, et un retour depuis les options quitte l'outil",
-        "Choisir un fichier est plus rapide: le navigateur de fichiers affiche \"Récents\" en haut (les fichiers récents de l'écran d'accueil, qui incluent désormais les PDF choisis dans n'importe quel outil), à choisir d'un seul appui; il s'ouvre dans le dossier du dernier fichier choisi, commun à tous les outils et à \"Ouvrir un PDF\" de l'écran d'accueil (les images gardent leur propre dossier)"
+        "Choisir un fichier est plus rapide: le navigateur de fichiers affiche \"Récents\" en haut (les fichiers récents de l'écran d'accueil, qui incluent désormais les PDF traités par n'importe quel outil), à choisir d'un seul appui; il s'ouvre dans le dossier du dernier fichier choisi, commun à tous les outils et à \"Ouvrir un PDF\" de l'écran d'accueil (les images gardent leur propre dossier)"
       ]
     },
     "v1.0.0": {

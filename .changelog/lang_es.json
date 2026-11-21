@@ -35,7 +35,7 @@
         "Las indicaciones de procesamiento de la pantalla de resultados de las herramientas ahora se muestran en el idioma de la interfaz en lugar de solo en inglés",
         "Se reescribieron las instrucciones del centro de complementos en cinco partes: primeros pasos, funciones principales, uso en scripts, requisitos y preguntas frecuentes",
         "Volver desde la pantalla de resultado o de error de una herramienta, con la flecha de la barra superior o la tecla atrás del sistema, ahora lleva a las opciones con los archivos elegidos y todo lo escrito conservado, para volver a ejecutar tras un cambio; el nuevo resultado recibe un número en lugar de reemplazar el anterior, y volver desde las opciones cierra la herramienta",
-        "Elegir archivos es más rápido: el explorador de archivos muestra \"Recientes\" arriba (los archivos recientes de la pantalla de inicio, que ahora incluyen los PDF elegidos en cualquier herramienta) para elegir con un toque; empieza en la carpeta del último archivo elegido, compartida por todas las herramientas y por \"Abrir un PDF\" de la pantalla de inicio (las imágenes recuerdan su propia carpeta)"
+        "Elegir archivos es más rápido: el explorador de archivos muestra \"Recientes\" arriba (los archivos recientes de la pantalla de inicio, que ahora incluyen los PDF procesados con cualquier herramienta) para elegir con un toque; empieza en la carpeta del último archivo elegido, compartida por todas las herramientas y por \"Abrir un PDF\" de la pantalla de inicio (las imágenes recuerdan su propia carpeta)"
       ]
     },
     "v1.0.0": {
