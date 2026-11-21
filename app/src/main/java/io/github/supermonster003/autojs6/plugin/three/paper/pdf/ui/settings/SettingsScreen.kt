@@ -57,6 +57,7 @@ import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.Toolb
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.rememberStorageAccess
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.update.AppUpdateController
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.update.AppUpdateStore
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.viewer.ViewerPreferences
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -66,12 +67,13 @@ private enum class SettingsDialog { LANGUAGE, DARK_MODE, THEME_COLOR, LAUNCHER_I
  * The settings destination of the toolbox (roadmap P4.1, D37, standalone settings specification, precedent 3-Slate
  * Studio): appearance (language, night mode, theme color, launcher icon; the first three follow AutoJs6 by default,
  * appendix D Q102), toolbox (the output folder, `Documents/3-Paper PDF/` by default, and the default resolution of PDF to
- * images; scripts choose their own outputs), permissions (all files access of D7, notifications, the task notification
- * channel) and about (version, release history, the update check with its automatic check and ignored releases).
+ * images; scripts choose their own outputs), viewer (whether full-screen reading also hides the page number and the
+ * system bars, E4 feedback F2), permissions (all files access of D7, notifications, the task notification channel) and about (version, release history, the update check with its automatic check and ignored releases).
  * [onHoldChange] tells the activity while a dialog or the folder browser is open, so an appearance change does not
  * recreate the screen under it.
  * zh-CN: 工具箱的设置目的地 (路线图 P4.1, D37, 独立设置规范, 先例 3-Slate Studio): 外观 (语言, 夜间模式, 主题色, 启动器图标; 前三项默认跟随
- * AutoJs6, 附录 D Q102), 工具箱 (输出目录, 默认为 `Documents/3-Paper PDF/`, 以及 PDF 转图片的默认分辨率; 脚本自行决定输出位置), 权限
+ * AutoJs6, 附录 D Q102), 工具箱 (输出目录, 默认为 `Documents/3-Paper PDF/`, 以及 PDF 转图片的默认分辨率; 脚本自行决定输出位置), 查看器
+ * (全屏阅读时是否同时隐藏页码与系统栏, E4 反馈 F2), 权限
  * (D7 的所有文件访问, 通知, 任务通知渠道) 与关于 (版本, 发行历史, 更新检查及其自动检查与已忽略版本). 对话框或目录浏览器打开期间
  * 经 [onHoldChange] 告知 Activity, 外观变化不会在其下重建界面.
  */
@@ -157,6 +159,21 @@ internal fun SettingsScreen(
                 Hairline()
                 SettingsRow(stringResource(R.string.settings_default_dpi), summary = dpiLabel(ToolboxPreferences.defaultDpi(activity)), icon = R.drawable.ic_image_24,
                     onClick = { dialog = SettingsDialog.DPI }, modifier = Modifier.testTag("paper.settings.dpi"))
+
+                // Full-screen reading of the viewer (E4 feedback F2, appendix D Q343 (a)). zh-CN: 查看器的全屏阅读 (E4 反馈 F2, 附录 D Q343 (a)).
+                SectionHeader(stringResource(R.string.settings_viewer))
+                val viewerPreferences = remember { ViewerPreferences.of(activity) }
+                var fullscreen by remember { mutableStateOf(ViewerPreferences.fullscreen(viewerPreferences)) }
+                val failed = { message = activity.getString(R.string.settings_save_failed) }
+                SwitchRow(stringResource(R.string.settings_viewer_hide_indicator), fullscreen.hidePageIndicator,
+                    { if (ViewerPreferences.setHidePageIndicator(viewerPreferences, it)) fullscreen = fullscreen.copy(hidePageIndicator = it) else failed() },
+                    summary = stringResource(R.string.settings_viewer_hide_indicator_summary), icon = R.drawable.ic_format_list_numbered_24,
+                    modifier = Modifier.testTag("paper.settings.viewerHidePageIndicator"))
+                Hairline()
+                SwitchRow(stringResource(R.string.settings_viewer_hide_system_bars), fullscreen.hideSystemBars,
+                    { if (ViewerPreferences.setHideSystemBars(viewerPreferences, it)) fullscreen = fullscreen.copy(hideSystemBars = it) else failed() },
+                    summary = stringResource(R.string.settings_viewer_hide_system_bars_summary), icon = R.drawable.ic_fullscreen_24,
+                    modifier = Modifier.testTag("paper.settings.viewerHideSystemBars"))
 
                 SectionHeader(stringResource(R.string.settings_permissions))
                 SettingsRow(stringResource(R.string.settings_storage_permission),

@@ -105,6 +105,11 @@
     <string name="settings_update_summary">Buscar una versión más reciente en el índice oficial de complementos</string>
     <string name="settings_version">Versión</string>
     <string name="settings_version_value">%1$s (%2$d) · %3$s</string>
+    <string name="settings_viewer">Visor</string>
+    <string name="settings_viewer_hide_indicator">Ocultar el número de página en pantalla completa</string>
+    <string name="settings_viewer_hide_indicator_summary">Al tocar la página para ocultar las barras, también se oculta el número de página</string>
+    <string name="settings_viewer_hide_system_bars">Ocultar las barras del sistema en pantalla completa</string>
+    <string name="settings_viewer_hide_system_bars_summary">La barra de estado y la barra de navegación se ocultan con las barras; desliza desde el borde de la pantalla para mostrarlas un momento</string>
     <string name="tool_advanced">Avanzado</string>
     <string name="tool_cancelled">Cancelado. No se guardó nada.</string>
     <string name="tool_color">Color</string>

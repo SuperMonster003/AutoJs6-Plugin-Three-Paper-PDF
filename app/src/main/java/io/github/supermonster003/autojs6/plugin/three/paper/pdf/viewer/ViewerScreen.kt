@@ -1,6 +1,7 @@
 package io.github.supermonster003.autojs6.plugin.three.paper.pdf.viewer
 
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -79,6 +80,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -91,6 +93,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.R
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlin.math.max
@@ -100,9 +106,12 @@ import kotlin.math.roundToInt
 /**
  * The viewer screen (roadmap P3.1): the page canvas under a top bar (title, search, outline, menu with night mode,
  * share and open with), a page indicator that opens the jump dialog, a thumbnail strip, the outline panel and the
- * password prompt. A single tap on the pages hides or shows the bars.
+ * password prompt. A single tap on the pages hides or shows the bars; with the bars hidden the viewer reads full screen
+ * (E4 feedback F2): by default the page indicator and the system bars hide too (two switches of the settings screen,
+ * [ViewerPreferences]).
  * zh-CN: 查看器界面 (路线图 P3.1): 页面画布, 上方是顶栏 (标题, 搜索, 大纲, 菜单含夜间模式, 分享与用其他应用打开), 页码指示 (点按打开
- * 跳页对话框), 缩略图栏, 大纲面板与密码提示. 单击页面隐藏或显示工具栏.
+ * 跳页对话框), 缩略图栏, 大纲面板与密码提示. 单击页面隐藏或显示工具栏; 工具栏隐藏时查看器全屏阅读 (E4 反馈 F2): 默认页码指示与系统栏也一并
+ * 隐藏 (设置页的两个开关, [ViewerPreferences]).
  */
 @Composable
 internal fun ViewerScreen(model: ViewerViewModel, onClose: () -> Unit, onShare: () -> Unit, onOpenWith: () -> Unit) {
@@ -154,7 +163,9 @@ private fun Ready(model: ViewerViewModel, onClose: () -> Unit, onShare: () -> Un
             modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            PageIndicator(model)
+            AnimatedVisibility(visible = model.pageIndicatorVisible, enter = fadeIn(), exit = fadeOut()) {
+                PageIndicator(model)
+            }
             AnimatedVisibility(visible = model.chromeVisible, enter = fadeIn(), exit = fadeOut()) {
                 Surface(color = bars.container, contentColor = bars.content, shadowElevation = 2.dp, modifier = Modifier.testTag(VIEWER_THUMBNAILS_TAG)) {
                     ThumbnailStrip(model, modifier = Modifier.windowInsetsPadding(safe.only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal)))
@@ -166,6 +177,32 @@ private fun Ready(model: ViewerViewModel, onClose: () -> Unit, onShare: () -> Un
             OutlinePanel(model)
         }
         if (model.jumpOpen) JumpDialog(model)
+    }
+    SystemBars(hidden = model.systemBarsHidden)
+}
+
+/**
+ * Hides the status and navigation bars while [hidden] (full-screen reading, E4 feedback F2); a swipe in from the edge
+ * shows them for a moment. They show again whenever the viewer pauses (back, another app, the share sheet, open with)
+ * or leaves the pages, and the state is applied again on every resume and whenever the window gets the focus back
+ * (below API 30 a dialog or the notification shade can clear the immersive flags). The pages do not move: their insets
+ * ignore whether the bars show ([viewerSafeArea]). The display cutout mode stays the one of edge-to-edge (always on
+ * API 30+, short edges on API 28 / 29), and the cutout stays in the insets, so in landscape the pages keep clear of it.
+ * zh-CN: [hidden] 为真时隐藏状态栏与导航栏 (全屏阅读, E4 反馈 F2); 从屏幕边缘向内滑动可临时显示. 查看器暂停 (返回, 切到其他应用, 分享面板,
+ * 用其他应用打开) 或离开页面时系统栏重新显示, 每次恢复以及窗口重新获得焦点时再次应用 (API 30 以下, 对话框或通知栏可能清除沉浸标志). 页面不会
+ * 移动: 其 insets 不考虑系统栏是否显示 ([viewerSafeArea]). 刘海模式保持边到边的设置 (API 30+ 为 always, API 28 / 29 为 short edges), 刘海
+ * 仍计入 insets, 因此横屏时页面让开刘海.
+ */
+@Composable
+private fun SystemBars(hidden: Boolean) {
+    val activity = LocalActivity.current ?: return
+    val focused = LocalWindowInfo.current.isWindowFocused
+    LifecycleResumeEffect(activity, hidden && focused) {
+        val window = activity.window
+        val controller = WindowCompat.getInsetsController(window, window.decorView)
+        controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        if (hidden && focused) controller.hide(WindowInsetsCompat.Type.systemBars()) else controller.show(WindowInsetsCompat.Type.systemBars())
+        onPauseOrDispose { controller.show(WindowInsetsCompat.Type.systemBars()) }
     }
 }
 

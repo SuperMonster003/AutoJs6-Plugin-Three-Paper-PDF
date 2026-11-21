@@ -105,6 +105,11 @@
     <string name="settings_update_summary">Look for a newer release in the official plugin index</string>
     <string name="settings_version">Version</string>
     <string name="settings_version_value">%1$s (%2$d) · %3$s</string>
+    <string name="settings_viewer">Viewer</string>
+    <string name="settings_viewer_hide_indicator">Hide the page number in full screen</string>
+    <string name="settings_viewer_hide_indicator_summary">When a tap on the page hides the bars, the page number hides too</string>
+    <string name="settings_viewer_hide_system_bars">Hide the system bars in full screen</string>
+    <string name="settings_viewer_hide_system_bars_summary">The status bar and the navigation bar hide with the bars; swipe in from the edge of the screen to show them for a moment</string>
     <string name="tool_advanced">Advanced</string>
     <string name="tool_cancelled">Cancelled. Nothing was saved.</string>
     <string name="tool_color">Color</string>

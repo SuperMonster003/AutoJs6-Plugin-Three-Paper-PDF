@@ -105,6 +105,11 @@
     <string name="settings_update_summary">公式プラグインインデックスで新しいリリースを探します</string>
     <string name="settings_version">バージョン</string>
     <string name="settings_version_value">%1$s (%2$d) · %3$s</string>
+    <string name="settings_viewer">ビューアー</string>
+    <string name="settings_viewer_hide_indicator">全画面表示でページ番号を隠す</string>
+    <string name="settings_viewer_hide_indicator_summary">ページをタップしてバーを隠すと, ページ番号も隠れます</string>
+    <string name="settings_viewer_hide_system_bars">全画面表示でシステムバーを隠す</string>
+    <string name="settings_viewer_hide_system_bars_summary">ステータスバーとナビゲーションバーもバーと一緒に隠れます. 画面の端から内側へスワイプすると一時的に表示されます</string>
     <string name="tool_advanced">詳細設定</string>
     <string name="tool_cancelled">キャンセルしました. 何も保存されていません.</string>
     <string name="tool_color">色</string>

@@ -9,6 +9,7 @@ import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import android.util.Log
+import android.view.View
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
@@ -25,8 +26,12 @@ import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipe
 import androidx.core.content.FileProvider
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.test.core.app.ActivityScenario
+import androidx.test.espresso.Espresso
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.tom_roush.pdfbox.pdmodel.PDDocument
@@ -53,9 +58,11 @@ import kotlin.math.max
  * The viewer Activity on a device (roadmap P3.1): page count and jump on a sample opened by a `file:` URI, the state
  * kept across recreation, a `content:` URI with its provider name, the session token entry (start page, search from
  * there, an unknown token), the password prompt, and 100 pages scrolled without blocking the main thread (the timing
- * is logged under `PaperViewerPerf`).
+ * is logged under `PaperViewerPerf`), the pages clear of the bars (E4 feedback F1) and full-screen reading with its two
+ * switches (E4 feedback F2).
  * zh-CN: 设备上的查看器 Activity (路线图 P3.1): 以 `file:` URI 打开样例时的页数与跳页, 重建后保留的状态, 带提供方名称的 `content:`
- * URI, 会话令牌入口 (起始页, 从起始页搜索, 未知令牌), 密码提示, 以及滚动 100 页时主线程不被阻塞 (耗时记录在 `PaperViewerPerf` 下).
+ * URI, 会话令牌入口 (起始页, 从起始页搜索, 未知令牌), 密码提示, 滚动 100 页时主线程不被阻塞 (耗时记录在 `PaperViewerPerf` 下), 页面让开
+ * 各栏 (E4 反馈 F1), 以及全屏阅读及其两个开关 (E4 反馈 F2).
  */
 @OptIn(ExperimentalTestApi::class)
 @RunWith(AndroidJUnit4::class)
@@ -196,7 +203,107 @@ class ViewerActivityDeviceTest {
         }
     }
 
+    @Test
+    fun aTapReadsFullScreenAndTheSwitchesKeepWhatTheyTurnOff() {
+        // E4 feedback F2, appendix D Q343 (a). zh-CN: E4 反馈 F2, 附录 D Q343 (a).
+        val preferences = ViewerPreferences.of(context)
+        val saved = ViewerPreferences.fullscreen(preferences)
+        val uri = Uri.fromFile(PdfServiceHarness.sampleFile("text.pdf"))
+        val count = pagesOf("text.pdf")
+        try {
+            // By default the page number and the system bars go with the bars, also after a rotation, and come back on a pause.
+            // zh-CN: 默认页码与系统栏随工具栏一起隐藏, 旋转后仍是如此, 暂停时重新显示.
+            preferences.edit().remove(ViewerPreferences.KEY_HIDE_PAGE_INDICATOR).remove(ViewerPreferences.KEY_HIDE_SYSTEM_BARS).commit()
+            launch(viewIntent(uri)).use { scenario ->
+                awaitIndicator(1, count)
+                awaitSystemBars(scenario, hidden = false)
+                tapPages()
+                awaitGone(VIEWER_TOP_BAR_TAG)
+                awaitGone(PAGE_INDICATOR_TAG)
+                awaitSystemBars(scenario, hidden = true)
+                tapPages()
+                awaitTag(VIEWER_TOP_BAR_TAG)
+                awaitIndicator(1, count)
+                awaitSystemBars(scenario, hidden = false)
+                tapPages()
+                awaitSystemBars(scenario, hidden = true)
+                scenario.onActivity { it.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE }
+                compose.waitUntil(TIMEOUT_MILLIS) { scenario.isLandscape() }
+                awaitSystemBars(scenario, hidden = true)
+                assertTrue("the page number came back after the rotation", compose.onAllNodesWithTag(PAGE_INDICATOR_TAG).fetchSemanticsNodes().isEmpty())
+                scenario.onActivity { it.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED }
+                // Another Activity on top pauses the viewer: the system bars show, and hide again on the return.
+                // zh-CN: 其他 Activity 覆盖时查看器暂停: 系统栏显示, 返回后再次隐藏.
+                scenario.moveToState(Lifecycle.State.STARTED)
+                awaitSystemBars(scenario, hidden = false)
+                scenario.moveToState(Lifecycle.State.RESUMED)
+                awaitSystemBars(scenario, hidden = true)
+            }
+            // Both switches off: only the bars of the viewer go. zh-CN: 两个开关都关闭: 只隐藏查看器自己的工具栏.
+            assertTrue(ViewerPreferences.setHidePageIndicator(preferences, false))
+            assertTrue(ViewerPreferences.setHideSystemBars(preferences, false))
+            launch(viewIntent(uri)).use { scenario ->
+                awaitIndicator(1, count)
+                tapPages()
+                awaitGone(VIEWER_TOP_BAR_TAG)
+                compose.waitForIdle()
+                awaitIndicator(1, count)
+                assertTrue("the system bars hid with the switch off", !systemBarsHidden(scenario))
+            }
+            // The page number kept in full screen opens the jump dialog, which shows the system bars until it closes.
+            // zh-CN: 全屏时保留的页码可以打开跳页对话框, 对话框打开期间系统栏显示, 关闭后再次隐藏.
+            assertTrue(ViewerPreferences.setHideSystemBars(preferences, true))
+            launch(viewIntent(uri)).use { scenario ->
+                awaitIndicator(1, count)
+                tapPages()
+                awaitSystemBars(scenario, hidden = true)
+                compose.onNodeWithTag(PAGE_INDICATOR_TAG).performClick()
+                awaitTag("viewer-jump-field")
+                awaitSystemBars(scenario, hidden = false)
+                Espresso.pressBack()
+                awaitGone("viewer-jump-field")
+                awaitSystemBars(scenario, hidden = true)
+            }
+        } finally {
+            ViewerPreferences.setHidePageIndicator(preferences, saved.hidePageIndicator)
+            ViewerPreferences.setHideSystemBars(preferences, saved.hideSystemBars)
+        }
+    }
+
     // Helpers. zh-CN: 辅助方法.
+
+    private fun tapPages() {
+        compose.onNodeWithTag(VIEWER_CANVAS_TAG).performTouchInput { click(Offset(centerX, height * 0.45f)) }
+    }
+
+    private fun awaitGone(tag: String) {
+        compose.waitUntil(TIMEOUT_MILLIS) { compose.onAllNodesWithTag(tag).fetchSemanticsNodes().isEmpty() }
+    }
+
+    private fun awaitSystemBars(scenario: ActivityScenario<ThreePaperPdfViewerActivity>, hidden: Boolean) {
+        compose.waitUntil(TIMEOUT_MILLIS) { systemBarsHidden(scenario) == hidden }
+    }
+
+    /**
+     * Whether the status and navigation bars are hidden. Below API 30 the edge-to-edge window keeps stable insets, so
+     * the flags of the decor view tell it.
+     * zh-CN: 状态栏与导航栏是否隐藏. API 30 以下边到边窗口保持稳定的 insets, 因此由 decor view 的标志判断.
+     */
+    @Suppress("DEPRECATION")
+    private fun systemBarsHidden(scenario: ActivityScenario<ThreePaperPdfViewerActivity>): Boolean {
+        var hidden = false
+        scenario.onActivity { activity ->
+            val decor = activity.window.decorView
+            hidden = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                val insets = ViewCompat.getRootWindowInsets(decor)
+                insets != null && !insets.isVisible(WindowInsetsCompat.Type.statusBars()) && !insets.isVisible(WindowInsetsCompat.Type.navigationBars())
+            } else {
+                val flags = View.SYSTEM_UI_FLAG_FULLSCREEN or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                decor.systemUiVisibility and flags == flags
+            }
+        }
+        return hidden
+    }
 
     /**
      * From the first page: its top is below the top bar, a tap hides the bars without moving it and another shows them;
@@ -336,6 +443,7 @@ class ViewerActivityDeviceTest {
 
     private companion object {
         const val TIMEOUT_MILLIS = 20_000L
+        const val PAGE_INDICATOR_TAG = "viewer-page-indicator"
         const val HUNDRED = 100
         const val SWIPES = 30
 

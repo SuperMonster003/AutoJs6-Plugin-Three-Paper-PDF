@@ -126,6 +126,23 @@ internal class ViewerViewModel(application: Application) : AndroidViewModel(appl
     var nightMode by mutableStateOf(preferences.getBoolean(KEY_NIGHT, false))
         private set
 
+    /** What full-screen reading hides (E4 feedback F2), read again on every resume. zh-CN: 全屏阅读隐藏的内容 (E4 反馈 F2), 每次恢复时重新读取. */
+    var fullscreenSettings by mutableStateOf(ViewerPreferences.fullscreen(preferences))
+        private set
+
+    /**
+     * Full-screen reading (roadmap P6.15, E4 feedback F2, appendix D Q343 (a)): a tap hid the bars and no search,
+     * outline or jump dialog is open (the password prompt is a phase of its own). Opening any of them leaves it until
+     * it closes; the search shows the bars itself.
+     * zh-CN: 全屏阅读 (路线图 P6.15, E4 反馈 F2, 附录 D Q343 (a)): 单击隐藏了工具栏, 且没有打开搜索, 大纲或跳页对话框 (密码提示是单独的阶段).
+     * 打开其中任何一个即退出全屏, 直到它关闭; 搜索会自行显示工具栏.
+     */
+    val fullscreen: Boolean get() = phase == Phase.Ready && !chromeVisible && !searchOpen && !outlineOpen && !jumpOpen
+
+    val pageIndicatorVisible: Boolean get() = fullscreenSettings.pageIndicatorVisible(fullscreen)
+
+    val systemBarsHidden: Boolean get() = fullscreenSettings.systemBarsHidden(fullscreen)
+
     var outline by mutableStateOf<List<OutlineReader.Entry>?>(null)
         private set
 
@@ -170,6 +187,8 @@ internal class ViewerViewModel(application: Application) : AndroidViewModel(appl
         if (shownKey == key) return
         endSession(if (key.startsWith(SESSION_KEY_PREFIX)) PdfContract.REASON_REPLACED else PdfContract.REASON_CLOSED)
         reset()
+        // A new document opens with the bars shown, out of full screen (E4 feedback F2). zh-CN: 新文档打开时显示工具栏, 不在全屏 (E4 反馈 F2).
+        chromeVisible = true
         shownKey = key
         val next = build()
         if (next == null) {
@@ -292,6 +311,8 @@ internal class ViewerViewModel(application: Application) : AndroidViewModel(appl
     /** Whether the viewer Activity is resumed (`visible` of the session state). zh-CN: 查看器 Activity 是否处于 resumed 状态 (会话状态的 `visible`). */
     fun onResumed(resumed: Boolean) {
         this.resumed = resumed
+        // The settings screen may have changed them meanwhile. zh-CN: 设置页可能已在此期间修改它们.
+        if (resumed) fullscreenSettings = ViewerPreferences.fullscreen(preferences)
         session?.visible(resumed)
     }
 

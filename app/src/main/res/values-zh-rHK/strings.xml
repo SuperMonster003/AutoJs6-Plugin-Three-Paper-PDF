@@ -105,6 +105,11 @@
     <string name="settings_update_summary">在官方插件索引中查找新版本</string>
     <string name="settings_version">版本</string>
     <string name="settings_version_value">%1$s (%2$d) · %3$s</string>
+    <string name="settings_viewer">檢視器</string>
+    <string name="settings_viewer_hide_indicator">全螢幕時隱藏頁碼</string>
+    <string name="settings_viewer_hide_indicator_summary">單擊頁面收起工具列時, 頁碼一併隱藏</string>
+    <string name="settings_viewer_hide_system_bars">全螢幕時隱藏系統列</string>
+    <string name="settings_viewer_hide_system_bars_summary">狀態列與導航列隨工具列一併隱藏; 從螢幕邊緣向內滑動可暫時顯示</string>
     <string name="tool_advanced">進階</string>
     <string name="tool_cancelled">已取消, 沒有儲存任何內容.</string>
     <string name="tool_color">顏色</string>

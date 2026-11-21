@@ -105,6 +105,11 @@
     <string name="settings_update_summary">Найти более новый выпуск в официальном индексе плагинов</string>
     <string name="settings_version">Версия</string>
     <string name="settings_version_value">%1$s (%2$d) · %3$s</string>
+    <string name="settings_viewer">Средство просмотра</string>
+    <string name="settings_viewer_hide_indicator">Скрывать номер страницы в полноэкранном режиме</string>
+    <string name="settings_viewer_hide_indicator_summary">Когда касание страницы скрывает панели, номер страницы тоже скрывается</string>
+    <string name="settings_viewer_hide_system_bars">Скрывать системные панели в полноэкранном режиме</string>
+    <string name="settings_viewer_hide_system_bars_summary">Строка состояния и панель навигации скрываются вместе с панелями; проведите от края экрана, чтобы ненадолго их показать</string>
     <string name="tool_advanced">Дополнительно</string>
     <string name="tool_cancelled">Отменено. Ничего не сохранено.</string>
     <string name="tool_color">Цвет</string>

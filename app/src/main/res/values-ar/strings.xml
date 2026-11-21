@@ -105,6 +105,11 @@
     <string name="settings_update_summary">البحث عن إصدار أحدث في فهرس الإضافات الرسمي</string>
     <string name="settings_version">الإصدار</string>
     <string name="settings_version_value">%1$s (%2$d) · %3$s</string>
+    <string name="settings_viewer">العارض</string>
+    <string name="settings_viewer_hide_indicator">إخفاء رقم الصفحة في وضع ملء الشاشة</string>
+    <string name="settings_viewer_hide_indicator_summary">عند النقر على الصفحة لإخفاء الأشرطة يختفي رقم الصفحة أيضا</string>
+    <string name="settings_viewer_hide_system_bars">إخفاء أشرطة النظام في وضع ملء الشاشة</string>
+    <string name="settings_viewer_hide_system_bars_summary">يختفي شريط الحالة وشريط التنقل مع الأشرطة; اسحب من حافة الشاشة نحو الداخل لإظهارهما مؤقتا</string>
     <string name="tool_advanced">متقدم</string>
     <string name="tool_cancelled">تم الإلغاء. لم يُحفظ أي شيء.</string>
     <string name="tool_color">اللون</string>

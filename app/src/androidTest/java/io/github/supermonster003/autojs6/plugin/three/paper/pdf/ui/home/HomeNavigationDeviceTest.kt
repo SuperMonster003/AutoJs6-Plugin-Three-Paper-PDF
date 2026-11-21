@@ -3,6 +3,7 @@ package io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.home
 import android.content.res.Configuration
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
@@ -21,6 +22,7 @@ import io.github.supermonster003.autojs6.plugin.three.paper.pdf.explorer.ToolKin
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.ToolboxTestEnvironment
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.appearance.AppearancePreferences
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.ToolboxPreferences
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.viewer.ViewerPreferences
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -34,9 +36,10 @@ import java.util.Locale
 /**
  * The navigation and the settings of the plugin's own screens on a device (roadmap P4.1): home, settings, release
  * history and every toolbox wizard open and close with the top bar and the system back; the default resolution, the
- * output folder and the language chosen in the settings are kept and reach the wizards after a restart.
+ * output folder and the language chosen in the settings are kept and reach the wizards after a restart; the two viewer
+ * switches of full-screen reading (E4 feedback F2) start on and are kept.
  * zh-CN: 在设备上测试插件自身界面的导航与设置 (路线图 P4.1): 首页, 设置, 发行历史与每个工具箱向导都能经顶栏与系统返回打开和关闭; 设置中选择的
- * 默认分辨率, 输出目录与语言会被保留, 重启后仍作用于向导.
+ * 默认分辨率, 输出目录与语言会被保留, 重启后仍作用于向导; 查看器全屏阅读的两个开关 (E4 反馈 F2) 默认开启并被保留.
  */
 @OptIn(ExperimentalTestApi::class)
 @RunWith(AndroidJUnit4::class)
@@ -152,6 +155,44 @@ class HomeNavigationDeviceTest {
         }
     }
 
+    @Test
+    fun theViewerSwitchesStartOnAndAreKeptAcrossARestart() {
+        val preferences = ViewerPreferences.of(context)
+        preferences.edit().remove(ViewerPreferences.KEY_HIDE_PAGE_INDICATOR).remove(ViewerPreferences.KEY_HIDE_SYSTEM_BARS).commit()
+        ActivityScenario.launch(HomeActivity::class.java).use {
+            awaitTag("paper.home")
+            click("paper.home.settings")
+            awaitTag("paper.settings")
+            // E4 feedback F2: both switches start on. zh-CN: E4 反馈 F2: 两个开关默认开启.
+            awaitToggle(HIDE_INDICATOR, ToggleableState.On)
+            awaitToggle(HIDE_SYSTEM_BARS, ToggleableState.On)
+            compose.onNodeWithTag(HIDE_INDICATOR).performScrollTo().performClick()
+            awaitCondition { !ViewerPreferences.fullscreen(preferences).hidePageIndicator }
+            awaitToggle(HIDE_INDICATOR, ToggleableState.Off)
+            awaitToggle(HIDE_SYSTEM_BARS, ToggleableState.On)
+            compose.onNodeWithTag(HIDE_SYSTEM_BARS).performScrollTo().performClick()
+            awaitCondition { !ViewerPreferences.fullscreen(preferences).hideSystemBars }
+        }
+        ActivityScenario.launch(HomeActivity::class.java).use {
+            awaitTag("paper.home")
+            click("paper.home.settings")
+            awaitTag("paper.settings")
+            awaitToggle(HIDE_INDICATOR, ToggleableState.Off)
+            awaitToggle(HIDE_SYSTEM_BARS, ToggleableState.Off)
+            compose.onNodeWithTag(HIDE_INDICATOR).performScrollTo().performClick()
+            awaitCondition { ViewerPreferences.fullscreen(preferences).hidePageIndicator }
+        }
+        assertEquals(ViewerPreferences.Fullscreen(hidePageIndicator = true, hideSystemBars = false), ViewerPreferences.fullscreen(preferences))
+    }
+
+    private fun awaitToggle(tag: String, state: ToggleableState) {
+        awaitTag(tag)
+        compose.onNodeWithTag(tag).performScrollTo()
+        compose.waitUntil(TIMEOUT_MILLIS) {
+            compose.onAllNodesWithTag(tag).fetchSemanticsNodes().any { it.config.getOrNull(SemanticsProperties.ToggleableState) == state }
+        }
+    }
+
     private fun openTool(kind: ToolKind) {
         compose.onNodeWithTag("paper.home").performScrollToNode(hasTestTag("paper.home.tool.${kind.id}"))
         compose.onNodeWithTag("paper.home.tool.${kind.id}").performClick()
@@ -223,6 +264,8 @@ class HomeNavigationDeviceTest {
         const val TIMEOUT_MILLIS = 20_000L
         const val LOW_DPI = 72
         const val JAPANESE = "ja"
+        const val HIDE_INDICATOR = "paper.settings.viewerHidePageIndicator"
+        const val HIDE_SYSTEM_BARS = "paper.settings.viewerHideSystemBars"
     }
 
 }

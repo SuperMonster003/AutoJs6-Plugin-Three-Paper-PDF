@@ -105,6 +105,11 @@
     <string name="settings_update_summary">공식 플러그인 색인에서 새 릴리스 찾기</string>
     <string name="settings_version">버전</string>
     <string name="settings_version_value">%1$s (%2$d) · %3$s</string>
+    <string name="settings_viewer">뷰어</string>
+    <string name="settings_viewer_hide_indicator">전체 화면에서 페이지 번호 숨기기</string>
+    <string name="settings_viewer_hide_indicator_summary">페이지를 탭해 막대를 숨기면 페이지 번호도 함께 숨깁니다</string>
+    <string name="settings_viewer_hide_system_bars">전체 화면에서 시스템 표시줄 숨기기</string>
+    <string name="settings_viewer_hide_system_bars_summary">상태 표시줄과 탐색 메뉴도 막대와 함께 숨깁니다. 화면 가장자리에서 안쪽으로 스와이프하면 잠시 표시됩니다</string>
     <string name="tool_advanced">고급</string>
     <string name="tool_cancelled">취소되었습니다. 아무것도 저장되지 않았습니다.</string>
     <string name="tool_color">색상</string>
