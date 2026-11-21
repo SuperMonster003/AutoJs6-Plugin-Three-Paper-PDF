@@ -7,13 +7,15 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Environment
 import androidx.core.content.ContextCompat
+import androidx.core.content.edit
 import java.io.File
 
 /**
  * The toolbox settings (roadmap D37, P4.1): the output folder (default `Documents/3-Paper PDF/` of the primary
- * storage) and the default resolution of PDF to images. Only the toolbox reads them; scripts choose their own outputs.
- * zh-CN: 工具箱设置 (路线图 D37, P4.1): 输出目录 (默认为主存储的 `Documents/3-Paper PDF/`) 与 PDF 转图片的默认分辨率. 只有工具箱读取它们;
- * 脚本自行决定输出位置.
+ * storage) and the default resolution of PDF to images, plus the folders the file browser last picked PDFs and images in
+ * (roadmap P6.15 batch 17d). Only the toolbox reads them; scripts choose their own outputs.
+ * zh-CN: 工具箱设置 (路线图 D37, P4.1): 输出目录 (默认为主存储的 `Documents/3-Paper PDF/`) 与 PDF 转图片的默认分辨率, 以及文件浏览器上次
+ * 选取 PDF 与图片所在的文件夹 (路线图 P6.15 批次 17d). 只有工具箱读取它们; 脚本自行决定输出位置.
  */
 internal object ToolboxPreferences {
 
@@ -44,6 +46,21 @@ internal object ToolboxPreferences {
         if (folder == null) editor.remove(KEY_OUTPUT_FOLDER) else editor.putString(KEY_OUTPUT_FOLDER, folder.absolutePath)
         return editor.commit()
     }
+
+    /**
+     * The folder the file browser last picked PDFs in (the toolbox inputs and "Open PDF" of the home screen share it,
+     * roadmap P6.15 batch 17d, appendix D Q324 (a)). zh-CN: 文件浏览器上次选取 PDF 所在的文件夹 (工具箱输入与首页 "打开 PDF" 共用, 路线图 P6.15
+     * 批次 17d, 附录 D Q324 (a)).
+     */
+    const val KEY_PDF_FOLDER = "browsePdfFolder"
+
+    /** The folder the file browser last picked images in (Images to PDF). zh-CN: 文件浏览器上次选取图片所在的文件夹 (图片转 PDF). */
+    const val KEY_IMAGE_FOLDER = "browseImageFolder"
+
+    /** The folder remembered under [key] ([KEY_PDF_FOLDER] or [KEY_IMAGE_FOLDER]), null when none. zh-CN: [key] 下记住的文件夹, 没有时为 null. */
+    fun browseFolder(context: Context, key: String): File? = prefs(context).getString(key, null)?.takeIf { it.isNotBlank() }?.let(::File)
+
+    fun setBrowseFolder(context: Context, key: String, folder: File) = prefs(context).edit { putString(key, folder.absolutePath) }
 
     fun defaultDpi(context: Context): Int = prefs(context).getInt(KEY_DEFAULT_DPI, DEFAULT_DPI).takeIf { it in DPI_CHOICES } ?: DEFAULT_DPI
 

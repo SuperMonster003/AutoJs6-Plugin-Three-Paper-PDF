@@ -1,20 +1,28 @@
 package io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.files
 
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.RecentEntry
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.ToolboxPreferences
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import java.io.File
 
 /**
- * The rules of the file browser for the recent files (roadmap P6.15 batch 17d, appendix D Q324 (a)): which modes list
- * the recent files and which entries, how many show before "Show all", one check state per file in the order checked and
- * the picks of a confirmation.
- * zh-CN: 文件浏览器关于最近文件的规则 (路线图 P6.15 批次 17d, 附录 D Q324 (a)): 哪些模式列出最近文件以及哪些条目, "全部" 之前显示几条,
- * 每个文件一个勾选状态且按勾选顺序, 以及确认时交回的内容.
+ * The rules of the file browser for the recent files and the remembered folders (roadmap P6.15 batch 17d, appendix D
+ * Q324 (a)): which modes list the recent files and which entries, how many show before "Show all", one check state per
+ * file in the order checked, the picks of a confirmation, the folder remembered and where the browser starts, with the
+ * fallbacks for deleted folders and folders outside the volumes.
+ * zh-CN: 文件浏览器关于最近文件与记住文件夹的规则 (路线图 P6.15 批次 17d, 附录 D Q324 (a)): 哪些模式列出最近文件以及哪些条目, "全部" 之前显示
+ * 几条, 每个文件一个勾选状态且按勾选顺序, 确认时交回的内容, 记住的文件夹与起始文件夹, 以及文件夹已删除或不在存储卷内时的回落.
  */
 class BrowserRulesTest {
+
+    @get:Rule
+    val temporary = TemporaryFolder()
 
     @Test
     fun `only the PDF modes list the recent files`() {
@@ -74,6 +82,58 @@ class BrowserRulesTest {
         )
         assertTrue(BrowserRules.isDocumentKey(DOCUMENT.uri))
         assertFalse(BrowserRules.isDocumentKey(LOCAL_A.path))
+    }
+
+    @Test
+    fun `PDFs share one memory, images have their own and folders none`() {
+        assertEquals(ToolboxPreferences.KEY_PDF_FOLDER, BrowserRules.memoryOf(BrowseMode.PDF))
+        assertEquals(ToolboxPreferences.KEY_PDF_FOLDER, BrowserRules.memoryOf(BrowseMode.PDFS))
+        assertEquals(ToolboxPreferences.KEY_IMAGE_FOLDER, BrowserRules.memoryOf(BrowseMode.IMAGES))
+        assertNull(BrowserRules.memoryOf(BrowseMode.FOLDER))
+        assertTrue(ToolboxPreferences.KEY_PDF_FOLDER != ToolboxPreferences.KEY_IMAGE_FOLDER)
+    }
+
+    @Test
+    fun `the folder of the last local pick is remembered, documents keep the memory`() {
+        val a = File(temporary.root, "a/one.pdf")
+        val b = File(temporary.root, "b/two.pdf")
+        assertEquals(b.parentFile, BrowserRules.folderToRemember(listOf(BrowserPick.Local(a), BrowserPick.Document(DOCUMENT), BrowserPick.Local(b))))
+        assertEquals(a.parentFile, BrowserRules.folderToRemember(listOf(BrowserPick.Local(a), BrowserPick.Document(DOCUMENT))))
+        assertNull(BrowserRules.folderToRemember(listOf(BrowserPick.Document(DOCUMENT))))
+        assertNull(BrowserRules.folderToRemember(emptyList()))
+    }
+
+    @Test
+    fun `the tool's last input wins over the remembered folder`() {
+        val volume = temporary.newFolder("volume")
+        val input = File(volume, "inputs").apply { mkdirs() }
+        val remembered = File(volume, "remembered").apply { mkdirs() }
+        assertEquals(input.absolutePath, BrowserRules.startFolder(listOf(input, remembered), listOf(volume)))
+        assertEquals("a file starts in its folder", input.absolutePath, BrowserRules.startFolder(listOf(File(input, "x.pdf"), remembered), listOf(volume)))
+        assertEquals("no input yet", remembered.absolutePath, BrowserRules.startFolder(listOf(null, remembered), listOf(volume)))
+    }
+
+    @Test
+    fun `a deleted folder starts from its nearest existing parent`() {
+        val volume = temporary.newFolder("volume")
+        val parent = File(volume, "work").apply { mkdirs() }
+        val deleted = File(parent, "gone/deeper")
+        assertEquals(parent.absolutePath, BrowserRules.startFolder(listOf(null, deleted), listOf(volume)))
+        parent.deleteRecursively()
+        assertEquals("up to the volume", volume.absolutePath, BrowserRules.startFolder(listOf(null, deleted), listOf(volume)))
+    }
+
+    @Test
+    fun `a folder outside the volumes falls back to the volume or the volume list`() {
+        val volume = temporary.newFolder("volume")
+        val other = temporary.newFolder("volume2")
+        val outside = temporary.newFolder("private")
+        assertEquals("the next candidate", File(volume, "x").apply { mkdirs() }.absolutePath, BrowserRules.startFolder(listOf(outside, File(volume, "x")), listOf(volume)))
+        assertEquals("the only volume", volume.absolutePath, BrowserRules.startFolder(listOf(outside, null), listOf(volume)))
+        assertNull("several volumes: the list of volumes", BrowserRules.startFolder(listOf(outside), listOf(volume, other)))
+        assertNull(BrowserRules.startFolder(emptyList(), listOf(volume, other)))
+        assertFalse("a sibling with the same prefix is not inside", BrowserRules.inside(File(temporary.root, "volume2"), volume))
+        assertTrue(BrowserRules.inside(volume, volume))
     }
 
     private companion object {

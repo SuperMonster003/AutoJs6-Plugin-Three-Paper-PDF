@@ -68,6 +68,7 @@ import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.components.To
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.RecentEntry
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.RecentFiles
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.ToolboxFiles
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.ToolboxPreferences
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -103,7 +104,9 @@ internal enum class BrowseMode {
  * A tap picks an entry like a file of the folder, or checks it in the same order and state as the folder rows (one key per
  * file). A document of the system picker is checked under its grant first ([RecentFiles.reopen]); a document or local
  * file that no longer opens is removed with a message. Local files that cannot be read now (no storage access) are not
- * listed. Every pick of PDFs enters the recent files.
+ * listed. Every pick of PDFs enters the recent files, and every pick of files remembers its folder ([BrowserRules.memoryOf]:
+ * PDFs share one, images have their own), where the next browser starts unless [start] (the tool's last input) leads
+ * somewhere; without a remembered PDF folder the folder of the newest recent local file is used.
  *
  * Test tags: `browser.list`, `browser.entry.<name>`, `browser.recent`, `browser.recent.toggle`, `browser.recent.<name>`,
  * `browser.confirm`, `browser.system`, `browser.newFolder`, `browser.close`, `browser.path`.
@@ -114,7 +117,9 @@ internal enum class BrowseMode {
  * 选择 PDF 时 ([BrowseMode.PDF], [BrowseMode.PDFS]; 路线图 P6.15 批次 17d, 附录 D Q324 (a)), 列表以 "最近使用" 一组开头: 即首页的最近文件
  * ([RecentFiles], 最新在前, 同一份列表, 首页的清空与移除在这里同样生效), 未点 "全部" 展开时至多 [BrowserRules.COMPACT_MAX] 条且不超过一半高度.
  * 点按条目即与目录中的文件一样选中, 或按同样的顺序与状态勾选 (每个文件一个键). 系统选择器的文档先凭授权核对 ([RecentFiles.reopen]);
- * 已打不开的文档或本地文件移除并提示. 现在读不了的本地文件 (没有存储访问权限) 不列出. 每次选定 PDF 都记入最近文件.
+ * 已打不开的文档或本地文件移除并提示. 现在读不了的本地文件 (没有存储访问权限) 不列出. 每次选定 PDF 都记入最近文件, 每次选定文件都记住所在
+ * 文件夹 ([BrowserRules.memoryOf]: PDF 共用一个, 图片单独一个), 下次浏览器从那里开始, 除非 [start] (本工具上一个输入) 可用; 没有记住的
+ * PDF 文件夹时用最新的本地最近文件所在的文件夹.
  *
  * 测试标签: `browser.list`, `browser.entry.<名称>`, `browser.recent`, `browser.recent.toggle`, `browser.recent.<名称>`, `browser.confirm`,
  * `browser.system`, `browser.newFolder`, `browser.close`, `browser.path`.
@@ -135,7 +140,7 @@ internal fun FileBrowser(
     val scope = rememberCoroutineScope()
     val snackbar = remember { SnackbarHostState() }
     val roots = remember { storageRoots(context) }
-    var path by rememberSaveable { mutableStateOf(initialPath(start, roots)) }
+    var path by rememberSaveable { mutableStateOf(startPath(context, mode, start, roots)) }
     var checked by rememberSaveable { mutableStateOf<List<String>>(ArrayList()) }
     var refresh by remember { mutableIntStateOf(0) }
     var creating by rememberSaveable { mutableStateOf(false) }
@@ -149,8 +154,10 @@ internal fun FileBrowser(
     val directory = path?.let(::File)
     val root = directory?.let { dir -> roots.firstOrNull { BrowserRules.inside(dir, it) } }
 
-    // Lists the PDFs among the recent files, then hands the picks over. zh-CN: 把 PDF 记入最近文件, 再交回选定的内容.
+    // Remembers the folder and lists the PDFs among the recent files, then hands the picks over.
+    // zh-CN: 记住文件夹并把 PDF 记入最近文件, 再交回选定的内容.
     val finish: (List<BrowserPick>) -> Unit = { picks ->
+        BrowserRules.memoryOf(mode)?.let { key -> BrowserRules.folderToRemember(picks)?.let { ToolboxPreferences.setBrowseFolder(context, key, it) } }
         if (BrowserRules.listsRecent(mode)) picks.forEach { if (it is BrowserPick.Local) RecentFiles.add(context, it.file) }
         onPick(picks)
     }
@@ -495,11 +502,18 @@ internal fun storageRoots(context: Context): List<File> {
     return (listOf(primary) + others).distinctBy { it.absolutePath }
 }
 
-private fun initialPath(start: File?, roots: List<File>): String? {
-    var candidate = start
-    while (candidate != null && !candidate.isDirectory) candidate = candidate.parentFile
-    val inside = candidate?.takeIf { dir -> roots.any { BrowserRules.inside(dir, it) } }
-    return inside?.absolutePath ?: roots.singleOrNull()?.absolutePath
+/**
+ * The folder the browser opens in ([BrowserRules.startFolder]): [start], then the folder remembered for [mode]; without a
+ * remembered PDF folder, the folder of the newest recent local file (where home started before batch 17d).
+ * zh-CN: 浏览器打开时所在的文件夹 ([BrowserRules.startFolder]): [start], 然后是 [mode] 记住的文件夹; 没有记住的 PDF 文件夹时, 用最新的本地
+ * 最近文件所在的文件夹 (批次 17d 之前首页的起点).
+ */
+private fun startPath(context: Context, mode: BrowseMode, start: File?, roots: List<File>): String? {
+    val remembered = BrowserRules.memoryOf(mode)?.let { key ->
+        ToolboxPreferences.browseFolder(context, key)
+            ?: if (BrowserRules.listsRecent(mode)) RecentFiles.read(context).firstNotNullOfOrNull { (it as? RecentEntry.Local)?.file?.parentFile } else null
+    }
+    return BrowserRules.startFolder(listOf(start, remembered), roots)
 }
 
 private fun volumeName(context: Context, volume: File): String =

@@ -251,7 +251,8 @@ private fun HomeScreen(onTool: (ToolKind) -> Unit, onSettings: () -> Unit) {
             mode = BrowseMode.PDF,
             title = stringResource(R.string.home_open_pdf),
             onDismiss = { browsing = false },
-            // The browser lists the pick among the recent files (batch 17d). zh-CN: 浏览器把选中的文件记入最近文件 (批次 17d).
+            // The browser lists the pick among the recent files and remembers its folder (batch 17d); it starts in the
+            // remembered folder. zh-CN: 浏览器把选中的文件记入最近文件并记住其文件夹 (批次 17d); 它从记住的文件夹开始.
             onPick = { picks ->
                 browsing = false
                 reload++
@@ -261,7 +262,6 @@ private fun HomeScreen(onTool: (ToolKind) -> Unit, onSettings: () -> Unit) {
                     null -> Unit
                 }
             },
-            start = recents.firstNotNullOfOrNull { (it as? RecentEntry.Local)?.file?.parentFile },
             onSystemPicker = {
                 browsing = false
                 runCatching { pickPdf.launch(arrayOf(MIME_PDF)) }
