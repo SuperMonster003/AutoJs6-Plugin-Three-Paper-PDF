@@ -116,7 +116,8 @@ internal data class ToolWarning(val text: String, val code: String? = null, val 
             }
         }
 
-        private fun argsOf(json: String): Map<String, Any>? {
+        /** The arguments of one entry, or null when [json] is not a JSON object. zh-CN: 一项的参数; [json] 不是 JSON 对象时为 null. */
+        fun argsOf(json: String): Map<String, Any>? {
             val parsed = try {
                 JSONObject(json)
             } catch (_: JSONException) {

@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.ParcelFileDescriptor
+import android.os.Process
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -14,6 +15,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.core.net.toUri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ThreePaperPdfContract
@@ -47,7 +49,7 @@ import java.util.concurrent.Executors
  * [ToolTasks] 在前台服务中执行, 离开界面也不会停止). 两者共用选项, 校验与 [PdfToolRunner]. 引擎与宿主调用在一个工作线程上运行;
  * 状态都在主线程上.
  */
-internal class PdfToolViewModel(application: Application, saved: SavedStateHandle) : AndroidViewModel(application) {
+internal class PdfToolViewModel(application: Application, private val saved: SavedStateHandle) : AndroidViewModel(application) {
 
     sealed interface Phase {
         data object Inspecting : Phase
@@ -215,6 +217,13 @@ internal class PdfToolViewModel(application: Application, saved: SavedStateHandl
     /** The newest reading of form fields or properties (main thread). zh-CN: 最新一次读取表单字段或文档属性 (主线程). */
     private var detailsGeneration = 0
 
+    /** What the screen kept before its process died, if anything (appendix D Q326 (a)). zh-CN: 界面在其进程死亡前保留的内容 (如有, 附录 D Q326 (a)). */
+    private val restored: ToolScreenState? = ToolScreenState.decode(saved.get<Bundle>(KEY_SCREEN)?.getString(KEY_SCREEN))
+
+    init {
+        saved.setSavedStateProvider(KEY_SCREEN) { Bundle().apply { savedScreen()?.let { putString(KEY_SCREEN, it) } } }
+    }
+
     /**
      * Starts the tool of the file manager [request] once; a recreated Activity calls it again and keeps the state.
      * Without a usable request the screen fails with [NO_FILES].
@@ -246,12 +255,17 @@ internal class PdfToolViewModel(application: Application, saved: SavedStateHandl
             }
             main.post { if (localPhase == Phase.Inspecting) localPhase = Phase.Ready }
         }
+        // The inputs come from the request again; the result page comes back when the process died on it (Q326 (a)).
+        // zh-CN: 输入再次取自请求; 进程在结果页上死亡时结果页恢复 (Q326 (a)).
+        restored?.takeIf { it.kind == requested.name }?.result?.let { localPhase = Phase.Done(it) }
     }
 
     /**
      * Starts the toolbox wizard of [tool] once (roadmap P4.2): no inputs yet, the output folder and resolution from the
-     * toolbox settings.
-     * zh-CN: 启动 [tool] 的工具箱向导, 只执行一次 (路线图 P4.2): 尚无输入, 输出目录与分辨率取自工具箱设置.
+     * toolbox settings. After the process died, the inputs, the output folder and the result page it kept come back
+     * (appendix D Q326 (a)).
+     * zh-CN: 启动 [tool] 的工具箱向导, 只执行一次 (路线图 P4.2): 尚无输入, 输出目录与分辨率取自工具箱设置. 进程死亡后, 界面保留的输入,
+     * 输出目录与结果页恢复 (附录 D Q326 (a)).
      */
     fun startToolbox(tool: ToolKind) {
         if (started) return
@@ -259,13 +273,46 @@ internal class PdfToolViewModel(application: Application, saved: SavedStateHandl
         toolbox = true
         kind = tool
         val app = getApplication<Application>()
-        outputFolder = ToolboxPreferences.outputFolder(app)
+        val state = restored?.takeIf { it.kind == tool.name }
+        outputFolder = state?.outputFolder?.let(::File) ?: ToolboxPreferences.outputFolder(app)
         imageDpi = ToolboxPreferences.defaultDpi(app)
         acquired = true
         worker.execute {
             plugin = ToolEngine.acquire(app)
             main.post { if (localPhase == Phase.Inspecting) localPhase = Phase.Ready }
         }
+        state?.let { restoreToolbox(tool, it) }
+    }
+
+    /**
+     * The kept toolbox state: the inputs are read again without a password (an encrypted one asks for it, its field
+     * empty); the task shown comes back while its process lives (the screen alone was destroyed), else the kept result.
+     * zh-CN: 恢复保留的工具箱状态: 输入不带密码重新读取 (加密的输入询问密码, 密码框为空); 任务的进程仍在 (只有界面被销毁) 时接回该任务,
+     * 否则显示保留的结果.
+     */
+    private fun restoreToolbox(tool: ToolKind, state: ToolScreenState) {
+        val entries = state.inputs.take(PdfContract.MAX_RUN_INPUTS).map { Input(ToolTarget(it.uri.toUri(), it.displayName)) }
+        inputs += entries
+        inspectAdded(tool, entries)
+        val alive = state.task?.takeIf { it.process == Process.myPid() }?.let { ToolTasks.find(it.id) }?.takeIf { it.kind == tool }
+        when {
+            alive != null -> task = alive
+            state.result != null -> localPhase = Phase.Done(state.result)
+        }
+    }
+
+    /** The encoded state the screen keeps for a new process, null before a tool started. zh-CN: 界面为新进程保留的状态 (已编码), 工具启动之前为 null. */
+    internal fun savedScreen(): String? = screenState()?.encode()
+
+    private fun screenState(): ToolScreenState? {
+        val tool = kind ?: return null
+        return ToolScreenState(
+            kind = tool.name,
+            inputs = if (toolbox) inputs.map { ToolScreenState.SavedInput(it.target.uri.toString(), it.target.displayName) } else emptyList(),
+            outputFolder = outputFolder?.path?.takeIf { toolbox },
+            task = task?.let { ToolScreenState.SavedTask(Process.myPid(), it.id) },
+            result = (phase as? Phase.Done)?.result,
+        )
     }
 
     /**
@@ -290,7 +337,12 @@ internal class PdfToolViewModel(application: Application, saved: SavedStateHandl
         }
         val entries = fresh.map(::Input)
         inputs += entries
-        if (tool.inputs == ToolKind.Inputs.IMAGES) return
+        inspectAdded(tool, entries)
+    }
+
+    /** Reads the new toolbox [entries] in the background; images are checked by the operation. zh-CN: 在后台读取新的工具箱输入 [entries]; 图片由操作本身校验. */
+    private fun inspectAdded(tool: ToolKind, entries: List<Input>) {
+        if (tool.inputs == ToolKind.Inputs.IMAGES || entries.isEmpty()) return
         entries.forEach { it.inspecting = true }
         worker.execute {
             val engine = plugin ?: return@execute
@@ -857,6 +909,9 @@ internal class PdfToolViewModel(application: Application, saved: SavedStateHandl
             PdfContract.KEY_CREATION_DATE, PdfContract.KEY_MODIFICATION_DATE, PdfContract.KEY_XFA,
             PdfContract.KEY_TITLE, PdfContract.KEY_AUTHOR, PdfContract.KEY_SUBJECT, PdfContract.KEY_KEYWORDS,
         )
+
+        /** The saved-state key of [ToolScreenState] (a bundle with the JSON under the same key). zh-CN: [ToolScreenState] 的保存状态键 (bundle 中以同一键存放 JSON). */
+        internal const val KEY_SCREEN = "tool.screen"
 
         private const val QUARTER = 90
 
