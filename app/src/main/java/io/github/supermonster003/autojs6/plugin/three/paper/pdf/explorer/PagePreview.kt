@@ -202,16 +202,32 @@ internal class PagePreview(
          * [options] for the one-page cut-out of [page] in a document of [total] pages: the same stamp the tool puts on
          * [page], with `{page}` and `{total}` written out in one pass as the engine would ([StampItems.expand]) and the
          * range dropped. `{date}` and `{name}` stay for the engine, which gets the source's name. A watermark counts
-         * from the first page of the file (appendix D Q263).
+         * from the first page of the file (appendix D Q263); the page number counts from its start number through the
+         * `pageOffset` the tool sends ([ToolPayloads.pageOffset], appendix D Q211), headers and footers from the first
+         * page of the file (appendix D Q262). The start goes back to 1 without a range, so the cut-out gets no offset.
          * zh-CN: 适用于 [total] 页文档中第 [page] 页单页切出文件的 [options]: 与工具盖在 [page] 上的内容相同, `{page}` 与 `{total}` 按引擎的方式
          * 单遍写出 ([StampItems.expand]), 去掉页码范围. `{date}` 与 `{name}` 留给引擎处理, 引擎会拿到源文件的名称. 水印从文件第一页开始计数
-         * (附录 D Q263).
+         * (附录 D Q263); 页码经工具发送的 `pageOffset` 从起始数字开始计数 ([ToolPayloads.pageOffset], 附录 D Q211), 页眉与页脚从文件第一页
+         * 开始计数 (附录 D Q262). 起始数字改回 1 且不带范围, 因此切出文件没有偏移.
          */
         fun stampFor(options: ToolOptions, page: Int, total: Int): ToolOptions = when (options) {
             is ToolOptions.Watermark ->
                 if (options.type == PdfContract.STAMP_TEXT) options.copy(text = counted(options.text, page, total, 0L), pages = null) else options.copy(pages = null)
+            is ToolOptions.PageNumbers -> {
+                val offset = ToolPayloads.pageOffset(options.start, options.pages)?.toLong() ?: 0L
+                options.copy(
+                    format = options.format?.let { counted(it, page, total, offset) },
+                    header = slots(options.header, page, total),
+                    footer = slots(options.footer, page, total),
+                    start = 1,
+                    pages = null,
+                )
+            }
             else -> throw IllegalArgumentException("no preview for ${options.javaClass.simpleName}")
         }
+
+        private fun slots(slots: ToolOptions.Slots, page: Int, total: Int): ToolOptions.Slots =
+            ToolOptions.Slots(counted(slots.left, page, total, 0L), counted(slots.center, page, total, 0L), counted(slots.right, page, total, 0L))
 
         /** [text] with only the page placeholders written out. zh-CN: 只写出计页占位符的 [text]. */
         private fun counted(text: String, page: Int, total: Int, offset: Long): String =

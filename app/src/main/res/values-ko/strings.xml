@@ -217,6 +217,8 @@
     <string name="tool_page_numbers_header">머리글</string>
     <string name="tool_page_numbers_nothing">머리글 또는 바닥글 텍스트를 입력하거나 페이지 번호를 켜세요.</string>
     <string name="tool_page_numbers_overlap">머리글 또는 바닥글 텍스트가 페이지 번호와 같은 위치에 있습니다.</string>
+    <string name="tool_page_numbers_preview_note">미리 보기는 결과와 같습니다. 페이지 번호는 입력한 시작 번호부터, 머리글과 바닥글의 {page}는 파일의 첫 페이지부터 셉니다.</string>
+    <string name="tool_page_numbers_preview_outside">이 페이지는 선택한 페이지에 포함되지 않아 페이지 번호, 머리글, 바닥글이 추가되지 않습니다.</string>
     <string name="tool_page_numbers_slots_note">머리글과 바닥글의 {page}는 파일의 첫 페이지부터 셉니다.</string>
     <string name="tool_page_numbers_start">시작 번호</string>
     <string name="tool_page_numbers_start_hint">선택한 첫 페이지에 이 번호가 붙습니다</string>

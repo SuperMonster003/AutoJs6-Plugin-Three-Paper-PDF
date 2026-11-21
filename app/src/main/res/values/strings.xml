@@ -217,6 +217,8 @@
     <string name="tool_page_numbers_header">Header</string>
     <string name="tool_page_numbers_nothing">Enter a header or footer text, or turn on page numbers.</string>
     <string name="tool_page_numbers_overlap">A header or footer text is at the same place as the page number.</string>
+    <string name="tool_page_numbers_preview_note">The preview shows this page as in the result: the page number counts from the start number, {page} in headers and footers from the first page of the file.</string>
+    <string name="tool_page_numbers_preview_outside">This page is not among the chosen pages, so it gets no page number, header or footer.</string>
     <string name="tool_page_numbers_slots_note">In headers and footers {page} counts from the first page of the file.</string>
     <string name="tool_page_numbers_start">Start number</string>
     <string name="tool_page_numbers_start_hint">The first selected page gets this number</string>

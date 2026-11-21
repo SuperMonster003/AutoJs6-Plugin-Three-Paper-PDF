@@ -217,6 +217,8 @@
     <string name="tool_page_numbers_header">Encabezado</string>
     <string name="tool_page_numbers_nothing">Escriba un texto de encabezado o pie de página, o active los números de página.</string>
     <string name="tool_page_numbers_overlap">Un texto de encabezado o pie de página está en el mismo lugar que el número de página.</string>
+    <string name="tool_page_numbers_preview_note">La vista previa muestra esta página como en el resultado: el número de página empieza en el número inicial y {page} en encabezados y pies de página cuenta desde la primera página del archivo.</string>
+    <string name="tool_page_numbers_preview_outside">Esta página no está entre las páginas elegidas, así que no recibe número de página, encabezado ni pie de página.</string>
     <string name="tool_page_numbers_slots_note">En encabezados y pies de página, {page} cuenta desde la primera página del archivo.</string>
     <string name="tool_page_numbers_start">Número inicial</string>
     <string name="tool_page_numbers_start_hint">La primera página seleccionada recibe este número</string>

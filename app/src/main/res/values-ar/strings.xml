@@ -217,6 +217,8 @@
     <string name="tool_page_numbers_header">الرأس</string>
     <string name="tool_page_numbers_nothing">أدخل نص رأس أو تذييل, أو فعّل أرقام الصفحات.</string>
     <string name="tool_page_numbers_overlap">يقع نص رأس أو تذييل في موضع رقم الصفحة نفسه.</string>
+    <string name="tool_page_numbers_preview_note">تعرض المعاينة هذه الصفحة كما في النتيجة: يبدأ رقم الصفحة من رقم البداية, ويُحسب {page} في الرؤوس والتذييلات من الصفحة الأولى في الملف.</string>
+    <string name="tool_page_numbers_preview_outside">هذه الصفحة ليست ضمن الصفحات المختارة, لذا لا يُضاف إليها رقم صفحة أو رأس أو تذييل.</string>
     <string name="tool_page_numbers_slots_note">في الرؤوس والتذييلات يُحسب {page} من الصفحة الأولى في الملف.</string>
     <string name="tool_page_numbers_start">رقم البداية</string>
     <string name="tool_page_numbers_start_hint">تحصل أول صفحة محددة على هذا الرقم</string>

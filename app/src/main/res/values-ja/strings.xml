@@ -217,6 +217,8 @@
     <string name="tool_page_numbers_header">ヘッダー</string>
     <string name="tool_page_numbers_nothing">ヘッダーかフッターの文字を入力するか, ページ番号をオンにしてください.</string>
     <string name="tool_page_numbers_overlap">ヘッダーまたはフッターの文字がページ番号と同じ位置にあります.</string>
+    <string name="tool_page_numbers_preview_note">プレビューは結果と同じです. ページ番号は指定した開始番号から, ヘッダーとフッターの {page} はファイルの最初のページから数えます.</string>
+    <string name="tool_page_numbers_preview_outside">このページは選択したページに含まれないため, ページ番号, ヘッダー, フッターは追加されません.</string>
     <string name="tool_page_numbers_slots_note">ヘッダーとフッターの {page} はファイルの最初のページから数えます.</string>
     <string name="tool_page_numbers_start">開始番号</string>
     <string name="tool_page_numbers_start_hint">選択した最初のページにこの番号が付きます</string>

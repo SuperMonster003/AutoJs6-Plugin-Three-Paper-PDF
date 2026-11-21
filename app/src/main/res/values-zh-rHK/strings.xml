@@ -217,6 +217,8 @@
     <string name="tool_page_numbers_header">頁首</string>
     <string name="tool_page_numbers_nothing">請輸入頁首或頁尾文字, 或開啟頁碼.</string>
     <string name="tool_page_numbers_overlap">有頁首或頁尾文字與頁碼位置相同.</string>
+    <string name="tool_page_numbers_preview_note">預覽與生成的結果相同: 頁碼由所填的起始數字開始計算, 頁首與頁尾中的 {page} 由檔案第一頁開始計算.</string>
+    <string name="tool_page_numbers_preview_outside">此頁不在所選頁碼範圍內, 不會加上頁碼與頁首頁尾.</string>
     <string name="tool_page_numbers_slots_note">頁首與頁尾中的 {page} 由檔案第一頁開始計算.</string>
     <string name="tool_page_numbers_start">起始頁碼</string>
     <string name="tool_page_numbers_start_hint">所選的第一頁使用此頁碼</string>

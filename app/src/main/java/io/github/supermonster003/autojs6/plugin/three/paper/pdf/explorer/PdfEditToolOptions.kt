@@ -86,7 +86,7 @@ import org.autojs.plugin.pdf.api.PdfContract
  * `-next`, `-page` and `-outside`, E4 feedback F4),
  * `tool-numbers-switch`, `tool-numbers-format-<n>`, `tool-numbers-format`, `tool-numbers-position-<position>`,
  * `tool-numbers-start`, `tool-numbers-advanced`, `tool-numbers-<header|footer>-<left|center|right>`,
- * `tool-numbers-font-<points>`, `tool-compress-<preset>`, `tool-compress-advanced`, `tool-compress-dpi-<dpi>`,
+ * `tool-numbers-font-<points>`, `tool-numbers-preview` (like the watermark preview, E4 feedback F5), `tool-compress-<preset>`, `tool-compress-advanced`, `tool-compress-dpi-<dpi>`,
  * `tool-compress-quality-<quality>`, `tool-compress-metadata`, `tool-compress-object-streams`, `tool-form-loading`,
  * `tool-form-error`, `tool-form-none`, `tool-form-xfa`, `tool-form-page-<page>`, `tool-form-field-<name>`,
  * `tool-form-choice-<name>-<n>`, `tool-form-flatten`, `tool-form-viewer-note`, `tool-properties-facts`,
@@ -404,6 +404,15 @@ internal fun PageNumbersOptions(model: PdfToolViewModel) {
     if (state.tooLong()) Warning(R.string.tool_text_too_long, "tool-numbers-too-long", PdfContract.MAX_STAMP_TEXT_LENGTH)
     if (!state.numbered && state.header.blank && state.footer.blank) Note(R.string.tool_page_numbers_nothing)
     PagesField(model)
+    // The same preview as the watermark (E4 feedback F5, appendix D Q342 (a)). zh-CN: 与水印相同的预览 (E4 反馈 F5, 附录 D Q342 (a)).
+    PagePreviewCard(
+        model = model,
+        options = state.options(model.previewRangeSpec()),
+        tag = "tool-numbers-preview",
+        outside = R.string.tool_page_numbers_preview_outside,
+        empty = null,
+        note = R.string.tool_page_numbers_preview_note,
+    )
 }
 
 @Composable

@@ -28,6 +28,42 @@ class PagePreviewTest {
         assertEquals(image.copy(pages = null), PagePreview.stampFor(image, page = 1, total = 1))
     }
 
+    @Test
+    fun `the page number counts from its start number and headers and footers from the first page`() {
+        // Start 5 on pages 2-: page 2 shows 5, so page 4 shows 7 (appendix D Q211); headers count physically (Q262).
+        // zh-CN: 从第 2 页起起始为 5: 第 2 页显示 5, 因此第 4 页显示 7 (附录 D Q211); 页眉按物理页计数 (Q262).
+        val options = numbers(format = "{page}/{total}", start = 5, pages = "2-", header = ToolOptions.Slots(right = "Q {page} of {total}"))
+        val stamp = PagePreview.stampFor(options, page = 4, total = 6) as ToolOptions.PageNumbers
+        assertEquals("7/6", stamp.format)
+        assertEquals(ToolOptions.Slots(right = "Q 4 of 6"), stamp.header)
+        assertEquals(ToolOptions.Slots(center = "{name} 4"), stamp.footer)
+        // The cut-out gets no offset of its own and no range. zh-CN: 切出文件不再带偏移与范围.
+        assertEquals(1, stamp.start)
+        assertNull(stamp.pages)
+        assertNull(ToolPayloads.pageOffset(stamp.start, stamp.pages))
+        assertEquals(options.position, stamp.position)
+        assertEquals(options.fontSize, stamp.fontSize, 0.0)
+    }
+
+    @Test
+    fun `a start below the first page shows as it is and headers alone keep no number`() {
+        val below = PagePreview.stampFor(numbers(format = "{page}", start = 0, pages = "3-"), page = 3, total = 6) as ToolOptions.PageNumbers
+        assertEquals("0", below.format)
+        val headersOnly = PagePreview.stampFor(numbers(format = null, start = 1, pages = null), page = 2, total = 6) as ToolOptions.PageNumbers
+        assertNull(headersOnly.format)
+        assertEquals(ToolOptions.Slots(center = "{name} 2"), headersOnly.footer)
+    }
+
+    private fun numbers(format: String?, start: Int, pages: String?, header: ToolOptions.Slots = ToolOptions.Slots()) = ToolOptions.PageNumbers(
+        format = format,
+        position = PdfContract.POSITION_BOTTOM_RIGHT,
+        start = start,
+        header = header,
+        footer = ToolOptions.Slots(center = "{name} {page}"),
+        fontSize = 12.5,
+        pages = pages,
+    )
+
     private fun watermark(text: String, pages: String?) = ToolOptions.Watermark(
         type = PdfContract.STAMP_TEXT,
         text = text,

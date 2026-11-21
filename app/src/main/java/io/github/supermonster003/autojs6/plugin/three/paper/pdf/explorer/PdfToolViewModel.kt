@@ -201,7 +201,7 @@ internal class PdfToolViewModel(application: Application, saved: SavedStateHandl
     /** The facts, metadata and outline of the properties tool, read when its input opens. zh-CN: 文档属性工具的文件信息, 元数据与书签, 在其输入打开时读取. */
     val properties = PropertiesState()
 
-    /** The single-page preview, while the input of the watermark tool is open. zh-CN: 单页预览, 在水印工具的输入打开期间存在. */
+    /** The single-page preview, while the input of the watermark or page numbers tool is open. zh-CN: 单页预览, 在水印或页码工具的输入打开期间存在. */
     var preview by mutableStateOf<PagePreview?>(null)
         private set
 
@@ -399,6 +399,9 @@ internal class PdfToolViewModel(application: Application, saved: SavedStateHandl
 
     /** The page count of the previewed input, 0 without one. zh-CN: 预览输入的页数, 没有输入时为 0. */
     fun previewPageCount(): Int = inputs.firstOrNull()?.pageCount ?: 0
+
+    /** The typed range when it is valid, else null (every page). zh-CN: 输入的范围有效时为该范围, 否则为 null (全部页). */
+    fun previewRangeSpec(): String? = pagesOrAll(previewPageCount())?.value
 
     /** Whether the tool stamps page [page] (from 1) with the typed range. zh-CN: 按输入的范围, 工具是否在第 [page] 页 (从 1 起) 盖章. */
     fun previewInRange(page: Int): Boolean = previewSelection().contains(page)
@@ -606,7 +609,7 @@ internal class PdfToolViewModel(application: Application, saved: SavedStateHandl
                 if (inputs.firstOrNull() === input) {
                     when (kind) {
                         ToolKind.ORGANIZE -> openPages(input)
-                        ToolKind.WATERMARK -> openPreview(input)
+                        ToolKind.WATERMARK, ToolKind.PAGE_NUMBERS -> openPreview(input)
                         ToolKind.FILL_FORM, ToolKind.PROPERTIES -> loadDetails(input)
                         else -> Unit
                     }

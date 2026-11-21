@@ -217,6 +217,8 @@
     <string name="tool_page_numbers_header">En-tête</string>
     <string name="tool_page_numbers_nothing">Saisissez un texte d\'en-tête ou de pied de page, ou activez les numéros de page.</string>
     <string name="tool_page_numbers_overlap">Un texte d\'en-tête ou de pied de page est au même endroit que le numéro de page.</string>
+    <string name="tool_page_numbers_preview_note">L\'aperçu montre cette page comme dans le résultat: le numéro de page part du numéro de départ, {page} dans les en-têtes et pieds de page part de la première page du fichier.</string>
+    <string name="tool_page_numbers_preview_outside">Cette page ne fait pas partie des pages choisies: elle ne reçoit ni numéro de page, ni en-tête, ni pied de page.</string>
     <string name="tool_page_numbers_slots_note">Dans les en-têtes et pieds de page, {page} compte à partir de la première page du fichier.</string>
     <string name="tool_page_numbers_start">Numéro de départ</string>
     <string name="tool_page_numbers_start_hint">La première page sélectionnée reçoit ce numéro</string>

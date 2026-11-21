@@ -217,6 +217,8 @@
     <string name="tool_page_numbers_header">页眉</string>
     <string name="tool_page_numbers_nothing">请输入页眉或页脚文字, 或开启页码.</string>
     <string name="tool_page_numbers_overlap">有页眉或页脚文字与页码位置相同.</string>
+    <string name="tool_page_numbers_preview_note">预览与生成的结果相同: 页码从所填的起始数字算起, 页眉与页脚中的 {page} 从文件第一页算起.</string>
+    <string name="tool_page_numbers_preview_outside">此页不在所选页码范围内, 不会添加页码与页眉页脚.</string>
     <string name="tool_page_numbers_slots_note">页眉与页脚中的 {page} 从文件第一页开始计数.</string>
     <string name="tool_page_numbers_start">起始页码</string>
     <string name="tool_page_numbers_start_hint">所选的第一页使用此页码</string>

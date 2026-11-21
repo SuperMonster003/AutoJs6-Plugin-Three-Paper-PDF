@@ -68,12 +68,14 @@ import kotlin.math.roundToInt
  * page numbers, compress): a refused text keeps the start button off, and the typed numbers show in the output (glyph
  * size and angle read with PDFBox, colour and opacity from the rendered page, image size and JPEG quality through the
  * engine). The single-page preview of the watermark (E4 feedback F4) turns through the pages, follows a change of the range
- * (appendix D Q344 (a)), draws a page outside the range as it is and shows what the result has on that page.
+ * (appendix D Q344 (a)), draws a page outside the range as it is and shows what the result has on that page; the page
+ * numbers tool has the same preview (E4 feedback F5).
  * zh-CN: 在设备上把路线图 P6.12 的五个编辑类工具 (D68) 各走一次, 从首页到结果页: 输入代替文件浏览器直接交给向导的视图模型, 选项在界面上
  * 设置, 任务在前台服务中运行并按附录 D Q261 的名称写入, 结果经引擎自己的 Binder 接口读回 (文本, 表单字段, 文档信息, 书签与图片). 低于
  * API 35 时填写表单的结果页带有附录 D Q241 的提示. 附录 D Q265 (b) 与 Q290 的 "自定义" 值在每个工具 (水印, 页码, 压缩) 上各走一次: 被拒的
  * 文字让开始按钮保持不可用, 输入的数值体现在输出中 (字形大小与角度用 PDFBox 读取, 颜色与不透明度取自渲染出的页面, 图片尺寸与 JPEG
- * 质量经引擎读回). 水印的单页预览 (E4 反馈 F4) 可以翻页, 跟随范围的修改 (附录 D Q344 (a)), 范围外的页按原样绘制, 并显示结果在该页上的样子.
+ * 质量经引擎读回). 水印的单页预览 (E4 反馈 F4) 可以翻页, 跟随范围的修改 (附录 D Q344 (a)), 范围外的页按原样绘制, 并显示结果在该页上的样子; 页码工具有
+ * 相同的预览 (E4 反馈 F5).
  */
 @OptIn(ExperimentalTestApi::class)
 @RunWith(AndroidJUnit4::class)
@@ -165,6 +167,30 @@ class ToolboxEditToolsDeviceTest {
         assertTrue(last, last.contains("${OUTLINE_PAGES + 3}/$OUTLINE_PAGES"))
         val first = pageText(result, "1")
         assertFalse(first, first.contains(HEADER) || first.contains("/$OUTLINE_PAGES"))
+    }
+
+    @Test
+    fun thePageNumbersPreviewShowsWhatTheResultHasOnThePage() = wizard(ToolKind.PAGE_NUMBERS) { model ->
+        // E4 feedback F5, appendix D Q342 (a): the number counts from the start, the header from the first page.
+        // zh-CN: E4 反馈 F5, 附录 D Q342 (a): 页码从起始数字计, 页眉从第一页计.
+        give(model, sample("outline.pdf", "Outline.pdf"))
+        compose.onNodeWithTag("tool-pages").performScrollTo().performTextReplacement("2-")
+        compose.onNodeWithTag("tool-numbers-start").performScrollTo().performTextReplacement("5")
+        compose.onNodeWithTag("tool-numbers-advanced").performScrollTo().performClick()
+        awaitTag("tool-numbers-header-right")
+        compose.onNodeWithTag("tool-numbers-header-right").performScrollTo().performTextReplacement("$HEADER {page}")
+        awaitPreview(model, NUMBERS_PREVIEW, page = 2, stamped = true)
+        turn(NUMBERS_PREVIEW, next = false)
+        awaitPreview(model, NUMBERS_PREVIEW, page = 1, stamped = false)
+        repeat(3) { turn(NUMBERS_PREVIEW, next = true) }
+        val shown = awaitPreview(model, NUMBERS_PREVIEW, page = 4, stamped = true)
+        start()
+        awaitTag("tool-done")
+        val result = File(output, "Outline_numbered.pdf")
+        val text = pageText(result, "4")
+        assertTrue(text, text.contains("7/$OUTLINE_PAGES"))
+        assertTrue(text, text.contains("${HEADER}4"))
+        assertSamePage(shown, result, 4)
     }
 
     @Test
@@ -624,6 +650,7 @@ class ToolboxEditToolsDeviceTest {
         const val PIXEL_TOLERANCE = 40
         const val MAX_DIFFERING_SHARE = 0.01
         const val WATERMARK_PREVIEW = "tool-watermark-preview"
+        const val NUMBERS_PREVIEW = "tool-numbers-preview"
 
         @BeforeClass
         @JvmStatic

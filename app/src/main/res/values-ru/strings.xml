@@ -217,6 +217,8 @@
     <string name="tool_page_numbers_header">Верхний колонтитул</string>
     <string name="tool_page_numbers_nothing">Введите текст колонтитула или включите номера страниц.</string>
     <string name="tool_page_numbers_overlap">Текст колонтитула находится там же, где номер страницы.</string>
+    <string name="tool_page_numbers_preview_note">Предпросмотр показывает страницу так же, как в результате: номер страницы отсчитывается от начального номера, а {page} в колонтитулах от первой страницы файла.</string>
+    <string name="tool_page_numbers_preview_outside">Эта страница не входит в выбранные, поэтому номер страницы и колонтитулы на неё не добавляются.</string>
     <string name="tool_page_numbers_slots_note">В колонтитулах {page} отсчитывается от первой страницы файла.</string>
     <string name="tool_page_numbers_start">Начальный номер</string>
     <string name="tool_page_numbers_start_hint">Этот номер получает первая выбранная страница</string>
