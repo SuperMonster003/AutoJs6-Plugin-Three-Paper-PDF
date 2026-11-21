@@ -315,8 +315,8 @@ class ViewerActivityDeviceTest {
 
     /**
      * From the first page: its top is below the top bar, a tap hides the bars without moving it and another shows them;
-     * at the last page its bottom is above the thumbnail bar.
-     * zh-CN: 从第一页开始: 其顶边在顶栏之下, 单击隐藏各栏而它不动, 再单击显示各栏; 到最后一页时其底边在缩略图栏之上.
+     * scrolled to the end, the bottom of the last page is above the thumbnail bar.
+     * zh-CN: 从第一页开始: 其顶边在顶栏之下, 单击隐藏各栏而它不动, 再单击显示各栏; 滚到末尾时最后一页的底边在缩略图栏之上.
      */
     private fun checkBarsAndPages(scenario: ActivityScenario<ThreePaperPdfViewerActivity>, count: Int, label: String) {
         compose.waitUntil(TIMEOUT_MILLIS) {
@@ -337,7 +337,13 @@ class ViewerActivityDeviceTest {
         assertEquals("$label: hiding the bars moved the first page", top, pageEdge(scenario, 0, bottom = false), 0.5f)
         compose.onNodeWithTag(VIEWER_CANVAS_TAG).performTouchInput { click(Offset(centerX, height * 0.45f)) }
         awaitTag(VIEWER_THUMBNAILS_TAG)
-        scenario.onActivity { modelOf(it).goToPage(count - 1) }
+        // The end of the column: a landscape page is taller than the screen, so going to it shows only its top.
+        // zh-CN: 滚到列的末尾: 横屏时一页比屏幕高, 跳到该页只显示其顶部.
+        scenario.onActivity { activity ->
+            val model = modelOf(activity)
+            model.goToPage(count - 1)
+            model.moveTo(model.position.copy(scrollY = checkNotNull(model.layout).maxScrollY(model.position.zoom)))
+        }
         awaitIndicator(count, count)
         compose.waitForIdle()
         val stripTop = boundsOf(VIEWER_THUMBNAILS_TAG).top

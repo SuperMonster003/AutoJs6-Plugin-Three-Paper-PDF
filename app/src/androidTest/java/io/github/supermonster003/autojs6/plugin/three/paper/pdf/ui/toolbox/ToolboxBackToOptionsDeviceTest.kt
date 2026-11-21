@@ -75,9 +75,9 @@ class ToolboxBackToOptionsDeviceTest {
     fun theBackKeyOnTheResultKeepsTheWatermarkOptionsAndTheSecondRunWritesANumberedCopy() = wizard(ToolKind.WATERMARK) { model ->
         give(model, sample("text.pdf", "Text.pdf"))
         compose.onNodeWithTag("tool-watermark-text").performScrollTo().performTextReplacement(FIRST)
-        compose.onNodeWithTag("tool-watermark-rotation-0").performScrollTo().performClick()
-        compose.onNodeWithTag("tool-watermark-opacity-50").performScrollTo().performClick()
-        compose.onNodeWithTag("tool-watermark-tile").performScrollTo().performClick()
+        clickUntil("tool-watermark-rotation-0") { model.watermark.rotation.selected(0) }
+        clickUntil("tool-watermark-opacity-50") { model.watermark.opacity.selected(50) }
+        clickUntil("tool-watermark-tile") { model.watermark.tile }
         awaitTile(model)
         start()
         awaitTag("tool-done")
@@ -197,6 +197,19 @@ class ToolboxBackToOptionsDeviceTest {
 
     private fun fieldText(tag: String): String? =
         compose.onNodeWithTag(tag).fetchSemanticsNode().config.getOrNull(SemanticsProperties.EditableText)?.text
+
+    /**
+     * Clicks [tag] until [chosen] holds: the keyboard of the text field above may still move the form, so a click can miss.
+     * zh-CN: 点击 [tag] 直到 [chosen] 成立: 上方输入框的键盘可能仍在移动表单, 点击可能落空.
+     */
+    private fun clickUntil(tag: String, chosen: () -> Boolean) {
+        repeat(START_ATTEMPTS) {
+            if (onMain(chosen)) return
+            compose.onNodeWithTag(tag).performScrollTo().performClick()
+            if (runCatching { compose.waitUntil(START_WAIT_MILLIS) { onMain(chosen) } }.isSuccess) return
+        }
+        fail("$tag took no click")
+    }
 
     private fun awaitTile(model: PdfToolViewModel) {
         compose.waitUntil(TIMEOUT_MILLIS) {

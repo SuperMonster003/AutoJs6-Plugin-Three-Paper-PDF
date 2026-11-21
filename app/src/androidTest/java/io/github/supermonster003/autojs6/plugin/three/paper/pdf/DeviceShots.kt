@@ -14,7 +14,8 @@ import java.io.File
  */
 internal object DeviceShots {
 
-    private val enabled: Boolean by lazy { InstrumentationRegistry.getArguments().getString("paperShots") == "1" }
+    /** Whether this run takes screenshots; tests skip their preparation for a shot otherwise. zh-CN: 本次运行是否截图; 否则测试跳过为截图所做的准备. */
+    val enabled: Boolean by lazy { InstrumentationRegistry.getArguments().getString("paperShots") == "1" }
 
     /** The folder the shots go to. zh-CN: 截图所在的目录. */
     val folder: File get() = File(InstrumentationRegistry.getInstrumentation().targetContext.filesDir, "shots")

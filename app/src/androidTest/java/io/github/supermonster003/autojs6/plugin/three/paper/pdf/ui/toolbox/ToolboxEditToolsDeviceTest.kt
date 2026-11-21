@@ -21,6 +21,7 @@ import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextReplacement
 import androidx.lifecycle.ViewModelProvider
 import androidx.test.core.app.ActivityScenario
+import androidx.test.espresso.Espresso
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
@@ -489,9 +490,16 @@ class ToolboxEditToolsDeviceTest {
         compose.onNodeWithTag("$prefix-value").performScrollTo().performTextReplacement(text)
     }
 
-    /** A screenshot with the arrows of the preview [tag] in view. zh-CN: 让预览 [tag] 的箭头可见后截图. */
+    /**
+     * A screenshot of the preview [tag] with its arrows and note, the keyboard closed.
+     * zh-CN: 关闭键盘后, 让预览 [tag] 及其箭头与说明可见再截图.
+     */
     private fun shot(tag: String, name: String) {
-        compose.onNodeWithTag("$tag-page").performScrollTo()
+        if (!DeviceShots.enabled) return
+        Espresso.closeSoftKeyboard()
+        compose.onNodeWithTag(tag).performScrollTo()
+        val below = if (compose.onAllNodesWithTag("$tag-outside", useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()) "$tag-outside" else "$tag-page"
+        compose.onNodeWithTag(below, useUnmergedTree = true).performScrollTo()
         compose.waitForIdle()
         DeviceShots.take(name)
     }

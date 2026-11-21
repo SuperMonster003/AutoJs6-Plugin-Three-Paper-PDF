@@ -100,6 +100,7 @@ def instrument(device: Device, tests: list[str], timeout: int, shots: bool = Fal
     output = device.shell(f"am instrument -r -w {selection}{RUNNER}", check=False, timeout=timeout)
     results: list[tuple[str, str, str]] = []
     status: dict[str, str] = {}
+    key = ""
     for line in output.splitlines():
         line = line.rstrip("\r")
         if line.startswith("INSTRUMENTATION_STATUS: "):
@@ -109,9 +110,14 @@ def instrument(device: Device, tests: list[str], timeout: int, shots: bool = Fal
             code = int(line.split(":", 1)[1])
             if code != 1 and "test" in status:
                 name = status.get("class", "").rsplit(".", 1)[-1] + "#" + status["test"]
-                detail = (status.get("stack") or "").strip().splitlines()[:1]
-                results.append((VERDICTS.get(code, "FAIL"), name, detail[0][:200] if detail else ""))
+                stack = (status.get("stack") or "").strip().splitlines()
+                # The frames in test files tell which step failed (helper < test). zh-CN: 测试文件里的各帧说明是哪一步失败 (辅助方法 < 测试).
+                frames = [f.strip()[f.strip().rfind("(") + 1:].rstrip(")") for f in stack if "DeviceTest.kt:" in f]
+                where = f" [{' < '.join(frames[:4])}]" if frames else ""
+                results.append((VERDICTS.get(code, "FAIL"), name, (stack[0][:200] if stack else "") + where))
             status = {}
+        elif key == "stack" and "stack" in status and not line.startswith("INSTRUMENTATION_"):
+            status["stack"] += "\n" + line
         elif line.startswith("INSTRUMENTATION_RESULT: shortMsg=") or line.startswith("INSTRUMENTATION_FAILED"):
             results.append(("FAIL", "instrumentation", line[:200]))
     if not results:
