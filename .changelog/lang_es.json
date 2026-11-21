@@ -18,16 +18,20 @@
         "pdf.setInfo cambia propiedades del documento como el título, el autor, el asunto, las palabras clave y el creador, y pdf.setOutline reescribe o elimina el esquema con la estructura que devuelve pdf.outline",
         "Cada método nuevo tiene una forma Async y un método del mismo nombre en PdfDocument, y funciona también en Node.js, Bun y las aplicaciones empaquetadas por AutoJs6; los resultados de los métodos que escriben archivos también incluyen warningCodes, para que los scripts traten los avisos por código",
         "La caja de herramientas añade 5 herramientas, \"Añadir marca de agua al PDF\" (con vista previa de una página), \"Añadir números de página\", \"Comprimir PDF\", \"Rellenar formulario\" y \"Propiedades del documento\", 13 en total; la marca de agua, los números de página y la compresión aceptan también valores personalizados además de los ajustes predefinidos",
+        "La vista previa de una página de las herramientas de marca de agua y números de página pasa a cualquier página del documento; el número de página y el total de páginas de la vista previa siguen la página mostrada, igual que en el resultado, y una página fuera de las elegidas se muestra tal cual con una nota",
         "La pantalla de resultados de las herramientas y de las acciones del gestor de archivos puede escribir el proceso como un script de Rhino, Node.js o Bun, con \"Copiar script\", \"Guardar como .js\" y \"Abrir en AutoJs6\"; las contraseñas quedan como null en el script para que las rellene usted",
-        "El menú PDF del gestor de archivos de AutoJs6 añade \"Comprimir PDF\" y \"Añadir marca de agua al PDF\", que guardan el resultado junto al archivo original, y \"Crear PDF con búsqueda de texto\" mediante un complemento de OCR"
+        "El menú PDF del gestor de archivos de AutoJs6 añade \"Comprimir PDF\" y \"Añadir marca de agua al PDF\", que guardan el resultado junto al archivo original, y \"Crear PDF con búsqueda de texto\" mediante un complemento de OCR",
+        "El visor lee a pantalla completa: al tocar la página para ocultar las barras también se ocultan el número de página, la barra de estado y la barra de navegación (desliza desde el borde de la pantalla para mostrar las barras del sistema un momento), y otro toque las recupera; la nueva sección \"Visor\" de los ajustes desactiva por separado \"Ocultar el número de página en pantalla completa\" y \"Ocultar las barras del sistema en pantalla completa\""
       ],
       "fix": [
-        "Problema por el que algunos guiones (como los de \"3-Paper\" y \"A-B\") de los PDF generados por pdf.fromText se convertían en caracteres nulos al extraer texto o buscar con algunas fuentes del sistema (como en ColorOS 15)"
+        "Problema por el que algunos guiones (como los de \"3-Paper\" y \"A-B\") de los PDF generados por pdf.fromText se convertían en caracteres nulos al extraer texto o buscar con algunas fuentes del sistema (como en ColorOS 15)",
+        "Problema por el que la barra superior del visor tapaba la parte superior de la primera página al abrir un documento, y la barra de miniaturas el final de la última página; ahora las páginas dejan libres las barras en los dos extremos del documento y ya no se mueven al ocultar o mostrar las barras"
       ],
       "improvement": [
         "La página Historial de versiones ahora se expande y contrae por versión: una versión contraída muestra su fecha y el número de entradas por categoría, una expandida nombra cada categoría una sola vez; todas las versiones se pueden expandir o contraer a la vez y la más reciente se abre expandida; la página lleva el nombre del complemento como subtítulo",
         "Las indicaciones de procesamiento de la pantalla de resultados de las herramientas ahora se muestran en el idioma de la interfaz en lugar de solo en inglés",
-        "Se reescribieron las instrucciones del centro de complementos en cinco partes: primeros pasos, funciones principales, uso en scripts, requisitos y preguntas frecuentes"
+        "Se reescribieron las instrucciones del centro de complementos en cinco partes: primeros pasos, funciones principales, uso en scripts, requisitos y preguntas frecuentes",
+        "Volver desde la pantalla de resultado o de error de una herramienta, con la flecha de la barra superior o la tecla atrás del sistema, ahora lleva a las opciones con los archivos elegidos y todo lo escrito conservado, para volver a ejecutar tras un cambio; el nuevo resultado recibe un número en lugar de reemplazar el anterior, y volver desde las opciones cierra la herramienta"
       ]
     },
     "v1.0.0": {

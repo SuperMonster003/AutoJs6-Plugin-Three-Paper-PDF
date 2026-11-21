@@ -14,7 +14,7 @@
 - **Generation and encryption**: create PDF files from images, text or HTML; set a password and permissions on a document, or remove the password.
 - **Editing**: fill in forms, add watermarks, page numbers, headers and footers, reduce the file size, and change the outline and document properties such as the title and author.
 - **Scanned page recognition**: recognize the text of scanned pages without a text layer with an installed OCR plugin, or write a text layer into a scan to make a searchable PDF.
-- **Viewer**: continuous scrolling, pinch zoom, thumbnails, outline, search highlights, go to page and night mode. Other apps can hand PDF files to it through "Open with" or sharing.
+- **Viewer**: continuous scrolling, pinch zoom, thumbnails, outline, search highlights, go to page, night mode and full-screen reading (a tap on the page hides the bars; the settings choose whether the page number and the system bars hide too). Other apps can hand PDF files to it through "Open with" or sharing.
 - **Toolbox**: 13 tools such as merge, split, compress and add watermark; after a run, the same processing can be written as a script. Tasks run one after another in the background, with the progress shown in the notification.
 - **AutoJs6 file manager**: tapping a PDF opens it in the viewer, and PDF files inside archives also open directly; the file menu offers processing such as merge, split, compress and add watermark, and can make a searchable PDF.
 
