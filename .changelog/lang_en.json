@@ -6,7 +6,7 @@
   "changelog_label_dependency": "Dependency",
   "$data": {
     "v1.1.0": {
-      "released_date": "2026/11/20",
+      "released_date": "2026/11/22",
       "hint": [
         "The new script methods and \"Make searchable PDF\" of the file manager require AutoJs6 {{ required_host_version_name }} or later, and use in Node.js or Bun scripts requires Node.js Runtime 2.2.0 or Bun Runtime 0.23.0 or later; the new toolbox tools do not depend on AutoJs6"
       ],

@@ -6,7 +6,7 @@
   "changelog_label_dependency": "Dépendance",
   "$data": {
     "v1.1.0": {
-      "released_date": "2026/11/20",
+      "released_date": "2026/11/22",
       "hint": [
         "Les nouvelles méthodes de script et l'action \"Créer un PDF interrogeable\" du gestionnaire de fichiers nécessitent AutoJs6 {{ required_host_version_name }} ou ultérieur, et leur utilisation dans les scripts Node.js ou Bun nécessite aussi Node.js Runtime 2.2.0 ou Bun Runtime 0.23.0 ou ultérieur; les nouveaux outils de la boîte à outils ne dépendent pas d'AutoJs6"
       ],

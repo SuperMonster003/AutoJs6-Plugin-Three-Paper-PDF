@@ -276,7 +276,7 @@ Los planes, las decisiones de diseño y el progreso se registran como lista de v
 
 #### v1.1.0
 
-_2026/11/20_
+_2026/11/22_
 
 - `Aviso` Los nuevos métodos de script y la acción "Crear PDF con búsqueda de texto" del gestor de archivos requieren AutoJs6 6.8.1 o posterior, y usarlos en scripts de Node.js o Bun requiere además Node.js Runtime 2.2.0 o Bun Runtime 0.23.0 o posterior; las nuevas herramientas de la caja de herramientas no dependen de AutoJs6
 - `Función` pdf.forms y pdf.fillForm leen los campos de formulario (campos de texto, casillas de verificación, botones de opción, cuadros combinados, cuadros de lista) y los rellenan por nombre de campo, con la opción de acoplarlos como contenido normal de la página; pdf.info añade el número de campos de formulario

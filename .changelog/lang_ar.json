@@ -6,7 +6,7 @@
   "changelog_label_dependency": "تبعية",
   "$data": {
     "v1.1.0": {
-      "released_date": "2026/11/20",
+      "released_date": "2026/11/22",
       "hint": [
         "تتطلب طرق السكربت الجديدة وإجراء \"إنشاء PDF قابل للبحث\" في مدير الملفات الإصدار {{ required_host_version_name }} من AutoJs6 أو أحدث, ويتطلب استخدامها في سكربتات Node.js أو Bun أيضا الإصدار Node.js Runtime 2.2.0 أو Bun Runtime 0.23.0 أو أحدث; ولا تعتمد أدوات صندوق الأدوات الجديدة على AutoJs6"
       ],

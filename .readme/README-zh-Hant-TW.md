@@ -276,7 +276,7 @@ native libraries: libandroidx.graphics.path.so of Jetpack Compose only (arm64-v8
 
 #### v1.1.0
 
-_2026/11/20_
+_2026/11/22_
 
 - `提示` 新增的指令碼方法與檔案管理員的 "產生可搜尋 PDF" 需要 AutoJs6 6.8.1 或更新版本, 在 Node.js 或 Bun 指令碼中使用另需 Node.js Runtime 2.2.0 或 Bun Runtime 0.23.0 或更新版本; 工具箱的新工具不依賴 AutoJs6
 - `新增` pdf.forms 與 pdf.fillForm: 讀取表單欄位 (文字方塊, 核取方塊, 選項按鈕, 下拉式方塊, 清單方塊) 並依欄位名稱填寫, 可以平面化為一般頁面內容; pdf.info 新增表單欄位數

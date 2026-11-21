@@ -276,7 +276,7 @@ native libraries: libandroidx.graphics.path.so of Jetpack Compose only (arm64-v8
 
 #### v1.1.0
 
-_2026/11/20_
+_2026/11/22_
 
 - `ヒント` 新しいスクリプトのメソッドとファイルマネージャーの "検索可能な PDF を作成" には AutoJs6 6.8.1 以降が必要です. Node.js や Bun のスクリプトで使うには, さらに Node.js Runtime 2.2.0 または Bun Runtime 0.23.0 以降が必要です. ツールボックスの新しいツールは AutoJs6 に依存しません
 - `機能` pdf.forms と pdf.fillForm: フォームのフィールド (テキストフィールド, チェックボックス, ラジオボタン, コンボボックス, リストボックス) を読み取り, フィールド名を指定して入力します. 通常のページ内容へのフラット化もできます. pdf.info にフォームのフィールド数を追加

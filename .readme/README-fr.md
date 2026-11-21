@@ -276,7 +276,7 @@ Les plans, décisions de conception et l'avancement sont suivis sous forme de li
 
 #### v1.1.0
 
-_2026/11/20_
+_2026/11/22_
 
 - `Note` Les nouvelles méthodes de script et l'action "Créer un PDF interrogeable" du gestionnaire de fichiers nécessitent AutoJs6 6.8.1 ou ultérieur, et leur utilisation dans les scripts Node.js ou Bun nécessite aussi Node.js Runtime 2.2.0 ou Bun Runtime 0.23.0 ou ultérieur; les nouveaux outils de la boîte à outils ne dépendent pas d'AutoJs6
 - `Fonctionnalité` pdf.forms et pdf.fillForm lisent les champs de formulaire (champs de texte, cases à cocher, boutons radio, listes déroulantes, zones de liste) et les remplissent par nom de champ, avec aplatissement facultatif en contenu de page ordinaire; pdf.info indique en plus le nombre de champs de formulaire

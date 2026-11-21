@@ -276,7 +276,7 @@ Plans, design decisions and progress are tracked as a checklist in ROADMAP.md. U
 
 #### v1.1.0
 
-_2026/11/20_
+_2026/11/22_
 
 - `Hint` The new script methods and "Make searchable PDF" of the file manager require AutoJs6 6.8.1 or later, and use in Node.js or Bun scripts requires Node.js Runtime 2.2.0 or Bun Runtime 0.23.0 or later; the new toolbox tools do not depend on AutoJs6
 - `Feature` pdf.forms and pdf.fillForm read form fields (text fields, check boxes, radio buttons, combo boxes, list boxes) and fill them in by field name, optionally flattened into ordinary page content; pdf.info adds the number of form fields

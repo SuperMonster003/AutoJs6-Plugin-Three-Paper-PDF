@@ -276,7 +276,7 @@ native libraries: libandroidx.graphics.path.so of Jetpack Compose only (arm64-v8
 
 #### v1.1.0
 
-_2026/11/20_
+_2026/11/22_
 
 - `힌트` 새 스크립트 메서드와 파일 관리자의 "검색 가능한 PDF 만들기"에는 AutoJs6 6.8.1 이상이 필요합니다. Node.js나 Bun 스크립트에서 쓰려면 Node.js Runtime 2.2.0 또는 Bun Runtime 0.23.0 이상도 필요합니다. 도구 상자의 새 도구는 AutoJs6에 의존하지 않습니다
 - `기능` pdf.forms와 pdf.fillForm: 양식 필드 (텍스트 필드, 확인란, 라디오 단추, 콤보 상자, 목록 상자)를 읽고 필드 이름으로 값을 채웁니다. 일반 페이지 내용으로 평면화할 수도 있습니다. pdf.info에 양식 필드 수 추가

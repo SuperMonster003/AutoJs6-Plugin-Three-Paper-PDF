@@ -6,7 +6,7 @@
   "changelog_label_dependency": "Зависимость",
   "$data": {
     "v1.1.0": {
-      "released_date": "2026/11/20",
+      "released_date": "2026/11/22",
       "hint": [
         "Новым методам скриптов и действию \"Создать PDF с поиском\" в файловом менеджере нужен AutoJs6 {{ required_host_version_name }} или новее, а для использования в скриптах Node.js или Bun также нужен Node.js Runtime 2.2.0 или Bun Runtime 0.23.0 или новее; новые инструменты набора инструментов не зависят от AutoJs6"
       ],
