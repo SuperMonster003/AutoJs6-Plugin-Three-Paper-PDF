@@ -28,7 +28,7 @@
     <string name="home_open_pdf_summary">عرض ملف PDF في العارض المدمج</string>
     <string name="home_recent">الملفات الأخيرة</string>
     <string name="home_recent_clear">مسح</string>
-    <string name="home_recent_empty">تظهر هنا ملفات PDF التي تفتحها من هنا والتي ينشئها صندوق الأدوات</string>
+    <string name="home_recent_empty">تظهر هنا ملفات PDF التي تفتحها من هنا أو تختارها في صندوق الأدوات أو ينشئها</string>
     <string name="home_recent_picked">فُتح باستخدام منتقي الملفات في النظام</string>
     <string name="home_recent_remove">إزالة %1$s من الملفات الأخيرة</string>
     <string name="home_recent_unavailable">تعذّر فتح %1$s (حُذف الملف أو أُلغي الوصول إليه). تمت إزالته من الملفات الأخيرة.</string>

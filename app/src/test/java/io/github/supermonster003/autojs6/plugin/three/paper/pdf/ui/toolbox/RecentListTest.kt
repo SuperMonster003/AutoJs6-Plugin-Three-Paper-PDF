@@ -88,6 +88,15 @@ class RecentListTest {
         assertTrue(RecentFiles.MAX <= 128)
     }
 
+    @Test
+    fun `inputs chosen in order end up newest first, a reused file moved up without a duplicate`() {
+        // Roadmap P6.15 batch 17d (Q324 (a)): the inputs of a tool are added one by one in the order chosen.
+        // zh-CN: 路线图 P6.15 批次 17d (Q324 (a)): 工具的输入按选择的顺序逐个记入.
+        var list = listOf<RecentEntry>(LOCAL_B, DOCUMENT_B)
+        listOf(LOCAL_A, DOCUMENT_A, LOCAL_B).forEach { list = RecentList.add(list, it, RecentFiles.MAX) }
+        assertEquals(listOf(LOCAL_B, DOCUMENT_A, LOCAL_A, DOCUMENT_B), list)
+    }
+
     private companion object {
         val LOCAL_A = RecentEntry.Local("/sdcard/a.pdf")
         val LOCAL_B = RecentEntry.Local("/sdcard/b.pdf")

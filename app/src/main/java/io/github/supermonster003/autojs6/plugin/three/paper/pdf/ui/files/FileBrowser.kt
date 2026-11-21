@@ -103,7 +103,7 @@ internal enum class BrowseMode {
  * A tap picks an entry like a file of the folder, or checks it in the same order and state as the folder rows (one key per
  * file). A document of the system picker is checked under its grant first ([RecentFiles.reopen]); a document or local
  * file that no longer opens is removed with a message. Local files that cannot be read now (no storage access) are not
- * listed.
+ * listed. Every pick of PDFs enters the recent files.
  *
  * Test tags: `browser.list`, `browser.entry.<name>`, `browser.recent`, `browser.recent.toggle`, `browser.recent.<name>`,
  * `browser.confirm`, `browser.system`, `browser.newFolder`, `browser.close`, `browser.path`.
@@ -114,7 +114,7 @@ internal enum class BrowseMode {
  * 选择 PDF 时 ([BrowseMode.PDF], [BrowseMode.PDFS]; 路线图 P6.15 批次 17d, 附录 D Q324 (a)), 列表以 "最近使用" 一组开头: 即首页的最近文件
  * ([RecentFiles], 最新在前, 同一份列表, 首页的清空与移除在这里同样生效), 未点 "全部" 展开时至多 [BrowserRules.COMPACT_MAX] 条且不超过一半高度.
  * 点按条目即与目录中的文件一样选中, 或按同样的顺序与状态勾选 (每个文件一个键). 系统选择器的文档先凭授权核对 ([RecentFiles.reopen]);
- * 已打不开的文档或本地文件移除并提示. 现在读不了的本地文件 (没有存储访问权限) 不列出.
+ * 已打不开的文档或本地文件移除并提示. 现在读不了的本地文件 (没有存储访问权限) 不列出. 每次选定 PDF 都记入最近文件.
  *
  * 测试标签: `browser.list`, `browser.entry.<名称>`, `browser.recent`, `browser.recent.toggle`, `browser.recent.<名称>`, `browser.confirm`,
  * `browser.system`, `browser.newFolder`, `browser.close`, `browser.path`.
@@ -149,7 +149,11 @@ internal fun FileBrowser(
     val directory = path?.let(::File)
     val root = directory?.let { dir -> roots.firstOrNull { BrowserRules.inside(dir, it) } }
 
-    val finish: (List<BrowserPick>) -> Unit = onPick
+    // Lists the PDFs among the recent files, then hands the picks over. zh-CN: 把 PDF 记入最近文件, 再交回选定的内容.
+    val finish: (List<BrowserPick>) -> Unit = { picks ->
+        if (BrowserRules.listsRecent(mode)) picks.forEach { if (it is BrowserPick.Local) RecentFiles.add(context, it.file) }
+        onPick(picks)
+    }
     val unavailable: (RecentEntry) -> Unit = { entry ->
         val key = BrowserRules.keyOf(entry)
         removed = ArrayList(removed + key)

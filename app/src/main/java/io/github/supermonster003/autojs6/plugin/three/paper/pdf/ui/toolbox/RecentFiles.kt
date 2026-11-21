@@ -104,15 +104,17 @@ internal object RecentList {
 }
 
 /**
- * The files the toolbox opened or wrote, newest first, at most [MAX] (roadmap P4.1, appendix D Q106 = B). Local files
- * that no longer exist are left out when read. Documents picked with the system file picker are kept under the
- * persistable read grant the picker offers; every change releases the grants no entry holds, so the plugin never holds
- * more than [MAX] (the system allows 128, 512 from Android 11). A document is checked when opened: when the grant is gone
- * or the provider no longer finds it, the entry is removed. One-time uris that other apps pass with VIEW or SEND stay
- * out of the list.
- * zh-CN: 工具箱打开或写出的文件, 最新的在前, 至多 [MAX] 个 (路线图 P4.1, 附录 D Q106 = B). 读取时略去已不存在的本地文件. 用系统文件选择器
- * 选取的文档凭选择器给出的可持久读取授权保留; 每次改动都释放没有条目持有的授权, 因此插件持有的授权从不超过 [MAX] 个 (系统上限 128,
- * Android 11 起 512). 文档在打开时检查: 授权已失效或提供方找不到该文档时移除条目. 其他应用经 VIEW 或 SEND 传入的一次性 uri 不进列表.
+ * The files the toolbox opened, chose as PDF inputs or wrote, newest first, at most [MAX] (roadmap P4.1, appendix D
+ * Q106 = B; the inputs since P6.15 batch 17d, Q324 (a)). The home screen and the group "Recent" of the file browser show
+ * this one list. Local files that no longer exist are left out when read. Documents picked with the system file picker
+ * are kept under the persistable read grant the picker offers; every change releases the grants no entry holds, so the
+ * plugin never holds more than [MAX] (the system allows 128, 512 from Android 11). A document is checked when opened:
+ * when the grant is gone or the provider no longer finds it, the entry is removed. One-time uris that other apps pass
+ * with VIEW or SEND, and the files of the AutoJs6 file manager tools (one-time grants of the host), stay out of the list.
+ * zh-CN: 工具箱打开, 选作 PDF 输入或写出的文件, 最新的在前, 至多 [MAX] 个 (路线图 P4.1, 附录 D Q106 = B; 输入自 P6.15 批次 17d 起, Q324 (a)).
+ * 首页与文件浏览器的 "最近使用" 显示的是同一份列表. 读取时略去已不存在的本地文件. 用系统文件选择器选取的文档凭选择器给出的可持久读取授权保留;
+ * 每次改动都释放没有条目持有的授权, 因此插件持有的授权从不超过 [MAX] 个 (系统上限 128, Android 11 起 512). 文档在打开时检查: 授权已失效或
+ * 提供方找不到该文档时移除条目. 其他应用经 VIEW 或 SEND 传入的一次性 uri, 以及 AutoJs6 文件管理器工具的文件 (宿主的一次性授权) 不进列表.
  */
 internal object RecentFiles {
 
@@ -244,6 +246,25 @@ internal class OpenPersistableDocument : ActivityResultContract<Array<String>, P
     override fun parseResult(resultCode: Int, intent: Intent?): PickedDocument? {
         val uri = intent?.takeIf { resultCode == Activity.RESULT_OK }?.data ?: return null
         return PickedDocument(uri, intent.flags)
+    }
+
+}
+
+/**
+ * [ActivityResultContracts.OpenMultipleDocuments] that keeps the grant flags of the result for every document, so the
+ * PDF inputs of the toolbox enter the recent files under a persistable grant (roadmap P6.15 batch 17d, Q324 (a)).
+ * zh-CN: 为每个文档保留结果中授权标志的 [ActivityResultContracts.OpenMultipleDocuments], 使工具箱的 PDF 输入凭可持久授权进入最近文件
+ * (路线图 P6.15 批次 17d, Q324 (a)).
+ */
+internal class OpenMultiplePersistableDocuments : ActivityResultContract<Array<String>, List<PickedDocument>>() {
+
+    private val open = ActivityResultContracts.OpenMultipleDocuments()
+
+    override fun createIntent(context: Context, input: Array<String>): Intent = open.createIntent(context, input)
+
+    override fun parseResult(resultCode: Int, intent: Intent?): List<PickedDocument> {
+        if (intent == null || resultCode != Activity.RESULT_OK) return emptyList()
+        return open.parseResult(resultCode, intent).map { PickedDocument(it, intent.flags) }
     }
 
 }

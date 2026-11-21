@@ -28,7 +28,7 @@
     <string name="home_open_pdf_summary">Ver un archivo PDF en el visor integrado</string>
     <string name="home_recent">Archivos recientes</string>
     <string name="home_recent_clear">Borrar</string>
-    <string name="home_recent_empty">Aquí aparecen los PDF que abras desde aquí y los que cree la caja de herramientas</string>
+    <string name="home_recent_empty">Aquí aparecen los PDF que abras desde aquí, elijas en la caja de herramientas o cree ella</string>
     <string name="home_recent_picked">Abierto con el selector de archivos del sistema</string>
     <string name="home_recent_remove">Quitar %1$s de los archivos recientes</string>
     <string name="home_recent_unavailable">No se puede abrir %1$s (el archivo se eliminó o se revocó el acceso). Se quitó de los archivos recientes.</string>

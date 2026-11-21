@@ -28,7 +28,7 @@
     <string name="home_open_pdf_summary">在內建檢視器中檢視 PDF 檔案</string>
     <string name="home_recent">最近的檔案</string>
     <string name="home_recent_clear">清除</string>
-    <string name="home_recent_empty">從這裡開啟的 PDF 與工具箱產生的 PDF 會顯示在這裡</string>
+    <string name="home_recent_empty">從這裡開啟, 在工具箱中選取或由工具箱產生的 PDF 會顯示在這裡</string>
     <string name="home_recent_picked">透過系統檔案選擇器開啟</string>
     <string name="home_recent_remove">從最近的檔案中移除 %1$s</string>
     <string name="home_recent_unavailable">%1$s 已無法開啟 (檔案已刪除或存取授權已失效), 已從最近的檔案中移除.</string>

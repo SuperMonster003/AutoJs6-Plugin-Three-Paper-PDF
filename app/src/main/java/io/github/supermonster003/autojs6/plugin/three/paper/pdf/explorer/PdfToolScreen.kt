@@ -92,10 +92,15 @@ import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.files.BrowseM
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.files.BrowserPick
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.files.FileBrowser
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.NotificationAccess
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.OpenMultiplePersistableDocuments
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.OpenPersistableDocument
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.PickedDocument
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.RecentFiles
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.StorageAccessState
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.ToolboxFiles
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.rememberStorageAccess
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.viewer.ThreePaperPdfViewerActivity
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.autojs.plugin.pdf.api.PdfContract
 import org.autojs.plugin.pdf.api.PdfErrorCodes
@@ -123,11 +128,22 @@ internal fun PdfToolScreen(model: PdfToolViewModel, onClose: () -> Unit) {
     val storage = rememberStorageAccess()
     val snackbar = remember { SnackbarHostState() }
     var browsing by rememberSaveable { mutableStateOf<String?>(null) }
-    val pickOne = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        uri?.let { model.addTargets(listOf(targetOf(context, it))) }
+    val scope = rememberCoroutineScope()
+    // PDFs from the system picker enter the recent files when the grant can be kept, so other tools and the home screen
+    // offer them too (roadmap P6.15 batch 17d, Q324 (a)); images do not. zh-CN: 系统选择器选取的 PDF 在授权可以保留时记入最近文件, 其他工具与首页
+    // 也能直接选到 (路线图 P6.15 批次 17d, Q324 (a)); 图片不记.
+    val addPicked: (List<PickedDocument>) -> Unit = { picked ->
+        model.addTargets(picked.map { targetOf(context, it.uri) })
+        if (picked.isNotEmpty() && model.kind?.inputs != ToolKind.Inputs.IMAGES) {
+            val app = context.applicationContext
+            scope.launch(Dispatchers.IO) { picked.forEach { RecentFiles.adopt(app, it.uri, it.flags) } }
+        }
     }
-    val pickMany = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
-        model.addTargets(uris.map { targetOf(context, it) })
+    val pickOne = rememberLauncherForActivityResult(OpenPersistableDocument()) { picked ->
+        picked?.let { addPicked(listOf(it)) }
+    }
+    val pickMany = rememberLauncherForActivityResult(OpenMultiplePersistableDocuments()) { picked ->
+        addPicked(picked)
     }
     val askNotifications = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
     val inputs = model.kind?.inputs ?: ToolKind.Inputs.ONE_PDF

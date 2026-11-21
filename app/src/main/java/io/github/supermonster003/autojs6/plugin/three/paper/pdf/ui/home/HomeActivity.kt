@@ -251,19 +251,13 @@ private fun HomeScreen(onTool: (ToolKind) -> Unit, onSettings: () -> Unit) {
             mode = BrowseMode.PDF,
             title = stringResource(R.string.home_open_pdf),
             onDismiss = { browsing = false },
+            // The browser lists the pick among the recent files (batch 17d). zh-CN: 浏览器把选中的文件记入最近文件 (批次 17d).
             onPick = { picks ->
                 browsing = false
+                reload++
                 when (val pick = picks.firstOrNull()) {
-                    is BrowserPick.Local -> {
-                        RecentFiles.add(context, pick.file)
-                        reload++
-                        ToolboxFiles.openInViewer(context, pick.file)
-                    }
-                    // A document of "Recent" moved first when it was checked. zh-CN: "最近使用" 中的文档在核对时已移到最前.
-                    is BrowserPick.Document -> {
-                        reload++
-                        ToolboxFiles.openUriInViewer(context, pick.entry.uri.toUri())
-                    }
+                    is BrowserPick.Local -> ToolboxFiles.openInViewer(context, pick.file)
+                    is BrowserPick.Document -> ToolboxFiles.openUriInViewer(context, pick.entry.uri.toUri())
                     null -> Unit
                 }
             },

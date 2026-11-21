@@ -28,7 +28,7 @@
     <string name="home_open_pdf_summary">View a PDF file in the built-in viewer</string>
     <string name="home_recent">Recent files</string>
     <string name="home_recent_clear">Clear</string>
-    <string name="home_recent_empty">PDFs you open here and PDFs the toolbox creates appear here</string>
+    <string name="home_recent_empty">PDFs you open here, choose in the toolbox or create with it appear here</string>
     <string name="home_recent_picked">Opened with the system file picker</string>
     <string name="home_recent_remove">Remove %1$s from recent files</string>
     <string name="home_recent_unavailable">%1$s can no longer be opened (the file was deleted or access to it was revoked) and was removed from recent files.</string>

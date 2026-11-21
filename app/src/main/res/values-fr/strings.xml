@@ -28,7 +28,7 @@
     <string name="home_open_pdf_summary">Afficher un fichier PDF dans la visionneuse intégrée</string>
     <string name="home_recent">Fichiers récents</string>
     <string name="home_recent_clear">Effacer</string>
-    <string name="home_recent_empty">Les PDF ouverts ici et ceux créés par la boîte à outils apparaissent ici</string>
+    <string name="home_recent_empty">Les PDF ouverts ici, choisis dans la boîte à outils ou créés par elle apparaissent ici</string>
     <string name="home_recent_picked">Ouvert avec le sélecteur de fichiers du système</string>
     <string name="home_recent_remove">Retirer %1$s des fichiers récents</string>
     <string name="home_recent_unavailable">Impossible d\'ouvrir %1$s (fichier supprimé ou accès révoqué). Il a été retiré des fichiers récents.</string>
