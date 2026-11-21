@@ -261,11 +261,16 @@ class StampOperationDeviceTest {
                 assertTrue("page $number: '$extracted'", extracted.contains("第 $number 页, 共 100 页"))
             }
         }
+        // Reports inside the 250 ms throttle are dropped: a warmed-up fast device (XQ-DQ72 in a full run, 2026-11-22) places
+        // the 100 pages before a processing report may pass, so the stages seen are checked for their order only, as in
+        // CompressOperationDeviceTest. zh-CN: 250 ms 节流间隔内的报告被丢弃: 预热后的快设备 (XQ-DQ72 全量运行, 2026-11-22) 在处理阶段的报告
+        // 能通过之前就放完 100 页, 因此与 CompressOperationDeviceTest 一样只核对看到的阶段的顺序.
         val processing = recorder.progress.filter { it.getString(PdfContract.KEY_STAGE) == PdfContract.STAGE_PROCESSING }
-        assertTrue("processing progress", processing.isNotEmpty())
         assertTrue("progress counts the 100 pages", processing.all { it.getInt(PdfContract.KEY_TOTAL) == 100 })
         val stages = recorder.progress.map { it.getString(PdfContract.KEY_STAGE) }.distinct()
-        assertTrue("stages $stages", stages.containsAll(listOf(PdfContract.STAGE_OPENING, PdfContract.STAGE_PROCESSING)))
+        val order = listOf(PdfContract.STAGE_OPENING, PdfContract.STAGE_PROCESSING, PdfContract.STAGE_WRITING)
+        assertEquals(PdfContract.STAGE_OPENING, stages.firstOrNull())
+        assertEquals(stages.toString(), stages, order.filter { it in stages })
     }
 
     /**
