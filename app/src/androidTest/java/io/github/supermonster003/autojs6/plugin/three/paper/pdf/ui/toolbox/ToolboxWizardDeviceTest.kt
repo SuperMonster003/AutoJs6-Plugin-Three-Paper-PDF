@@ -105,15 +105,24 @@ class ToolboxWizardDeviceTest {
         compose.onNodeWithTag("tool-split-every").performScrollTo().performTextReplacement("3")
         start()
         val task = checkNotNull(model.task)
-        // Back home while the task may still run: the task goes on. zh-CN: 任务可能仍在运行时回到首页: 任务继续.
+        // Back home while the task may still run: the task goes on and finishes on its home card. A task that already
+        // finished shows its result, where back leads to the options and drops the card (E4 feedback F3); back there goes home.
+        // zh-CN: 任务可能仍在运行时回到首页: 任务继续, 在首页卡片上完成. 已经完成的任务显示结果页, 在那里返回回到选项页并移除卡片
+        // (E4 反馈 F3), 再返回才回首页.
         click("paper.topBar.back")
+        compose.waitUntil(TIMEOUT_MILLIS) {
+            compose.onAllNodesWithTag("paper.home").fetchSemanticsNodes().isNotEmpty() ||
+                compose.onAllNodesWithTag("tool-start").fetchSemanticsNodes().isNotEmpty()
+        }
+        val finishedFirst = compose.onAllNodesWithTag("paper.home").fetchSemanticsNodes().isEmpty()
+        if (finishedFirst) click("paper.topBar.back")
         awaitTag("paper.home")
         assertEquals(HomeActivity.ROUTE_HOME, route(scenario))
-        reveal("paper.home.task.${task.id}.path")
+        if (!finishedFirst) reveal("paper.home.task.${task.id}.path")
         listOf("Outline-01.pdf", "Outline-02.pdf").forEach { name ->
             PDDocument.load(File(output, "Outline_split/$name")).use { assertEquals(3, it.numberOfPages) }
         }
-        click("paper.home.task.${task.id}.dismiss")
+        if (!finishedFirst) click("paper.home.task.${task.id}.dismiss")
         compose.waitUntil(TIMEOUT_MILLIS) { compose.onAllNodesWithTag("paper.home.task.${task.id}").fetchSemanticsNodes().isEmpty() }
     }
 
