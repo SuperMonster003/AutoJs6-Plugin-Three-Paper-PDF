@@ -104,7 +104,8 @@ internal enum class BrowseMode {
  * A tap picks an entry like a file of the folder, or checks it in the same order and state as the folder rows (one key per
  * file). A document of the system picker is checked under its grant first ([RecentFiles.reopen]); a document or local
  * file that no longer opens is removed with a message. Local files that cannot be read now (no storage access) are not
- * listed. Every pick of PDFs enters the recent files, and every pick of files remembers its folder ([BrowserRules.memoryOf]:
+ * listed. With [recordPicks] (the home screen's "Open a PDF", where a pick opens the file) a pick of PDFs enters the
+ * recent files; the tools record their inputs only when they run (appendix D Q353 (b)). Every pick of files remembers its folder ([BrowserRules.memoryOf]:
  * PDFs share one, images have their own), where the next browser starts unless [start] (the tool's last input) leads
  * somewhere; without a remembered PDF folder the folder of the newest recent local file is used.
  *
@@ -117,7 +118,8 @@ internal enum class BrowseMode {
  * 选择 PDF 时 ([BrowseMode.PDF], [BrowseMode.PDFS]; 路线图 P6.15 批次 17d, 附录 D Q324 (a)), 列表以 "最近使用" 一组开头: 即首页的最近文件
  * ([RecentFiles], 最新在前, 同一份列表, 首页的清空与移除在这里同样生效), 未点 "全部" 展开时至多 [BrowserRules.COMPACT_MAX] 条且不超过一半高度.
  * 点按条目即与目录中的文件一样选中, 或按同样的顺序与状态勾选 (每个文件一个键). 系统选择器的文档先凭授权核对 ([RecentFiles.reopen]);
- * 已打不开的文档或本地文件移除并提示. 现在读不了的本地文件 (没有存储访问权限) 不列出. 每次选定 PDF 都记入最近文件, 每次选定文件都记住所在
+ * 已打不开的文档或本地文件移除并提示. 现在读不了的本地文件 (没有存储访问权限) 不列出. [recordPicks] 时 (首页 "打开 PDF", 选定即打开)
+ * 选定的 PDF 记入最近文件; 工具只在运行时记入其输入 (附录 D Q353 (b)). 每次选定文件都记住所在
  * 文件夹 ([BrowserRules.memoryOf]: PDF 共用一个, 图片单独一个), 下次浏览器从那里开始, 除非 [start] (本工具上一个输入) 可用; 没有记住的
  * PDF 文件夹时用最新的本地最近文件所在的文件夹.
  *
@@ -134,6 +136,7 @@ internal fun FileBrowser(
     onSystemPicker: (() -> Unit)? = null,
     onRequestAccess: (() -> Unit)? = null,
     accessGeneration: Int = 0,
+    recordPicks: Boolean = false,
 ) {
     val context = LocalContext.current
     val resources = LocalResources.current
@@ -154,11 +157,11 @@ internal fun FileBrowser(
     val directory = path?.let(::File)
     val root = directory?.let { dir -> roots.firstOrNull { BrowserRules.inside(dir, it) } }
 
-    // Remembers the folder and lists the PDFs among the recent files, then hands the picks over.
-    // zh-CN: 记住文件夹并把 PDF 记入最近文件, 再交回选定的内容.
+    // Remembers the folder and, with recordPicks, lists the PDFs among the recent files, then hands the picks over.
+    // zh-CN: 记住文件夹, recordPicks 时把 PDF 记入最近文件, 再交回选定的内容.
     val finish: (List<BrowserPick>) -> Unit = { picks ->
         BrowserRules.memoryOf(mode)?.let { key -> BrowserRules.folderToRemember(picks)?.let { ToolboxPreferences.setBrowseFolder(context, key, it) } }
-        if (BrowserRules.listsRecent(mode)) picks.forEach { if (it is BrowserPick.Local) RecentFiles.add(context, it.file) }
+        if (recordPicks && BrowserRules.listsRecent(mode)) picks.forEach { if (it is BrowserPick.Local) RecentFiles.add(context, it.file) }
         onPick(picks)
     }
     val unavailable: (RecentEntry) -> Unit = { entry ->
@@ -186,7 +189,7 @@ internal fun FileBrowser(
                 verifying = true
                 val app = context.applicationContext
                 scope.launch {
-                    val fresh = withContext(Dispatchers.IO) { RecentFiles.reopen(app, entry) }
+                    val fresh = withContext(Dispatchers.IO) { RecentFiles.reopen(app, entry, promote = recordPicks) }
                     verifying = false
                     when {
                         fresh == null -> unavailable(entry)
@@ -365,15 +368,17 @@ internal fun FileBrowser(
 }
 
 /**
- * The header of the group "Recent", a heading for screen readers, with "All (n)" / "Show less" when [expandable].
- * zh-CN: "最近使用" 分组的表头, 对读屏器为标题; [expandable] 时带 "全部 (n)" / "收起".
+ * The header of the group "Recent", a heading for screen readers, with "All (n)" / "Show less" when [expandable]; the
+ * two texts share their baseline (the heading has more space above than below, the button centers its text, E4 RC1).
+ * zh-CN: "最近使用" 分组的表头, 对读屏器为标题; [expandable] 时带 "全部 (n)" / "收起"; 两段文字按基线对齐 (标题上方留白多于下方, 按钮的文字
+ * 居中, E4 RC1).
  */
 @Composable
 private fun RecentHeader(total: Int, expandable: Boolean, expanded: Boolean, onToggle: () -> Unit) {
-    Row(Modifier.fillMaxWidth().testTag("browser.recent"), verticalAlignment = Alignment.Bottom) {
-        SectionHeader(stringResource(R.string.browser_recent), modifier = Modifier.weight(1f))
+    Row(Modifier.fillMaxWidth().testTag("browser.recent")) {
+        SectionHeader(stringResource(R.string.browser_recent), modifier = Modifier.weight(1f).alignByBaseline())
         if (expandable) {
-            TextButton(onClick = onToggle, modifier = Modifier.padding(end = 8.dp).testTag("browser.recent.toggle")) {
+            TextButton(onClick = onToggle, modifier = Modifier.alignByBaseline().padding(end = 8.dp).testTag("browser.recent.toggle")) {
                 Text(if (expanded) stringResource(R.string.browser_recent_less) else stringResource(R.string.browser_recent_all, total))
             }
         }

@@ -95,12 +95,10 @@ import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.Notif
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.OpenMultiplePersistableDocuments
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.OpenPersistableDocument
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.PickedDocument
-import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.RecentFiles
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.StorageAccessState
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.ToolboxFiles
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.rememberStorageAccess
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.viewer.ThreePaperPdfViewerActivity
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.autojs.plugin.pdf.api.PdfContract
 import org.autojs.plugin.pdf.api.PdfErrorCodes
@@ -128,16 +126,13 @@ internal fun PdfToolScreen(model: PdfToolViewModel, onClose: () -> Unit) {
     val storage = rememberStorageAccess()
     val snackbar = remember { SnackbarHostState() }
     var browsing by rememberSaveable { mutableStateOf<String?>(null) }
-    val scope = rememberCoroutineScope()
-    // PDFs from the system picker enter the recent files when the grant can be kept, so other tools and the home screen
-    // offer them too (roadmap P6.15 batch 17d, Q324 (a)); images do not. zh-CN: 系统选择器选取的 PDF 在授权可以保留时记入最近文件, 其他工具与首页
-    // 也能直接选到 (路线图 P6.15 批次 17d, Q324 (a)); 图片不记.
+    // PDFs from the system picker enter the recent files when the tool runs and the grant can be kept, so other tools
+    // and the home screen offer them too (roadmap P6.15 batch 17d, Q324 (a), Q353 (b)); images do not. The model keeps
+    // the flags of the picker's result until then. zh-CN: 系统选择器选取的 PDF 在工具运行且授权可以保留时记入最近文件, 其他工具与首页也能直接
+    // 选到 (路线图 P6.15 批次 17d, Q324 (a), Q353 (b)); 图片不记. 在此之前由模型保存选择器结果的标志.
     val addPicked: (List<PickedDocument>) -> Unit = { picked ->
         model.addTargets(picked.map { targetOf(context, it.uri) })
-        if (picked.isNotEmpty() && model.kind?.inputs != ToolKind.Inputs.IMAGES) {
-            val app = context.applicationContext
-            scope.launch(Dispatchers.IO) { picked.forEach { RecentFiles.adopt(app, it.uri, it.flags) } }
-        }
+        if (model.kind?.inputs != ToolKind.Inputs.IMAGES) picked.forEach { model.picked(it.uri, it.flags) }
     }
     val pickOne = rememberLauncherForActivityResult(OpenPersistableDocument()) { picked ->
         picked?.let { addPicked(listOf(it)) }

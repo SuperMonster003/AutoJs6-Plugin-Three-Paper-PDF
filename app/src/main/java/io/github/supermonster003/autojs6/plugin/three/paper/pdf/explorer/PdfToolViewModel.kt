@@ -217,6 +217,9 @@ internal class PdfToolViewModel(application: Application, private val saved: Sav
     /** The newest reading of form fields or properties (main thread). zh-CN: 最新一次读取表单字段或文档属性 (主线程). */
     private var detailsGeneration = 0
 
+    /** The result flags of the documents the system picker returned, by uri, until the tool runs. zh-CN: 系统选择器返回的文档的结果标志, 按 uri, 保存到工具运行时. */
+    private val pickedFlags = HashMap<String, Int>()
+
     /** What the screen kept before its process died, if anything (appendix D Q326 (a)). zh-CN: 界面在其进程死亡前保留的内容 (如有, 附录 D Q326 (a)). */
     private val restored: ToolScreenState? = ToolScreenState.decode(saved.get<Bundle>(KEY_SCREEN)?.getString(KEY_SCREEN))
 
@@ -524,6 +527,7 @@ internal class PdfToolViewModel(application: Application, private val saved: Sav
         if (toolbox) {
             val folder = outputFolder ?: return
             task = ToolTasks.submit(getApplication(), tool, jobInputs, options, folder)
+            if (tool.inputs != ToolKind.Inputs.IMAGES) recordInputs(jobInputs.map { it.target.uri })
             return
         }
         val engine = plugin ?: return
@@ -553,6 +557,22 @@ internal class PdfToolViewModel(application: Application, private val saved: Sav
                 }
             }
         }
+    }
+
+    /** Keeps the [flags] of the system picker's result for [uri] until the tool runs. zh-CN: 保存系统选择器结果中 [uri] 的 [flags], 直到工具运行. */
+    fun picked(uri: Uri, flags: Int) {
+        pickedFlags[uri.toString()] = flags
+    }
+
+    /**
+     * The PDF inputs of a toolbox run enter the recent files now, not when they were chosen (appendix D Q353 (b)): a file
+     * checked by mistake and taken out again stays out.
+     * zh-CN: 工具箱运行的 PDF 输入在此时记入最近文件, 而不是选定时 (附录 D Q353 (b)): 误选后又移除的文件不会记入.
+     */
+    private fun recordInputs(uris: List<Uri>) {
+        val app = getApplication<Application>()
+        val inputs = uris.map { it to pickedFlags[it.toString()] }
+        worker.execute { runCatching { RecentFiles.recordInputs(app, inputs) } }
     }
 
     fun cancel() {

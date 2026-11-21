@@ -53,7 +53,8 @@ import java.io.File
 
 /**
  * The group "Recent" of the file browser and the folder it remembers, on a device the way a user picks files (roadmap
- * P6.15 batch 17d, appendix D Q324 (a)): a PDF chosen in one tool is offered by the next tool and by "Open PDF" of the
+ * P6.15 batch 17d, appendix D Q324 (a)): a PDF chosen in a tool that did not run stays out, one a tool ran on (Q353 (b))
+ * is offered by the next tool and by "Open PDF" of the
  * home screen and picked with one tap, and they all start in its folder (a deleted folder starts from its parent); a
  * PDF the toolbox wrote is offered and opens; checking in "Recent" and in the folder shares one state and one order;
  * a document of the system picker is checked under its grant and removed with a notice once revoked; images list no
@@ -62,7 +63,7 @@ import java.io.File
  * (another app's file without storage access) is not listed. The files live in the plugin's own external folder,
  * inside the primary volume, so no storage access is needed; [GrantingTestProvider] stands in for another app's
  * documents.
- * zh-CN: 在设备上以用户选文件的方式测试文件浏览器的 "最近使用" 与记住的文件夹 (路线图 P6.15 批次 17d, 附录 D Q324 (a)): 在一个工具中选过的 PDF
+ * zh-CN: 在设备上以用户选文件的方式测试文件浏览器的 "最近使用" 与记住的文件夹 (路线图 P6.15 批次 17d, 附录 D Q324 (a)): 在没有运行的工具中选过的 PDF 不记入, 运行过的工具的输入 (Q353 (b))
  * 出现在下一个工具与首页 "打开 PDF" 中并一点即选, 它们都从该文件所在的文件夹开始 (文件夹删除后从其上级开始); 工具箱写出的 PDF 出现并能打开;
  * 在 "最近使用" 与目录中勾选共用一个状态与顺序; 系统选择器的文档凭授权核对, 授权撤销后移除并提示; 图片不列最近文件且单独记住文件夹; 首页清空后
  * 分组为空; 条目多时文件夹列表仍在屏幕上, 直到点 "全部"; 勾选, 文件夹与分组状态在重建后保留; 插件现在读不了的最近文件 (没有存储权限时其他
@@ -117,7 +118,7 @@ class FileBrowserRecentDeviceTest {
     }
 
     @Test
-    fun aPdfChosenInOneToolIsOfferedByTheNextAndEveryBrowserStartsInItsFolder() {
+    fun aPdfRunInOneToolIsOfferedByTheNextAndEveryBrowserStartsInItsFolder() {
         remember(ToolboxPreferences.KEY_PDF_FOLDER, folderB)
         ActivityScenario.launch(HomeActivity::class.java).use { scenario ->
             val split = openTool(scenario, ToolKind.SPLIT)
@@ -129,17 +130,32 @@ class FileBrowserRecentDeviceTest {
             click("browser.entry.a")
             click("browser.entry.alpha.pdf")
             awaitInputs(split, alpha)
-            assertEquals("the input enters the recent files", RecentEntry.Local(alpha.absolutePath), RecentFiles.read(context).first())
-            assertEquals("and its folder is remembered", folderA.absolutePath, remembered(ToolboxPreferences.KEY_PDF_FOLDER))
+            assertEquals("its folder is remembered", folderA.absolutePath, remembered(ToolboxPreferences.KEY_PDF_FOLDER))
+            assertTrue("an input of a tool that did not run stays out of the recent files (Q353 (b))", RecentFiles.read(context).isEmpty())
             backHome(scenario)
 
+            // The next tool starts in that folder; the input enters the recent files when the tool runs.
+            // zh-CN: 下一个工具从该文件夹开始; 工具运行时输入才记入最近文件.
             val compress = openTool(scenario, ToolKind.COMPRESS)
+            openInputs()
+            assertPathEndsWith("a")
+            assertFalse("still no recent files", compose.shows(hasTestTag(RECENT)))
+            click("browser.entry.alpha.pdf")
+            awaitInputs(compress, alpha)
+            assertTrue(RecentFiles.read(context).isEmpty())
+            start()
+            awaitTag("tool-done")
+            compose.waitUntil(TIMEOUT_MILLIS) { RecentEntry.Local(alpha.absolutePath) in RecentFiles.read(context) }
+            click("tool-finish")
+            awaitTag("paper.home")
+
+            val again = openTool(scenario, ToolKind.SPLIT)
             openInputs()
             assertPathEndsWith("a")
             awaitTag("$RECENT.alpha.pdf")
             DeviceShots.take("R1-browser-recent-one-tool-to-another")
             click("$RECENT.alpha.pdf")
-            awaitInputs(compress, alpha)
+            awaitInputs(again, alpha)
             backHome(scenario)
 
             openHomeBrowser()
@@ -148,12 +164,13 @@ class FileBrowserRecentDeviceTest {
             DeviceShots.take("R3-home-browser-starts-in-the-remembered-folder")
             click("browser.close")
 
-            // A deleted folder starts from its nearest existing parent; its files leave "Recent".
-            // zh-CN: 已删除的文件夹从最近的已存在上级开始; 其中的文件不再出现在 "最近使用".
+            // A deleted folder starts from its nearest existing parent; its files leave "Recent" (the compressed copy in
+            // the output folder stays). zh-CN: 已删除的文件夹从最近的已存在上级开始; 其中的文件不再出现在 "最近使用" (输出文件夹中的压缩副本仍在).
             assertTrue(folderA.deleteRecursively())
             openHomeBrowser()
             assertPathEndsWith(base.name)
-            assertFalse(compose.shows(hasTestTag(RECENT)))
+            awaitTag("$RECENT.alpha_compressed.pdf")
+            assertFalse(compose.shows(hasTestTag("$RECENT.alpha.pdf")))
             awaitTag("browser.entry.b")
         }
     }
@@ -212,10 +229,21 @@ class FileBrowserRecentDeviceTest {
             click("browser.confirm")
             awaitInputs(merge, alpha, gamma, beta)
             assertEquals(
-                "added in the order checked, the last checked first",
-                listOf(beta, gamma, alpha).map { RecentEntry.Local(it.absolutePath) },
-                RecentFiles.read(context).take(3),
+                "choosing records nothing (Q353 (b))",
+                listOf(beta, gamma).map { RecentEntry.Local(it.absolutePath) },
+                RecentFiles.read(context),
             )
+            start()
+            awaitTag("tool-done")
+            val inputs = listOf(beta, gamma, alpha).map { RecentEntry.Local(it.absolutePath) }
+            compose.waitUntil(TIMEOUT_MILLIS) { RecentFiles.read(context).filter { it in inputs } == inputs }
+            assertEquals(
+                "recorded when the tool runs, in the order checked, the last checked first",
+                inputs,
+                RecentFiles.read(context).filter { it in inputs },
+            )
+            click("tool-finish")
+            awaitTag("paper.home")
             assertEquals("the folder of the last local file", folderA.absolutePath, remembered(ToolboxPreferences.KEY_PDF_FOLDER))
         }
     }

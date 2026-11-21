@@ -268,6 +268,7 @@ private fun HomeScreen(onTool: (ToolKind) -> Unit, onSettings: () -> Unit) {
             },
             onRequestAccess = storage.request,
             accessGeneration = storage.generation,
+            recordPicks = true,
         )
         return
     }

@@ -104,14 +104,15 @@ internal object RecentList {
 }
 
 /**
- * The files the toolbox opened, chose as PDF inputs or wrote, newest first, at most [MAX] (roadmap P4.1, appendix D
- * Q106 = B; the inputs since P6.15 batch 17d, Q324 (a)). The home screen and the group "Recent" of the file browser show
+ * The files the toolbox opened, ran a tool on (PDF inputs, recorded when the tool runs) or wrote, newest first, at
+ * most [MAX] (roadmap P4.1, appendix D Q106 = B; the inputs since P6.15 batch 17d, Q324 (a), Q353 (b)). The home screen and the group "Recent" of the file browser show
  * this one list. Local files that no longer exist are left out when read. Documents picked with the system file picker
  * are kept under the persistable read grant the picker offers; every change releases the grants no entry holds, so the
  * plugin never holds more than [MAX] (the system allows 128, 512 from Android 11). A document is checked when opened:
  * when the grant is gone or the provider no longer finds it, the entry is removed. One-time uris that other apps pass
  * with VIEW or SEND, and the files of the AutoJs6 file manager tools (one-time grants of the host), stay out of the list.
- * zh-CN: 工具箱打开, 选作 PDF 输入或写出的文件, 最新的在前, 至多 [MAX] 个 (路线图 P4.1, 附录 D Q106 = B; 输入自 P6.15 批次 17d 起, Q324 (a)).
+ * zh-CN: 工具箱打开, 用作工具的 PDF 输入 (工具运行时记入) 或写出的文件, 最新的在前, 至多 [MAX] 个 (路线图 P4.1, 附录 D Q106 = B; 输入自
+ * P6.15 批次 17d 起, Q324 (a), Q353 (b)).
  * 首页与文件浏览器的 "最近使用" 显示的是同一份列表. 读取时略去已不存在的本地文件. 用系统文件选择器选取的文档凭选择器给出的可持久读取授权保留;
  * 每次改动都释放没有条目持有的授权, 因此插件持有的授权从不超过 [MAX] 个 (系统上限 128, Android 11 起 512). 文档在打开时检查: 授权已失效或
  * 提供方找不到该文档时移除条目. 其他应用经 VIEW 或 SEND 传入的一次性 uri, 以及 AutoJs6 文件管理器工具的文件 (宿主的一次性授权) 不进列表.
@@ -169,12 +170,13 @@ internal object RecentFiles {
 
     /**
      * Checks a document before it opens: the persisted read grant is still there and the provider still finds the
-     * document. Answers the entry, moved first with its current name, or null after removing it. Queries the provider,
-     * so call it off the main thread.
-     * zh-CN: 在打开文档之前检查: 持久读取授权仍在, 且提供方仍能找到该文档. 返回移到最前并更新名称的条目; 否则移除条目并返回 null. 会查询
-     * 提供方, 因此不要在主线程调用.
+     * document. Answers the entry, moved first with its current name when [promote] (it opens now; a tool input only
+     * when the tool runs, appendix D Q353 (b)), or null after removing it. Queries the provider, so call it off the main
+     * thread.
+     * zh-CN: 在打开文档之前检查: 持久读取授权仍在, 且提供方仍能找到该文档. 返回条目, [promote] 时 (它现在就打开; 工具的输入只在工具运行时,
+     * 附录 D Q353 (b)) 移到最前并更新名称; 否则移除条目并返回 null. 会查询提供方, 因此不要在主线程调用.
      */
-    fun reopen(context: Context, entry: RecentEntry.Document): RecentEntry.Document? {
+    fun reopen(context: Context, entry: RecentEntry.Document, promote: Boolean = true): RecentEntry.Document? {
         val uri = entry.uri.toUri()
         val name = if (holdsGrant(context, uri)) nameOf(context, uri) else null
         synchronized(this) {
@@ -183,8 +185,32 @@ internal object RecentFiles {
                 return null
             }
             val fresh = entry.copy(name = name)
-            update(context) { RecentList.add(it, fresh, MAX) }
+            if (promote) update(context) { RecentList.add(it, fresh, MAX) }
             return fresh
+        }
+    }
+
+    /**
+     * Records the PDF inputs of a tool that runs now (appendix D Q353 (b)), in their order, so the last comes first: a
+     * local file ([ContentResolver.SCHEME_FILE]); a document already in the list, checked and moved first ([reopen]); a
+     * document the system picker returned to the tool, with the [flags][Pair.second] of that result ([adopt]). Other
+     * uris (one-time grants of the host) stay out. Queries the provider, so call it off the main thread.
+     * zh-CN: 记入现在运行的工具的 PDF 输入 (附录 D Q353 (b)), 按其顺序, 因此最后一个排在最前: 本地文件 ([ContentResolver.SCHEME_FILE]);
+     * 已在列表中的文档, 核对后移到最前 ([reopen]); 系统选择器交给工具的文档, 带该结果的 [flags][Pair.second] ([adopt]). 其他 uri (宿主的一次性
+     * 授权) 不记. 会查询提供方, 因此不要在主线程调用.
+     */
+    fun recordInputs(context: Context, inputs: List<Pair<Uri, Int?>>) {
+        for ((uri, flags) in inputs) {
+            when (uri.scheme) {
+                ContentResolver.SCHEME_FILE -> uri.path?.let { add(context, File(it)) }
+                ContentResolver.SCHEME_CONTENT -> {
+                    val known = read(context).firstOrNull { it is RecentEntry.Document && it.uri == uri.toString() } as RecentEntry.Document?
+                    when {
+                        known != null -> reopen(context, known)
+                        flags != null -> adopt(context, uri, flags)
+                    }
+                }
+            }
         }
     }
 
