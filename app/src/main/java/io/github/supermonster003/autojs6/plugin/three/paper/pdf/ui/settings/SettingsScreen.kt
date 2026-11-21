@@ -50,6 +50,7 @@ import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.components.Se
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.components.SwitchRow
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.components.ThemeColorDialog
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.files.BrowseMode
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.files.BrowserPick
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.files.FileBrowser
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.NotificationAccess
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.ToolTaskService
@@ -121,9 +122,9 @@ internal fun SettingsScreen(
             mode = BrowseMode.FOLDER,
             title = stringResource(R.string.settings_output_folder),
             onDismiss = { browsing = false },
-            onPick = { folders ->
+            onPick = { picks ->
                 browsing = false
-                val folder = folders.firstOrNull() ?: return@FileBrowser
+                val folder = (picks.firstOrNull() as? BrowserPick.Local)?.file ?: return@FileBrowser
                 if (ToolboxPreferences.setOutputFolder(activity, folder)) revision++ else message = activity.getString(R.string.settings_save_failed)
             },
             start = ToolboxPreferences.outputFolder(activity),

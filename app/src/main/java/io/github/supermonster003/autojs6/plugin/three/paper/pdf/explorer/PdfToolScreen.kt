@@ -84,10 +84,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import androidx.core.net.toUri
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.R
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.explorer.PdfToolViewModel.Phase
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.components.PaperScreen
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.files.BrowseMode
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.files.BrowserPick
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.files.FileBrowser
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.NotificationAccess
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.StorageAccessState
@@ -141,9 +143,16 @@ internal fun PdfToolScreen(model: PdfToolViewModel, onClose: () -> Unit) {
                 mode = mode,
                 title = stringResource(if (mode == BrowseMode.PDF) R.string.toolbox_choose_file else R.string.toolbox_add_files),
                 onDismiss = { browsing = null },
-                onPick = { files ->
+                onPick = { picks ->
                     browsing = null
-                    model.addTargets(files.map { ToolTarget(Uri.fromFile(it), it.name) })
+                    model.addTargets(
+                        picks.map { pick ->
+                            when (pick) {
+                                is BrowserPick.Local -> ToolTarget(Uri.fromFile(pick.file), pick.file.name)
+                                is BrowserPick.Document -> ToolTarget(pick.entry.uri.toUri(), pick.entry.name)
+                            }
+                        },
+                    )
                 },
                 start = model.inputs.lastOrNull()?.target?.uri?.takeIf { it.scheme == "file" }?.path?.let { File(it).parentFile },
                 onSystemPicker = {
@@ -164,9 +173,9 @@ internal fun PdfToolScreen(model: PdfToolViewModel, onClose: () -> Unit) {
                 mode = BrowseMode.FOLDER,
                 title = stringResource(R.string.toolbox_output_folder),
                 onDismiss = { browsing = null },
-                onPick = { folders ->
+                onPick = { picks ->
                     browsing = null
-                    folders.firstOrNull()?.let { model.outputFolder = it }
+                    (picks.firstOrNull() as? BrowserPick.Local)?.let { model.outputFolder = it.file }
                 },
                 start = model.outputFolder,
                 onRequestAccess = storage.request,

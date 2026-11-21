@@ -6,6 +6,9 @@
     <string name="browser_new_folder_failed">Не удалось создать папку</string>
     <string name="browser_new_folder_name">Имя папки</string>
     <string name="browser_no_folders">Здесь нет вложенных папок</string>
+    <string name="browser_recent">Недавние</string>
+    <string name="browser_recent_all">Показать все (%1$d)</string>
+    <string name="browser_recent_less">Свернуть</string>
     <string name="browser_storage">Хранилище</string>
     <string name="browser_system_picker">Системный выбор файлов</string>
     <string name="browser_unreadable">Не удаётся прочитать эту папку</string>

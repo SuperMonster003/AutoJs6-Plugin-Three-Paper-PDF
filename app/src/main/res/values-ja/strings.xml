@@ -6,6 +6,9 @@
     <string name="browser_new_folder_failed">フォルダーを作成できませんでした</string>
     <string name="browser_new_folder_name">フォルダー名</string>
     <string name="browser_no_folders">ここにサブフォルダーはありません</string>
+    <string name="browser_recent">最近使用したファイル</string>
+    <string name="browser_recent_all">すべて表示 (%1$d)</string>
+    <string name="browser_recent_less">折りたたむ</string>
     <string name="browser_storage">ストレージ</string>
     <string name="browser_system_picker">システムのファイル選択</string>
     <string name="browser_unreadable">このフォルダーを読み取れません</string>

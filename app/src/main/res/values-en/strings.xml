@@ -6,6 +6,9 @@
     <string name="browser_new_folder_failed">Could not create the folder</string>
     <string name="browser_new_folder_name">Folder name</string>
     <string name="browser_no_folders">There are no subfolders here</string>
+    <string name="browser_recent">Recent</string>
+    <string name="browser_recent_all">Show all (%1$d)</string>
+    <string name="browser_recent_less">Show less</string>
     <string name="browser_storage">Storage</string>
     <string name="browser_system_picker">System file picker</string>
     <string name="browser_unreadable">Cannot read this folder</string>

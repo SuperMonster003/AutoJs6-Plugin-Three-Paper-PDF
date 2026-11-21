@@ -6,6 +6,9 @@
     <string name="browser_new_folder_failed">تعذر إنشاء المجلد</string>
     <string name="browser_new_folder_name">اسم المجلد</string>
     <string name="browser_no_folders">لا توجد مجلدات فرعية هنا</string>
+    <string name="browser_recent">المستخدمة مؤخرًا</string>
+    <string name="browser_recent_all">عرض الكل (%1$d)</string>
+    <string name="browser_recent_less">عرض أقل</string>
     <string name="browser_storage">التخزين</string>
     <string name="browser_system_picker">منتقي الملفات في النظام</string>
     <string name="browser_unreadable">تتعذر قراءة هذا المجلد</string>

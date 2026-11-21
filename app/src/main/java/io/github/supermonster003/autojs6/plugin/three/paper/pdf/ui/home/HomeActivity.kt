@@ -69,6 +69,7 @@ import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.components.Se
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.components.SettingsRow
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.components.TopBarAction
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.files.BrowseMode
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.files.BrowserPick
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.files.FileBrowser
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.release.ReleaseHistoryAssets
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.release.ReleaseHistoryScreen
@@ -250,12 +251,20 @@ private fun HomeScreen(onTool: (ToolKind) -> Unit, onSettings: () -> Unit) {
             mode = BrowseMode.PDF,
             title = stringResource(R.string.home_open_pdf),
             onDismiss = { browsing = false },
-            onPick = { files ->
+            onPick = { picks ->
                 browsing = false
-                files.firstOrNull()?.let { file ->
-                    RecentFiles.add(context, file)
-                    reload++
-                    ToolboxFiles.openInViewer(context, file)
+                when (val pick = picks.firstOrNull()) {
+                    is BrowserPick.Local -> {
+                        RecentFiles.add(context, pick.file)
+                        reload++
+                        ToolboxFiles.openInViewer(context, pick.file)
+                    }
+                    // A document of "Recent" moved first when it was checked. zh-CN: "最近使用" 中的文档在核对时已移到最前.
+                    is BrowserPick.Document -> {
+                        reload++
+                        ToolboxFiles.openUriInViewer(context, pick.entry.uri.toUri())
+                    }
+                    null -> Unit
                 }
             },
             start = recents.firstNotNullOfOrNull { (it as? RecentEntry.Local)?.file?.parentFile },
