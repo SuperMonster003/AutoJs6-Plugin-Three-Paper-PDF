@@ -156,7 +156,7 @@ private fun Ready(model: ViewerViewModel, onClose: () -> Unit, onShare: () -> Un
         AnimatedVisibility(visible = model.chromeVisible || model.searchOpen, enter = fadeIn(), exit = fadeOut(), modifier = Modifier.align(Alignment.TopCenter)) {
             Surface(color = bars.container, contentColor = bars.content, shadowElevation = 2.dp, modifier = Modifier.testTag(VIEWER_TOP_BAR_TAG)) {
                 val padding = Modifier.windowInsetsPadding(safe.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal))
-                if (model.searchOpen) SearchBar(model, padding) else TopBar(model, padding, onClose, onShare, onOpenWith)
+                if (model.searchOpen) SearchBar(model, modifier = padding) else TopBar(model, onClose, onShare, onOpenWith, modifier = padding)
             }
         }
         Column(
@@ -216,10 +216,10 @@ private fun viewerSafeArea(): WindowInsets =
     WindowInsets.statusBarsIgnoringVisibility.union(WindowInsets.navigationBarsIgnoringVisibility).union(WindowInsets.displayCutout)
 
 @Composable
-private fun TopBar(model: ViewerViewModel, padding: Modifier, onClose: () -> Unit, onShare: () -> Unit, onOpenWith: () -> Unit) {
+private fun TopBar(model: ViewerViewModel, onClose: () -> Unit, onShare: () -> Unit, onOpenWith: () -> Unit, modifier: Modifier = Modifier) {
     var menuOpen by remember { mutableStateOf(false) }
     Row(
-        modifier = Modifier.fillMaxWidth().then(padding).height(BAR_HEIGHT).padding(horizontal = 4.dp),
+        modifier = modifier.fillMaxWidth().height(BAR_HEIGHT).padding(horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         IconButton(onClick = onClose) { Icon(ViewerIcons.Back, contentDescription = stringResource(R.string.viewer_back)) }
@@ -267,13 +267,13 @@ private fun TopBar(model: ViewerViewModel, padding: Modifier, onClose: () -> Uni
 }
 
 @Composable
-private fun SearchBar(model: ViewerViewModel, padding: Modifier) {
+private fun SearchBar(model: ViewerViewModel, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
     val focus = remember { FocusRequester() }
     val keyboard = LocalSoftwareKeyboardController.current
     LaunchedEffect(Unit) { if (model.hits.isEmpty()) focus.requestFocus() }
     Row(
-        modifier = Modifier.fillMaxWidth().then(padding).height(BAR_HEIGHT).padding(horizontal = 4.dp),
+        modifier = modifier.fillMaxWidth().height(BAR_HEIGHT).padding(horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         IconButton(onClick = model::closeSearch) { Icon(ViewerIcons.Close, contentDescription = stringResource(R.string.viewer_search_close)) }
