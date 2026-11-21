@@ -81,6 +81,8 @@ abstract class StandaloneActivity : ComponentActivity() {
     internal lateinit var palette: PaperPalette
         private set
     private var refreshGeneration = 0
+    /** Set while a confirmed appearance change waits for its dialog to go. zh-CN: 已确认的外观变化等待其对话框关闭期间为真. */
+    private var recreateOnFocus = false
 
     override fun attachBaseContext(newBase: Context) {
         appearance = AppearancePreferences.resolve(newBase, HostAppearanceReader.cached(newBase))
@@ -134,10 +136,35 @@ abstract class StandaloneActivity : ComponentActivity() {
         super.onDestroy()
     }
 
-    /** Called by the settings screen after a confirmed appearance change. zh-CN: 设置页确认外观变化后调用. */
+    /**
+     * Called by the settings screen after a confirmed appearance change. The dialog of the choice still holds the focus
+     * then: recreating at once left its window over the recreated screen for about two seconds (E4 R1, XQ-DQ72). So the
+     * screen waits until it has the focus again (the dialog is gone) and the dialog's exit animation has run
+     * ([DIALOG_EXIT_MILLIS]), or at most [DIALOG_DEADLINE_MILLIS], before it is recreated.
+     * zh-CN: 设置页确认外观变化后调用. 此时选择对话框仍持有焦点: 立即重建会让它的窗口在重建后的界面上停留约两秒 (E4 R1, XQ-DQ72). 所以等界面
+     * 重新获得焦点 (对话框已关闭) 且对话框的退出动画播完 ([DIALOG_EXIT_MILLIS]) 再重建, 最多等 [DIALOG_DEADLINE_MILLIS].
+     */
     internal fun applyAppearanceChange() {
         val next = AppearancePreferences.resolve(this, HostAppearanceReader.cached(this))
-        if (next != appearance) recreate()
+        if (next == appearance) return
+        if (hasWindowFocus()) {
+            recreate()
+            return
+        }
+        recreateOnFocus = true
+        window.decorView.postDelayed(::recreatePending, DIALOG_DEADLINE_MILLIS)
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus && recreateOnFocus) window.decorView.postDelayed(::recreatePending, DIALOG_EXIT_MILLIS)
+    }
+
+    private fun recreatePending() {
+        if (recreateOnFocus && !isFinishing && !isDestroyed) {
+            recreateOnFocus = false
+            recreate()
+        }
     }
 
     private fun refreshIfChanged(next: HostAppearance) {
@@ -164,5 +191,11 @@ abstract class StandaloneActivity : ComponentActivity() {
 
         /** The scrim AndroidX uses behind light icons it cannot darken. zh-CN: AndroidX 在无法变深的浅色图标后使用的底色. */
         const val DARK_NAVIGATION_SCRIM = 0x801b1b1b.toInt()
+
+        /** How long a confirmed appearance change waits for its dialog to go. zh-CN: 已确认的外观变化等待对话框关闭的最长时间. */
+        const val DIALOG_DEADLINE_MILLIS = 1_000L
+
+        /** The exit animation of a dialog window (the system's short animation is 200 ms). zh-CN: 对话框窗口的退出动画 (系统的短动画为 200 毫秒). */
+        const val DIALOG_EXIT_MILLIS = 250L
     }
 }
