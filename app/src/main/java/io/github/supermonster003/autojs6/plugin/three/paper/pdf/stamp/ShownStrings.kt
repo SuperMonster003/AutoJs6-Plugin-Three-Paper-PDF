@@ -10,6 +10,7 @@ import com.tom_roush.pdfbox.cos.COSObject
 import com.tom_roush.pdfbox.cos.COSString
 import com.tom_roush.pdfbox.pdfparser.PDFStreamParser
 import com.tom_roush.pdfbox.pdmodel.PDDocument
+import com.tom_roush.pdfbox.pdmodel.PDPage
 import com.tom_roush.pdfbox.pdmodel.PDResources
 import com.tom_roush.pdfbox.pdmodel.graphics.form.PDFormXObject
 import java.util.IdentityHashMap
@@ -30,6 +31,58 @@ internal object ShownStrings {
         val shown = IdentityHashMap<COSDictionary, MutableList<ByteArray>>()
         for (page in document.pages) scan(page, page.resources, shown, 0)
         return shown
+    }
+
+    /** A string a text object shows and the font `Tf` selected for it. zh-CN: 文本对象显示的一个字符串及 `Tf` 为它选中的字体. */
+    class Shown(val font: COSDictionary, val bytes: ByteArray)
+
+    /**
+     * The text objects (`BT` ... `ET`) of [page] and of its form XObjects in content order, each as the strings it
+     * shows. Skia writes one text object per glyph run, so the glyphs of a text object are one run of drawn text
+     * ([ToUnicodeRepair] places them on that text).
+     * zh-CN: [page] 及其表单 XObject 中按内容顺序排列的文本对象 (`BT` ... `ET`), 每个为它显示的字符串. Skia 为每个字形段写一个文本对象,
+     * 因此一个文本对象的字形是所画文字中连续的一段 ([ToUnicodeRepair] 把它们放回该文字上).
+     */
+    fun textObjects(page: PDPage): List<List<Shown>> {
+        val objects = ArrayList<List<Shown>>()
+        objects(page, page.resources, objects, 0)
+        return objects
+    }
+
+    private fun objects(stream: PDContentStream, resources: PDResources?, out: MutableList<List<Shown>>, depth: Int) {
+        if (depth > MAX_DEPTH) return
+        val tokens = PDFStreamParser(stream).apply { parse() }.tokens
+        val operands = ArrayList<Any>()
+        var font: COSDictionary? = null
+        var current = ArrayList<Shown>()
+        fun end() {
+            if (current.isNotEmpty()) out += current
+            current = ArrayList()
+        }
+        fun show(base: Any?) {
+            val target = font ?: return
+            if (base is COSString) current += Shown(target, base.bytes)
+        }
+        for (token in tokens) {
+            if (token !is Operator) {
+                operands += token
+                continue
+            }
+            when (token.name) {
+                "BT", "ET" -> end()
+                "Tf" -> font = (operands.firstOrNull() as? COSName)?.let { name -> resolve(fonts(resources)?.getDictionaryObject(name)) as? COSDictionary }
+                "Tj", "'", "\"" -> show(operands.lastOrNull())
+                "TJ" -> (operands.lastOrNull() as? COSArray)?.forEach { show(it) }
+                "Do" -> (operands.firstOrNull() as? COSName)?.let { name ->
+                    (resources?.getXObject(name) as? PDFormXObject)?.let {
+                        end()
+                        objects(it, it.resources, out, depth + 1)
+                    }
+                }
+            }
+            operands.clear()
+        }
+        end()
     }
 
     private fun scan(stream: PDContentStream, resources: PDResources?, shown: MutableMap<COSDictionary, MutableList<ByteArray>>, depth: Int) {

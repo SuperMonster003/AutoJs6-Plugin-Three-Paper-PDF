@@ -11,6 +11,8 @@ import com.tom_roush.pdfbox.io.MemoryUsageSetting
 import com.tom_roush.pdfbox.pdmodel.PDDocument
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.Operations
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.engine.PdfLoader
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.stamp.GlyphComparer
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.stamp.ToUnicodeRepair
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfFailure
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfOptions
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.util.PdfWarning
@@ -85,9 +87,14 @@ internal object TextToPdf {
         val text = normalize(String(InputBytes.read(inputs[0], PdfContract.MAX_TEXT_INPUT_BYTES, "the text"), Charsets.UTF_8))
         val typeface = if (request.hasFont) font(inputs[1], directory) else Typeface.DEFAULT
         val laidOut = File(directory, "text.pdf")
-        layout(text, typeface, request, laidOut, operation)
+        val texts = layout(text, typeface, request, laidOut, operation)
         operation.stop.checkStop()
         PDDocument.load(laidOut, MemoryUsageSetting.setupMixed(PdfLoader.DEFAULT_MAIN_MEMORY_BYTES).setTempDir(directory)).use { document ->
+            // Skia writes U+0000 for a contextual alternate without a code point (the hyphen of "3-Paper" in the
+            // system font of ColorOS 15) and radicals for ideographs; the repair maps them back (roadmap Q322).
+            // zh-CN: Skia 为没有码位的上下文替代字形 (ColorOS 15 系统字体中 "3-Paper" 的连字符) 写入 U+0000, 为表意文字写入部首;
+            // 修复把它们映射回所画的字符 (路线图 Q322).
+            GlyphComparer(listOf(typeface)).use { ToUnicodeRepair.repair(document, texts, it) }
             return GeneratedDocuments.write(document, request.title, operation, request.warnings, request.page)
         }
     }
@@ -161,11 +168,11 @@ internal object TextToPdf {
     /**
      * Lays [text] out into [target]: runs of whole lines per page, each drawn through a clip so `StaticLayout.draw` only
      * emits the lines of that page. A line taller than the page box gets a page of its own, clipped. Empty text gives one
-     * blank page.
+     * blank page. Answers the text drawn on each page, by page index ([ToUnicodeRepair]).
      * zh-CN: 把 [text] 排版到 [target]: 每页放若干整行, 经裁剪区绘制, 使 `StaticLayout.draw` 只输出该页的行. 比页面方框还高的行独占
-     * 一页并被裁剪. 空文本得到一个空白页.
+     * 一页并被裁剪. 空文本得到一个空白页. 返回每页所画的文字, 以页序号为下标 ([ToUnicodeRepair]).
      */
-    private fun layout(text: String, typeface: Typeface, request: Request, target: File, operation: Operations.Operation) {
+    private fun layout(text: String, typeface: Typeface, request: Request, target: File, operation: Operations.Operation): List<List<String>> {
         val box = PageLayout.contentBox(request.page, request.margin, minimum = request.fontSize)
         val paint = TextPaint(TextPaint.ANTI_ALIAS_FLAG).apply {
             this.typeface = typeface
@@ -179,6 +186,7 @@ internal object TextToPdf {
         val left = box.x
         val top = request.page.height - box.y - box.height
         val document = PdfDocument()
+        val texts = ArrayList<MutableList<String>>()
         try {
             var page: PdfDocument.Page? = null
             var used = 0f
@@ -187,6 +195,7 @@ internal object TextToPdf {
                 return document.startPage(PdfDocument.PageInfo.Builder(pageWidth, pageHeight, document.pages.size + 1).create()).also {
                     page = it
                     used = 0f
+                    texts += ArrayList<String>()
                 }
             }
             val pieces = chunks(text)
@@ -211,6 +220,7 @@ internal object TextToPdf {
                         translate(left, top + used - firstTop)
                         layout.draw(this)
                     }
+                    texts.last() += piece.substring(layout.getLineStart(first), layout.getLineEnd(last))
                     used += height
                     line = last + 1
                     if (line < layout.lineCount) newPage()
@@ -228,6 +238,7 @@ internal object TextToPdf {
         } finally {
             document.close()
         }
+        return texts
     }
 
     private fun staticLayout(text: String, paint: TextPaint, width: Int, spacing: Float): StaticLayout =

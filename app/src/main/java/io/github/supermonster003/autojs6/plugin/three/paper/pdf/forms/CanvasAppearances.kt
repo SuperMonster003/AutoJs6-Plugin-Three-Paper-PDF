@@ -48,7 +48,7 @@ internal class CanvasAppearances(private val directory: File, private val fonts:
         if (requests.isEmpty()) return emptyList()
         val file = File.createTempFile("fields-", ".pdf", directory)
         try {
-            val drawn = HashSet<Int>()
+            val texts = ArrayList<List<String>>()
             val spaces = HashMap<Int, List<LaidSpace>>()
             fonts.spacesAsNoBreak = requests.none { request ->
                 request.text?.contains(StampFonts.NO_BREAK_SPACE) == true || request.options.any { StampFonts.NO_BREAK_SPACE in it }
@@ -61,6 +61,8 @@ internal class CanvasAppearances(private val directory: File, private val fonts:
                     val height = ceil(request.height).toInt().coerceAtLeast(1)
                     val page = pdf.startPage(PdfDocument.PageInfo.Builder(width, height, index + 1).create())
                     val laid = ArrayList<LaidSpace>()
+                    val drawn = ArrayList<String>()
+                    texts += drawn
                     fonts.spaceSink = laid
                     try {
                         paint(page.canvas, request, drawn)
@@ -76,7 +78,9 @@ internal class CanvasAppearances(private val directory: File, private val fonts:
                 fonts.releaseBitmaps()
             }
             PDDocument.load(file, MemoryUsageSetting.setupMixed(PdfLoader.DEFAULT_MAIN_MEMORY_BYTES).setTempDir(directory)).use { source ->
-                if (drawn.isNotEmpty()) GlyphComparer(listOf(fonts.typeface(useCustom = false, bold = false, italic = false))).use { ToUnicodeRepair.repair(source, drawn, it) }
+                if (texts.any { it.isNotEmpty() }) {
+                    GlyphComparer(listOf(fonts.typeface(useCustom = false, bold = false, italic = false))).use { ToUnicodeRepair.repair(source, texts, it) }
+                }
                 Type3Pruning.prune(source)
                 SpaceRepair.repair(source, spaces)
                 FontSubsetting.subset(source)
@@ -90,7 +94,8 @@ internal class CanvasAppearances(private val directory: File, private val fonts:
         }
     }
 
-    private fun paint(canvas: Canvas, request: AppearanceRequest, drawn: MutableSet<Int>) {
+    /** Paints the appearance of [request]; [drawn] gets the texts drawn. zh-CN: 绘制 [request] 的外观; [drawn] 收到所画的文字. */
+    private fun paint(canvas: Canvas, request: AppearanceRequest, drawn: MutableList<String>) {
         val padding = request.padding
         val contentWidth = max(1.0, request.width - 2 * padding)
         val contentHeight = max(1.0, request.height - 2 * padding)
@@ -120,7 +125,7 @@ internal class CanvasAppearances(private val directory: File, private val fonts:
                     val option = request.options[row]
                     if (option.isNotEmpty()) {
                         TextStamp(option, x, top + rowHeight / 2, anchorX, 0.5, size, request.color, align = align).draw(canvas, fonts)
-                        option.codePoints().forEach { drawn += it }
+                        drawn += option
                     }
                     top += rowHeight
                 }
@@ -130,7 +135,7 @@ internal class CanvasAppearances(private val directory: File, private val fonts:
                 val size = fontSize(request.fontSize, DEFAULT_SIZE)
                 val lines = breakLines(text, size, contentWidth)
                 TextStamp(lines, x, padding, anchorX, 0.0, size, request.color, align = align).draw(canvas, fonts)
-                lines.codePoints().forEach { drawn += it }
+                drawn += lines
             }
             else -> {
                 val size = if (request.fontSize > 0) fontSize(request.fontSize, DEFAULT_SIZE) else {
@@ -139,7 +144,7 @@ internal class CanvasAppearances(private val directory: File, private val fonts:
                     if (widest > contentWidth) fontSize(byHeight * contentWidth / widest, DEFAULT_SIZE) else byHeight
                 }
                 TextStamp(text, x, request.height / 2, anchorX, 0.5, size, request.color, align = align).draw(canvas, fonts)
-                text.codePoints().forEach { drawn += it }
+                drawn += text
             }
         }
     }

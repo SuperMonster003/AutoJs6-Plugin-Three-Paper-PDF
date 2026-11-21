@@ -20,12 +20,17 @@ import java.util.IdentityHashMap
  * whose target was not drawn is mapped to what was: first to its NFKC form when every code point of that form was
  * drawn (Kangxi radicals, ligatures, compatibility characters), then to the one drawn code point that no entry accounts
  * for and that [sameGlyph] says draws the same glyph (CJK radicals supplement, whose code points have no decomposition).
- * Entries with more than one candidate stay as they are.
+ * Entries with more than one candidate stay as they are. Then glyphs that map to nothing or to U+0000 (a contextual
+ * alternate without a code point, roadmap Q322) are placed on the text drawn on their page ([GlyphAlignment]): each text
+ * object is one run of drawn text, so its known glyphs locate the run and give the unknown glyph the character drawn
+ * there; codes that read differently at two places stay as they are.
  * zh-CN: 修复 Skia 写入临时印章文档的 `/ToUnicode` 映射 (spike S2): Skia 把每个字形映射回字体 `cmap` 中的一个码位, 多个码位共用
  * 一个字形时取最小者, 因此字形兼作部首的中日韩表意文字会被映射成部首 (文 成为 U+2F42 KANGXI RADICAL SCRIPT, 页 成为 U+2EDA CJK
  * RADICAL C-SIMPLIFIED LEAF), 文本提取与搜索得到错误的字符. 既然知道画了什么, 目标字符未被绘制的条目就改映射到实际绘制的字符:
  * 先看其 NFKC 形式, 该形式的每个码位都被绘制时采用它 (康熙部首, 连字, 兼容字符); 否则取没有任何条目对应, 且 [sameGlyph] 判定为
- * 同一字形的那个已绘制码位 (中日韩部首补充, 这些码位没有分解). 候选不止一个的条目保持不变.
+ * 同一字形的那个已绘制码位 (中日韩部首补充, 这些码位没有分解). 候选不止一个的条目保持不变. 然后把映射为空或 U+0000 的字形 (没有码位的
+ * 上下文替代字形, 路线图 Q322) 放回其所在页画的文字上 ([GlyphAlignment]): 每个文本对象是所画文字中连续的一段, 其中的已知字形确定这段
+ * 文字的位置, 未知字形取该处所画的字符; 在两处读法不同的编码保持不变.
  */
 internal object ToUnicodeRepair {
 
@@ -34,25 +39,84 @@ internal object ToUnicodeRepair {
 
     /**
      * Repairs every `/ToUnicode` map reachable from the pages of [document] (page fonts, fonts of form XObjects and of
-     * Type 3 glyph resources) for the code points in [drawn]; answers how many entries changed.
-     * zh-CN: 针对 [drawn] 中的码位, 修复从 [document] 各页可达的全部 `/ToUnicode` 映射 (页面字体, 表单 XObject 与 Type 3 字形资源中
-     * 的字体); 返回改动的条目数.
+     * Type 3 glyph resources) for the texts drawn on each page ([texts] by page index; a text may hold several lines);
+     * answers how many entries changed.
+     * zh-CN: 针对各页所画的文字 ([texts] 以页序号为下标; 一段文字可以有多行), 修复从 [document] 各页可达的全部 `/ToUnicode` 映射
+     * (页面字体, 表单 XObject 与 Type 3 字形资源中的字体); 返回改动的条目数.
      */
-    fun repair(document: PDDocument, drawn: Set<Int>, sameGlyph: (Int, Int) -> Boolean): Int {
+    fun repair(document: PDDocument, texts: List<Collection<String>>, sameGlyph: (Int, Int) -> Boolean): Int {
+        val drawn = HashSet<Int>()
+        texts.forEach { page -> page.forEach { text -> text.codePoints().forEach { drawn += it } } }
         val maps = ArrayList<Pair<COSStream, Int>>()
         val seen = Collections.newSetFromMap(IdentityHashMap<COSBase, Boolean>())
         for (page in document.pages) collectFonts(page.cosObject.getDictionaryObject(COSName.RESOURCES), seen, maps, 0)
         val parsed = maps.map { (stream, codeBytes) -> Triple(stream, codeBytes, read(stream, codeBytes)) }
         val accounted = HashSet<Int>()
         for ((_, _, mappings) in parsed) for (target in mappings.values) target.codePoints().forEach { accounted += it }
+        val current = IdentityHashMap<COSStream, Map<Int, String>>()
+        val fixes = IdentityHashMap<COSStream, MutableMap<Int, String>>()
+        for ((stream, _, mappings) in parsed) {
+            val planned = plan(mappings, drawn, accounted, sameGlyph)
+            current[stream] = mappings + planned
+            if (planned.isNotEmpty()) fixes[stream] = LinkedHashMap(planned)
+        }
+        if (current.values.any { mappings -> mappings.values.any(::unknown) }) {
+            for ((stream, placed) in place(document, texts, current)) fixes.getOrPut(stream) { LinkedHashMap() }.putAll(placed)
+        }
         var changed = 0
         for ((stream, codeBytes, mappings) in parsed) {
-            val fixes = plan(mappings, drawn, accounted, sameGlyph)
-            if (fixes.isEmpty()) continue
-            write(stream, codeBytes, mappings + fixes)
-            changed += fixes.size
+            val streamFixes = fixes[stream] ?: continue
+            write(stream, codeBytes, mappings + streamFixes)
+            changed += streamFixes.size
         }
         return changed
+    }
+
+    /**
+     * A target that names no character: none, empty or control characters only (Skia writes U+0000).
+     * zh-CN: 不代表任何字符的目标: 无, 空或只含控制字符 (Skia 写 U+0000).
+     */
+    fun unknown(target: String?): Boolean = target == null || target.isEmpty() || target.all { it.code < 0x20 }
+
+    /**
+     * The glyphs with an [unknown] target placed on the texts of their pages ([GlyphAlignment]), by `/ToUnicode` stream
+     * and code; a code that reads differently in two text objects is left out. [current] holds the maps with the fixes
+     * of [plan] applied.
+     * zh-CN: 把目标 [unknown] 的字形放回其所在页的文字上 ([GlyphAlignment]) 得到的映射, 按 `/ToUnicode` 流与编码组织; 在两个文本对象中
+     * 读法不同的编码不在其中. [current] 是已应用 [plan] 修正的映射.
+     */
+    private fun place(document: PDDocument, texts: List<Collection<String>>, current: Map<COSStream, Map<Int, String>>): Map<COSStream, Map<Int, String>> {
+        val readings = IdentityHashMap<COSStream, HashMap<Int, MutableSet<Int>>>()
+        document.pages.forEachIndexed { index, page ->
+            val lines = texts.getOrNull(index).orEmpty().flatMap { it.split('\n') }.filter { it.isNotEmpty() }.distinct().map { it.codePoints().toArray() }
+            if (lines.isEmpty()) return@forEachIndexed
+            for (shown in ShownStrings.textObjects(page)) {
+                val glyphs = ArrayList<Pair<COSStream, Int>>()
+                for (string in shown) {
+                    val stream = resolve(string.font.getDictionaryObject(COSName.TO_UNICODE)) as? COSStream ?: break
+                    val codeBytes = if (COSName.TYPE0 == string.font.getCOSName(COSName.SUBTYPE)) 2 else 1
+                    val bytes = string.bytes
+                    var at = 0
+                    while (at + codeBytes <= bytes.size) {
+                        var code = 0
+                        repeat(codeBytes) { code = (code shl 8) or (bytes[at++].toInt() and 0xFF) }
+                        glyphs += stream to code
+                    }
+                }
+                val targets = glyphs.map { (stream, code) -> current[stream]?.get(code)?.takeUnless(::unknown) }
+                if (targets.none { it == null }) continue
+                for ((glyph, codePoint) in GlyphAlignment.place(targets, lines)) {
+                    val (stream, code) = glyphs[glyph]
+                    readings.getOrPut(stream) { HashMap() }.getOrPut(code) { HashSet() } += codePoint
+                }
+            }
+        }
+        val result = IdentityHashMap<COSStream, Map<Int, String>>()
+        for ((stream, codes) in readings) {
+            val decided = codes.filterValues { it.size == 1 }.mapValues { String(Character.toChars(it.value.first())) }
+            if (decided.isNotEmpty()) result[stream] = decided
+        }
+        return result
     }
 
     /**

@@ -132,14 +132,15 @@ internal class CanvasStamps(
         }
     }
 
-    /** Repairs the text mapping of the drawn text stamps (spike S2). zh-CN: 修复所画文字印章的文本映射 (spike S2). */
+    /**
+     * Repairs the text mapping of the drawn text stamps (spike S2, roadmap Q322); page `i` of [source] is sheet `i`.
+     * zh-CN: 修复所画文字印章的文本映射 (spike S2, 路线图 Q322); [source] 的第 `i` 页就是第 `i` 张印章页.
+     */
     private fun repairText(source: PDDocument, sheets: Collection<Sheet>): Int {
-        val texts = sheets.flatMap { it.stamps }.filterIsInstance<TextStamp>()
-        if (texts.isEmpty()) return 0
-        val drawn = HashSet<Int>()
-        texts.forEach { stamp -> stamp.text.codePoints().forEach { drawn += it } }
-        val faces = texts.map { fonts.typeface(it.customFont, it.bold, it.italic) }.distinct()
-        return GlyphComparer(faces).use { ToUnicodeRepair.repair(source, drawn, it) }
+        val stamps = sheets.map { sheet -> sheet.stamps.filterIsInstance<TextStamp>() }
+        if (stamps.all { it.isEmpty() }) return 0
+        val faces = stamps.flatten().map { fonts.typeface(it.customFont, it.bold, it.italic) }.distinct()
+        return GlyphComparer(faces).use { ToUnicodeRepair.repair(source, stamps.map { page -> page.map { it.text } }, it) }
     }
 
     /**
