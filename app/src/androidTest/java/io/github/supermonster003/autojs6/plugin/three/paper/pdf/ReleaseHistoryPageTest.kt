@@ -19,6 +19,7 @@ import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToNode
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -67,6 +68,20 @@ class ReleaseHistoryPageTest {
 
     /** Unmerged: the count chips sit inside the clickable header, which merges its children. zh-CN: 未合并树: 计数胶囊在合并子节点的可点按版本头里. */
     private fun exists(tag: String): Boolean = compose.shows(hasTestTag(tag), useUnmergedTree = true)
+
+    /**
+     * Scrolls the list to a version header. A release below the fold is not composed at all, so its tags stay missing
+     * until it is scrolled into view (the expanded newest release can fill the screen).
+     * zh-CN: 把列表滚到某个版本头. 视野以下的版本根本不会被组合, 滚入视野前它的标签都不存在 (展开的最新版本可能占满整屏).
+     */
+    private fun scrollTo(version: String) {
+        compose.onNodeWithTag("paper.releaseHistory.list").performScrollToNode(hasTestTag("paper.releaseHistory.entry.$version"))
+    }
+
+    private fun clickHeader(version: String) {
+        scrollTo(version)
+        compose.onNodeWithTag("paper.releaseHistory.entry.$version").performClick()
+    }
 
     private fun versions(): List<String> {
         val locale = context.resources.configuration.locales[0]
@@ -117,18 +132,21 @@ class ReleaseHistoryPageTest {
             val (newest, second) = versions
             assertTrue(exists("paper.releaseHistory.body.$newest"))
             assertFalse(exists("paper.releaseHistory.counts.$newest"))
+            scrollTo(second)
             assertFalse(exists("paper.releaseHistory.body.$second"))
             assertTrue(exists("paper.releaseHistory.counts.$second"))
 
-            compose.onNodeWithTag("paper.releaseHistory.entry.$second").performClick()
+            clickHeader(second)
             compose.waitUntil(TIMEOUT) { exists("paper.releaseHistory.body.$second") }
-            compose.onNodeWithTag("paper.releaseHistory.entry.$newest").performClick()
+            clickHeader(newest)
             compose.waitUntil(TIMEOUT) { !exists("paper.releaseHistory.body.$newest") && exists("paper.releaseHistory.counts.$newest") }
 
             scenario.recreate()
             compose.waitUntil(TIMEOUT) { exists("paper.releaseHistory.list") }
             assertEquals(HomeActivity.ROUTE_HISTORY, route(scenario))
+            scrollTo(second)
             assertTrue(exists("paper.releaseHistory.body.$second"))
+            scrollTo(newest)
             assertFalse(exists("paper.releaseHistory.body.$newest"))
 
             compose.onNodeWithTag("paper.releaseHistory.toggleAll")
