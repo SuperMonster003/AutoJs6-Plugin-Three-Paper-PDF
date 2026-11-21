@@ -25,7 +25,8 @@
       ],
       "fix": [
         "Problema por el que algunos guiones (como los de \"3-Paper\" y \"A-B\") de los PDF generados por pdf.fromText se convertían en caracteres nulos al extraer texto o buscar con algunas fuentes del sistema (como en ColorOS 15)",
-        "Problema por el que la barra superior del visor tapaba la parte superior de la primera página al abrir un documento, y la barra de miniaturas el final de la última página; ahora las páginas dejan libres las barras en los dos extremos del documento y ya no se mueven al ocultar o mostrar las barras"
+        "Problema por el que la barra superior del visor tapaba la parte superior de la primera página al abrir un documento, y la barra de miniaturas el final de la última página; ahora las páginas dejan libres las barras en los dos extremos del documento y ya no se mueven al ocultar o mostrar las barras",
+        "Problema por el que, con la apariencia siguiendo a AutoJs6 y un idioma o modo nocturno del sistema distintos de los de AutoJs6, las pantallas se mostraban a veces un instante con el idioma y el modo nocturno del sistema (por ejemplo, un destello negro) al abrir el complemento o tras cambiar la apariencia en los ajustes"
       ],
       "improvement": [
         "La página Historial de versiones ahora se expande y contrae por versión: una versión contraída muestra su fecha y el número de entradas por categoría, una expandida nombra cada categoría una sola vez; todas las versiones se pueden expandir o contraer a la vez y la más reciente se abre expandida; la página lleva el nombre del complemento como subtítulo",

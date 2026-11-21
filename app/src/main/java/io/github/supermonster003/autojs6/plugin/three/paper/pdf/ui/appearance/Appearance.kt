@@ -6,7 +6,6 @@ import android.content.res.Configuration
 import android.content.res.Resources
 import android.os.Bundle
 import android.os.LocaleList
-import android.os.SystemClock
 import androidx.core.net.toUri
 import java.util.Locale
 import java.util.concurrent.Executors
@@ -139,17 +138,71 @@ internal data class AppearancePreferences(
  * zh-CN: 官方宿主设置 Provider 是宿主外观的唯一来源; 无法访问 (未装 AutoJs6, 调试签名, 旧宿主) 属于正常回退. 改编自 3-Block Compose.
  */
 internal object HostAppearanceReader {
-    private data class Cached(val value: HostAppearance, val readAt: Long)
-    private const val CACHE_TTL_MILLIS = 30_000L
-    @Volatile private var cache: Cached? = null
+    /** The file of the stored copy and its keys. zh-CN: 保存副本的文件与键名. */
+    internal const val FILE = "host-appearance"
+    private const val KEY_LANGUAGE = "language"
+    private const val KEY_DARK = "dark"
+    private const val KEY_PRIMARY = "primary"
+    private const val KEY_ACCENT = "accent"
+    private const val OPAQUE = -0x1000000
+    @Volatile private var last: HostAppearance? = null
+    @Volatile private var loaded = false
     val worker = Executors.newSingleThreadExecutor { task -> Thread(task, "PaperHostAppearance").apply { isDaemon = true } }
 
-    fun cached(): HostAppearance? = cache?.takeIf { SystemClock.elapsedRealtime() - it.readAt < CACHE_TTL_MILLIS }?.value
-
-    /** Called only after a still-resumed Activity accepts the refresh, including a missing host. zh-CN: 仅在仍处于前台的 Activity 接受刷新后调用. */
-    fun accept(value: HostAppearance?) {
-        cache = value?.let { Cached(it, SystemClock.elapsedRealtime()) }
+    /**
+     * The last host appearance this process read, else the copy an earlier process stored; null when the host was not
+     * readable at the last read. Every resume reads the host again off the main thread and recreates the screen when the
+     * result differs, so a value of any age is only the first guess and it never expires. An expiring value (30 seconds
+     * until 1.1.0) fell back to the system language and night mode: a screen recreated later than that, after an
+     * appearance change in the settings or at a cold start, first showed the system appearance and then recreated again,
+     * a black flash where the system is dark and AutoJs6 is light (E4 A19).
+     * zh-CN: 本进程最后读到的宿主外观, 否则为此前进程保存的副本; 上次读取时宿主不可读则为 null. 每次恢复都会在主线程外重新读取宿主, 结果
+     * 不同时重建界面, 所以任何时候的值都只是初始猜测, 不会过期. 会过期的值 (1.1.0 之前为 30 秒) 会回落到系统语言与夜间模式: 在设置中改外观
+     * 后或冷启动时, 超过这个时间才重建的界面先按系统外观显示再重建一次, 系统为深色而 AutoJs6 为浅色时表现为一次黑色闪烁 (E4 A19).
+     */
+    fun cached(context: Context): HostAppearance? {
+        if (!loaded) {
+            last = runCatching { fromStored(prefs(context).all) }.getOrNull()
+            loaded = true
+        }
+        return last
     }
+
+    /**
+     * Called only after a still-resumed Activity accepts the refresh, including a missing host; the value is stored for
+     * the next process. zh-CN: 仅在仍处于前台的 Activity 接受刷新后调用, 包括宿主缺失的情形; 该值会保存供下一个进程使用.
+     */
+    @SuppressLint("UseKtx")
+    fun accept(context: Context, value: HostAppearance?) {
+        val changed = !loaded || value != last
+        last = value
+        loaded = true
+        if (changed) {
+            val editor = prefs(context).edit().clear()
+            if (value != null) {
+                editor.putString(KEY_LANGUAGE, value.language).putBoolean(KEY_DARK, value.dark)
+                    .putInt(KEY_PRIMARY, value.primary).putInt(KEY_ACCENT, value.accent)
+            }
+            editor.apply()
+        }
+    }
+
+    /** The stored copy, or null when a part is missing or malformed. zh-CN: 保存的副本; 缺少或格式不对时为 null. */
+    internal fun fromStored(values: Map<String, *>): HostAppearance? {
+        val language = (values[KEY_LANGUAGE] as? String)?.takeIf(::validLanguage) ?: return null
+        val dark = values[KEY_DARK] as? Boolean ?: return null
+        val primary = values[KEY_PRIMARY] as? Int ?: return null
+        val accent = values[KEY_ACCENT] as? Int ?: return null
+        return HostAppearance(language, dark, primary or OPAQUE, accent or OPAQUE)
+    }
+
+    private fun prefs(context: Context) = context.applicationContext.getSharedPreferences(FILE, Context.MODE_PRIVATE)
+
+    /** A well-formed language tag; forLanguageTag alone silently truncates malformed subtags. zh-CN: 格式正确的语言标签. */
+    private fun validLanguage(language: String): Boolean = runCatching {
+        language.length in 2..80 && language.matches(Regex("[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*")) &&
+            Locale.Builder().setLanguageTag(language).build().language.isNotEmpty()
+    }.getOrDefault(false)
 
     /** Must run on [worker]; keeps no Activity reference and closes the unstable client. zh-CN: 必须在 [worker] 上运行. */
     fun read(context: Context): HostAppearance? = runCatching {
@@ -166,10 +219,7 @@ internal object HostAppearanceReader {
         require(value.get(C.KEY_DARK_MODE_ACTIVE) is Boolean)
         require(value.get(C.KEY_THEME_COLOR_PRIMARY) is Int && value.get(C.KEY_THEME_COLOR_ACCENT) is Int)
         val language = requireNotNull(value.getString(C.KEY_RESOLVED_LANGUAGE_TAG))
-        require(language.length in 2..80 && language.matches(Regex("[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*")))
-        // forLanguageTag alone silently truncates malformed subtags; Builder validates the whole tag.
-        val locale = Locale.Builder().setLanguageTag(language).build()
-        require(locale.language.isNotEmpty())
+        require(validLanguage(language))
         HostAppearance(
             language, value.getBoolean(C.KEY_DARK_MODE_ACTIVE),
             value.getInt(C.KEY_THEME_COLOR_PRIMARY) or -0x1000000, value.getInt(C.KEY_THEME_COLOR_ACCENT) or -0x1000000,

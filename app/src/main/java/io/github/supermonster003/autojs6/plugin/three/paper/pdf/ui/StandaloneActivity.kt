@@ -83,7 +83,7 @@ abstract class StandaloneActivity : ComponentActivity() {
     private var refreshGeneration = 0
 
     override fun attachBaseContext(newBase: Context) {
-        appearance = AppearancePreferences.resolve(newBase, HostAppearanceReader.cached())
+        appearance = AppearancePreferences.resolve(newBase, HostAppearanceReader.cached(newBase))
         super.attachBaseContext(appearance.wrap(newBase))
     }
 
@@ -109,7 +109,7 @@ abstract class StandaloneActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        refreshIfChanged(AppearancePreferences.resolve(this, HostAppearanceReader.cached()))
+        refreshIfChanged(AppearancePreferences.resolve(this, HostAppearanceReader.cached(this)))
         val expected = ++refreshGeneration
         val owner = WeakReference(this)
         val application = applicationContext
@@ -117,7 +117,7 @@ abstract class StandaloneActivity : ComponentActivity() {
             val snapshot = HostAppearanceReader.read(application)
             main.post {
                 owner.get()?.takeIf { !it.isFinishing && !it.isDestroyed && it.refreshGeneration == expected }?.let { activity ->
-                    HostAppearanceReader.accept(snapshot)
+                    HostAppearanceReader.accept(application, snapshot)
                     activity.refreshIfChanged(AppearancePreferences.resolve(application, snapshot))
                 }
             }
@@ -136,7 +136,7 @@ abstract class StandaloneActivity : ComponentActivity() {
 
     /** Called by the settings screen after a confirmed appearance change. zh-CN: 设置页确认外观变化后调用. */
     internal fun applyAppearanceChange() {
-        val next = AppearancePreferences.resolve(this, HostAppearanceReader.cached())
+        val next = AppearancePreferences.resolve(this, HostAppearanceReader.cached(this))
         if (next != appearance) recreate()
     }
 

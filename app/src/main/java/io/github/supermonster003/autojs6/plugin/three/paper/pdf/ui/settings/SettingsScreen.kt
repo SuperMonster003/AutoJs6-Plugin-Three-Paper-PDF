@@ -263,7 +263,7 @@ internal fun SettingsScreen(
             val current = AppearancePreferences.read(activity)
             ThemeColorDialog(
                 currentColor = current.color,
-                hostColor = HostAppearanceReader.cached()?.primary ?: AppearancePreferences.DEFAULT_COLOR,
+                hostColor = HostAppearanceReader.cached(activity)?.primary ?: AppearancePreferences.DEFAULT_COLOR,
                 onDismissRequest = close,
                 onConfirm = { color -> close(); saveAppearance(current.copy(color = color)) },
             )
@@ -378,7 +378,7 @@ private class SettingsLabels(private val activity: StandaloneActivity) {
 
     @Composable
     fun followNote(isFollow: Boolean): String? =
-        if (isFollow && HostAppearanceReader.cached() == null) stringResource(R.string.settings_follow_autojs6_unavailable) else null
+        if (isFollow && HostAppearanceReader.cached(activity) == null) stringResource(R.string.settings_follow_autojs6_unavailable) else null
 
     @Composable
     fun languageSummary(value: String): String = when (value) {
