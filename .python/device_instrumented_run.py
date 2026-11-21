@@ -11,7 +11,8 @@ package is uninstalled; the plugin is uninstalled too unless it was installed be
 With `--installed` the plugin already on the device is used as it is (it must be a debuggable build): only the test
 package is installed and uninstalled, so a device that asks to confirm every installation (MIUI / HyperOS, ColorOS)
 asks once per run. The script never taps the screen; an installation that waits for a confirmation on the device
-times out and is reported.
+times out and is reported. The UI tests find controls by their English text, so the plugin's own language is English
+during the run (debuggable builds, through `run-as`) and put back afterwards; `--keep-language` leaves it alone.
 
 Usage:
   py .python/device_instrumented_run.py --serial BH900ASK9E --tests PdfServiceGenerationTest[,PdfServiceCryptoTest#name]
@@ -25,7 +26,7 @@ they are copied to DIR through `run-as` and removed from the device before the p
 Output: the device line, one line per test, the tagged logcat lines, then `RESULT PASS` or `RESULT FAIL` (exit code 1).
 zh-CN: 在一台设备上运行 3-Paper PDF 的仪器测试类, 只输出结论与关键数值; 结束时卸载测试包, 插件此前未安装时一并卸载, 否则装回事先
 拉取的原 APK. 给出 `--installed` 时直接使用设备上已装的插件 (须为可调试版本), 只安装与卸载测试包, 每次安装都要确认的设备 (MIUI / HyperOS,
-ColorOS) 每次运行只需确认一次. 不点按屏幕; 需要在设备上确认的安装会超时并报告. 给出 `--shots DIR` 时, 调用 `DeviceShots.take` 的测试会保存截图
+ColorOS) 每次运行只需确认一次. 不点按屏幕; 需要在设备上确认的安装会超时并报告. 界面测试按英文文字找控件, 所以运行期间插件自己的语言设为英文 (可调试包, 经 `run-as`), 结束后装回; 给出 `--keep-language` 时不改. 给出 `--shots DIR` 时, 调用 `DeviceShots.take` 的测试会保存截图
 (仪器参数 `paperShots=1`), 截图经 `run-as` 复制到 DIR, 在装回插件之前从设备上删除.
 """
 
@@ -138,6 +139,43 @@ def copy_shots(device: Device, target: Path) -> int:
     return len(names)
 
 
+APPEARANCE = "shared_prefs/app-appearance.xml"
+
+
+def force_english(device: Device) -> bytes | None:
+    """Sets the plugin's own language to English for the run and returns the file to put back (empty bytes: there was
+    none), or None when the plugin is not debuggable. The UI tests find controls by their English text; on a device whose
+    plugin follows a host in another language (the E4 phones follow a Chinese AutoJs6) 17 of them failed only for that
+    (2026-11-21, XQ-DQ72). The process is stopped first so that it cannot write the old file back.
+    zh-CN: 运行期间把插件自己的语言设为英文, 返回结束时要装回的文件 (空字节: 原本没有), 插件不可调试时返回 None. 界面测试按英文文字找控件;
+    插件跟随其他语言宿主的设备上 (E4 手机跟随中文的 AutoJs6) 有 17 项仅因此失败 (2026-11-21, XQ-DQ72). 先停止进程, 以免它把旧文件写回."""
+    probe = subprocess.run(["adb", "-s", device.serial, "exec-out", "run-as", PLUGIN_PACKAGE, "ls", "-d", "."],
+                           capture_output=True, timeout=60)
+    if probe.returncode != 0 or b"not debuggable" in probe.stdout + probe.stderr:
+        return None
+    device.shell(f"am force-stop {PLUGIN_PACKAGE}", check=False)
+    read = subprocess.run(["adb", "-s", device.serial, "exec-out", "run-as", PLUGIN_PACKAGE, "cat", APPEARANCE],
+                          capture_output=True, timeout=60)
+    original = read.stdout if read.returncode == 0 and read.stdout.lstrip().startswith(b"<?xml") else b""
+    entries = re.findall(rb'^\s*(<(?:string|int) name="(?!language")[^"]+"[^\n]*)$', original, re.MULTILINE)
+    english = b"<?xml version='1.0' encoding='utf-8' standalone='yes' ?>\n<map>\n" + \
+        b"".join(b"    " + e.strip() + b"\n" for e in entries) + b'    <string name="language">en</string>\n</map>\n'
+    write_appearance(device, english)
+    return original
+
+
+def write_appearance(device: Device, content: bytes) -> None:
+    """Writes (or with empty bytes removes) the appearance file of the stopped plugin. zh-CN: 写入 (空字节时删除) 已停止插件的外观文件."""
+    device.shell(f"am force-stop {PLUGIN_PACKAGE}", check=False)
+    if not content:
+        device.shell(f"run-as {PLUGIN_PACKAGE} rm -f {APPEARANCE}", check=False)
+        return
+    result = subprocess.run(["adb", "-s", device.serial, "shell", f"run-as {PLUGIN_PACKAGE} sh -c 'mkdir -p shared_prefs && cat > {APPEARANCE}'"],
+                            input=content, capture_output=True, timeout=60)
+    if result.returncode != 0:
+        raise RuntimeError(f"writing {APPEARANCE} failed: {(result.stderr or result.stdout).decode(errors='replace').strip()[:200]}")
+
+
 def main() -> int:
     # Logcat lines may hold characters the console code page lacks (an emoji under GBK); escape them instead of failing.
     # zh-CN: logcat 行可能含控制台代码页没有的字符 (GBK 下的表情), 转义输出而不是报错.
@@ -150,6 +188,8 @@ def main() -> int:
     parser.add_argument("--installed", action="store_true",
                         help="use the plugin already installed (debuggable); install only the test package")
     parser.add_argument("--shots", type=Path, help="save the screenshots of DeviceShots.take into this folder")
+    parser.add_argument("--keep-language", action="store_true",
+                        help="keep the plugin's language (by default it is English during the run and put back afterwards)")
     arguments = parser.parse_args()
     device = Device(arguments.serial)
     for apk in ((TEST_APK,) if arguments.installed else (PLUGIN_APK, TEST_APK)):
@@ -179,10 +219,15 @@ def main() -> int:
             return 1
         print("INFO plugin was installed before; it is put back at the end")
     failed = False
+    appearance: bytes | None = None
     try:
         if not arguments.installed:
             device.install(PLUGIN_APK, "-r", "-t", "-d")
         device.install(TEST_APK, "-r", "-t")
+        if not arguments.keep_language:
+            appearance = force_english(device)
+            print("INFO plugin language set to English for the run" if appearance is not None
+                  else "INFO plugin not debuggable; its language is kept")
         device.adb("logcat", "-c", check=False)
         tests = [t.strip() for t in arguments.tests.split(",") if t.strip()]
         for verdict, name, detail in instrument(device, tests, arguments.timeout, shots=arguments.shots is not None):
@@ -199,6 +244,13 @@ def main() -> int:
         print(f"FAIL setup: {e}")
     finally:
         device.adb("uninstall", TEST_PACKAGE, check=False)
+        if appearance is not None and (arguments.installed or backup is not None):
+            try:
+                write_appearance(device, appearance)
+                print("INFO plugin language put back")
+            except (RuntimeError, subprocess.TimeoutExpired) as e:
+                failed = True
+                print(f"FAIL restore language: {e}")
         if arguments.installed:
             pass
         elif backup is not None:
