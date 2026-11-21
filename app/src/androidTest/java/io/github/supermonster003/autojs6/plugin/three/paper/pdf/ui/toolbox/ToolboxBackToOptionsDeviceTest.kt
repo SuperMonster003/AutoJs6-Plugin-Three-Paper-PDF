@@ -19,6 +19,7 @@ import androidx.test.espresso.Espresso
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.PdfServiceHarness
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.DeviceShots
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.explorer.PdfToolViewModel
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.explorer.ToolKind
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.explorer.ToolOptions
@@ -91,6 +92,7 @@ class ToolboxBackToOptionsDeviceTest {
             assertTrue("the tile switch was not kept", model.watermark.tile)
         }
         assertEquals(FIRST, fieldText("tool-watermark-text"))
+        DeviceShots.take("F3-toolbox-back-to-options")
         compose.onNodeWithTag("tool-watermark-text").performScrollTo().performTextReplacement(SECOND)
         start()
         awaitTag("tool-done")
@@ -100,6 +102,7 @@ class ToolboxBackToOptionsDeviceTest {
         assertTrue("the second result was not numbered", second.isFile)
         // The script of the second result page is the second run. zh-CN: 第二个结果页的脚本对应第二次运行.
         assertEquals(second.absolutePath, scriptOutput(model))
+        DeviceShots.take("F3-toolbox-second-result")
         onMain {
             val run = checkNotNull(model.scriptRequestOf((model.phase as PdfToolViewModel.Phase.Done).result))
             assertEquals(SECOND, (run.options as ToolOptions.Watermark).text)
@@ -150,6 +153,7 @@ class ToolboxBackToOptionsDeviceTest {
             assertEquals(1, model.inputs.size)
         }
         assertEquals("5", fieldText("tool-numbers-start"))
+        DeviceShots.take("F3-toolbox-back-from-failure")
         assertTrue(moved.renameTo(copy))
         start()
         awaitTag("tool-done")

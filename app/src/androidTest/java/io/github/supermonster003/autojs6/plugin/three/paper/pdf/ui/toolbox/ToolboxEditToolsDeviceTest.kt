@@ -28,6 +28,7 @@ import com.tom_roush.pdfbox.pdmodel.PDDocument
 import com.tom_roush.pdfbox.text.PDFTextStripper
 import com.tom_roush.pdfbox.text.TextPosition
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.MarshallingBinder
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.DeviceShots
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.PdfServiceHarness
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.PdfServiceHarness.request
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.PdfServiceHarness.withPdfPlugin
@@ -130,6 +131,7 @@ class ToolboxEditToolsDeviceTest {
         awaitPreview(model, WATERMARK_PREVIEW, page = 3, stamped = true)
         turn(WATERMARK_PREVIEW, next = true)
         awaitPreview(model, WATERMARK_PREVIEW, page = 4, stamped = false)
+        shot(WATERMARK_PREVIEW, "F4-watermark-preview-outside")
         // A range without the page moves to its first page; one with it, or one that is not valid, keeps the page.
         // zh-CN: 不含当前页的范围转到其第一页; 包含当前页的范围或无效的范围保持当前页.
         compose.onNodeWithTag("tool-pages").performScrollTo().performTextReplacement("5-")
@@ -142,6 +144,7 @@ class ToolboxEditToolsDeviceTest {
         awaitPreview(model, WATERMARK_PREVIEW, page = 2, stamped = true)
         turn(WATERMARK_PREVIEW, next = true)
         val shown = awaitPreview(model, WATERMARK_PREVIEW, page = 3, stamped = true)
+        shot(WATERMARK_PREVIEW, "F4-watermark-preview-page-3")
         start()
         awaitTag("tool-done")
         assertSamePage(shown, File(output, "Outline_watermarked.pdf"), 3)
@@ -182,8 +185,10 @@ class ToolboxEditToolsDeviceTest {
         awaitPreview(model, NUMBERS_PREVIEW, page = 2, stamped = true)
         turn(NUMBERS_PREVIEW, next = false)
         awaitPreview(model, NUMBERS_PREVIEW, page = 1, stamped = false)
+        shot(NUMBERS_PREVIEW, "F5-numbers-preview-outside")
         repeat(3) { turn(NUMBERS_PREVIEW, next = true) }
         val shown = awaitPreview(model, NUMBERS_PREVIEW, page = 4, stamped = true)
+        shot(NUMBERS_PREVIEW, "F5-numbers-preview-page-4")
         start()
         awaitTag("tool-done")
         val result = File(output, "Outline_numbered.pdf")
@@ -482,6 +487,13 @@ class ToolboxEditToolsDeviceTest {
         }
         if (!shown()) fail("the chip $prefix-custom took no click")
         compose.onNodeWithTag("$prefix-value").performScrollTo().performTextReplacement(text)
+    }
+
+    /** A screenshot with the arrows of the preview [tag] in view. zh-CN: 让预览 [tag] 的箭头可见后截图. */
+    private fun shot(tag: String, name: String) {
+        compose.onNodeWithTag("$tag-page").performScrollTo()
+        compose.waitForIdle()
+        DeviceShots.take(name)
     }
 
     /** Clicks the next or previous arrow of the preview [tag]. zh-CN: 点击预览 [tag] 的下一页或上一页箭头. */

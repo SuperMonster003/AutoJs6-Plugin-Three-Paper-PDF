@@ -19,11 +19,14 @@ Usage:
   py .python/device_instrumented_run.py --serial 968e9f18 --installed --tests PdfServiceRenderingTest#timingOfAnA4TextPageAt144Dpi
 
 A device behind a remote adb server is reached by setting `ADB_SERVER_SOCKET=tcp:<host>:<port>` before the call.
+With `--shots DIR` the tests that call `DeviceShots.take` save screenshots (instrumentation argument `paperShots=1`);
+they are copied to DIR through `run-as` and removed from the device before the plugin is put back.
 
 Output: the device line, one line per test, the tagged logcat lines, then `RESULT PASS` or `RESULT FAIL` (exit code 1).
 zh-CN: 在一台设备上运行 3-Paper PDF 的仪器测试类, 只输出结论与关键数值; 结束时卸载测试包, 插件此前未安装时一并卸载, 否则装回事先
 拉取的原 APK. 给出 `--installed` 时直接使用设备上已装的插件 (须为可调试版本), 只安装与卸载测试包, 每次安装都要确认的设备 (MIUI / HyperOS,
-ColorOS) 每次运行只需确认一次. 不点按屏幕; 需要在设备上确认的安装会超时并报告.
+ColorOS) 每次运行只需确认一次. 不点按屏幕; 需要在设备上确认的安装会超时并报告. 给出 `--shots DIR` 时, 调用 `DeviceShots.take` 的测试会保存截图
+(仪器参数 `paperShots=1`), 截图经 `run-as` 复制到 DIR, 在装回插件之前从设备上删除.
 """
 
 from __future__ import annotations
@@ -90,8 +93,10 @@ def qualified(test: str) -> str:
     return test if test.startswith(TEST_PREFIX) else TEST_PREFIX + test
 
 
-def instrument(device: Device, tests: list[str], timeout: int) -> list[tuple[str, str, str]]:
+def instrument(device: Device, tests: list[str], timeout: int, shots: bool = False) -> list[tuple[str, str, str]]:
     selection = "" if tests == ["all"] else f"-e class {','.join(qualified(t) for t in tests)} "
+    if shots:
+        selection += "-e paperShots 1 "
     output = device.shell(f"am instrument -r -w {selection}{RUNNER}", check=False, timeout=timeout)
     results: list[tuple[str, str, str]] = []
     status: dict[str, str] = {}
@@ -114,6 +119,19 @@ def instrument(device: Device, tests: list[str], timeout: int) -> list[tuple[str
     return results
 
 
+def copy_shots(device: Device, target: Path) -> int:
+    """Copies the screenshots of `files/shots/` to [target] and removes them. zh-CN: 把 `files/shots/` 中的截图复制到 [target] 并删除."""
+    listing = device.shell(f"run-as {PLUGIN_PACKAGE} ls files/shots", check=False)
+    names = [n.strip() for n in listing.splitlines() if n.strip().endswith(".png")]
+    target.mkdir(parents=True, exist_ok=True)
+    for name in names:
+        data = subprocess.run(["adb", "-s", device.serial, "exec-out", "run-as", PLUGIN_PACKAGE, "cat", f"files/shots/{name}"],
+                              capture_output=True, timeout=120).stdout
+        (target / name).write_bytes(data)
+    device.shell(f"run-as {PLUGIN_PACKAGE} rm -rf files/shots", check=False)
+    return len(names)
+
+
 def main() -> int:
     # Logcat lines may hold characters the console code page lacks (an emoji under GBK); escape them instead of failing.
     # zh-CN: logcat 行可能含控制台代码页没有的字符 (GBK 下的表情), 转义输出而不是报错.
@@ -125,6 +143,7 @@ def main() -> int:
     parser.add_argument("--timeout", type=int, default=1800, help="seconds for the whole instrumentation")
     parser.add_argument("--installed", action="store_true",
                         help="use the plugin already installed (debuggable); install only the test package")
+    parser.add_argument("--shots", type=Path, help="save the screenshots of DeviceShots.take into this folder")
     arguments = parser.parse_args()
     device = Device(arguments.serial)
     for apk in ((TEST_APK,) if arguments.installed else (PLUGIN_APK, TEST_APK)):
@@ -159,13 +178,16 @@ def main() -> int:
             device.install(PLUGIN_APK, "-r", "-t", "-d")
         device.install(TEST_APK, "-r", "-t")
         device.adb("logcat", "-c", check=False)
-        for verdict, name, detail in instrument(device, [t.strip() for t in arguments.tests.split(",") if t.strip()], arguments.timeout):
+        tests = [t.strip() for t in arguments.tests.split(",") if t.strip()]
+        for verdict, name, detail in instrument(device, tests, arguments.timeout, shots=arguments.shots is not None):
             failed |= verdict == "FAIL"
             print(f"{verdict} {name}" + (f": {detail}" if detail else ""))
         log = device.adb("logcat", "-d", "-v", "brief", "-s", *TAGS, check=False)
         for line in log.splitlines():
             if any(f"/{tag}" in line for tag in TAGS):
                 print("  " + re.sub(r"^\w/(\w+)\(\s*\d+\):\s*", r"\1: ", line.strip()))
+        if arguments.shots is not None:
+            print(f"INFO screenshots: {copy_shots(device, arguments.shots)} copied to {arguments.shots}")
     except (RuntimeError, subprocess.TimeoutExpired) as e:
         failed = True
         print(f"FAIL setup: {e}")

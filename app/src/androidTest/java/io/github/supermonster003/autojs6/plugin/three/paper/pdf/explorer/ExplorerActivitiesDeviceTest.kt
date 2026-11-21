@@ -22,6 +22,7 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.MarshallingBinder
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.DeviceShots
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.PdfServiceHarness
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.PdfServiceHarness.request
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.PdfServiceHarness.withPdfPlugin
@@ -165,6 +166,7 @@ class ExplorerActivitiesDeviceTest {
             Espresso.pressBack()
             awaitTag("tool-start")
             assertEquals(WATERMARK, compose.onNodeWithTag("tool-watermark-text").fetchSemanticsNode().config.getOrNull(SemanticsProperties.EditableText)?.text)
+            DeviceShots.take("F3-explorer-back-to-options")
             start()
             // The host numbers the taken name; the first result stays. zh-CN: 宿主为已被占用的名称编号; 第一个结果保留.
             awaitText("tool-done", context.getString(R.string.tool_done_saved, "${FakeHostSession.PARENT_PATH}/Text_watermarked (1).pdf"))

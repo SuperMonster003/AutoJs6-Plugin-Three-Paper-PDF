@@ -40,6 +40,7 @@ import com.tom_roush.pdfbox.pdmodel.PDPageContentStream
 import com.tom_roush.pdfbox.pdmodel.common.PDRectangle
 import com.tom_roush.pdfbox.pdmodel.font.PDType1Font
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.PdfServiceHarness
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.DeviceShots
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.R
 import org.autojs.plugin.pdf.api.PdfActions
 import org.json.JSONObject
@@ -221,6 +222,7 @@ class ViewerActivityDeviceTest {
                 awaitGone(VIEWER_TOP_BAR_TAG)
                 awaitGone(PAGE_INDICATOR_TAG)
                 awaitSystemBars(scenario, hidden = true)
+                DeviceShots.take("F2-viewer-full-screen")
                 tapPages()
                 awaitTag(VIEWER_TOP_BAR_TAG)
                 awaitIndicator(1, count)
@@ -231,6 +233,7 @@ class ViewerActivityDeviceTest {
                 compose.waitUntil(TIMEOUT_MILLIS) { scenario.isLandscape() }
                 awaitSystemBars(scenario, hidden = true)
                 assertTrue("the page number came back after the rotation", compose.onAllNodesWithTag(PAGE_INDICATOR_TAG).fetchSemanticsNodes().isEmpty())
+                DeviceShots.take("F2-viewer-full-screen-landscape")
                 scenario.onActivity { it.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED }
                 // Another Activity on top pauses the viewer: the system bars show, and hide again on the return.
                 // zh-CN: 其他 Activity 覆盖时查看器暂停: 系统栏显示, 返回后再次隐藏.
@@ -249,6 +252,7 @@ class ViewerActivityDeviceTest {
                 compose.waitForIdle()
                 awaitIndicator(1, count)
                 assertTrue("the system bars hid with the switch off", !systemBarsHidden(scenario))
+                DeviceShots.take("F2-viewer-switches-off")
             }
             // The page number kept in full screen opens the jump dialog, which shows the system bars until it closes.
             // zh-CN: 全屏时保留的页码可以打开跳页对话框, 对话框打开期间系统栏显示, 关闭后再次隐藏.
@@ -260,6 +264,7 @@ class ViewerActivityDeviceTest {
                 compose.onNodeWithTag(PAGE_INDICATOR_TAG).performClick()
                 awaitTag("viewer-jump-field")
                 awaitSystemBars(scenario, hidden = false)
+                DeviceShots.take("F2-viewer-jump-dialog")
                 Espresso.pressBack()
                 awaitGone("viewer-jump-field")
                 awaitSystemBars(scenario, hidden = true)
@@ -271,6 +276,9 @@ class ViewerActivityDeviceTest {
     }
 
     // Helpers. zh-CN: 辅助方法.
+
+    /** A file name part of a check label ("outline.pdf landscape" -> "outline-landscape"). zh-CN: 检查标签对应的文件名部分. */
+    private fun shotName(label: String): String = label.replace(".pdf", "").replace(' ', '-')
 
     private fun tapPages() {
         compose.onNodeWithTag(VIEWER_CANVAS_TAG).performTouchInput { click(Offset(centerX, height * 0.45f)) }
@@ -323,6 +331,7 @@ class ViewerActivityDeviceTest {
         val barBottom = boundsOf(VIEWER_TOP_BAR_TAG).bottom
         val top = pageEdge(scenario, 0, bottom = false)
         assertTrue("$label: the first page starts at $top, under the top bar ending at $barBottom", top >= barBottom)
+        DeviceShots.take("F1-viewer-open-${shotName(label)}")
         compose.onNodeWithTag(VIEWER_CANVAS_TAG).performTouchInput { click(Offset(centerX, height * 0.45f)) }
         compose.waitUntil(TIMEOUT_MILLIS) { compose.onAllNodesWithTag(VIEWER_TOP_BAR_TAG).fetchSemanticsNodes().isEmpty() }
         assertEquals("$label: hiding the bars moved the first page", top, pageEdge(scenario, 0, bottom = false), 0.5f)
@@ -334,6 +343,7 @@ class ViewerActivityDeviceTest {
         val stripTop = boundsOf(VIEWER_THUMBNAILS_TAG).top
         val bottom = pageEdge(scenario, count - 1, bottom = true)
         assertTrue("$label: the last page ends at $bottom, under the thumbnails starting at $stripTop", bottom <= stripTop)
+        DeviceShots.take("F1-viewer-last-page-${shotName(label)}")
     }
 
     /** The top or bottom of page [page] on screen (root coordinates). zh-CN: 第 [page] 页在屏幕上的顶边或底边 (根坐标). */

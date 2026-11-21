@@ -17,6 +17,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.R
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.DeviceShots
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.explorer.PdfToolViewModel
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.explorer.ToolKind
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.ToolboxTestEnvironment
@@ -166,6 +167,7 @@ class HomeNavigationDeviceTest {
             // E4 feedback F2: both switches start on. zh-CN: E4 反馈 F2: 两个开关默认开启.
             awaitToggle(HIDE_INDICATOR, ToggleableState.On)
             awaitToggle(HIDE_SYSTEM_BARS, ToggleableState.On)
+            DeviceShots.take("F2-settings-viewer")
             compose.onNodeWithTag(HIDE_INDICATOR).performScrollTo().performClick()
             awaitCondition { !ViewerPreferences.fullscreen(preferences).hidePageIndicator }
             awaitToggle(HIDE_INDICATOR, ToggleableState.Off)
