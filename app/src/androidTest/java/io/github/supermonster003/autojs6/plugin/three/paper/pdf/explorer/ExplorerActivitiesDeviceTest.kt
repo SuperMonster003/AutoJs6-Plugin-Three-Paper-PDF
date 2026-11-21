@@ -17,7 +17,9 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextReplacement
+import androidx.lifecycle.Lifecycle
 import androidx.test.core.app.ActivityScenario
+import androidx.test.espresso.Espresso
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.MarshallingBinder
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.PdfServiceHarness
@@ -45,10 +47,12 @@ import org.junit.runner.RunWith
  * granted URIs and the host session; roadmap P3.3, appendix D Q70 / Q75): the open action shows the viewer under the
  * file manager's name, a tool screen writes next to the selection, a locked input asks for its password and the retry
  * after `PERMISSION_DENIED` takes the owner password, requests without a session or a file cannot start, and the
- * compress and watermark entries of P6.12 write their results next to the selection (read back through the engine).
+ * compress and watermark entries of P6.12 write their results next to the selection (read back through the engine);
+ * back from a result leads to the kept options, and a second run gets the next name from the host (E4 feedback F3).
  * zh-CN: 以宿主的方式在设备上启动文件管理器入口 (`EXECUTE`, 带目标, 已授权的 URI 与宿主会话; 路线图 P3.3, 附录 D Q70 / Q75): 打开
  * 动作以文件管理器给出的名称显示查看器, 工具界面把结果写到选中文件旁边, 被锁定的输入询问密码, `PERMISSION_DENIED` 之后的重试接受
- * 所有者密码, 没有会话或文件的请求无法开始, 以及 P6.12 的压缩与加水印入口把结果写到选中文件旁边 (经引擎回读).
+ * 所有者密码, 没有会话或文件的请求无法开始, 以及 P6.12 的压缩与加水印入口把结果写到选中文件旁边 (经引擎回读); 从结果页返回回到保留的
+ * 选项, 第二次运行由宿主给出下一个名称 (E4 反馈 F3).
  */
 @OptIn(ExperimentalTestApi::class)
 @RunWith(AndroidJUnit4::class)
@@ -148,6 +152,32 @@ class ExplorerActivitiesDeviceTest {
             }
             assertTrue(text, text.contains(WATERMARK))
         }
+    }
+
+    @Test
+    fun backFromTheResultLeadsToTheKeptOptionsAndTheSecondRunTakesTheNextName() {
+        launch(request(ExplorerTool.WATERMARK, "text.pdf" to "Text.pdf")).use { scenario ->
+            awaitTag("tool-watermark-text")
+            compose.onNodeWithTag("tool-watermark-text").performScrollTo().performTextReplacement(WATERMARK)
+            start()
+            awaitText("tool-done", context.getString(R.string.tool_done_saved, "${FakeHostSession.PARENT_PATH}/Text_watermarked.pdf"))
+            // E4 feedback F3: the system back key leads to the options with the text kept. zh-CN: E4 反馈 F3: 系统返回键回到选项页, 文字保留.
+            Espresso.pressBack()
+            awaitTag("tool-start")
+            assertEquals(WATERMARK, compose.onNodeWithTag("tool-watermark-text").fetchSemanticsNode().config.getOrNull(SemanticsProperties.EditableText)?.text)
+            start()
+            // The host numbers the taken name; the first result stays. zh-CN: 宿主为已被占用的名称编号; 第一个结果保留.
+            awaitText("tool-done", context.getString(R.string.tool_done_saved, "${FakeHostSession.PARENT_PATH}/Text_watermarked (1).pdf"))
+            assertEquals(listOf("Text_watermarked (1).pdf", "Text_watermarked.pdf"), host.files())
+            assertEquals("one session takes both results", 1, host.clients.size)
+            // The back arrow of the top bar leads to the options too, and back there closes the screen.
+            // zh-CN: 顶栏的返回箭头同样回到选项页, 在那里返回则关闭界面.
+            compose.onNodeWithTag("paper.topBar.back").performClick()
+            awaitTag("tool-start")
+            compose.onNodeWithTag("paper.topBar.back").performClick()
+            assertTrue("back on the options did not close the screen", PdfServiceHarness.eventually { scenario.state == Lifecycle.State.DESTROYED })
+        }
+        assertTrue("leaving the screen closes the host session", PdfServiceHarness.eventually { host.closed })
     }
 
     @Test

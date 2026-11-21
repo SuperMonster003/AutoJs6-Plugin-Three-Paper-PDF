@@ -86,6 +86,13 @@ internal class PdfToolViewModel(application: Application, saved: SavedStateHandl
         var password by mutableStateOf<String?>(null)
             internal set
 
+        /**
+         * What is typed in its password field before unlocking: kept here, in memory only, so it survives a rotation
+         * without entering the saved state (E4 feedback F3).
+         * zh-CN: 解锁前在其密码框中输入的内容: 只保存在内存中的这里, 因此旋转后仍在, 但不进入保存的状态 (E4 反馈 F3).
+         */
+        var passwordDraft by mutableStateOf("")
+
         /** Why it cannot be read, a code of `PdfErrorCodes`. zh-CN: 无法读取的原因, `PdfErrorCodes` 中的错误码. */
         var error by mutableStateOf<String?>(null)
             internal set
@@ -484,11 +491,43 @@ internal class PdfToolViewModel(application: Application, saved: SavedStateHandl
             inputs.filter { it.encrypted && it.error == null }.forEach { input ->
                 input.locked = true
                 input.wrongPassword = false
+                input.passwordDraft = ""
             }
         }
         task?.let { ToolTasks.dismiss(getApplication(), it) }
         task = null
         localPhase = Phase.Ready
+    }
+
+    /**
+     * Back from the result or failure page to the options (roadmap P6.15, E4 feedback F3): the inputs and everything
+     * chosen or typed stay as they were (passwords only in this model, never in the saved state), so a change and a new
+     * start write another result. That result does not replace the first one: the toolbox numbers a taken name
+     * ([LocalFolderOutput]) and the host does so for the file manager (`OUTPUT_CONFLICT_AUTO_RENAME`, one host session
+     * takes any number of outputs). A failure goes back as [retry] does. Answers false when there is no page to go
+     * back from (the screen then closes): while inspecting, on the options, while running, or after a failure that left
+     * no input.
+     * zh-CN: 从结果页或失败页回到选项 (路线图 P6.15, E4 反馈 F3): 输入以及选择或填写的全部内容保持原样 (密码只在本模型中, 从不进入保存的
+     * 状态), 因此修改后再次开始会写出另一个结果. 该结果不会取代第一个: 工具箱为已被占用的名称编号 ([LocalFolderOutput]), 文件管理器由宿主
+     * 编号 (`OUTPUT_CONFLICT_AUTO_RENAME`, 一个宿主会话可以创建任意数量的输出). 失败时与 [retry] 相同. 没有可返回的页面时 (读取中, 选项页,
+     * 运行中, 或失败后没有任何输入) 返回 false, 此时界面关闭.
+     */
+    fun backToOptions(): Boolean = when (phase) {
+        is Phase.Done -> {
+            // The outcome was seen: its home card and notification go, as with the finish button.
+            // zh-CN: 结果已被看到: 与完成按钮一样移除其首页卡片与通知.
+            task?.let { ToolTasks.dismiss(getApplication(), it) }
+            task = null
+            localPhase = Phase.Ready
+            true
+        }
+        is Phase.Failed -> if (inputs.isEmpty()) {
+            false
+        } else {
+            retry()
+            true
+        }
+        else -> false
     }
 
     /**

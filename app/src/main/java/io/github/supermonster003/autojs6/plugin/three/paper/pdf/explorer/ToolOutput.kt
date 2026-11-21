@@ -141,27 +141,34 @@ internal class LocalFolderOutput(private val folder: File) : ToolOutput {
 
     @Synchronized
     private fun publish(staged: File, name: String): String {
-        val target = available(name)
+        val target = available(folder, name)
         if (!staged.renameTo(target)) throw IOException("cannot rename $staged to $target")
         return target.absolutePath
     }
 
-    private fun available(name: String): File {
-        val first = File(folder, name)
-        if (!first.exists()) return first
-        val dot = name.lastIndexOf('.').takeIf { it > 0 } ?: name.length
-        val base = name.substring(0, dot)
-        val extension = name.substring(dot)
-        var number = 1
-        while (true) {
-            val next = File(folder, "$base ($number)$extension")
-            if (!next.exists()) return next
-            number += 1
-        }
-    }
+    internal companion object {
 
-    private companion object {
-        const val STAGING_SUFFIX = "partial"
+        private const val STAGING_SUFFIX = "partial"
+
+        /**
+         * [name] in [folder], or `name (1).ext`, `name (2).ext` and so on when it is taken, so a second run of a tool (E4
+         * feedback F3) writes next to the first result.
+         * zh-CN: [folder] 中的 [name]; 已被占用时为 `name (1).ext`, `name (2).ext` 等, 因此工具第二次运行 (E4 反馈 F3) 写在第一个结果旁边.
+         */
+        fun available(folder: File, name: String): File {
+            val first = File(folder, name)
+            if (!first.exists()) return first
+            val dot = name.lastIndexOf('.').takeIf { it > 0 } ?: name.length
+            val base = name.substring(0, dot)
+            val extension = name.substring(dot)
+            var number = 1
+            while (true) {
+                val next = File(folder, "$base ($number)$extension")
+                if (!next.exists()) return next
+                number += 1
+            }
+        }
+
     }
 
 }

@@ -103,13 +103,15 @@ import java.text.NumberFormat
 /**
  * The tool screen, shared by the file manager tools (roadmap P3.3, appendix D Q70; [PdfToolActivity]) and the toolbox
  * wizards (roadmap P4.2; a destination of the home screen): the input files, the options, then progress with cancel
- * and the outcome. The toolbox adds choosing and ordering the inputs (the built-in file browser or the system picker),
+ * and the outcome; back from the outcome or a failure (the top bar or the system key) returns to the options with all
+ * of them kept (E4 feedback F3), back from the options closes the tool. The toolbox adds choosing and ordering the inputs (the built-in file browser or the system picker),
  * the output folder, the organize grid and, for its outcome, opening and sharing the results. Test tags: `tool-start`,
  * `tool-cancel`, `tool-done`, `tool-error`, `tool-retry`, `tool-password-<n>`, `tool-unlock-<n>`, `tool-add`,
  * `tool-remove-<n>`, `tool-output`, `tool-open`, `tool-share`, `tool-finish`, `tool-page-<page>`; the options of the editing
  * tools and the result summary are in `PdfEditToolOptions.kt`.
  * zh-CN: 工具界面, 由文件管理器工具 (路线图 P3.3, 附录 D Q70; [PdfToolActivity]) 与工具箱向导 (路线图 P4.2; 首页的一个目的地) 共用:
- * 输入文件, 选项, 然后是可取消的进度与结果. 工具箱另有选择与排列输入 (自带文件浏览器或系统选择器), 输出目录, 页面整理网格, 以及
+ * 输入文件, 选项, 然后是可取消的进度与结果; 在结果页或失败页返回 (顶栏或系统返回键) 回到保留了全部内容的选项页 (E4 反馈 F3), 在选项页
+ * 返回才关闭工具. 工具箱另有选择与排列输入 (自带文件浏览器或系统选择器), 输出目录, 页面整理网格, 以及
  * 结果的打开与分享. 测试标签见上; 编辑类工具的选项与结果摘要在 `PdfEditToolOptions.kt` 中.
  */
 @Composable
@@ -181,6 +183,9 @@ internal fun PdfToolScreen(model: PdfToolViewModel, onClose: () -> Unit) {
     // The file manager tool stops when left while running; a toolbox task goes on in the foreground service.
     // zh-CN: 文件管理器工具运行中离开即停止; 工具箱任务在前台服务中继续.
     BackHandler(enabled = !model.toolbox && phase == Phase.Running) { model.cancel() }
+    // From the result or failure page back leads to the options with everything kept (E4 feedback F3); only the options
+    // page closes the tool. zh-CN: 在结果页或失败页, 返回回到保留了全部内容的选项页 (E4 反馈 F3); 只有选项页的返回关闭工具.
+    BackHandler(enabled = phase is Phase.Done || (phase is Phase.Failed && model.inputs.isNotEmpty())) { model.backToOptions() }
     val start: () -> Unit = {
         if (model.toolbox && NotificationAccess.shouldAsk(context)) {
             NotificationAccess.markAsked(context)
@@ -191,7 +196,13 @@ internal fun PdfToolScreen(model: PdfToolViewModel, onClose: () -> Unit) {
     PaperScreen(
         title = stringResource(model.kind?.title ?: R.string.tool_title),
         singleLineTitle = true,
-        onBack = { if (!model.toolbox && phase == Phase.Running) model.cancel() else onClose() },
+        onBack = {
+            when {
+                !model.toolbox && phase == Phase.Running -> model.cancel()
+                model.backToOptions() -> Unit
+                else -> onClose()
+            }
+        },
         snackbarHostState = snackbar,
         bottomBar = {
             if (phase == Phase.Ready) {
@@ -418,11 +429,12 @@ private fun InputRow(model: PdfToolViewModel, index: Int, input: PdfToolViewMode
             }
         }
         if (input.locked) {
-            var password by rememberSaveable(input.target.uri.toString()) { mutableStateOf("") }
+            // The draft lives in the model, never in the saved state. zh-CN: 草稿保存在模型中, 从不进入保存的状态.
+            val password = input.passwordDraft
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
                     value = password,
-                    onValueChange = { password = it },
+                    onValueChange = { input.passwordDraft = it },
                     modifier = Modifier.weight(1f).testTag("tool-password-$index"),
                     label = { Text(stringResource(R.string.viewer_password_hint)) },
                     isError = input.wrongPassword,
