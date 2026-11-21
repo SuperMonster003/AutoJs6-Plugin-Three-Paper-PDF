@@ -20,6 +20,7 @@ import androidx.compose.foundation.gestures.calculateZoom
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
@@ -50,12 +51,14 @@ import kotlin.math.abs
  * 夜间模式用反色滤镜绘制页面, 再不带滤镜重画图片区域 (附录 D Q3).
  */
 @Composable
-internal fun ViewerCanvas(model: ViewerViewModel, background: Color, modifier: Modifier = Modifier) {
+internal fun ViewerCanvas(model: ViewerViewModel, background: Color, insets: ViewerInsets, modifier: Modifier = Modifier) {
     val density = LocalDensity.current.density
     val scope = rememberCoroutineScope()
     val decay = rememberSplineBasedDecay<Offset>()
     val jobs = remember { arrayOfNulls<Job>(1) }
     val painter = remember { PagePainter() }
+
+    SideEffect { model.onInsets(insets) }
 
     LaunchedEffect(model) {
         snapshotFlow { listOf(model.layout, model.position, model.tileZoom, model.nightMode, model.chromeVisible, model.document) }

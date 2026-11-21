@@ -12,20 +12,28 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsIgnoringVisibility
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsIgnoringVisibility
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -69,6 +77,7 @@ import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -119,11 +128,26 @@ private fun Ready(model: ViewerViewModel, onClose: () -> Unit, onShare: () -> Un
             else -> model.closeSearch()
         }
     }
+    val safe = viewerSafeArea()
+    val density = LocalDensity.current
+    val direction = LocalLayoutDirection.current
+    // The pages keep clear of the bars at the ends of the column (E4 feedback F1): the top bar is the safe area plus
+    // BAR_HEIGHT, the thumbnail bar the safe area plus STRIP_HEIGHT, whether they show or not.
+    // zh-CN: 在列的两端, 页面让开各栏 (E4 反馈 F1): 顶栏为安全区加 BAR_HEIGHT, 缩略图栏为安全区加 STRIP_HEIGHT, 不论它们是否显示.
+    val insets = with(density) {
+        ViewerInsets(
+            left = safe.getLeft(this, direction).toFloat(),
+            top = (safe.getTop(this) + BAR_HEIGHT.roundToPx()).toFloat(),
+            right = safe.getRight(this, direction).toFloat(),
+            bottom = (safe.getBottom(this) + STRIP_HEIGHT.roundToPx()).toFloat(),
+        )
+    }
     Box(modifier = Modifier.fillMaxSize()) {
-        ViewerCanvas(model, background = colors.surfaceVariant, modifier = Modifier.fillMaxSize())
+        ViewerCanvas(model, background = colors.surfaceVariant, insets = insets, modifier = Modifier.fillMaxSize())
         AnimatedVisibility(visible = model.chromeVisible || model.searchOpen, enter = fadeIn(), exit = fadeOut(), modifier = Modifier.align(Alignment.TopCenter)) {
-            Surface(color = bars.container, contentColor = bars.content, shadowElevation = 2.dp) {
-                if (model.searchOpen) SearchBar(model) else TopBar(model, onClose, onShare, onOpenWith)
+            Surface(color = bars.container, contentColor = bars.content, shadowElevation = 2.dp, modifier = Modifier.testTag(VIEWER_TOP_BAR_TAG)) {
+                val padding = Modifier.windowInsetsPadding(safe.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal))
+                if (model.searchOpen) SearchBar(model, padding) else TopBar(model, padding, onClose, onShare, onOpenWith)
             }
         }
         Column(
@@ -132,11 +156,11 @@ private fun Ready(model: ViewerViewModel, onClose: () -> Unit, onShare: () -> Un
         ) {
             PageIndicator(model)
             AnimatedVisibility(visible = model.chromeVisible, enter = fadeIn(), exit = fadeOut()) {
-                Surface(color = bars.container, contentColor = bars.content, shadowElevation = 2.dp) {
-                    ThumbnailStrip(model, modifier = Modifier.navigationBarsPadding())
+                Surface(color = bars.container, contentColor = bars.content, shadowElevation = 2.dp, modifier = Modifier.testTag(VIEWER_THUMBNAILS_TAG)) {
+                    ThumbnailStrip(model, modifier = Modifier.windowInsetsPadding(safe.only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal)))
                 }
             }
-            if (!model.chromeVisible) Spacer(modifier = Modifier.navigationBarsPadding())
+            if (!model.chromeVisible) Spacer(modifier = Modifier.windowInsetsPadding(safe.only(WindowInsetsSides.Bottom)))
         }
         AnimatedVisibility(visible = model.outlineOpen, enter = fadeIn(), exit = fadeOut()) {
             OutlinePanel(model)
@@ -145,11 +169,20 @@ private fun Ready(model: ViewerViewModel, onClose: () -> Unit, onShare: () -> Un
     }
 }
 
+/**
+ * What the viewer keeps clear of: the status and navigation bars whether they show or not, and the display cutout.
+ * zh-CN: 查看器要让开的区域: 状态栏与导航栏 (不论是否显示), 以及刘海挖孔.
+ */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun TopBar(model: ViewerViewModel, onClose: () -> Unit, onShare: () -> Unit, onOpenWith: () -> Unit) {
+private fun viewerSafeArea(): WindowInsets =
+    WindowInsets.statusBarsIgnoringVisibility.union(WindowInsets.navigationBarsIgnoringVisibility).union(WindowInsets.displayCutout)
+
+@Composable
+private fun TopBar(model: ViewerViewModel, padding: Modifier, onClose: () -> Unit, onShare: () -> Unit, onOpenWith: () -> Unit) {
     var menuOpen by remember { mutableStateOf(false) }
     Row(
-        modifier = Modifier.fillMaxWidth().statusBarsPadding().height(BAR_HEIGHT).padding(horizontal = 4.dp),
+        modifier = Modifier.fillMaxWidth().then(padding).height(BAR_HEIGHT).padding(horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         IconButton(onClick = onClose) { Icon(ViewerIcons.Back, contentDescription = stringResource(R.string.viewer_back)) }
@@ -197,13 +230,13 @@ private fun TopBar(model: ViewerViewModel, onClose: () -> Unit, onShare: () -> U
 }
 
 @Composable
-private fun SearchBar(model: ViewerViewModel) {
+private fun SearchBar(model: ViewerViewModel, padding: Modifier) {
     val colors = MaterialTheme.colorScheme
     val focus = remember { FocusRequester() }
     val keyboard = LocalSoftwareKeyboardController.current
     LaunchedEffect(Unit) { if (model.hits.isEmpty()) focus.requestFocus() }
     Row(
-        modifier = Modifier.fillMaxWidth().statusBarsPadding().height(BAR_HEIGHT).padding(horizontal = 4.dp),
+        modifier = Modifier.fillMaxWidth().then(padding).height(BAR_HEIGHT).padding(horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         IconButton(onClick = model::closeSearch) { Icon(ViewerIcons.Close, contentDescription = stringResource(R.string.viewer_search_close)) }
@@ -294,8 +327,8 @@ private fun ThumbnailStrip(model: ViewerViewModel, modifier: Modifier = Modifier
     }
     LazyRow(
         state = state,
-        modifier = modifier.fillMaxWidth().height(THUMBNAIL_BOX + 16.dp),
-        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+        modifier = modifier.fillMaxWidth().height(STRIP_HEIGHT),
+        contentPadding = PaddingValues(horizontal = 12.dp, vertical = STRIP_PADDING),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -517,10 +550,17 @@ internal data class ViewerBarColors(val container: Color, val content: Color) {
     }
 }
 
+internal const val VIEWER_TOP_BAR_TAG = "viewer-top-bar"
+internal const val VIEWER_THUMBNAILS_TAG = "viewer-thumbnails"
+
 private val BAR_HEIGHT = 56.dp
 private const val BAR_ALPHA = 0.96f
 private val THUMBNAIL_WIDTH = 44.dp
 private val THUMBNAIL_BOX = 60.dp
+private val STRIP_PADDING = 8.dp
+
+/** The thumbnail bar without the safe area under it. zh-CN: 不含其下安全区的缩略图栏高度. */
+private val STRIP_HEIGHT = THUMBNAIL_BOX + STRIP_PADDING * 2
 private val OUTLINE_INDENT = 16.dp
 private const val MAX_INDENT_LEVEL = 6
 private const val OUTLINE_WIDTH_FRACTION = 0.86f

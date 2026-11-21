@@ -1,6 +1,8 @@
 package io.github.supermonster003.autojs6.plugin.three.paper.pdf.viewer
 
 import android.content.Intent
+import android.content.pm.ActivityInfo
+import android.content.res.Configuration
 import android.net.Uri
 import android.os.Build
 import android.os.Handler
@@ -11,6 +13,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
@@ -22,6 +25,7 @@ import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipe
 import androidx.core.content.FileProvider
+import androidx.lifecycle.ViewModelProvider
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -176,7 +180,77 @@ class ViewerActivityDeviceTest {
         }
     }
 
+    @Test
+    fun theFirstPageOpensBelowTheTopBarTheLastScrollsAboveTheThumbnailsAndTheBarsMoveNothing() {
+        // E4 feedback F1: a short and a longer document, in portrait and in landscape. zh-CN: E4 反馈 F1: 一份短文档与一份较长的文档, 竖屏与横屏.
+        for (name in listOf("outline.pdf", "text.pdf")) {
+            val count = pagesOf(name)
+            launch(viewIntent(Uri.fromFile(PdfServiceHarness.sampleFile(name)))).use { scenario ->
+                awaitIndicator(1, count)
+                checkBarsAndPages(scenario, count, name)
+                scenario.onActivity { it.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE }
+                compose.waitUntil(TIMEOUT_MILLIS) { scenario.isLandscape() }
+                checkBarsAndPages(scenario, count, "$name landscape")
+                scenario.onActivity { it.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED }
+            }
+        }
+    }
+
     // Helpers. zh-CN: 辅助方法.
+
+    /**
+     * From the first page: its top is below the top bar, a tap hides the bars without moving it and another shows them;
+     * at the last page its bottom is above the thumbnail bar.
+     * zh-CN: 从第一页开始: 其顶边在顶栏之下, 单击隐藏各栏而它不动, 再单击显示各栏; 到最后一页时其底边在缩略图栏之上.
+     */
+    private fun checkBarsAndPages(scenario: ActivityScenario<ThreePaperPdfViewerActivity>, count: Int, label: String) {
+        compose.waitUntil(TIMEOUT_MILLIS) {
+            var ready = false
+            scenario.onActivity { ready = modelOf(it).layout != null }
+            ready
+        }
+        scenario.onActivity { modelOf(it).goToPage(0) }
+        awaitIndicator(1, count)
+        awaitTag(VIEWER_TOP_BAR_TAG)
+        compose.waitForIdle()
+        val barBottom = boundsOf(VIEWER_TOP_BAR_TAG).bottom
+        val top = pageEdge(scenario, 0, bottom = false)
+        assertTrue("$label: the first page starts at $top, under the top bar ending at $barBottom", top >= barBottom)
+        compose.onNodeWithTag(VIEWER_CANVAS_TAG).performTouchInput { click(Offset(centerX, height * 0.45f)) }
+        compose.waitUntil(TIMEOUT_MILLIS) { compose.onAllNodesWithTag(VIEWER_TOP_BAR_TAG).fetchSemanticsNodes().isEmpty() }
+        assertEquals("$label: hiding the bars moved the first page", top, pageEdge(scenario, 0, bottom = false), 0.5f)
+        compose.onNodeWithTag(VIEWER_CANVAS_TAG).performTouchInput { click(Offset(centerX, height * 0.45f)) }
+        awaitTag(VIEWER_THUMBNAILS_TAG)
+        scenario.onActivity { modelOf(it).goToPage(count - 1) }
+        awaitIndicator(count, count)
+        compose.waitForIdle()
+        val stripTop = boundsOf(VIEWER_THUMBNAILS_TAG).top
+        val bottom = pageEdge(scenario, count - 1, bottom = true)
+        assertTrue("$label: the last page ends at $bottom, under the thumbnails starting at $stripTop", bottom <= stripTop)
+    }
+
+    /** The top or bottom of page [page] on screen (root coordinates). zh-CN: 第 [page] 页在屏幕上的顶边或底边 (根坐标). */
+    private fun pageEdge(scenario: ActivityScenario<ThreePaperPdfViewerActivity>, page: Int, bottom: Boolean): Float {
+        val canvasTop = boundsOf(VIEWER_CANVAS_TAG).top
+        var edge = 0f
+        scenario.onActivity { activity ->
+            val model = modelOf(activity)
+            val layout = checkNotNull(model.layout)
+            val zoom = model.position.zoom
+            edge = layout.viewportY(layout.pageTop(page, zoom) + if (bottom) layout.pageHeight(page, zoom) else 0f, model.position)
+        }
+        return canvasTop + edge
+    }
+
+    private fun boundsOf(tag: String) = compose.onNodeWithTag(tag).fetchSemanticsNode().boundsInRoot
+
+    private fun modelOf(activity: ThreePaperPdfViewerActivity): ViewerViewModel = ViewModelProvider(activity)[ViewerViewModel::class.java]
+
+    private fun ActivityScenario<ThreePaperPdfViewerActivity>.isLandscape(): Boolean {
+        var landscape = false
+        onActivity { landscape = it.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE }
+        return landscape
+    }
 
     private fun launch(intent: Intent): ActivityScenario<ThreePaperPdfViewerActivity> = ActivityScenario.launch(intent)
 

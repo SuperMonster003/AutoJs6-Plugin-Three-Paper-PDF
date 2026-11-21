@@ -127,6 +127,74 @@ class ViewerLayoutTest {
         assertTrue(TileGrid.visible(0, 700, 0f, 0f, 100f, 100f).isEmpty())
     }
 
+    // E4 feedback F1: insets 30 left, 200 top, 10 right and 300 bottom leave an inner viewport of 960 x 1500, content
+    // width 920: page heights 1226.67, 613.33 and 1840, tops 20, 1256.67 and 1880, column 3740.
+    // zh-CN: E4 反馈 F1: 左 30, 上 200, 右 10, 下 300 的边距留下 960 x 1500 的内视口, 内容宽度 920: 页高 1226.67, 613.33 与 1840,
+    // 顶边 20, 1256.67 与 1880, 整列 3740.
+    private val barred = ViewerLayout(
+        pageWidths = floatArrayOf(600f, 600f, 300f),
+        pageHeights = floatArrayOf(800f, 400f, 600f),
+        viewportWidth = 1000f,
+        viewportHeight = 2000f,
+        gap = 10f,
+        padding = 20f,
+        insets = ViewerInsets(30f, 200f, 10f, 300f),
+    )
+
+    @Test
+    fun `the first page opens below the top bar and the last page scrolls above the thumbnail bar`() {
+        assertEquals(920f, barred.contentWidth, 0f)
+        assertEquals(3740f, barred.columnHeight, 0.01f)
+        val start = ViewerPosition(1f, 0f, 0f)
+        assertEquals(220f, barred.viewportY(barred.pageTop(0, 1f), start), 0.01f)
+        assertEquals(50f, barred.viewportX(barred.pageLeft(1f), start), 0.01f)
+        // The insets do not grow with the zoom. zh-CN: 边距不随缩放增大.
+        assertEquals(250f, barred.viewportY(barred.pageTop(0, 2.5f), ViewerPosition(2.5f, 0f, 0f)), 0.01f)
+        val end = barred.clamp(ViewerPosition(1f, 0f, 99_999f))
+        assertEquals(2240f, end.scrollY, 0.01f)
+        assertEquals(1680f, barred.viewportY(barred.pageTop(2, 1f) + barred.pageHeight(2, 1f), end), 0.01f)
+        assertEquals(2, barred.currentPage(end))
+    }
+
+    @Test
+    fun `pages under the bars still count as visible`() {
+        // Document rows 1100 - 3100 are on screen, 1300 - 2800 of them between the bars. zh-CN: 文档行 1100 - 3100 在屏幕上, 其中 1300 - 2800 在两栏之间.
+        assertEquals(0..2, barred.visiblePages(ViewerPosition(1f, 0f, 1300f)))
+        assertEquals(0..1, barred.visiblePages(ViewerPosition(1f, 0f, 0f)))
+    }
+
+    @Test
+    fun `jumps and search hits use the part of the viewport between the bars`() {
+        val jumped = barred.positionForPage(1, ViewerPosition(1f, 0f, 0f))
+        assertEquals(1236.67f, jumped.scrollY, 0.01f)
+        assertEquals(220f, barred.viewportY(barred.pageTop(1, 1f), jumped), 0.01f)
+        val hit = barred.positionForRect(1, 100f, 100f, 200f, 200f, ViewerPosition(1f, 0f, 0f))
+        val centerY = barred.pageTop(1, 1f) + 150f * barred.pageScale(1, 1f)
+        assertEquals(950f, barred.viewportY(centerY, hit), 0.01f)
+        assertEquals(0, barred.currentPage(barred.positionForPage(0, hit)))
+    }
+
+    @Test
+    fun `zooming around a focus keeps the document point under it with the insets`() {
+        val from = ViewerPosition(1f, 0f, 500f)
+        val to = barred.zoomAround(from, 2f, 500f, 900f)
+        assertEquals(ViewerPosition(2f, 470f, 1700f), to)
+        assertEquals(500f, barred.viewportX(470f * 2, to), 0.01f)
+        assertEquals(900f, barred.viewportY(1200f * 2, to), 0.01f)
+    }
+
+    @Test
+    fun `a short document is centered between the bars and an anchor keeps the top below them`() {
+        val short = ViewerLayout(floatArrayOf(600f), floatArrayOf(100f), 1000f, 2000f, 10f, 20f, ViewerInsets(0f, 200f, 0f, 300f))
+        val position = short.clamp(ViewerPosition(1f, 0f, 0f))
+        val top = short.viewportY(short.pageTop(0, 1f), position)
+        assertEquals(950f, top + short.pageHeight(0, 1f) / 2, 0.01f)
+        // Insets that arrive after the first layout keep the reader at the top. zh-CN: 首次布局之后才到的边距使读者仍停在顶部.
+        val moved = barred.positionFor(layout.anchorOf(ViewerPosition(1f, 0f, 0f)))
+        assertEquals(0f, moved.scrollY, 0.01f)
+        assertEquals(220f, barred.viewportY(barred.pageTop(0, 1f), moved), 0.01f)
+    }
+
     private fun documentPoint(position: ViewerPosition, x: Float, y: Float): Pair<Float, Float> = Pair(
         (x - layout.originX(position.zoom) + position.scrollX) / position.zoom,
         (y - layout.originY(position.zoom) + position.scrollY) / position.zoom,

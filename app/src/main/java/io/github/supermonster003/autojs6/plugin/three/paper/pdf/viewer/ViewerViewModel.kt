@@ -154,6 +154,7 @@ internal class ViewerViewModel(application: Application) : AndroidViewModel(appl
     private val imageRequests = HashSet<Int>()
     private var viewportWidth = 0f
     private var viewportHeight = 0f
+    private var insets = ViewerInsets.NONE
     private var density = 1f
 
     @Volatile
@@ -211,6 +212,17 @@ internal class ViewerViewModel(application: Application) : AndroidViewModel(appl
         viewportWidth = width
         viewportHeight = height
         this.density = density
+        rebuildLayout()
+    }
+
+    /**
+     * The edges the bars may cover (E4 feedback F1); they change with the window (rotation, cutout), not with the bars
+     * showing or hiding, so the pages do not move when the bars do.
+     * zh-CN: 各栏可能遮住的边缘 (E4 反馈 F1); 它们随窗口 (旋转, 刘海挖孔) 变化, 不随各栏显示或隐藏变化, 因此各栏出现与消失时页面不动.
+     */
+    fun onInsets(next: ViewerInsets) {
+        if (next == insets) return
+        insets = next
         rebuildLayout()
     }
 
@@ -565,6 +577,7 @@ internal class ViewerViewModel(application: Application) : AndroidViewModel(appl
             viewportHeight = viewportHeight,
             gap = GAP_DP * density,
             padding = PADDING_DP * density,
+            insets = insets,
         )
         layout = next
         position = when {

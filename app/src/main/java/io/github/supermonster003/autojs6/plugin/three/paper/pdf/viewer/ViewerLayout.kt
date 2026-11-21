@@ -18,13 +18,31 @@ internal data class ViewerPosition(val zoom: Float, val scrollX: Float, val scro
 internal data class ViewerAnchor(val page: Int, val fraction: Float, val zoom: Float)
 
 /**
- * Geometry of the continuous vertical page column (roadmap D35): every page is fitted to the viewport width minus
- * [padding] on each side at zoom 1, pages are separated by [gap], and the whole column scales with the zoom. A column
- * narrower or shorter than the viewport is centered. Pages are given as displayed sizes in points (rotation applied,
- * read/PageFrame), so search rectangles map without further turns. Pure arithmetic, tested on the JVM.
- * zh-CN: 连续纵向页面列的几何 (路线图 D35): 缩放为 1 时每页适配视口宽度 (两侧各留 [padding]), 页间隔 [gap], 整列随缩放等比
- * 变化. 比视口窄或矮的列居中. 页面以显示尺寸 (已应用旋转, 见 read/PageFrame) 给出, 单位为点, 因此搜索矩形无需再旋转即可映射.
- * 纯算术, 在 JVM 上测试.
+ * The edges of the viewport, in pixels, that the bars may cover: the top bar and the thumbnail bar with the system bars
+ * and the display cutout under them. They stay the same whether the bars show or not (roadmap P6.15, E4 feedback F1).
+ * zh-CN: 视口中可能被各栏遮住的边缘 (像素): 顶栏与缩略图栏, 以及其下的系统栏与刘海挖孔. 不论各栏显示与否都保持不变 (路线图 P6.15,
+ * E4 反馈 F1).
+ */
+internal data class ViewerInsets(val left: Float, val top: Float, val right: Float, val bottom: Float) {
+
+    companion object {
+        val NONE = ViewerInsets(0f, 0f, 0f, 0f)
+    }
+
+}
+
+/**
+ * Geometry of the continuous vertical page column (roadmap D35): every page is fitted to the width of the inner
+ * viewport (the viewport less [insets]) minus [padding] on each side at zoom 1, pages are separated by [gap], and the
+ * whole column scales with the zoom. A column narrower or shorter than the inner viewport is centered in it. The insets
+ * do not scale: at the start of the column the first page sits below the top inset, at its end the last page above the
+ * bottom inset, and in between the pages fill the whole viewport, under bars that are hidden or translucent (E4 feedback
+ * F1). Pages are given as displayed sizes in points (rotation applied, read/PageFrame), so search rectangles map without
+ * further turns. Pure arithmetic, tested on the JVM.
+ * zh-CN: 连续纵向页面列的几何 (路线图 D35): 缩放为 1 时每页适配内视口 (视口减去 [insets]) 的宽度 (两侧各留 [padding]), 页间隔
+ * [gap], 整列随缩放等比变化. 比内视口窄或矮的列在内视口中居中. 边距不随缩放变化: 列的开头第一页位于顶部边距之下, 末尾最后一页位于
+ * 底部边距之上, 中间的页面铺满整个视口, 位于隐藏或半透明的栏之下 (E4 反馈 F1). 页面以显示尺寸 (已应用旋转, 见 read/PageFrame)
+ * 给出, 单位为点, 因此搜索矩形无需再旋转即可映射. 纯算术, 在 JVM 上测试.
  */
 internal class ViewerLayout(
     private val pageWidths: FloatArray,
@@ -33,6 +51,7 @@ internal class ViewerLayout(
     val viewportHeight: Float,
     val gap: Float,
     val padding: Float,
+    val insets: ViewerInsets = ViewerInsets.NONE,
 ) {
 
     init {
@@ -41,8 +60,14 @@ internal class ViewerLayout(
 
     val pageCount: Int get() = pageWidths.size
 
+    /** Width of the viewport the bars never cover. zh-CN: 各栏不会遮住的视口宽度. */
+    val innerWidth: Float = max(1f, viewportWidth - insets.left - insets.right)
+
+    /** Height of the viewport the bars never cover. zh-CN: 各栏不会遮住的视口高度. */
+    val innerHeight: Float = max(1f, viewportHeight - insets.top - insets.bottom)
+
     /** Width of every page at zoom 1, in pixels. zh-CN: 缩放为 1 时每页的宽度 (像素). */
-    val contentWidth: Float = max(1f, viewportWidth - 2 * padding)
+    val contentWidth: Float = max(1f, innerWidth - 2 * padding)
 
     private val heights = FloatArray(pageCount) { index ->
         val width = pageWidths[index].takeIf { it > 0f } ?: 1f
@@ -76,19 +101,25 @@ internal class ViewerLayout(
     /** Left of every page in document pixels at [zoom]. zh-CN: 各页在 [zoom] 下的文档像素左边. */
     fun pageLeft(zoom: Float): Float = padding * zoom
 
-    fun documentWidth(zoom: Float): Float = viewportWidth * zoom
+    fun documentWidth(zoom: Float): Float = innerWidth * zoom
 
     fun documentHeight(zoom: Float): Float = columnHeight * zoom
 
-    /** Viewport x of the document origin when the column is narrower than the viewport. zh-CN: 列比视口窄时文档原点的视口 x. */
-    fun originX(zoom: Float): Float = max(0f, (viewportWidth - documentWidth(zoom)) / 2)
+    /**
+     * Inner viewport x of the document origin when the column is narrower than the inner viewport.
+     * zh-CN: 列比内视口窄时文档原点在内视口中的 x.
+     */
+    fun originX(zoom: Float): Float = max(0f, (innerWidth - documentWidth(zoom)) / 2)
 
-    /** Viewport y of the document origin when the column is shorter than the viewport. zh-CN: 列比视口矮时文档原点的视口 y. */
-    fun originY(zoom: Float): Float = max(0f, (viewportHeight - documentHeight(zoom)) / 2)
+    /**
+     * Inner viewport y of the document origin when the column is shorter than the inner viewport.
+     * zh-CN: 列比内视口矮时文档原点在内视口中的 y.
+     */
+    fun originY(zoom: Float): Float = max(0f, (innerHeight - documentHeight(zoom)) / 2)
 
-    fun maxScrollX(zoom: Float): Float = max(0f, documentWidth(zoom) - viewportWidth)
+    fun maxScrollX(zoom: Float): Float = max(0f, documentWidth(zoom) - innerWidth)
 
-    fun maxScrollY(zoom: Float): Float = max(0f, documentHeight(zoom) - viewportHeight)
+    fun maxScrollY(zoom: Float): Float = max(0f, documentHeight(zoom) - innerHeight)
 
     fun clamp(position: ViewerPosition): ViewerPosition {
         val zoom = position.zoom.coerceIn(MIN_ZOOM, MAX_ZOOM)
@@ -100,10 +131,10 @@ internal class ViewerLayout(
     }
 
     /** Viewport x of document x [x]. zh-CN: 文档 x [x] 对应的视口 x. */
-    fun viewportX(x: Float, position: ViewerPosition): Float = originX(position.zoom) + x - position.scrollX
+    fun viewportX(x: Float, position: ViewerPosition): Float = insets.left + originX(position.zoom) + x - position.scrollX
 
     /** Viewport y of document y [y]. zh-CN: 文档 y [y] 对应的视口 y. */
-    fun viewportY(y: Float, position: ViewerPosition): Float = originY(position.zoom) + y - position.scrollY
+    fun viewportY(y: Float, position: ViewerPosition): Float = insets.top + originY(position.zoom) + y - position.scrollY
 
     /**
      * Pages that intersect the document rows [top] until [bottom] at [zoom]; empty when none does.
@@ -117,17 +148,19 @@ internal class ViewerLayout(
         return first..last
     }
 
-    /** Pages visible at [position]. zh-CN: [position] 下可见的页. */
+    /**
+     * Pages visible at [position], under the bars included. zh-CN: [position] 下可见的页, 包括位于各栏之下的页.
+     */
     fun visiblePages(position: ViewerPosition): IntRange {
-        val top = position.scrollY - originY(position.zoom)
+        val top = position.scrollY - originY(position.zoom) - insets.top
         return pagesIn(top, top + viewportHeight, position.zoom)
     }
 
     /**
-     * The page shown as current (index from 0): the page under the middle of the viewport, or the nearest page above
-     * it when the middle falls into a gap. The first and last pages win at the ends of the column, so a short last page
-     * can become current.
-     * zh-CN: 作为当前页显示的页 (从 0 起): 视口中线所在的页; 中线落在页间隙时取其上方最近的页. 列的两端分别取首页与末页, 因此较短的
+     * The page shown as current (index from 0): the page under the middle of the inner viewport, or the nearest page
+     * above it when the middle falls into a gap. The first and last pages win at the ends of the column, so a short last
+     * page can become current.
+     * zh-CN: 作为当前页显示的页 (从 0 起): 内视口中线所在的页; 中线落在页间隙时取其上方最近的页. 列的两端分别取首页与末页, 因此较短的
      * 末页也能成为当前页.
      */
     fun currentPage(position: ViewerPosition): Int {
@@ -135,14 +168,14 @@ internal class ViewerLayout(
         val zoom = position.zoom
         if (position.scrollY <= 0f) return 0
         if (position.scrollY >= maxScrollY(zoom) && maxScrollY(zoom) > 0f) return pageCount - 1
-        val middle = (position.scrollY - originY(zoom) + viewportHeight / 2) / zoom
+        val middle = (position.scrollY - originY(zoom) + innerHeight / 2) / zoom
         return lastPageStartingAtOrAbove(middle).coerceIn(0, pageCount - 1)
     }
 
     /**
-     * Scroll position that puts the top of page [page] (index from 0) at the top of the viewport, keeping zoom and
+     * Scroll position that puts the top of page [page] (index from 0) at the top of the inner viewport, keeping zoom and
      * horizontal offset.
-     * zh-CN: 把第 [page] 页 (从 0 起) 的顶边放到视口顶部的滚动位置, 缩放与水平偏移不变.
+     * zh-CN: 把第 [page] 页 (从 0 起) 的顶边放到内视口顶部的滚动位置, 缩放与水平偏移不变.
      */
     fun positionForPage(page: Int, from: ViewerPosition): ViewerPosition {
         val index = page.coerceIn(0, max(0, pageCount - 1))
@@ -152,8 +185,8 @@ internal class ViewerLayout(
 
     /**
      * Scroll position that centers the rectangle [left], [top], [right], [bottom] (points of the displayed page, from its
-     * top left corner) of page [page] in the viewport, keeping the zoom.
-     * zh-CN: 让第 [page] 页的矩形 [left], [top], [right], [bottom] (显示页面上的点, 从其左上角起) 位于视口中央的滚动位置, 缩放不变.
+     * top left corner) of page [page] in the inner viewport, keeping the zoom.
+     * zh-CN: 让第 [page] 页的矩形 [left], [top], [right], [bottom] (显示页面上的点, 从其左上角起) 位于内视口中央的滚动位置, 缩放不变.
      */
     fun positionForRect(page: Int, left: Float, top: Float, right: Float, bottom: Float, from: ViewerPosition): ViewerPosition {
         if (pageCount == 0) return from
@@ -161,7 +194,7 @@ internal class ViewerLayout(
         val scale = pageScale(page, zoom)
         val centerX = pageLeft(zoom) + (left + right) / 2 * scale
         val centerY = pageTop(page, zoom) + (top + bottom) / 2 * scale
-        return clamp(ViewerPosition(zoom, centerX - viewportWidth / 2, centerY - viewportHeight / 2))
+        return clamp(ViewerPosition(zoom, centerX - innerWidth / 2, centerY - innerHeight / 2))
     }
 
     /**
@@ -171,10 +204,12 @@ internal class ViewerLayout(
      */
     fun zoomAround(from: ViewerPosition, zoom: Float, focusX: Float, focusY: Float): ViewerPosition {
         val target = zoom.coerceIn(MIN_ZOOM, MAX_ZOOM)
-        val documentX = (focusX - originX(from.zoom) + from.scrollX) / from.zoom
-        val documentY = (focusY - originY(from.zoom) + from.scrollY) / from.zoom
-        val scrollX = documentX * target - focusX + originX(target)
-        val scrollY = documentY * target - focusY + originY(target)
+        val innerX = focusX - insets.left
+        val innerY = focusY - insets.top
+        val documentX = (innerX - originX(from.zoom) + from.scrollX) / from.zoom
+        val documentY = (innerY - originY(from.zoom) + from.scrollY) / from.zoom
+        val scrollX = documentX * target - innerX + originX(target)
+        val scrollY = documentY * target - innerY + originY(target)
         return clamp(ViewerPosition(target, scrollX, scrollY))
     }
 
@@ -188,12 +223,16 @@ internal class ViewerLayout(
         return ViewerAnchor(page, fraction, zoom)
     }
 
-    /** The position of [anchor] on this layout, horizontally centered. zh-CN: [anchor] 在本布局中的位置, 水平居中. */
+    /**
+     * The position of [anchor] on this layout, horizontally centered; an anchor above the first page (the start of the
+     * column) stays at the start, whatever the new page heights.
+     * zh-CN: [anchor] 在本布局中的位置, 水平居中; 位于第一页之上 (列的开头) 的锚点不论新的页高如何都停在开头.
+     */
     fun positionFor(anchor: ViewerAnchor): ViewerPosition {
         if (pageCount == 0) return ViewerPosition(1f, 0f, 0f)
         val zoom = anchor.zoom.coerceIn(MIN_ZOOM, MAX_ZOOM)
         val page = anchor.page.coerceIn(0, pageCount - 1)
-        val top = (tops[page] + anchor.fraction * heights[page]) * zoom
+        val top = if (page == 0 && anchor.fraction <= 0f) 0f else (tops[page] + anchor.fraction * heights[page]) * zoom
         return clamp(ViewerPosition(zoom, maxScrollX(zoom) / 2, top))
     }
 
