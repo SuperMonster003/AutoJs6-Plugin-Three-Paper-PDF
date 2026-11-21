@@ -265,6 +265,8 @@ class ViewerActivityDeviceTest {
                 awaitTag("viewer-jump-field")
                 awaitSystemBars(scenario, hidden = false)
                 DeviceShots.take("F2-viewer-jump-dialog")
+                // With a soft keyboard (API 24) the first back only closes it. zh-CN: 有软键盘时 (API 24) 第一次返回只关闭键盘.
+                Espresso.closeSoftKeyboard()
                 Espresso.pressBack()
                 awaitGone("viewer-jump-field")
                 awaitSystemBars(scenario, hidden = true)
