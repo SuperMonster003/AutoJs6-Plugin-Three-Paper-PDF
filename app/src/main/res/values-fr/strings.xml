@@ -234,6 +234,9 @@
     <string name="tool_position_top_center">En haut au centre</string>
     <string name="tool_position_top_left">En haut à gauche</string>
     <string name="tool_position_top_right">En haut à droite</string>
+    <string name="tool_preview_next">Page suivante</string>
+    <string name="tool_preview_page_of">Page %1$d sur %2$d</string>
+    <string name="tool_preview_previous">Page précédente</string>
     <string name="tool_properties_clear_outline">Supprimer tous les signets</string>
     <string name="tool_properties_edit">Informations du document</string>
     <string name="tool_properties_empty_removes">Laissez un champ vide pour le supprimer.</string>
@@ -305,7 +308,8 @@
     <string name="tool_watermark_preview">Aperçu</string>
     <string name="tool_watermark_preview_empty">Saisissez un texte ou choisissez une image pour voir un aperçu.</string>
     <string name="tool_watermark_preview_failed">Impossible d\'afficher l\'aperçu.</string>
-    <string name="tool_watermark_preview_note">Dans l\'aperçu, {page} et {total} valent 1.</string>
+    <string name="tool_watermark_preview_note">Dans l\'aperçu, {page} et {total} prennent les valeurs de cette page dans le fichier entier, comme dans le résultat.</string>
+    <string name="tool_watermark_preview_outside">Cette page ne fait pas partie des pages choisies: elle ne reçoit pas de filigrane.</string>
     <string name="tool_watermark_preview_page">Aperçu de la page %1$d</string>
     <string name="tool_watermark_rotation">Rotation</string>
     <string name="tool_watermark_text">Texte du filigrane</string>

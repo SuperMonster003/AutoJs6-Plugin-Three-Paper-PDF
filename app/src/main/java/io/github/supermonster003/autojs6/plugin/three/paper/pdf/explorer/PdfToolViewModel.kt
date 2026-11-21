@@ -201,9 +201,16 @@ internal class PdfToolViewModel(application: Application, saved: SavedStateHandl
     /** The facts, metadata and outline of the properties tool, read when its input opens. zh-CN: 文档属性工具的文件信息, 元数据与书签, 在其输入打开时读取. */
     val properties = PropertiesState()
 
-    /** The watermark preview, while the watermark tool's input is open. zh-CN: 水印预览, 在水印工具的输入打开期间存在. */
-    var preview by mutableStateOf<WatermarkPreview?>(null)
+    /** The single-page preview, while the input of the watermark tool is open. zh-CN: 单页预览, 在水印工具的输入打开期间存在. */
+    var preview by mutableStateOf<PagePreview?>(null)
         private set
+
+    /** The page the preview shows (from 1), turned with the arrows under it (E4 feedback F4). zh-CN: 预览显示的页 (从 1 起), 用其下方的箭头翻页 (E4 反馈 F4). */
+    var previewPage by mutableIntStateOf(1)
+        private set
+
+    /** The range text the preview page last followed, null before the first. zh-CN: 预览页上一次跟随的范围文字, 第一次之前为 null. */
+    private var previewRange: String? = null
 
     /** The newest reading of form fields or properties (main thread). zh-CN: 最新一次读取表单字段或文档属性 (主线程). */
     private var detailsGeneration = 0
@@ -390,14 +397,37 @@ internal class PdfToolViewModel(application: Application, saved: SavedStateHandl
         }
     }
 
+    /** The page count of the previewed input, 0 without one. zh-CN: 预览输入的页数, 没有输入时为 0. */
+    fun previewPageCount(): Int = inputs.firstOrNull()?.pageCount ?: 0
+
+    /** Whether the tool stamps page [page] (from 1) with the typed range. zh-CN: 按输入的范围, 工具是否在第 [page] 页 (从 1 起) 盖章. */
+    fun previewInRange(page: Int): Boolean = previewSelection().contains(page)
+
     /**
-     * The page the watermark preview shows: the first page of the typed range, or page 1.
-     * zh-CN: 水印预览显示的页: 输入的页码范围中的第一页, 否则为第 1 页.
+     * Follows the typed range (appendix D Q344 (a)): the preview stays on its page while the new range keeps it and
+     * goes to the first page of the new range otherwise; a range that is not valid counts as every page, so the page
+     * stays. The first call for an input starts on the first page of the range.
+     * zh-CN: 跟随输入的范围 (附录 D Q344 (a)): 新范围仍包含当前页时预览留在该页, 否则转到新范围的第一页; 无效的范围视为全部页, 因此页面不变.
+     * 某个输入的第一次调用从范围的第一页开始.
      */
-    fun previewPage(): Int {
-        val count = inputs.firstOrNull()?.pageCount ?: 0
-        val spec = pagesOrAll(count)?.value
-        return ToolPayloads.firstPage(spec).coerceIn(1, maxOf(1, count))
+    fun followPreviewRange() {
+        val typed = pages
+        if (typed == previewRange) return
+        previewRange = typed
+        val selection = previewSelection()
+        if (selection.isNotEmpty() && previewPage !in selection) previewPage = selection.first()
+    }
+
+    /** Turns the preview by [delta] pages within the document. zh-CN: 在文档范围内把预览翻动 [delta] 页. */
+    fun turnPreview(delta: Int) {
+        val count = previewPageCount()
+        if (count > 0) previewPage = (previewPage + delta).coerceIn(1, count)
+    }
+
+    /** The pages of the typed range; every page for none or one that is not valid. zh-CN: 输入范围中的页; 没有范围或范围无效时为全部页. */
+    private fun previewSelection(): IntArray {
+        val count = previewPageCount()
+        return PageRanges.parse(pagesOrAll(count)?.value, count)
     }
 
     /** The page range typed for the images and text tools is not valid. zh-CN: 为图片与文本工具输入的页码范围无效. */
@@ -606,7 +636,9 @@ internal class PdfToolViewModel(application: Application, saved: SavedStateHandl
     private fun openPreview(input: Input) {
         val engine = plugin ?: return
         preview?.close()
-        preview = WatermarkPreview(getApplication(), engine, input.target, input.password, input.pageCount)
+        preview = PagePreview(getApplication(), engine, input.target, input.password, input.pageCount)
+        previewPage = 1
+        previewRange = null
     }
 
     /** Closes the preview and forgets what was read of the input. zh-CN: 关闭预览并丢弃从输入读取的内容. */

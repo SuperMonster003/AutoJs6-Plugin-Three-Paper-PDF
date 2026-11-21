@@ -234,6 +234,9 @@
     <string name="tool_position_top_center">أعلى الوسط</string>
     <string name="tool_position_top_left">أعلى اليسار</string>
     <string name="tool_position_top_right">أعلى اليمين</string>
+    <string name="tool_preview_next">الصفحة التالية</string>
+    <string name="tool_preview_page_of">الصفحة %1$d من %2$d</string>
+    <string name="tool_preview_previous">الصفحة السابقة</string>
     <string name="tool_properties_clear_outline">إزالة كل الإشارات المرجعية</string>
     <string name="tool_properties_edit">معلومات المستند</string>
     <string name="tool_properties_empty_removes">اترك الحقل فارغا لإزالته.</string>
@@ -305,7 +308,8 @@
     <string name="tool_watermark_preview">معاينة</string>
     <string name="tool_watermark_preview_empty">أدخل نصا أو اختر صورة لرؤية المعاينة.</string>
     <string name="tool_watermark_preview_failed">تعذر رسم المعاينة.</string>
-    <string name="tool_watermark_preview_note">في المعاينة يظهر {page} و {total} بالقيمة 1.</string>
+    <string name="tool_watermark_preview_note">في المعاينة يظهر {page} و {total} بقيم هذه الصفحة في الملف كله, كما في النتيجة.</string>
+    <string name="tool_watermark_preview_outside">هذه الصفحة ليست ضمن الصفحات المختارة, لذا لا تُضاف إليها علامة مائية.</string>
     <string name="tool_watermark_preview_page">معاينة الصفحة %1$d</string>
     <string name="tool_watermark_rotation">الدوران</string>
     <string name="tool_watermark_text">نص العلامة المائية</string>

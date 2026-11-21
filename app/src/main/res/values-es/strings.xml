@@ -234,6 +234,9 @@
     <string name="tool_position_top_center">Arriba en el centro</string>
     <string name="tool_position_top_left">Arriba a la izquierda</string>
     <string name="tool_position_top_right">Arriba a la derecha</string>
+    <string name="tool_preview_next">Página siguiente</string>
+    <string name="tool_preview_page_of">Página %1$d de %2$d</string>
+    <string name="tool_preview_previous">Página anterior</string>
     <string name="tool_properties_clear_outline">Quitar todos los marcadores</string>
     <string name="tool_properties_edit">Información del documento</string>
     <string name="tool_properties_empty_removes">Deje un campo vacío para quitarlo.</string>
@@ -305,7 +308,8 @@
     <string name="tool_watermark_preview">Vista previa</string>
     <string name="tool_watermark_preview_empty">Escriba un texto o elija una imagen para ver una vista previa.</string>
     <string name="tool_watermark_preview_failed">No se puede mostrar la vista previa.</string>
-    <string name="tool_watermark_preview_note">En la vista previa, {page} y {total} se muestran como 1.</string>
+    <string name="tool_watermark_preview_note">En la vista previa, {page} y {total} muestran los valores de esta página en el archivo completo, igual que en el resultado.</string>
+    <string name="tool_watermark_preview_outside">Esta página no está entre las páginas elegidas, así que no recibe marca de agua.</string>
     <string name="tool_watermark_preview_page">Vista previa de la página %1$d</string>
     <string name="tool_watermark_rotation">Rotación</string>
     <string name="tool_watermark_text">Texto de la marca de agua</string>

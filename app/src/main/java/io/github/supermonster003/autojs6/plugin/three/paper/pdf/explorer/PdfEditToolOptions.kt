@@ -31,6 +31,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -81,7 +82,8 @@ import org.autojs.plugin.pdf.api.PdfContract
  * `tool-watermark-text`, `tool-watermark-image`, `tool-watermark-choose-image`, `tool-watermark-position-<position>`,
  * `tool-watermark-rotation-<degrees>`, `tool-watermark-opacity-<percent>`, `tool-watermark-tile`,
  * `tool-watermark-advanced`, `tool-watermark-color-<n>`, `tool-watermark-font-<auto|points>`,
- * `tool-watermark-width-<fit|points>`, `tool-watermark-layer-<layer>`, `tool-watermark-preview`,
+ * `tool-watermark-width-<fit|points>`, `tool-watermark-layer-<layer>`, `tool-watermark-preview` (with `-previous`,
+ * `-next`, `-page` and `-outside`, E4 feedback F4),
  * `tool-numbers-switch`, `tool-numbers-format-<n>`, `tool-numbers-format`, `tool-numbers-position-<position>`,
  * `tool-numbers-start`, `tool-numbers-advanced`, `tool-numbers-<header|footer>-<left|center|right>`,
  * `tool-numbers-font-<points>`, `tool-compress-<preset>`, `tool-compress-advanced`, `tool-compress-dpi-<dpi>`,
@@ -258,15 +260,38 @@ internal fun WatermarkOptions(model: PdfToolViewModel) {
         if (state.layer == PdfContract.LAYER_UNDER) Note(R.string.tool_watermark_layer_under_note)
     }
     PagesField(model)
-    WatermarkPreviewCard(model)
+    PagePreviewCard(
+        model = model,
+        options = state.options(null),
+        tag = "tool-watermark-preview",
+        outside = R.string.tool_watermark_preview_outside,
+        empty = R.string.tool_watermark_preview_empty,
+        note = R.string.tool_watermark_preview_note,
+    )
 }
 
+/**
+ * The single-page preview of a stamping tool (roadmap P6.12, E4 feedback F4 / F5): the page drawn by [PagePreview] with
+ * [options] on it, refreshed on every change, and the arrows that turn it through the whole document (the page and the
+ * page count between them). A page outside the typed range is drawn as it is, with the note [outside]; while there is
+ * nothing to stamp the page is drawn as it is with [empty]; otherwise [note] explains the placeholders. The page follows
+ * a change of the range by [PdfToolViewModel.followPreviewRange] (appendix D Q344 (a)). Tags: [tag] (the image),
+ * `<tag>-previous`, `<tag>-next`, `<tag>-page`, `<tag>-outside`.
+ * zh-CN: 盖章类工具的单页预览 (路线图 P6.12, E4 反馈 F4 / F5): 由 [PagePreview] 绘制盖上 [options] 的页面, 每次修改都刷新, 下方的箭头在整个
+ * 文档中翻页 (两个箭头之间显示页码与总页数). 不在输入范围内的页按原样绘制, 并显示提示 [outside]; 尚无可盖内容时按原样绘制并显示 [empty];
+ * 其他情况下 [note] 说明占位符. 修改范围后页面按 [PdfToolViewModel.followPreviewRange] 跟随 (附录 D Q344 (a)). 标签: [tag] (图像),
+ * `<tag>-previous`, `<tag>-next`, `<tag>-page`, `<tag>-outside`.
+ */
 @Composable
-private fun WatermarkPreviewCard(model: PdfToolViewModel) {
+private fun PagePreviewCard(model: PdfToolViewModel, options: ToolOptions?, tag: String, @StringRes outside: Int, @StringRes empty: Int?, @StringRes note: Int?) {
     val preview = model.preview ?: return
-    val options = model.watermark.options(null)
-    val page = model.previewPage()
-    LaunchedEffect(preview, options, page) { preview.request(options, page) }
+    val count = model.previewPageCount()
+    if (count <= 0) return
+    LaunchedEffect(preview, model.pages) { model.followPreviewRange() }
+    val page = model.previewPage
+    val inRange = model.previewInRange(page)
+    val stamp = options.takeIf { inRange }
+    LaunchedEffect(preview, stamp, page) { preview.request(stamp, page) }
     val bitmap = preview.bitmap
     Label(R.string.tool_watermark_preview)
     Box(modifier = Modifier.fillMaxWidth().heightIn(min = PREVIEW_MIN_HEIGHT), contentAlignment = Alignment.Center) {
@@ -278,17 +303,30 @@ private fun WatermarkPreviewCard(model: PdfToolViewModel) {
                     .widthIn(max = PREVIEW_MAX_WIDTH)
                     .fillMaxWidth()
                     .border(1.dp, MaterialTheme.colorScheme.outlineVariant)
-                    .testTag("tool-watermark-preview"),
+                    .testTag(tag),
                 contentScale = ContentScale.FillWidth,
             )
             preview.failed -> Note(R.string.tool_watermark_preview_failed)
-            !preview.busy -> Note(R.string.tool_watermark_preview_empty)
         }
         if (preview.busy) CircularProgressIndicator(modifier = Modifier.size(32.dp))
     }
-    if (bitmap != null) {
-        Note(R.string.tool_watermark_preview_page, preview.page)
-        Note(R.string.tool_watermark_preview_note)
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+        IconButton(onClick = { model.turnPreview(-1) }, enabled = page > 1, modifier = Modifier.testTag("$tag-previous")) {
+            Icon(painterResource(R.drawable.ic_chevron_left_24), contentDescription = stringResource(R.string.tool_preview_previous))
+        }
+        Text(
+            text = stringResource(R.string.tool_preview_page_of, page, count),
+            modifier = Modifier.padding(horizontal = 8.dp).testTag("$tag-page"),
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        IconButton(onClick = { model.turnPreview(1) }, enabled = page < count, modifier = Modifier.testTag("$tag-next")) {
+            Icon(painterResource(R.drawable.ic_chevron_right_24), contentDescription = stringResource(R.string.tool_preview_next))
+        }
+    }
+    when {
+        !inRange -> Note(outside, tag = "$tag-outside")
+        options == null -> empty?.let { Note(it) }
+        else -> note?.let { Note(it) }
     }
 }
 

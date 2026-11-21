@@ -234,6 +234,9 @@
     <string name="tool_position_top_center">上中央</string>
     <string name="tool_position_top_left">左上</string>
     <string name="tool_position_top_right">右上</string>
+    <string name="tool_preview_next">次のページ</string>
+    <string name="tool_preview_page_of">%1$d / %2$d ページ</string>
+    <string name="tool_preview_previous">前のページ</string>
     <string name="tool_properties_clear_outline">すべてのしおりを削除</string>
     <string name="tool_properties_edit">ドキュメント情報</string>
     <string name="tool_properties_empty_removes">空欄にした項目は削除されます.</string>
@@ -305,7 +308,8 @@
     <string name="tool_watermark_preview">プレビュー</string>
     <string name="tool_watermark_preview_empty">文字を入力するか画像を選択するとプレビューが表示されます.</string>
     <string name="tool_watermark_preview_failed">プレビューを描画できません.</string>
-    <string name="tool_watermark_preview_note">プレビューでは {page} と {total} は 1 と表示されます.</string>
+    <string name="tool_watermark_preview_note">プレビューの {page} と {total} は, ファイル全体でのこのページの値で表示され, 結果と同じです.</string>
+    <string name="tool_watermark_preview_outside">このページは選択したページに含まれないため, 透かしは追加されません.</string>
     <string name="tool_watermark_preview_page">%1$d ページ目のプレビュー</string>
     <string name="tool_watermark_rotation">回転</string>
     <string name="tool_watermark_text">透かしの文字</string>

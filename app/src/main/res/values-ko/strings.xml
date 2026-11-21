@@ -234,6 +234,9 @@
     <string name="tool_position_top_center">위쪽 가운데</string>
     <string name="tool_position_top_left">왼쪽 위</string>
     <string name="tool_position_top_right">오른쪽 위</string>
+    <string name="tool_preview_next">다음 페이지</string>
+    <string name="tool_preview_page_of">%1$d / %2$d 페이지</string>
+    <string name="tool_preview_previous">이전 페이지</string>
     <string name="tool_properties_clear_outline">모든 책갈피 제거</string>
     <string name="tool_properties_edit">문서 정보</string>
     <string name="tool_properties_empty_removes">비워 둔 항목은 제거됩니다.</string>
@@ -305,7 +308,8 @@
     <string name="tool_watermark_preview">미리 보기</string>
     <string name="tool_watermark_preview_empty">텍스트를 입력하거나 이미지를 선택하면 미리 보기가 표시됩니다.</string>
     <string name="tool_watermark_preview_failed">미리 보기를 그릴 수 없습니다.</string>
-    <string name="tool_watermark_preview_note">미리 보기에서는 {page}와 {total}이 1로 표시됩니다.</string>
+    <string name="tool_watermark_preview_note">미리 보기의 {page}와 {total}은 파일 전체에서 이 페이지의 값으로 표시되며 결과와 같습니다.</string>
+    <string name="tool_watermark_preview_outside">이 페이지는 선택한 페이지에 포함되지 않아 워터마크가 추가되지 않습니다.</string>
     <string name="tool_watermark_preview_page">%1$d페이지 미리 보기</string>
     <string name="tool_watermark_rotation">회전</string>
     <string name="tool_watermark_text">워터마크 텍스트</string>

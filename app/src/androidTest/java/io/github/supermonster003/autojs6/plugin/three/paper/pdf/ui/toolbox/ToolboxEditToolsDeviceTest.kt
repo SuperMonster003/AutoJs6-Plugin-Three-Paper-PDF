@@ -7,6 +7,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.ParcelFileDescriptor
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.test.ExperimentalTestApi
@@ -30,11 +31,14 @@ import io.github.supermonster003.autojs6.plugin.three.paper.pdf.MarshallingBinde
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.PdfServiceHarness
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.PdfServiceHarness.request
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.PdfServiceHarness.withPdfPlugin
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.R
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.explorer.PagePreview
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.explorer.PdfToolViewModel
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.explorer.ToolKind
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.explorer.ToolTarget
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.ToolboxTestEnvironment
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.home.HomeActivity
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.viewer.ViewerDocument
 import org.autojs.plugin.pdf.api.IPdfDocument
 import org.autojs.plugin.pdf.api.PdfContract
 import org.json.JSONArray
@@ -50,8 +54,10 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
+import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.hypot
+import kotlin.math.roundToInt
 
 /**
  * The five editing tools of roadmap P6.12 (D68) once each on a device, from the home screen to the result page: the
@@ -61,12 +67,13 @@ import kotlin.math.hypot
  * carries the hint of appendix D Q241. The "Custom" values of appendix D Q265 (b) and Q290 run once per tool (watermark,
  * page numbers, compress): a refused text keeps the start button off, and the typed numbers show in the output (glyph
  * size and angle read with PDFBox, colour and opacity from the rendered page, image size and JPEG quality through the
- * engine).
+ * engine). The single-page preview of the watermark (E4 feedback F4) turns through the pages, follows a change of the range
+ * (appendix D Q344 (a)), draws a page outside the range as it is and shows what the result has on that page.
  * zh-CN: 在设备上把路线图 P6.12 的五个编辑类工具 (D68) 各走一次, 从首页到结果页: 输入代替文件浏览器直接交给向导的视图模型, 选项在界面上
  * 设置, 任务在前台服务中运行并按附录 D Q261 的名称写入, 结果经引擎自己的 Binder 接口读回 (文本, 表单字段, 文档信息, 书签与图片). 低于
  * API 35 时填写表单的结果页带有附录 D Q241 的提示. 附录 D Q265 (b) 与 Q290 的 "自定义" 值在每个工具 (水印, 页码, 压缩) 上各走一次: 被拒的
  * 文字让开始按钮保持不可用, 输入的数值体现在输出中 (字形大小与角度用 PDFBox 读取, 颜色与不透明度取自渲染出的页面, 图片尺寸与 JPEG
- * 质量经引擎读回).
+ * 质量经引擎读回). 水印的单页预览 (E4 反馈 F4) 可以翻页, 跟随范围的修改 (附录 D Q344 (a)), 范围外的页按原样绘制, 并显示结果在该页上的样子.
  */
 @OptIn(ExperimentalTestApi::class)
 @RunWith(AndroidJUnit4::class)
@@ -107,6 +114,35 @@ class ToolboxEditToolsDeviceTest {
         awaitTag("tool-done")
         val text = pageText(File(output, "Text_watermarked.pdf"), "1")
         assertTrue(text, text.contains(WATERMARK))
+    }
+
+    @Test
+    fun theWatermarkPreviewTurnsThePagesFollowsTheRangeAndMatchesTheResult() = wizard(ToolKind.WATERMARK) { model ->
+        // E4 feedback F4, appendix D Q341 (a) and Q344 (a). zh-CN: E4 反馈 F4, 附录 D Q341 (a) 与 Q344 (a).
+        give(model, sample("outline.pdf", "Outline.pdf"))
+        compose.onNodeWithTag("tool-watermark-text").performScrollTo().performTextReplacement("P{page}/{total}")
+        compose.onNodeWithTag("tool-pages").performScrollTo().performTextReplacement("2-3")
+        // The preview starts on the first page of the range. zh-CN: 预览从范围的第一页开始.
+        awaitPreview(model, WATERMARK_PREVIEW, page = 2, stamped = true)
+        turn(WATERMARK_PREVIEW, next = true)
+        awaitPreview(model, WATERMARK_PREVIEW, page = 3, stamped = true)
+        turn(WATERMARK_PREVIEW, next = true)
+        awaitPreview(model, WATERMARK_PREVIEW, page = 4, stamped = false)
+        // A range without the page moves to its first page; one with it, or one that is not valid, keeps the page.
+        // zh-CN: 不含当前页的范围转到其第一页; 包含当前页的范围或无效的范围保持当前页.
+        compose.onNodeWithTag("tool-pages").performScrollTo().performTextReplacement("5-")
+        awaitPreview(model, WATERMARK_PREVIEW, page = 5, stamped = true)
+        compose.onNodeWithTag("tool-pages").performScrollTo().performTextReplacement("")
+        awaitPreview(model, WATERMARK_PREVIEW, page = 5, stamped = true)
+        compose.onNodeWithTag("tool-pages").performScrollTo().performTextReplacement("9-")
+        awaitPreview(model, WATERMARK_PREVIEW, page = 5, stamped = true)
+        compose.onNodeWithTag("tool-pages").performScrollTo().performTextReplacement("2-3")
+        awaitPreview(model, WATERMARK_PREVIEW, page = 2, stamped = true)
+        turn(WATERMARK_PREVIEW, next = true)
+        val shown = awaitPreview(model, WATERMARK_PREVIEW, page = 3, stamped = true)
+        start()
+        awaitTag("tool-done")
+        assertSamePage(shown, File(output, "Outline_watermarked.pdf"), 3)
     }
 
     @Test
@@ -422,6 +458,87 @@ class ToolboxEditToolsDeviceTest {
         compose.onNodeWithTag("$prefix-value").performScrollTo().performTextReplacement(text)
     }
 
+    /** Clicks the next or previous arrow of the preview [tag]. zh-CN: 点击预览 [tag] 的下一页或上一页箭头. */
+    private fun turn(tag: String, next: Boolean) {
+        compose.onNodeWithTag(if (next) "$tag-next" else "$tag-previous").performScrollTo().performClick()
+    }
+
+    /**
+     * Waits until the preview shows [page], with the stamp or as it is, its arrows say so and the outside note shows
+     * for a page drawn as it is; answers a copy of the drawn page.
+     * zh-CN: 等待预览显示第 [page] 页 (带盖章或按原样), 箭头之间显示该页, 按原样绘制的页显示范围外提示; 返回所绘页面的副本.
+     */
+    private fun awaitPreview(model: PdfToolViewModel, tag: String, page: Int, stamped: Boolean): Bitmap {
+        var count = 0
+        instrumentation.runOnMainSync { count = model.previewPageCount() }
+        compose.waitUntil(TIMEOUT_MILLIS) {
+            var done = false
+            instrumentation.runOnMainSync {
+                val preview = model.preview
+                done = model.previewPage == page && preview != null && !preview.busy && preview.bitmap != null && preview.page == page &&
+                    preview.stamped == stamped
+            }
+            done
+        }
+        val label = context.getString(R.string.tool_preview_page_of, page, count)
+        compose.waitUntil(TIMEOUT_MILLIS) {
+            compose.onAllNodesWithTag("$tag-page").fetchSemanticsNodes().any { node ->
+                node.config.getOrNull(SemanticsProperties.Text)?.any { it.text == label } == true
+            }
+        }
+        compose.waitUntil(TIMEOUT_MILLIS) {
+            compose.onAllNodesWithTag("$tag-outside", useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty() == !stamped
+        }
+        lateinit var copy: Bitmap
+        instrumentation.runOnMainSync { copy = checkNotNull(model.preview?.bitmap).asAndroidBitmap().copy(Bitmap.Config.ARGB_8888, false) }
+        return copy
+    }
+
+    /**
+     * The preview [shown] equals page [page] of [file] drawn the same way (the viewer's renderer at the preview width):
+     * fewer than 1 % of the pixels differ by more than 40 in a channel.
+     * zh-CN: 预览 [shown] 与用相同方式 (查看器的渲染器, 预览宽度) 绘制的 [file] 第 [page] 页相同: 某通道相差超过 40 的像素少于 1 %.
+     */
+    private fun assertSamePage(shown: Bitmap, file: File, page: Int) {
+        assertTrue("${file.name} was not written", file.isFile)
+        val scratch = File(environment.root, "render").apply { mkdirs() }
+        val expected = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY).use { descriptor ->
+            val document = ViewerDocument.open(descriptor, null, scratch)
+            try {
+                val frame = document.pages[page - 1]
+                val height = (PagePreview.WIDTH_PX * frame.height / frame.width).roundToInt()
+                Bitmap.createBitmap(PagePreview.WIDTH_PX, height, Bitmap.Config.ARGB_8888).also {
+                    it.eraseColor(Color.WHITE)
+                    document.render(page - 1, it)
+                }
+            } finally {
+                document.close()
+            }
+        }
+        try {
+            assertEquals("width", expected.width, shown.width)
+            assertEquals("height", expected.height, shown.height)
+            val a = IntArray(expected.width)
+            val b = IntArray(expected.width)
+            var differing = 0
+            for (y in 0 until expected.height) {
+                expected.getPixels(a, 0, a.size, 0, y, a.size, 1)
+                shown.getPixels(b, 0, b.size, 0, y, b.size, 1)
+                for (x in a.indices) {
+                    val p = a[x]
+                    val q = b[x]
+                    val delta = maxOf(abs(Color.red(p) - Color.red(q)), abs(Color.green(p) - Color.green(q)), abs(Color.blue(p) - Color.blue(q)))
+                    if (delta > PIXEL_TOLERANCE) differing++
+                }
+            }
+            val share = differing.toDouble() / (expected.width * expected.height)
+            assertTrue("$differing pixels (${"%.3f".format(share * 100)} %) of the preview differ from page $page of the result", share < MAX_DIFFERING_SHARE)
+        } finally {
+            expected.recycle()
+            shown.recycle()
+        }
+    }
+
     private fun startDisabled(): Boolean = compose.onAllNodesWithTag("tool-start").fetchSemanticsNodes().let { nodes ->
         nodes.isNotEmpty() && nodes.all { it.config.getOrNull(SemanticsProperties.Disabled) != null }
     }
@@ -504,6 +621,9 @@ class ToolboxEditToolsDeviceTest {
         const val RENDER_SCALE = 2
         const val MIN_STAMP_PIXELS = 500
         const val JPEG_LUMINANCE_DC = 16
+        const val PIXEL_TOLERANCE = 40
+        const val MAX_DIFFERING_SHARE = 0.01
+        const val WATERMARK_PREVIEW = "tool-watermark-preview"
 
         @BeforeClass
         @JvmStatic

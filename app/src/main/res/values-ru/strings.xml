@@ -234,6 +234,9 @@
     <string name="tool_position_top_center">Вверху по центру</string>
     <string name="tool_position_top_left">Вверху слева</string>
     <string name="tool_position_top_right">Вверху справа</string>
+    <string name="tool_preview_next">Следующая страница</string>
+    <string name="tool_preview_page_of">Страница %1$d из %2$d</string>
+    <string name="tool_preview_previous">Предыдущая страница</string>
     <string name="tool_properties_clear_outline">Удалить все закладки</string>
     <string name="tool_properties_edit">Сведения о документе</string>
     <string name="tool_properties_empty_removes">Оставьте поле пустым, чтобы удалить его.</string>
@@ -305,7 +308,8 @@
     <string name="tool_watermark_preview">Предпросмотр</string>
     <string name="tool_watermark_preview_empty">Введите текст или выберите изображение, чтобы увидеть предпросмотр.</string>
     <string name="tool_watermark_preview_failed">Не удалось построить предпросмотр.</string>
-    <string name="tool_watermark_preview_note">В предпросмотре {page} и {total} равны 1.</string>
+    <string name="tool_watermark_preview_note">В предпросмотре {page} и {total} показывают значения этой страницы во всём файле, как в результате.</string>
+    <string name="tool_watermark_preview_outside">Эта страница не входит в выбранные, поэтому водяной знак на неё не добавляется.</string>
     <string name="tool_watermark_preview_page">Предпросмотр страницы %1$d</string>
     <string name="tool_watermark_rotation">Поворот</string>
     <string name="tool_watermark_text">Текст водяного знака</string>

@@ -234,6 +234,9 @@
     <string name="tool_position_top_center">Top center</string>
     <string name="tool_position_top_left">Top left</string>
     <string name="tool_position_top_right">Top right</string>
+    <string name="tool_preview_next">Next page</string>
+    <string name="tool_preview_page_of">Page %1$d of %2$d</string>
+    <string name="tool_preview_previous">Previous page</string>
     <string name="tool_properties_clear_outline">Remove all bookmarks</string>
     <string name="tool_properties_edit">Document information</string>
     <string name="tool_properties_empty_removes">Leave a field empty to remove it.</string>
@@ -305,7 +308,8 @@
     <string name="tool_watermark_preview">Preview</string>
     <string name="tool_watermark_preview_empty">Enter text or choose an image to see a preview.</string>
     <string name="tool_watermark_preview_failed">The preview cannot be drawn.</string>
-    <string name="tool_watermark_preview_note">In the preview {page} and {total} show 1.</string>
+    <string name="tool_watermark_preview_note">In the preview {page} and {total} show what they show on this page of the whole file, as in the result.</string>
+    <string name="tool_watermark_preview_outside">This page is not among the chosen pages, so it gets no watermark.</string>
     <string name="tool_watermark_preview_page">Preview of page %1$d</string>
     <string name="tool_watermark_rotation">Rotation</string>
     <string name="tool_watermark_text">Watermark text</string>

@@ -234,6 +234,9 @@
     <string name="tool_position_top_center">頂部居中</string>
     <string name="tool_position_top_left">左上</string>
     <string name="tool_position_top_right">右上</string>
+    <string name="tool_preview_next">下一頁</string>
+    <string name="tool_preview_page_of">第 %1$d / %2$d 頁</string>
+    <string name="tool_preview_previous">上一頁</string>
     <string name="tool_properties_clear_outline">刪除全部書籤</string>
     <string name="tool_properties_edit">文件資料</string>
     <string name="tool_properties_empty_removes">留空的項目會被刪除.</string>
@@ -305,7 +308,8 @@
     <string name="tool_watermark_preview">預覽</string>
     <string name="tool_watermark_preview_empty">輸入文字或選擇圖片後即可預覽.</string>
     <string name="tool_watermark_preview_failed">無法繪製預覽.</string>
-    <string name="tool_watermark_preview_note">預覽中 {page} 與 {total} 顯示為 1.</string>
+    <string name="tool_watermark_preview_note">預覽中的 {page} 與 {total} 按此頁在整個檔案中的值顯示, 與生成的結果相同.</string>
+    <string name="tool_watermark_preview_outside">此頁不在所選頁碼範圍內, 不會加上水印.</string>
     <string name="tool_watermark_preview_page">第 %1$d 頁的預覽</string>
     <string name="tool_watermark_rotation">旋轉</string>
     <string name="tool_watermark_text">水印文字</string>
