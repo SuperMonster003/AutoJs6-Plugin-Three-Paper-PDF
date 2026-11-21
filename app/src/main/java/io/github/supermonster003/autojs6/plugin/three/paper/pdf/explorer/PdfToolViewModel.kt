@@ -23,6 +23,7 @@ import io.github.supermonster003.autojs6.plugin.three.paper.pdf.codegen.ScriptRe
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.codegen.ScriptRun
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.codegen.ScriptSource
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.edit.PdfEncryption
+import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.RecentFiles
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.ToolTask
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.ToolTasks
 import io.github.supermonster003.autojs6.plugin.three.paper.pdf.ui.toolbox.ToolboxPreferences
