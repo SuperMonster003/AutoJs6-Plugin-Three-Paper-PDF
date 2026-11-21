@@ -113,15 +113,20 @@ async function paperV2(pdf, log) {
     if (small.truncated !== false || small.length !== 4) throw new Error('outline.pdf truncated=' + small.truncated + ' length=' + small.length);
     return 'length=' + read.length + ' truncated=true non-enumerable read-only; outline.pdf truncated=false';
   });
-  // Writing the truncated outline back keeps only the front part (Q280); a bridge limit is reported, not failed.
-  // zh-CN: 写回截断的大纲只保留前段 (Q280); 超出桥的上限时只报告, 不算失败.
+  // Writing the truncated outline back keeps only the front part (Q280). Node.js and Bun refused arguments this large
+  // (about 379 KB) at their bridge limits until Q320 (c) gave them a temporary file channel (card paper-rt-bigargs):
+  // both outcomes pass and the line says which one happened; any other failure fails.
+  // zh-CN: 写回截断的大纲只保留前段 (Q280). Node.js 与 Bun 在 Q320 (c) 给出临时文件通道 (卡片 paper-rt-bigargs) 之前会按桥的上限
+  // 拒绝这么大的参数 (约 379 KB): 两种结果都算通过, 输出说明是哪一种; 其他失败算失败.
   if (read) {
     try {
       const back = await pdf.setOutline(TEXT, DIR + '/v2-back-' + AJ6_RUNTIME + '.pdf', read);
       const again = await pdf.outline(back.path);
-      log('AJ6PDFV2 ' + (again.length === read.length && again.truncated === false ? 'INFO' : 'FAIL') + ' writeBack length=' + again.length + ' truncated=' + again.truncated);
+      log('AJ6PDFV2 ' + (again.length === read.length && again.truncated === false ? 'INFO' : 'FAIL') + ' writeBack written length=' + again.length + ' truncated=' + again.truncated);
     } catch (e) {
-      log('AJ6PDFV2 INFO writeBack not written: ' + (e && e.code ? e.code + ' ' : '') + String(e && e.message !== undefined ? e.message : e).slice(0, 160));
+      const message = (e && e.code ? e.code + ' ' : '') + String(e && e.message !== undefined ? e.message : e);
+      const limit = /PAYLOAD_TOO_LARGE|TransactionTooLarge|too large|exceed|limit|max.?args/i.test(message);
+      log('AJ6PDFV2 ' + (limit ? 'INFO writeBack refused at the bridge limit: ' : 'FAIL writeBack not written: ') + message.slice(0, 160));
     }
   }
   log('AJ6PDFV2 DONE');
