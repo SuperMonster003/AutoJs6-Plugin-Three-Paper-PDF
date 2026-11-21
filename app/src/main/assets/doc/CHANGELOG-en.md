@@ -27,6 +27,7 @@
 * `Improvement` The processing hints on the tool result page are now shown in the interface language instead of English only
 * `Improvement` Rewrote the instructions shown in the Plugin Center in five parts: getting started, main features, using it in scripts, requirements and FAQ
 * `Improvement` Back on the result or failure page of a tool, with the arrow of the top bar or the system back key, now returns to the options with the chosen files and everything typed kept, so a change can run again; the new result gets a number instead of replacing the previous one, and back on the options leaves the tool
+* `Improvement` Picking files is quicker: the file browser lists "Recent" at the top (the recent files of the home screen, which now include the PDFs chosen in any tool), picked with one tap; it starts in the folder files were last picked from, shared by all tools and "Open a PDF" on the home screen (images keep their own folder)
 
 # v1.0.0
 
